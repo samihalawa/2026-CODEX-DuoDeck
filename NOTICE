@@ -1,0 +1,15 @@
+DuoDeck
+Copyright 2026 Agents AI Ltd.
+
+This project is derived from Sill, originally developed by Saffsanity:
+https://github.com/Saffsanity/sill
+
+The original software was released under the Apache License, Version 2.0.
+The copyright and license notices in its source files, the LICENSE file,
+and the links to the original authors and project are retained. DuoDeck
+adds its own fold-aware command deck, layouts, branding and documentation.
+This repository is independently created, not a GitHub fork.
+
+Neither the Sill authors nor Apple endorse DuoDeck.
+
+Initial standalone import source: samihalawa/sill at commit a06f1102af5f87ca7e4da79be7a6860cdc5e38ea.
