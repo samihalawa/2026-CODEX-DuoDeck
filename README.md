@@ -10,6 +10,8 @@ The iOS app is signed as `com.agentsai.duodeck`. Install the [free compatible Si
 
 The original Sill documentation is retained below for the streaming engine, troubleshooting and underlying protocols.
 
+The upstream GitHub Actions workflow definitions are preserved under docs/upstream-workflows but intentionally not activated; configure fresh Actions credentials for the new independent repository before enabling release automation.
+
 ---
 
 ## Upstream Sill foundation
