@@ -1,0 +1,22 @@
+{
+  "product": "DuoDeck",
+  "domain": "https://duodeck.megawebs.com",
+  "bundleId": "com.agentsai.duodeck",
+  "appleTeamId": "U549N38BV6",
+  "revenueCatEntitlement": "DuoDeck Pro",
+  "currency": "EUR",
+  "plans": {
+    "monthly": {
+      "productId": "duodeck_pro_monthly",
+      "priceMinor": 499
+    },
+    "annual": {
+      "productId": "duodeck_pro_annual",
+      "priceMinor": 2999
+    },
+    "lifetime": {
+      "productId": "duodeck_pro_lifetime",
+      "priceMinor": 5999
+    }
+  }
+}

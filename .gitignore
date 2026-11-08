@@ -21,3 +21,20 @@ design/reel/
 
 # Python's bytecode caches (Tests/checks/module.py, which its checks' mutants.py import).
 __pycache__/
+
+# Monorepo generated artifacts and machine-only credentials
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.keystore
+*.jks
+*service-account*.json
+local.properties
+.gradle/
+apps/android/**/build/
+apps/windows/release/
+.artifacts/
