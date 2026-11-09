@@ -130,7 +130,7 @@ require_no_release() {
 }
 check_tag() {
   GIT_TERMINAL_PROMPT=0 git ls-remote --tags "https://github.com/$repo.git" "refs/tags/$tag" "refs/tags/$tag^{}" > "$stage/tag-refs.txt"
-  tag_commit="$(/usr/bin/awk -v ref="refs/tags/$tag" '$2 == ref {direct=$1} $2 == ref "^{}" {peeled=$1} END {print peeled != "" ? peeled : direct}' "$stage/tag-refs.txt")"
+  tag_commit="$(/usr/bin/awk -v ref="refs/tags/$tag" '$2 == ref {direct=$1} $2 == ref "^{}" {peeled=$1} END {print (peeled != "" ? peeled : direct)}' "$stage/tag-refs.txt")"
   [ -z "$tag_commit" ] || [ "$tag_commit" = "$release_commit" ] || fail "$tag already points to another commit."
 }
 publish_preflight() {
