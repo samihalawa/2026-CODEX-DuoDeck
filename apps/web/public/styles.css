@@ -298,3 +298,5 @@ nav a:hover, .text-link:hover, .plain-button:hover { color: var(--accent); }
 }
 
 .symbol { width: 1em; height: 1em; flex: none; vertical-align: middle; }
+
+.button[aria-disabled="true"] { opacity: .62; cursor: default; pointer-events: none; }

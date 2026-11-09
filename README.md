@@ -22,7 +22,7 @@ DuoDeck controls a Mac. It is not a system-wide pointer for other iPhone apps. A
 
 The Mac host requires macOS 14 or later. The iOS client requires iOS 17 or later; fold-aware iPhone Duo layouts require iOS 27.1 or later. Building the iOS app requires Xcode 27.1 or later.
 
-Mac downloads are published in this repository's releases. The iOS source is available here; an App Store Connect record exists, and public App Store availability must be checked in the store itself. No Android, Windows, Mac App Store client, account backend or paid entitlement implementation is included in the current source tree.
+Signed Mac downloads appear in this repository's releases after Apple notarization. The website checks actual download availability. The iOS source is available here; an App Store Connect record exists, and public App Store availability must be checked in the store itself. No Android, Windows, Mac App Store client, account backend or paid entitlement implementation is included in the current source tree.
 
 ## Repository
 

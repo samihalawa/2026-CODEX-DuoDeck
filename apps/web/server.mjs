@@ -23,6 +23,24 @@ function security(res) {
   res.setHeader("Permissions-Policy","camera=(), microphone=(), geolocation=()");
   res.setHeader("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 }
+const macDownloadURL = "https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
+let downloadState = {available:false,checkedAt:0};
+let downloadCheck;
+async function currentDownloads() {
+  const ttl = downloadState.available ? 300_000 : 60_000;
+  if(Date.now()-downloadState.checkedAt >= ttl && !downloadCheck) {
+    downloadCheck = (async()=>{
+      try {
+        const response = await fetch(macDownloadURL,{method:"HEAD",redirect:"follow",signal:AbortSignal.timeout(6000)});
+        if(response.status===200) downloadState.available=true;
+        else if(response.status===404) downloadState.available=false;
+      } catch { /* Keep the last confirmed availability through a transient outage. */ }
+      downloadState.checkedAt=Date.now();
+    })().finally(()=>{downloadCheck=undefined;});
+  }
+  if(downloadCheck) await downloadCheck;
+  return {mac:{available:downloadState.available,url:downloadState.available?macDownloadURL:null}};
+}
 const app = http.createServer(async (req,res)=>{
   security(res);
   if(req.method !== "GET" && req.method !== "HEAD") {
@@ -30,6 +48,11 @@ const app = http.createServer(async (req,res)=>{
   }
   let pathname;
   try{pathname=new URL(req.url || "/", "https://duodeck.megawebs.com").pathname;}catch{res.writeHead(400);res.end();return;}
+  if(pathname==="/api/downloads"){
+    const downloads=await currentDownloads();
+    res.writeHead(200,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"});
+    res.end(req.method==="HEAD"?undefined:JSON.stringify(downloads));return;
+  }
   if(pathname==="/api/health"){
     res.writeHead(200,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"});
     if(req.method!=="HEAD")res.end(JSON.stringify({status:"ok",product:"DuoDeck",version,commit}));

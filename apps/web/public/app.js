@@ -150,3 +150,32 @@ setMode(saved?.mode||"small",false);
 speedLabel.value=(Number(speedInput.value)/100).toFixed(2)+"×";
 renderScenes();
 movePointer(0,0);
+
+let downloadRefreshTimer;
+async function refreshDownloads() {
+  clearTimeout(downloadRefreshTimer);
+  const link=$("macDownload");
+  try {
+    const response=await fetch("/api/downloads",{cache:"no-store"});
+    if(!response.ok) return;
+    const {mac}=await response.json();
+    const expected="https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
+    if(mac?.available && mac.url===expected) {
+      link.href=expected;link.removeAttribute("aria-disabled");link.removeAttribute("tabindex");
+      link.textContent="Download for Mac ↓";
+      $("macDownloadStatus").textContent="The signed Mac companion is ready to download.";
+    } else if(mac?.available===false) {
+      link.removeAttribute("href");link.setAttribute("aria-disabled","true");link.setAttribute("tabindex","-1");
+      link.textContent="Mac download preparing";
+      $("macDownloadStatus").textContent="The native source is available while the download is prepared.";
+    }
+  } catch { /* The source link remains available when the release check cannot be reached. */ }
+  finally {
+    if(link.hasAttribute("aria-disabled") && !document.hidden) downloadRefreshTimer=setTimeout(refreshDownloads,65_000);
+  }
+}
+refreshDownloads();
+document.addEventListener("visibilitychange",()=>{
+  clearTimeout(downloadRefreshTimer);
+  if(!document.hidden) refreshDownloads();
+});
