@@ -16,7 +16,7 @@ async function unusedPort() {
 before(async()=>{
   const port=await unusedPort();
   origin="http://127.0.0.1:"+port;
-  child=spawn(process.execPath,["server.mjs"],{cwd: new URL("..",import.meta.url),env:{...process.env,PORT:String(port),HOST:"127.0.0.1"},stdio:"ignore"});
+  child=spawn(process.execPath,["server.mjs"],{cwd: new URL("..",import.meta.url),env:{...process.env,PORT:String(port),HOST:"127.0.0.1",SOURCE_COMMIT:"web-cache-test"},stdio:"ignore"});
   let ready=false;
   for(let i=0;i<100;i++){
     if(child.exitCode!==null)break;
@@ -32,7 +32,7 @@ test("health supplies actual product identity and no secrets",async()=>{
   assert.equal(response.status,200);
   const body=await response.json();
   assert.equal(body.status,"ok");assert.equal(body.product,"DuoDeck");
-  assert.equal(body.version,"1.1.0");assert.equal("token" in body,false);
+  assert.equal(body.version,"1.1.0");assert.equal(body.commit,"web-cache-test");assert.equal("token" in body,false);
   assert.equal(response.headers.get("cache-control"),"no-store");
 });
 test("homepage has distinct brand and real claims",async()=>{
@@ -44,8 +44,10 @@ test("homepage has distinct brand and real claims",async()=>{
   assert.match(body,/Your Mac\./);
   assert.match(body,/In your hands/);
   assert.match(body,/not a system-wide trackpad/i);
-  assert.match(body,/href="\/styles\.css"/);
-  assert.match(body,/src="\/app\.js"/);
+  assert.match(body,/href="\/styles\.css\?v=web-cache-test"/);
+  assert.match(body,/src="\/app\.js\?v=web-cache-test"/);
+  assert.equal(r.headers.get("cache-control"),"no-cache");
+  assert.equal(body.includes("__ASSET_VERSION__"),false);
   assert.match(body,/github\.com\/samihalawa\/2026-CODEX-DuoDeck/);
 });
 test("real published icon is available",async()=>{

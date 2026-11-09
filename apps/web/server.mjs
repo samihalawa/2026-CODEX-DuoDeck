@@ -8,6 +8,7 @@ const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
 const version = process.env.DUODECK_VERSION || "1.1.0";
 const commit = process.env.SOURCE_COMMIT || process.env.GIT_COMMIT_SHA || "unpublished";
+const assetVersion = encodeURIComponent(commit === "unpublished" ? version : commit);
 const mime = Object.freeze({
   ".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",
   ".png":"image/png",".svg":"image/svg+xml",".webp":"image/webp",".ico":"image/x-icon",
@@ -54,11 +55,12 @@ const app = http.createServer(async (req,res)=>{
   try{
     const info=await stat(full);
     if(!info.isFile())throw new Error("not a file");
-    const data=await readFile(full);
+    let data=await readFile(full);
+    if(full.endsWith(".html")) data=Buffer.from(data.toString("utf8").replaceAll("__ASSET_VERSION__",assetVersion));
     res.writeHead(200,{
       "Content-Type":mime[extname(full)] ?? "application/octet-stream",
       "Content-Length":data.byteLength,
-      "Cache-Control":full.endsWith(".html")?"public, max-age=60":"public, max-age=3600",
+      "Cache-Control":full.endsWith(".html")?"no-cache":"public, max-age=3600",
     });
     res.end(req.method==="HEAD" ? undefined:data);
   }catch {
