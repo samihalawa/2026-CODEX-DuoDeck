@@ -1003,10 +1003,10 @@ let B3offVO = "New: Virtual Display, in Settings, streams a window you pick from
 let B4 = "Keyboard brings up the on-screen keyboard to type on Mac mini."
 let B5 = "New: A hardware keyboard types on Mac mini by itself, Esc included, and Keyboard then brings up the keyboard bar."
 let S1 = "New: With Share Clipboard, text you copy on Mac mini is ready to paste on this iPad."
-let S2 = "New: Copy on this iPad, then come back to Sill: Paste on Mac mini, on the note Sill shows then or in Settings, puts it where Mac mini’s cursor is."
-let S2off = "New: Copy on this iPad, then come back to Sill: Paste on Mac mini, on the note Sill shows then or in Settings, sends it to Mac mini’s clipboard."
+let S2 = "New: Copy on this iPad, then come back to DuoDeck: Paste on Mac mini, on the note DuoDeck shows then or in Settings, puts it where Mac mini’s cursor is."
+let S2off = "New: Copy on this iPad, then come back to DuoDeck: Paste on Mac mini, on the note DuoDeck shows then or in Settings, sends it to Mac mini’s clipboard."
 let S3 = "New: Send Audio, a beta, plays Mac mini’s sound here, and Mute silences this iPad alone."
-let S4 = "New: Update Sill on Mac mini to copy and paste between it and this iPad, and to hear its sound here."
+let S4 = "New: Update DuoDeck on Mac mini to copy and paste between it and this iPad, and to hear its sound here."
 let G1 = "Disconnect is at the bottom of Settings.", G2 = "Take the Tour is there too, to see this again."
 let G3 = "New: Reverse Scrolling turns a finger’s drag and the on-screen trackpad’s two-finger scroll around."
 let G4 = "New: Hold to Show Window Controls sets how long you hold a window’s thumbnail before its controls show."
@@ -1086,9 +1086,9 @@ check(words(.sharing, F, device: "iPhone").hint == "In Settings, the last button
       "sharing's hints")
 check(words(.sharing, L, voiceOver: true) == sharingL && words(.sharing, F, device: "iPhone", voiceOver: true) == words(.sharing, F, device: "iPhone"),
       "the same words under VoiceOver")
-check(texts(words(.sharing, L, mac: "Studio")).contains("New: Copy on this iPad, then come back to Sill: Paste on Studio, on the note Sill shows then or in Settings, puts it where Studio’s cursor is."),
+check(texts(words(.sharing, L, mac: "Studio")).contains("New: Copy on this iPad, then come back to DuoDeck: Paste on Studio, on the note DuoDeck shows then or in Settings, puts it where Studio’s cursor is."),
       "the Mac's name in Paste's row")
-check(texts(words(.sharing, L, mac: "")).contains("New: Copy on this iPad, then come back to Sill: Paste on your Mac, on the note Sill shows then or in Settings, puts it where your Mac’s cursor is."),
+check(texts(words(.sharing, L, mac: "")).contains("New: Copy on this iPad, then come back to DuoDeck: Paste on your Mac, on the note DuoDeck shows then or in Settings, puts it where your Mac’s cursor is."),
       "the “your Mac” fallback in Paste's row")
 for f in everyFeatures {
     let s = words(.sharing, L, features: f)
@@ -1114,7 +1114,7 @@ check(everyFeatures.allSatisfy { words(.settings, L, features: $0) == settingsL 
 
 // The laptop half's card.
 let laptopFirst = words(.laptop, P, first: true)
-check(laptopFirst.title == "Keys and Trackpad" && laptopFirst.subtitle == "Upright, Sill adds keys and a trackpad.", "laptop as a run's first card")
+check(laptopFirst.title == "Keys and Trackpad" && laptopFirst.subtitle == "Upright, DuoDeck adds keys and a trackpad.", "laptop as a run's first card")
 check(words(.laptop, P, first: false).subtitle == nil, "laptop's subtitle only as a run's first")
 check(texts(laptopFirst) == [K1, K2, K3, K4, K5], "laptop: \(texts(laptopFirst))")
 check(laptopFirst.rows[0].spoken == "Command, Option, Control and Shift stay on for the next key or trackpad click: tap Command, then C, to copy.", "the caps spoken by name")
@@ -1131,7 +1131,7 @@ let duoSettings = words(.settings, L, device: "iPhone", onItsSide: true)
 check(texts(duoSettings).last == "Turn your iPhone on its side for a trackpad and keys." && duoSettings.rows.last?.symbol == "iphone"
       && duoSettings.rows.last?.spans.first == TourSpan(text: "Turn your iPhone on its side", strong: true), "the Duo's inner display sideways")
 check(texts(duoSettings).prefix(4) == texts(words(.settings, L, device: "iPhone")).prefix(4), "the Duo: the other rows as before")
-check(words(.laptop, P, device: "iPhone", first: true, onItsSide: true).subtitle == "On its side, Sill adds keys and a trackpad.", "the Duo's laptop card")
+check(words(.laptop, P, device: "iPhone", first: true, onItsSide: true).subtitle == "On its side, DuoDeck adds keys and a trackpad.", "the Duo's laptop card")
 check(words(.laptop, P, device: "iPhone", first: false, onItsSide: true).subtitle == nil, "…only as a run's first")
 check(texts(words(.laptop, P, device: "iPhone", onItsSide: true)) == texts(words(.laptop, P, device: "iPhone")), "the Duo's laptop rows as before")
 for t in [TourTopic.touch, .bar, .sharing] {
@@ -1153,7 +1153,7 @@ check(words(.settings, F, device: "iPhone").hint == "The last button in the row 
 let laptopPhone = words(.laptop, F, device: "iPhone", first: true)
 check(texts(laptopPhone) == [K1, K4, K5, K6], "a phone's laptop card: no keyboard key, Larger Picture's row last: \(texts(laptopPhone))")
 check(laptopPhone.rows.map(\.symbol) == ["command", "cursorarrow.click.2", "hand.draw", "rectangle.expand.vertical"], "a phone's laptop symbols")
-check(laptopPhone.hint == "Under the windows: the row of keys, then the trackpad." && laptopPhone.subtitle == "Upright, Sill adds keys and a trackpad.",
+check(laptopPhone.hint == "Under the windows: the row of keys, then the trackpad." && laptopPhone.subtitle == "Upright, DuoDeck adds keys and a trackpad.",
       "a phone's laptop hint and subtitle")
 check(words(.laptop, F, device: "iPhone", voiceOver: true, first: true).rows.map(\.spoken)
       == ["Command, Option, Control and Shift stay on for the next key: Command, then C, copies.", K6], "a phone's laptop card under VoiceOver")
@@ -1388,8 +1388,8 @@ check(TourPolicy.spokenTitle(laptopFirst, index: 0, count: 1) == "Keys and Track
 check(TourPolicy.skipTitle == "Skip" && TourPolicy.nextTitle == "Next" && TourPolicy.doneTitle == "Done", "the buttons")
 check(TourPolicy.skipHint == "Ends the tour. Take the Tour in Settings shows it again.", "Skip's hint")
 check(TourPolicy.takeTourTitle == "Take the Tour", "the Settings row")
-check(TourPolicy.takeTourFootnote(device: "iPad") == "A short tour of Sill’s controls on this iPad.", "its footnote")
-check(TourPolicy.takeTourHint(device: "iPhone") == "Shows how to use Sill on this iPhone.", "its hint")
+check(TourPolicy.takeTourFootnote(device: "iPad") == "A short tour of DuoDeck’s controls on this iPad.", "its footnote")
+check(TourPolicy.takeTourHint(device: "iPhone") == "Shows how to use DuoDeck on this iPhone.", "its hint")
 
 print("\(checks) checks, \(failures) failed")
 exit(failures == 0 ? 0 : 1)

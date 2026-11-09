@@ -1,38 +1,9 @@
-# Design sources
+# DuoDeck visual identity
 
-- `AppIcon.svg` — the app icon on the 1024 grid, full square (iOS applies the
-  squircle). Four groups map to Icon Composer layers: background, iMac, iPad,
-  window. Render the asset with:
+The canonical vector mark is AppIcon.svg. Its checked-in opaque 1024×1024 PNG derivatives are apps/ios/Assets.xcassets/AppIcon.appiconset/AppIcon.png and apps/web/public/icon.png. The website uses apps/web/public/mark.svg. The Mac packaging script produces all ICNS sizes from the iOS asset, so both native apps use the same source identity.
 
-  ```
-  qlmanage -t -s 1024 -o . design/AppIcon.svg   # then flatten alpha before adding to the catalog
-  ```
+Use a standards-compliant SVG renderer when regenerating raster assets; inspect the pixels and verify the 1024×1024 opaque result before packaging. Quick Look can produce a blank thumbnail and is not a valid substitute for that check.
 
-  The three-direction exploration and the final board live on the design
-  canvas linked from `docs/BRIEF.md`.
+DuoDeck uses native system type, adaptive platform surfaces, restrained teal and short functional labels. See docs/PRODUCT_BRIEF.md for design decisions.
 
-- The Mac app's icon comes from the same file. `Scripts/make-app.sh` renders
-  it with Quick Look (`qlmanage -t -s 1024`), makes the render the one layer
-  of a generated Icon Composer document, and compiles that with Xcode's
-  `actool` into `Assets.car` (macOS 26 and later mask and light it natively)
-  plus a pre-masked `AppIcon.icns` for macOS 14–15. A plain `.icns` made with
-  `sips`/`iconutil` shows up on macOS 27 as a shrunken icon inside a grey
-  tile. The result is cached in `.build/icon`. A layered
-  `Packaging/AppIcon.icon` made in Icon Composer from the SVG's four groups
-  replaces the generated one as soon as it exists.
-- `DMGBackground.svg` — the window of Sill.dmg, the Mac download: 660 x 400
-  points of white, an arrow from where Sill.app sits (170, 180) to
-  Applications (490, 180) in the app icon's greys, and "To install Sill, drag
-  it to Applications." under them. `Scripts/make-dmg.sh` renders it with Quick
-  Look at 1x and 2x into one TIFF and puts the icons on it with a `.DS_Store`;
-  moving either icon means changing the SVG's arrow and the script's `--item`
-  lines together (`Tests/checks/dmg-layout` holds the same numbers). Keep
-  every edge white: the window is sized for macOS 27's title bar, so under
-  macOS 14's and 15's shorter one it shows 4 points below the picture.
-- The menu bar glyph is drawn in code from the same geometry
-  (`Sources/SillMenuBar/StatusGlyph.swift`): the iMac outline with the tilted
-  iPad, as a template image. `SillMenuBar -SillRenderPreviews <dir>` writes
-  `glyphs.png` with every state on light and dark bars.
-- `screenshots/`: the App Store's iPad screenshots that the README shows, at
-  half size (1032 × 1376, JPEG). Open-source app lists link these files, so
-  keep their names.
+The older ipad-*.jpg screenshots in screenshots are retained upstream historical assets; they are not DuoDeck release screenshots or evidence of current live behavior. Current QA images and renderer fixtures live under ignored .build/orchestration during release validation.

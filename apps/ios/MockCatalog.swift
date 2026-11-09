@@ -242,7 +242,7 @@ enum MockCatalog {
                             fetchDelay: 0.2, refusesChoices: false)
         case .noaccess:
             return MacMenus(topLevel: MacMenu(version: 3, app: "Code", bundleID: vscode, menus: [],
-                                              note: "Allow Accessibility for Sill on the Mac (System Settings › Privacy & Security › Accessibility)."),
+                                              note: "Allow Accessibility for DuoDeck on the Mac (System Settings › Privacy & Security › Accessibility)."),
                             tree: [:], fetchDelay: 0.2, refusesChoices: false)
         case .none:
             return MacMenus(topLevel: MacMenu(version: 3, menus: []), tree: [:], fetchDelay: 0.2, refusesChoices: false)
@@ -353,7 +353,7 @@ enum MockCatalog {
         case sound           // the Mac sends its sound: the Send Audio row on, and Mute under it
         case soundoff        // a Mac with sound, Send Audio off: the row off (as `default`), and Mute
         case soundnote       // on, and the Mac could not capture it: the note under the row
-        case nosound         // a Mac without sound (Sill for Mac 0.5.1): the row off and disabled, "Update Sill…", no Mute
+        case nosound         // a Mac without sound (Sill for Mac 0.5.1): the row off and disabled, "Update DuoDeck…", no Mute
     }
 
     /// The away and link cases: the Mac's two qualities (home Pro · Retina, away Low · Standard unless
@@ -568,10 +568,10 @@ enum MockCatalog {
         case homecode        // the home card's typed path, empty
         case homecodeerror   // the typed path after a wrong code: "That code didn’t work… 4 tries left."
         case homelocked      // the Mac is locked (a Wired row over the cable): "Unlock Mac mini, then tap it again."
-        case homeopenonmac   // the Mac showed no code by itself: "…choose Pair iPhone or iPad… in the Sill menu…"
+        case homeopenonmac   // the Mac showed no code by itself: "…choose Pair iPhone or iPad… in the DuoDeck menu…"
         case homerevoked     // the Mac removed this device: its row reads Not paired
         case homecabledone   // paired over the cable, the session on its way: "Paired with Mac mini over the cable."
-        case homeolder       // a tap on an Update Sill row: "Mac mini runs an older Sill…"
+        case homeolder       // a tap on an Update Sill row: "Mac mini runs an older DuoDeck…"
         case pairingrequired // Require pairing turned on while this device was connected without pairing
         case asleep          // the automatic reconnect's dials of a listed row not answered: "Mac mini isn’t answering. It may be asleep…" (issue #69)
         case tiles           // tiles with stored preview pictures and Home / Work / Other groups
@@ -663,7 +663,7 @@ enum MockCatalog {
             // the notice beside them. The message is the host's (DeviceGate's), for this device.
             client.macs = [mac("Mac mini", .wifi)]
             let goodbye = c == .update
-                ? Goodbye(reason: Goodbye.update, message: "Update Sill on your \(StreamClient.deviceWord) to keep using Mac mini. It needs version 1.2 or later.",
+                ? Goodbye(reason: Goodbye.update, message: "Update DuoDeck on your \(StreamClient.deviceWord) to keep using Mac mini. It needs version 1.2 or later.",
                           minimumVersion: "1.2", reconnect: false)
                 // A reason this build does not know ("pairingRequired" is pairing at home's own now).
                 : Goodbye(reason: "pairAgain",

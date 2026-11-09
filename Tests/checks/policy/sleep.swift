@@ -133,7 +133,7 @@ func afterSleepPolicy() {
           && redial(3, 10, fg: false, 1000) == (false, nil))
 
     let mini = "Mac mini"
-    let quiet = "Mac mini isn\u{2019}t answering. It may be asleep. Sill keeps trying, or tap it to try now."
+    let quiet = "Mac mini isn\u{2019}t answering. It may be asleep. DuoDeck keeps trying, or tap it to try now."
     let stopped = "Stopped trying to reach Mac mini. Tap it to try again."
     check("reconnectLine: the first three dials say Reconnecting, as before",
           (0...2).allSatisfy { P.reconnectLine(mac: mini, failed: $0, direct: false) == "Reconnecting to Mac mini\u{2026}" })
@@ -226,7 +226,7 @@ func afterSleepPolicy() {
 
     // MARK: The Desktop that did not start (2026-10-28)
 
-    // Sill.app could not start the Desktop the iPad asked for on its first list (a display gone while no
+    // DuoDeck.app could not start the Desktop the iPad asked for on its first list (a display gone while no
     // device was connected), and its next lists, 0.18 and 0.25 s after the request, came within the
     // spacing: nothing asked again, and the panel stayed black for the 7.4 s until Noah left. Now each
     // sets one re-check when the spacing ends, unless the person chose something since the request.

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import StreamProtocol
 
 // MARK: - Keys
@@ -134,7 +135,7 @@ private enum DuoDeckShortcutPreset: String, CaseIterable, Identifiable {
                 shortcut("Save", "square.and.arrow.down", "s"),
                 shortcut("Find All", "text.magnifyingglass", "f", [.command, .shift]),
                 shortcut("Comment", "text.bubble", "/"),
-                shortcut("Terminal", "terminal", "`")
+                shortcut("Next Window", "rectangle.on.rectangle", "`")
             ]
         }
     }
@@ -235,9 +236,14 @@ struct PortraitMetrics {
 struct PortraitStreamScreen: View {
     @ObservedObject var client: StreamClient
     var metrics: PortraitMetrics = .regular
-    /// Persisted only for the half-folded Duo's programmable lower surface.
+    /// Shared by the compact phone deck and the half-folded control surface.
     @AppStorage("DuoDeck.trackpadLayout") private var duoDeckLayout = "compact"
     @AppStorage("DuoDeck.shortcutPreset") private var duoDeckShortcutPreset = "editing"
+    @AppStorage("DuoDeck.pointerSensitivity") private var duoDeckPointerSensitivity = 1.25
+    @AppStorage("DuoDeck.focusMode") private var duoDeckFocusMode = true
+    @AppStorage("DuoDeck.shortcutsVisible") private var duoDeckShortcutsVisible = true
+    @AppStorage("DuoDeck.haptics") private var duoDeckHaptics = true
+    @State private var controlsSettingsOpen = false
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
     @Binding var textScale: Double?
@@ -262,6 +268,8 @@ struct PortraitStreamScreen: View {
     var linkLine: String? = nil
     /// Take the Tour in the panel (see `StreamScreen.takeTour`).
     var takeTour: () -> Void = {}
+    /// The guided tour reveals its existing full-control targets without changing the preference.
+    var forceFullControls = false
     /// Larger Picture on a phone: the software keyboard's height its rows are kept above
     /// (`PhonePortraitLayout.keyboard(for:largerPicture:foldable:)`, while a window streams with the
     /// switch on: `PhonePortraitLayout.largerPicture(switchOn:streaming:)`); nil for the phone's usual
@@ -270,6 +278,8 @@ struct PortraitStreamScreen: View {
     /// The picture's pinch zoom (StreamScreen's; StreamZoom): not watched here, only by the picture's
     /// own view, so a pinch redraws nothing else.
     let zoom: StreamZoomModel
+
+    private var usesSimpleControls: Bool { duoDeckFocusMode && !forceFullControls }
 
     private var streamShape: RoundedRectangle { RoundedRectangle(cornerRadius: 12, style: .continuous) }
     /// The Duo's fold across this screen (StreamScreen, iOS 27.1): where the halves split.
@@ -282,6 +292,16 @@ struct PortraitStreamScreen: View {
             } else {
                 halves(geo.size)
             }
+        }
+        #if DEBUG
+        .onAppear {
+            if UserDefaults.standard.bool(forKey: "DuoDeckControls") { controlsSettingsOpen = true }
+        }
+        #endif
+        .sheet(isPresented: $controlsSettingsOpen) {
+            DuoDeckControlsSettings()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -298,8 +318,11 @@ struct PortraitStreamScreen: View {
 
             VStack(spacing: split.controls - half) {
                 picturePane(measured: true).padding(8).frame(height: half)
-                controls(width: size.width, duoDeck: duoFold.horizontalBand != nil)
+                // Ordinary iPads and narrow iPad windows use the same configurable deck.
+                // The fold still decides the split above; it does not gate control preferences.
+                controls(width: size.width, duoDeck: true)
                     .frame(height: size.height - split.controls)
+                    .background(Palette.canvas)
             }
 
             // Same order as landscape: the dim goes over the stream so a tap with the drawer
@@ -343,8 +366,14 @@ struct PortraitStreamScreen: View {
 
     private func controls(width: CGFloat, duoDeck: Bool) -> some View {
         VStack(spacing: metrics.rowGap) {
-            windowBar(width: width - 2 * metrics.padSide)
-            keyRow(.full)
+            if duoDeck && usesSimpleControls {
+                duoDeckCompactBar
+            } else {
+                windowBar(width: width - 2 * metrics.padSide)
+            }
+            if !duoDeck || !usesSimpleControls {
+                keyRow(.full)
+            }
             if duoDeck {
                 duoDeckSurface(width: width - 2 * metrics.padSide)
             } else {
@@ -356,51 +385,108 @@ struct PortraitStreamScreen: View {
         .padding(.bottom, metrics.padBottom)
     }
 
+    /// Original compact navigation: full window picker, keyboard, desktop and settings
+    /// remain accessible even when the redundant keycap strip is hidden.
+    private var duoDeckCompactBar: some View {
+        HStack(spacing: 10) {
+            DuoDeckMark(size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(client.macName.isEmpty ? "DuoDeck" : client.macName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Palette.text)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Label(client.route?.word ?? "Connected", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(Palette.accent)
+            }
+            Spacer(minLength: 8)
+            appsButton(width: max(52, metrics.buttonWidth))
+            Button {
+                overlay.toggleKeyboard()
+            } label: {
+                VStack(spacing: 3) {
+                    Image(systemName: keyboardShown ? "keyboard.chevron.compact.down" : "keyboard")
+                        .font(.system(size: 19, weight: .medium))
+                    Text("Keyboard").font(.system(size: 11, weight: .medium))
+                }
+                .foregroundStyle(keyboardShown ? Palette.accent : Palette.text)
+                .frame(width: 60, height: 48)
+                .background(keyboardShown ? Palette.controlOpen : Palette.control,
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(keyboardShown ? "Hide Mac keyboard" : "Show Mac keyboard")
+            settingsButton(width: max(52, metrics.buttonWidth))
+        }
+        .frame(height: metrics.phone ? PhonePortraitLayout.buttonHeight : metrics.barHeight)
+    }
+
     /// In laptop posture the fold fixes the picture's physical top half. The bottom
     /// half is now a configurable control surface: the user chooses the pad's footprint
     /// and the remaining space becomes a shortcut deck, without changing streaming.
-    private func duoDeckSurface(width: CGFloat) -> some View {
+    private func duoDeckSurface(width: CGFloat, verticalSpan: CGFloat? = nil) -> some View {
         let mode = DuoDeckPadMode(rawValue: duoDeckLayout) ?? .compact
-        return VStack(spacing: 9) {
-            HStack(spacing: 10) {
-                HStack(spacing: 5) {
-                    Image(systemName: "hand.draw")
-                        .foregroundStyle(Palette.accent)
-                    Text("DUODECK")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(Palette.text)
-                }
-                .accessibilityLabel("DuoDeck controls")
-
+        let showsShortcuts = mode != .full && duoDeckShortcutsVisible
+        return VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Text("Trackpad")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Palette.text)
                 Spacer(minLength: 4)
-
                 Picker("Trackpad size", selection: $duoDeckLayout) {
-                    ForEach(DuoDeckPadMode.allCases) { item in
-                        Text(item.title).tag(item.rawValue)
-                    }
+                    ForEach(DuoDeckPadMode.allCases) { item in Text(item.title).tag(item.rawValue) }
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: 288)
+                .frame(maxWidth: 240)
                 .accessibilityLabel("Trackpad size")
+                Menu {
+                    Button { client.select(.desktop) } label: {
+                        Label("Show Desktop", systemImage: "desktopcomputer")
+                    }
+                    Toggle(isOn: $duoDeckShortcutsVisible) {
+                        Label("Show Shortcuts", systemImage: "square.grid.2x2")
+                    }
+                    Toggle(isOn: Binding(get: { !duoDeckFocusMode }, set: { duoDeckFocusMode = !$0 })) {
+                        Label("Show All Mac Controls", systemImage: "rectangle.and.hand.point.up.left")
+                    }
+                    Divider()
+                    Button {
+                        overlay.setKeyboard(shown: false)
+                        controlsSettingsOpen = true
+                    } label: {
+                        Label("Customize Controls…", systemImage: "slider.horizontal.3")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 21))
+                        .foregroundStyle(Palette.accent)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Trackpad and shortcut options")
             }
-            .frame(height: 34)
+            .frame(minHeight: 44)
+
+            if metrics.phone && keyboardShown {
+                keyRow(.phone).frame(height: PhonePortraitLayout.capHeight)
+            }
 
             GeometryReader { area in
-                let spacing: CGFloat = 10
-                let padWidth = mode == .full
-                    ? area.size.width
-                    : max(140, (area.size.width - spacing) * mode.widthFraction)
-                let padHeight = mode == .full
+                let spacing: CGFloat = 12
+                let padWidth = showsShortcuts
+                    ? max(150, (area.size.width - spacing) * mode.widthFraction)
+                    : area.size.width
+                let padHeight = mode == .full || !showsShortcuts
                     ? area.size.height
-                    : max(110, area.size.height * mode.heightFraction)
+                    : max(115, area.size.height * mode.heightFraction)
 
                 HStack(spacing: spacing) {
-                    trackpad(verticalSpan: nil)
-                        .frame(width: padWidth, height: padHeight)
+                    trackpad(verticalSpan: verticalSpan, sensitivity: CGFloat(duoDeckPointerSensitivity))
+                        .frame(width: min(area.size.width, padWidth),
+                               height: min(area.size.height, padHeight))
                         .accessibilityLabel("Mac trackpad")
-
-                    if mode != .full {
+                    if showsShortcuts {
                         duoDeckShortcuts
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
@@ -416,21 +502,33 @@ struct PortraitStreamScreen: View {
         let columns = [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)]
         return VStack(spacing: 6) {
             HStack(spacing: 4) {
-                Text("ACTIONS")
-                    .font(.system(size: 10, weight: .semibold))
-                    .tracking(0.8)
+                Text("Shortcuts")
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Palette.muted)
                 Spacer(minLength: 1)
-                Picker("Action preset", selection: $duoDeckShortcutPreset) {
-                    ForEach(DuoDeckShortcutPreset.allCases) { item in
-                        Text(item.title).tag(item.rawValue)
+                Menu {
+                    Picker("Shortcut group", selection: $duoDeckShortcutPreset) {
+                        ForEach(DuoDeckShortcutPreset.allCases) { item in
+                            Text(item.title).tag(item.rawValue)
+                        }
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(preset.title)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Image(systemName: "chevron.down")
+                            .font(.caption2.weight(.semibold))
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(Palette.accent)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
-                .pickerStyle(.menu)
-                .tint(Palette.accent)
-                .font(.system(size: 12))
+                .accessibilityLabel("Shortcut group")
+                .accessibilityValue(preset.title)
             }
-            .frame(height: 32)
+            .frame(minHeight: 44)
 
             LazyVGrid(columns: columns, spacing: 6) {
                 ForEach(preset.shortcuts) { shortcut in
@@ -451,6 +549,7 @@ struct PortraitStreamScreen: View {
             default: hid = HIDKey.usage(for: shortcut.key)
             }
             guard let hid else { return }
+            if duoDeckHaptics { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
             KeyChord.press(hid, with: shortcut.modifiers).forEach { client.sendFromKeyRow($0) }
             latched = []
         } label: {
@@ -549,12 +648,17 @@ struct PortraitStreamScreen: View {
 
     private func phoneStack(_ layout: PhonePortraitLayout, span: CGFloat) -> some View {
         let larger = layout.largerPicture
-        // In reading order, which is also top to bottom: the picture, row 1, the strip (none with
-        // Larger Picture), the key row, the trackpad.
-        let rects: [CGRect] = larger ? [layout.pane(video: client.videoSize), layout.row1, layout.keys, layout.trackpad]
-                                     : [layout.picture, layout.row1, layout.strip, layout.keys, layout.trackpad]
+        let simplified = usesSimpleControls && !larger
+        // Keep the picture and keyboard anchor stable. The compact deck uses the old strip,
+        // key row and trackpad space, so the viewport and direct-touch geometry stay unchanged.
+        let deck = CGRect(x: layout.row1.minX, y: layout.strip.minY,
+                          width: layout.row1.width,
+                          height: max(0, layout.trackpad.maxY - layout.strip.minY))
+        let rects: [CGRect] = simplified ? [layout.picture, layout.row1, deck]
+            : larger ? [layout.pane(video: client.videoSize), layout.row1, layout.keys, layout.trackpad]
+                     : [layout.picture, layout.row1, layout.strip, layout.keys, layout.trackpad]
         return ZStack(alignment: .topLeading) {
-            Color.black
+            Palette.canvas
 
             // While the drawer is open VoiceOver skips what it dims (a double-tap there would reach
             // the Mac, where a tap only closes the drawer): row 1, then the drawer. The drawer and the
@@ -563,14 +667,21 @@ struct PortraitStreamScreen: View {
             // beside them.
             PhoneRows(size: layout.size, rects: rects) {
                 picturePane(measured: false).accessibilityHidden(drawerOpen)
-                phoneRow1(layout, menus: larger && client.menus.hasMenus)
-                if !larger {
-                    phoneRow2(layout)
+                if simplified {
+                    duoDeckCompactBar
+                    duoDeckSurface(width: deck.width, verticalSpan: span)
                         .opacity(drawerOpen || settingsOpen ? 0 : 1)
                         .accessibilityHidden(drawerOpen)
+                } else {
+                    phoneRow1(layout, menus: larger && client.menus.hasMenus)
+                    if !larger {
+                        phoneRow2(layout)
+                            .opacity(drawerOpen || settingsOpen ? 0 : 1)
+                            .accessibilityHidden(drawerOpen)
+                    }
+                    keyRow(.phone).accessibilityHidden(drawerOpen)
+                    trackpad(verticalSpan: span).accessibilityHidden(drawerOpen)
                 }
-                keyRow(.phone).accessibilityHidden(drawerOpen)
-                trackpad(verticalSpan: span).accessibilityHidden(drawerOpen)
             }
 
             if drawerOpen {
@@ -720,7 +831,7 @@ struct PortraitStreamScreen: View {
             .tourTarget(.keys)
     }
 
-    private func trackpad(verticalSpan: CGFloat?) -> some View {
+    private func trackpad(verticalSpan: CGFloat?, sensitivity: CGFloat? = nil) -> some View {
         Trackpad(send: { client.sendInput($0) },
                  setPointer: { client.setOwnPointer($0, from: .trackpad) },
                  feed: { let f = client.pointerFeedState; return (f.anchor, f.reseeds) },
@@ -728,6 +839,7 @@ struct PortraitStreamScreen: View {
                  latched: latched,
                  onModifiersConsumed: { latched = [] },
                  verticalSpan: verticalSpan,
+                 pointerSensitivity: sensitivity ?? CGFloat(duoDeckPointerSensitivity),
                  sendGesture: { client.sendGesture($0, fingers: $1) })
             .tourTarget(.trackpad)
     }
@@ -1186,4 +1298,135 @@ private struct KeyRow: View {
         }
     }
     #endif
+}
+
+// MARK: - Native control preferences
+
+/// Local preferences stay on this device; nothing here changes the streaming protocol.
+struct DuoDeckControlsSettings: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("DuoDeck.trackpadLayout") private var layout = "compact"
+    @AppStorage("DuoDeck.shortcutPreset") private var preset = "editing"
+    @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
+    @AppStorage("DuoDeck.focusMode") private var focusMode = true
+    @AppStorage("DuoDeck.shortcutsVisible") private var shortcutsVisible = true
+    @AppStorage("DuoDeck.haptics") private var haptics = true
+    @State private var resetConfirmation = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Size", selection: $layout) {
+                        ForEach(DuoDeckPadMode.allCases) { Text($0.title).tag($0.rawValue) }
+                    }
+                    .pickerStyle(.segmented)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Label("Pointer speed", systemImage: "cursorarrow.motionlines")
+                            Spacer()
+                            Text(speed, format: .number.precision(.fractionLength(2)))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                            Text("×").foregroundStyle(.secondary)
+                        }
+                        Slider(value: $speed, in: 0.65...2.3, step: 0.05)
+                            .accessibilityLabel("Pointer speed")
+                            .accessibilityValue(String(format: "%.2f times", speed))
+                    }
+                } header: {
+                    Text("Trackpad")
+                } footer: {
+                    Text("Size applies to the compact control deck. Pointer speed applies to every on-screen trackpad.")
+                }
+                Section("Shortcuts") {
+                    Toggle("Show shortcut deck", isOn: $shortcutsVisible)
+                    Picker("Scene", selection: $preset) {
+                        ForEach(DuoDeckShortcutPreset.allCases) { Text($0.title).tag($0.rawValue) }
+                    }
+                    Toggle("Haptic feedback", isOn: $haptics)
+                }
+                Section {
+                    NavigationLink {
+                        DuoDeckGestureGuide()
+                    } label: {
+                        Label("Gestures & controls", systemImage: "hand.draw")
+                    }
+                    DisclosureGroup("Advanced") {
+                        Toggle("Show all Mac controls", isOn: Binding(
+                            get: { !focusMode }, set: { focusMode = !$0 }
+                        ))
+                        Text("Adds the window strip, text-size control, Mac menus and modifier keys to the foldable workspace.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Button("Reset control preferences", role: .destructive) {
+                            resetConfirmation = true
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Controls")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .confirmationDialog("Reset control preferences?", isPresented: $resetConfirmation, titleVisibility: .visible) {
+                Button("Reset Controls", role: .destructive) {
+                    layout = "compact"
+                    preset = "editing"
+                    speed = 1.25
+                    focusMode = true
+                    shortcutsVisible = true
+                    haptics = true
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Your paired Macs and connection settings will stay as they are.")
+            }
+        }
+        .tint(Palette.accent)
+    }
+}
+
+private struct DuoDeckGestureGuide: View {
+    var body: some View {
+        List {
+            Section("Trackpad") {
+                gesture("Move the pointer", detail: "Slide one finger.", symbol: "cursorarrow")
+                gesture("Click", detail: "Tap with one finger.", symbol: "hand.tap")
+                gesture("Right-click", detail: "Tap with two fingers.", symbol: "cursorarrow.click.2")
+                gesture("Scroll", detail: "Slide two fingers.", symbol: "hand.draw")
+                gesture("Drag", detail: "Touch and hold, then move without lifting.", symbol: "hand.point.up.left")
+            }
+            Section("Your Mac") {
+                gesture("Switch apps", detail: "Choose Apps, then select an app or window.", symbol: "square.grid.2x2")
+                gesture("Type", detail: "Open Keyboard or use a connected keyboard.", symbol: "keyboard")
+                gesture("Zoom the picture", detail: "Pinch the live picture. Move it with two fingers while zoomed.", symbol: "arrow.up.left.and.arrow.down.right")
+            }
+            Section("Three-finger gestures") {
+                gesture("Mission Control", detail: "Swipe up.", symbol: "rectangle.3.group")
+                gesture("App windows", detail: "Swipe down.", symbol: "rectangle.on.rectangle")
+                gesture("Change spaces", detail: "Swipe left or right.", symbol: "arrow.left.arrow.right")
+                Text("These follow your Mac’s keyboard shortcuts. You can turn them off in Keyboard, clipboard & gestures.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("Gestures & Controls")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func gesture(_ title: String, detail: String, symbol: String) -> some View {
+        Label {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                Text(detail).font(.subheadline).foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 4)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(Palette.accent)
+        }
+    }
 }

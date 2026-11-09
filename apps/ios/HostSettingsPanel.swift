@@ -45,6 +45,10 @@ struct HostSettingsPanel: View {
     @AccessibilityFocusState private var headerFocused: Bool
     /// Two seconds on this connection and still no state: the Mac runs a Sill without settings.
     @State private var olderMac = false
+    @State private var advancedStreaming = false
+    @State private var advancedConnection = false
+    @State private var deviceOptions = false
+    @State private var controlsOpen = false
     /// Bumped when Low Power Mode toggles, so the frame rate note is read again.
     @State private var powerState = 0
     /// This device's switch for three-finger gestures (docs/trackpad-gestures-plan.md §8): on unless
@@ -145,8 +149,8 @@ struct HostSettingsPanel: View {
         }
         .padding(14)
         .background(Self.shape.fill(Palette.bar))
-        .overlay(Self.shape.strokeBorder(Color.white.opacity(0.10), lineWidth: 1))
-        .shadow(color: .black.opacity(0.65), radius: 30, x: 0, y: 24)
+        .overlay(Self.shape.strokeBorder(Palette.separator, lineWidth: 1))
+        .shadow(color: .black.opacity(0.16), radius: 24, x: 0, y: 12)
         .tint(Palette.accent)
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         // VoiceOver stays inside while it is open, the escape gesture closes it, and focus starts
@@ -158,7 +162,19 @@ struct HostSettingsPanel: View {
         // tour's and the pairing overlay's do: SwiftUI's `.cancelAction` shortcut on Done (kept for
         // ⌘.) does not ask for priority (docs/hardware-keyboard-plan.md §1).
         .background(EscapeKey(action: close))
-        .onAppear { headerFocused = true }
+        .onAppear {
+            headerFocused = true
+            if Self.startsAt != nil || Self.startsAtEnd {
+                deviceOptions = true
+                advancedStreaming = true
+                advancedConnection = true
+            }
+        }
+        .sheet(isPresented: $controlsOpen) {
+            DuoDeckControlsSettings()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
         // A refused change: the control has already gone back to the Mac's value, and the reason
         // is in the footer or the note. The haptic is a no-op on an iPad.
         .sensoryFeedback(.warning, trigger: client.settingsRefusals)
@@ -194,44 +210,9 @@ struct HostSettingsPanel: View {
                     .truncationMode(.middle)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityFocused($headerFocused)
-                if let state = client.settings.host {
-                    VStack(alignment: .leading, spacing: 1) {
-                        // Wraps rather than cutting the bitrate off at larger text sizes; each
-                        // value keeps its unit (no-break spaces), and a wrap falls after a "·".
-                        // It ends in how this device's connection reaches the Mac, the connect
-                        // screen's word; "Direct" is the old "Connected directly" line.
-                        Text(Self.readout(state.stream, route: client.route))
-                            .fixedSize(horizontal: false, vertical: true)
-                        // Its own line: beside the numbers it never fit the panel's width, and it
-                        // is what confirms the Virtual Display switch took effect.
-                        if state.stream?.onVirtualDisplay == true {
-                            Text("On the virtual display")
-                        }
-                        // From afar, how, with the round trip (it needs no clock agreement between
-                        // the two devices, unlike frame age); the readout above then ends in the
-                        // bitrate. Wraps like the readout (larger text on the outer display cut it
-                        // off), after a "·" as the readout does, and never inside the route: its
-                        // spaces are no-break ones, as on the Mac's card (at xxLarge on the outer
-                        // display it read "Connected through" / "Tailscale · 48 ms").
-                        if let r = remoteRoute {
-                            Text("Connected \(r.phrase.replacingOccurrences(of: " ", with: "\u{00A0}"))\u{00A0}· \(Self.rttText(client.linkStats))")
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        // Away from home (docs/remote-bundle-plan.md §5.8): which quality this
-                        // connection's Mac runs for it, from the Mac's word. Its own line, wrapping
-                        // like the readout; the quality kept whole.
-                        if let line = AwayCopy.headerLine(state.away) {
-                            Text(line.text)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .font(.footnote.monospacedDigit())
+                Text(remoteRoute.map { "Connected \($0.phrase)" } ?? client.route?.word ?? "Connected")
+                    .font(.subheadline)
                     .foregroundStyle(Palette.muted)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Self.spokenReadout(state.stream, route: client.route, remote: remoteRoute,
-                                                           rttMs: client.linkStats?.rtt?.median)
-                                        + (AwayCopy.headerLine(state.away)?.spoken ?? ""))
-                }
                 // A locked Mac's lists have no windows while it shows nothing of itself (its LockPolicy,
                 // docs/locked-mac-plan.md): why, under the readout, its own element for VoiceOver.
                 if let why = client.lockWhy {
@@ -286,6 +267,23 @@ struct HostSettingsPanel: View {
 
     @ViewBuilder private var middle: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Rows {
+                Button {
+                    controlsOpen = true
+                } label: {
+                    HStack {
+                        Label("Controls", systemImage: "slider.horizontal.3")
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+                    }
+                    .foregroundStyle(Palette.accent)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .rowFrame()
+            }
+            Footnote(text: "Trackpad, shortcuts and gesture guide.")
             if let state = client.settings.host, let shown = client.settings.displayed {
                 if state.softwareEncoder {
                     // Neither a restart nor a return is promised: hosts before 2026-09-25 keep the
@@ -305,6 +303,9 @@ struct HostSettingsPanel: View {
                 } else if AwayCopy.showsRttCallout(away: state.away, remote: remoteRoute != nil, slowLink: client.slowLink) {
                     Callout(text: "The picture is arriving slowly from \(mac). Choose Low quality or Standard resolution.")
                 }
+                performancePresets(shown)
+                Footnote(text: "Smooth uses less bandwidth. Crisp gives text more detail.")
+                DisclosureGroup(isExpanded: $advancedStreaming) {
                 streamRows(shown)
                 Footnote(text: streamFooter)
                 // Which quality these rows set, away from home or at home.
@@ -337,6 +338,14 @@ struct HostSettingsPanel: View {
                     Footnote(text: "The window you pick moves onto an invisible display on \(mac) while it streams, so it keeps updating when covered.")
                 }
                 Footnote(text: "Applies to every device streaming from \(mac). The stream restarts for a moment.")
+                } label: {
+                    Label("Advanced streaming", systemImage: "slider.horizontal.3")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Palette.text)
+                        .frame(minHeight: 44)
+                }
+                .padding(.horizontal, 4)
+                .padding(.bottom, 8)
                 // Send Audio (docs/audio-plan.md §7.7): after the closing footer, whose "the stream restarts"
                 // is not true of it (the sound has a stream of its own), like Direct Wireless after it. Set
                 // from here for every device, as Quality is (Noah, 2026-10-27: the plan's Q8 revised): the
@@ -358,7 +367,7 @@ struct HostSettingsPanel: View {
                     .disabled(send == nil)
                     .accessibilityLabel("Send Audio, beta")
                     .accessibilityInputLabels(["Send Audio"])
-                    .accessibilityHint(send == nil ? "Update Sill on \(mac) to use this." : "")
+                    .accessibilityHint(send == nil ? "Update DuoDeck Host on \(mac) to use this." : "")
                     .rowFrame()
                     // Mute, right under Send Audio (Noah, 2026-10-27): this device's own (`soundMuted`,
                     // off by default, remembered, never sent), the only control of the Mac's sound on the
@@ -390,6 +399,7 @@ struct HostSettingsPanel: View {
                 // `takesDirectWireless`, 2026-10-29): off from a directly connected device is
                 // allowed, as on the Mac, and its consequence is written beside it. No row for a host
                 // without it.
+                DisclosureGroup(isExpanded: $advancedConnection) {
                 if let direct = shown.directWireless {
                     let locked = Self.directWirelessLock(remote: remoteRoute != nil, takes: state.takesDirectWireless, mac: mac)
                     Rows {
@@ -406,11 +416,25 @@ struct HostSettingsPanel: View {
                     Footnote(text: locked ?? directFooter(on: direct))
                 }
                 if !state.persistent {
-                    Footnote(text: "SillHost keeps these until it quits.")
+                    Footnote(text: "The command-line host keeps these until it quits.")
                 }
                 awayFromHome
+                if let stream = state.stream {
+                    Footnote(text: Self.readout(stream, route: client.route))
+                }
+                if remoteRoute != nil {
+                    Footnote(text: "Round trip: \(Self.rttText(client.linkStats))")
+                }
+                } label: {
+                    Label("Connection & diagnostics", systemImage: "network")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Palette.text)
+                        .frame(minHeight: 44)
+                }
+                .padding(.horizontal, 4)
+                .padding(.bottom, 8)
             } else if olderMac {
-                Label("Update Sill on \(mac) to change these from here.", systemImage: "arrow.down.circle")
+                Label("Update DuoDeck Host on \(mac) to change these from here.", systemImage: "arrow.down.circle")
                     .font(.body)
                     .foregroundStyle(Palette.text)
                     .fixedSize(horizontal: false, vertical: true)
@@ -428,9 +452,52 @@ struct HostSettingsPanel: View {
             }
             // After everything of the Mac's, whatever state its settings are in: while they load, and
             // for a Mac without them too. Both are this device's own: its gestures, then the tour.
-            thisDevice
+            DisclosureGroup(isExpanded: $deviceOptions) {
+                thisDevice
+            } label: {
+                Label("Keyboard, clipboard & gestures", systemImage: "keyboard")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Palette.text)
+                    .frame(minHeight: 44)
+            }
+            .padding(.horizontal, 4)
+            .padding(.bottom, 8)
             tour
         }
+    }
+
+    private func performancePresets(_ shown: StreamSettings) -> some View {
+        HStack(spacing: 8) {
+            performanceButton("Smooth", symbol: "bolt", bitrate: QualityPreset.efficient.rawValue,
+                              scale: 1, speed: true, shown: shown)
+            performanceButton("Balanced", symbol: "circle.lefthalf.filled", bitrate: QualityPreset.balanced.rawValue,
+                              scale: 1, speed: false, shown: shown)
+            performanceButton("Crisp", symbol: "textformat", bitrate: QualityPreset.high.rawValue,
+                              scale: 2, speed: false, shown: shown)
+        }
+    }
+
+    private func performanceButton(_ title: String, symbol: String, bitrate: Int, scale: Double,
+                                   speed: Bool, shown: StreamSettings) -> some View {
+        let selected = shown.bitrate == bitrate && shown.captureScale == scale
+            && shown.maxFPS == 60 && shown.prioritizeSpeed == speed
+        return Button {
+            client.changeSettings(HostSettingsChange(maxFPS: 60, bitrate: bitrate,
+                                  captureScale: scale, prioritizeSpeed: speed))
+        } label: {
+            VStack(spacing: 5) {
+                Image(systemName: selected ? "checkmark.circle.fill" : symbol)
+                    .font(.system(size: 18))
+                Text(title).font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(selected ? Palette.accent : Palette.text)
+            .frame(maxWidth: .infinity, minHeight: 62)
+            .background(selected ? Palette.controlOpen : Palette.control,
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title) streaming preset")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     /// The last group: this device's, not the Mac's, so after everything about the Mac, and there
@@ -528,7 +595,7 @@ struct HostSettingsPanel: View {
                 case .connected:
                     if let r = remoteRoute { Footnote(text: "Connected \(r.phrase).") }
                 case .reaches:
-                    Footnote(text: "Away from home, Sill reaches \(mac) \(Self.reach(info)).")
+                    Footnote(text: "Away from home, DuoDeck reaches \(mac) \(Self.reach(info)).")
                 case .turnOnRemoteAccess:
                     Footnote(text: Self.turnOnRemoteAccess(mac))
                 }
@@ -553,7 +620,7 @@ struct HostSettingsPanel: View {
 
     /// With Remote Access off on the Mac: how to reach it away from home.
     static func turnOnRemoteAccess(_ mac: String) -> String {
-        "To reach \(mac) away from home, turn on Remote Access in Sill’s Settings on the Mac."
+        "To reach \(mac) away from home, turn on Remote Access in DuoDeck Host settings on the Mac."
     }
 
     // MARK: This device
@@ -662,7 +729,7 @@ struct HostSettingsPanel: View {
         case false?:
             return "Beta. Turn this on to hear what streams on every connected device; \(mac) keeps playing it too." + mute
         case nil:
-            return "Beta. Update Sill on \(mac) to hear its sound on this \(device)."
+            return "Beta. Update DuoDeck Host on \(mac) to hear its sound on this \(device)."
         }
     }
 
@@ -701,7 +768,7 @@ struct HostSettingsPanel: View {
     /// Under the switch: where the gestures go and what they do, or why nothing happens.
     private var gesturesFooter: String {
         guard gesturesOn else { return "Three-finger strokes do nothing while this is off." }
-        guard macTakesGestures else { return "Update Sill on \(mac) to use these." }
+        guard macTakesGestures else { return "Update DuoDeck Host on \(mac) to use these." }
         // VoiceOver keeps three-finger swipes and taps for itself, and no touch of them reaches Sill.
         var text = voiceOver ? "VoiceOver keeps three-finger gestures for itself, so the rows above do them on \(mac) instead."
             : "Three fingers on the trackpad or over the stream."
@@ -1059,7 +1126,7 @@ private struct ClipboardPasteRow: View {
 /// A hairline between rows, inset like the system's.
 private struct RowDivider: View {
     var body: some View {
-        Rectangle().fill(Color.white.opacity(0.08)).frame(height: 0.5).padding(.leading, 14)
+        Rectangle().fill(Palette.separator).frame(height: 0.5).padding(.leading, 14)
     }
 }
 

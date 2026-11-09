@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import Combine
 import StreamProtocol
 
@@ -16,18 +17,53 @@ extension Color {
 }
 
 enum Palette {
-    static let bar = Color(hex: 0x16181C)          // top bar and drawer background
-    static let control = Color(hex: 0x23262C)      // bar buttons, search field, selected row
-    static let controlOpen = Color(hex: 0x2C3550)  // a bar button whose thing is showing
-    static let accent = Color(hex: 0x9BB7FF)
-    static let text = Color(hex: 0xEEF0F3)
-    static let barLabel = Color(hex: 0xC4C9D1)     // the 11pt labels under the bar icons
-    static let muted = Color(hex: 0xA4ABB5)        // section headers, window counts, placeholder
-    static let panel = Color(hex: 0x1F2126)        // the stream panel behind the video
-    static let trackpad = Color(hex: 0x101215)     // the portrait trackpad's well
-    static let thumbBody = Color(hex: 0x26282D)    // thumbnail placeholder
-    static let thumbTitleBar = Color(hex: 0x34373D)
-    static let iconFallback = Color(hex: 0x3A3D44) // two-letter app badge
+    static let canvas = Color(uiColor: .systemGroupedBackground)
+    static let bar = Color(uiColor: .secondarySystemGroupedBackground)
+    static let control = Color(uiColor: .tertiarySystemFill)
+    static let controlOpen = accent.opacity(0.14)
+    static let accent = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .systemTeal
+            : UIColor(red: 0, green: 127.0 / 255, blue: 120.0 / 255, alpha: 1)
+    })
+    static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
+    static let text = Color.primary
+    static let barLabel = Color.secondary
+    static let muted = Color.secondary
+    static let panel = Color.black
+    static let trackpad = Color(uiColor: .secondarySystemGroupedBackground)
+    static let thumbBody = Color(uiColor: .systemFill)
+    static let thumbTitleBar = Color(uiColor: .tertiarySystemBackground)
+    static let iconFallback = Color(uiColor: .systemGray)
+    static let separator = Color(uiColor: .separator).opacity(0.45)
+}
+
+// MARK: - DuoDeck brand system
+
+/// The same paired-surface motif at home and in the connected workspace.
+struct DuoDeckMark: View {
+    var size: CGFloat = 38
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+                .fill(Palette.accent)
+            VStack(spacing: size * 0.065) {
+                RoundedRectangle(cornerRadius: size * 0.075, style: .continuous)
+                    .strokeBorder(Palette.onAccent, lineWidth: max(1.4, size * 0.045))
+                RoundedRectangle(cornerRadius: size * 0.075, style: .continuous)
+                    .fill(Palette.onAccent.opacity(0.22))
+                    .overlay(alignment: .trailing) {
+                        Image(systemName: "cursorarrow")
+                            .font(.system(size: size * 0.27, weight: .bold))
+                            .foregroundStyle(Palette.onAccent)
+                            .padding(.trailing, size * 0.10)
+                    }
+            }
+            .padding(.horizontal, size * 0.18)
+            .padding(.vertical, size * 0.20)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
 }
 
 // MARK: - Layout selection
@@ -335,7 +371,7 @@ struct StreamScreen: View {
             }
             #endif
         }
-        .background(Color.black)
+        .background(Palette.canvas)
         .overlayPreferenceValue(WindowMenuAnchorKey.self) { anchor in
             if let anchor, let id = windowMenu, let window = client.windows.first(where: { $0.id == id }) {
                 WindowLightsMenu(anchor: anchor, window: window,
@@ -1198,6 +1234,7 @@ struct StreamScreen: View {
                              pairThisDevice: openPairingOverlay,
                              linkLine: shownLinkLine,
                              takeTour: takeTour,
+                             forceFullControls: tourOnScreen,
                              largerKeyboard: largerKeyboard,
                              zoom: zoom)
     }
@@ -1340,7 +1377,7 @@ struct LockedMacShade: View {
     var body: some View {
         ZStack {
             if let shade = client.lockShade {
-                Palette.panel
+                Palette.bar
                 VStack(spacing: 10) {
                     if shade == .unlocking {
                         ProgressView().tint(Palette.muted)
@@ -2216,8 +2253,8 @@ struct AppDrawer: View {
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Palette.bar))
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .strokeBorder(Color.white.opacity(0.10), lineWidth: 1))
-        .shadow(color: .black.opacity(0.65), radius: 30, x: 0, y: 24)
+            .strokeBorder(Palette.separator, lineWidth: 1))
+        .shadow(color: .black.opacity(0.16), radius: 24, x: 0, y: 12)
     }
 
     /// A locked Mac (`StreamClient.lockWhy`): one line in place of the search field and both lists, read

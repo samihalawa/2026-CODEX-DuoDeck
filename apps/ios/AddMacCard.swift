@@ -117,12 +117,12 @@ struct AddMacCard: View {
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.muted)
         } else {
-            Text("Pair once, and Sill reaches your Mac from anywhere, through your VPN or the internet.")
+            Text("Pair once, and DuoDeck reaches your Mac from anywhere, through your VPN or the internet.")
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(typed ? "Type the address and code that Sill shows on your Mac."
-                       : "On your Mac, choose Pair iPhone or iPad… in the Sill menu, then point this \(device) at the code.")
+            Text(typed ? "Type the address and code that DuoDeck Host shows on your Mac."
+                       : "On your Mac, choose Pair iPhone or iPad… in the DuoDeck menu, then point this \(device) at the code.")
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.text)
                 .fixedSize(horizontal: false, vertical: true)
@@ -152,7 +152,7 @@ struct AddMacCard: View {
             Button(action: pair) {
                 Text("Pair")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(Palette.onAccent)
                     .frame(minWidth: 88, minHeight: 44)
                     .padding(.horizontal, 12)
                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.accent.opacity(working ? 0.4 : 1)))
@@ -413,7 +413,7 @@ struct LinkConfirmation: View {
                 Button(action: pair) {
                     Text("Pair")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(Palette.onAccent)
                         .frame(minWidth: 88, minHeight: 44)
                         .padding(.horizontal, 12)
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.accent))

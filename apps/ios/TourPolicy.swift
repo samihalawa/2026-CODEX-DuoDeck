@@ -545,8 +545,8 @@ enum TourPolicy {
     static let skipHint = "Ends the tour. Take the Tour in Settings shows it again."
     /// The Settings panel's last row.
     static let takeTourTitle = "Take the Tour"
-    static func takeTourFootnote(device: String) -> String { "A short tour of Sill’s controls on this \(device)." }
-    static func takeTourHint(device: String) -> String { "Shows how to use Sill on this \(device)." }
+    static func takeTourFootnote(device: String) -> String { "A short tour of DuoDeck’s controls on this \(device)." }
+    static func takeTourHint(device: String) -> String { "Shows how to use DuoDeck on this \(device)." }
 
     /// The title as VoiceOver reads it: its place in the run, when the run has more than one card.
     static func spokenTitle(_ copy: TourCopy, index: Int, count: Int) -> String {
@@ -657,15 +657,15 @@ enum TourPolicy {
             var rows: [TourRow] = []
             if features.clipboard {
                 rows.append(row("doc.on.clipboard", [plain("With "), strong("Share Clipboard"), plain(", text you copy on \(mac) is ready to paste on this \(device).")], new: true))
-                rows.append(row("doc.on.doc", [plain("Copy on this \(device), then come back to Sill: "), strong("Paste on \(mac)"),
-                                               plain(", on the note Sill shows then or in Settings,"),
+                rows.append(row("doc.on.doc", [plain("Copy on this \(device), then come back to DuoDeck: "), strong("Paste on \(mac)"),
+                                               plain(", on the note DuoDeck shows then or in Settings,"),
                                                plain(features.pasteRightAway ? " puts it where \(mac)’s cursor is." : " sends it to \(mac)’s clipboard.")], new: true))
             }
             if features.sound {
                 rows.append(row("speaker.wave.2", [strong("Send Audio"), plain(", a beta, plays \(mac)’s sound here, and "), strong("Mute"), plain(" silences this \(device) alone.")], new: true))
             }
             if !features.clipboard && !features.sound {
-                rows.append(row("arrow.down.circle", [strong("Update Sill on \(mac)"), plain(" to copy and paste between it and this \(device), and to hear its sound here.")], new: true))
+                rows.append(row("arrow.down.circle", [strong("Update DuoDeck on \(mac)"), plain(" to copy and paste between it and this \(device), and to hear its sound here.")], new: true))
             }
             let title = features.clipboard == features.sound ? "Clipboard and Sound" : features.clipboard ? "Clipboard" : "Sound"
             return TourCopy(title: title, subtitle: nil, rows: rows,
@@ -709,7 +709,7 @@ enum TourPolicy {
             if layout == .phone && features.largerPicture {
                 rows.append(row("rectangle.expand.vertical", [strong("Larger Picture"), plain(", in Settings: a window’s picture takes the place of the thumbnails and reaches down to where the keyboard comes up.")], new: true))
             }
-            let subtitle = keysOnItsSide ? "On its side, Sill adds keys and a trackpad." : "Upright, Sill adds keys and a trackpad."
+            let subtitle = keysOnItsSide ? "On its side, DuoDeck adds keys and a trackpad." : "Upright, DuoDeck adds keys and a trackpad."
             let hint: String
             switch layout {
             case .landscape, .portrait: hint = "Below the bar: the row of keys, then the trackpad."

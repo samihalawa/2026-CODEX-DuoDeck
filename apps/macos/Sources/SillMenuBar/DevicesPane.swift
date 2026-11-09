@@ -46,6 +46,7 @@ struct DevicesPane: View {
     var now: Date?
 
     @State private var removedName: String?
+    @State private var showPairingOptions = false
     /// A Remove the keychain did not keep: the device's name and why.
     @State private var removeProblem: (name: String, reason: String)?
 
@@ -59,35 +60,33 @@ struct DevicesPane: View {
 
     var body: some View {
         Form {
-            Section {
-                Toggle("Require pairing", isOn: $requirePairing)
-                    .disabled(unavailable != nil)
-                if let problem = unavailable {
-                    Warning("Devices can’t connect: Sill couldn’t use its key in your keychain (\(withoutFullStop(problem))). Quit Sill and open it again, and choose Always Allow if the keychain asks.")
-                } else if let p = requirePairingProblem {
-                    let reason = withoutFullStop(p.reason)
-                    Warning(p.wanted
-                            ? "Pairing is required until Sill quits: Sill couldn’t update the keychain (\(reason)). Try again."
-                            : "Pairing is still required: Sill couldn’t update the keychain (\(reason)). Try again.")
-                }
-            } footer: {
-                if requirePairing {
-                    Footnote("Each iPhone or iPad pairs once: over the USB cable by itself, or on Wi\u{2011}Fi with a code this Mac shows when the device asks. Everything devices send and receive is encrypted.")
-                } else {
-                    Label("Any device on your network (or nearby, with Direct Wireless Connection on) and any app on this Mac can see and control it without pairing. Connections are still encrypted.",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Section {
-                Toggle("Show the pairing window to screen sharing", isOn: $showPairingWindowToScreenSharing)
-            } footer: {
-                Footnote("Turn this on to pair while you use this Mac through Screen Sharing or another remote desktop app, as you would a Mac without a display. While it’s on, anyone who can see this Mac’s screen remotely can read the code. Devices streaming this Mac never show the window.")
-            }
             pairedDevices
+            if let problem = unavailable {
+                Section {
+                    Warning("Devices can’t connect because DuoDeck Host couldn’t use its keychain key (\(withoutFullStop(problem))). Reopen DuoDeck Host and choose Always Allow if the keychain asks.")
+                }
+            } else if let p = requirePairingProblem {
+                Section {
+                    Warning(p.wanted
+                            ? "Pairing is required until DuoDeck Host quits. The keychain couldn’t be updated (\(withoutFullStop(p.reason))). Try again."
+                            : "Pairing is still required. The keychain couldn’t be updated (\(withoutFullStop(p.reason))). Try again.")
+                }
+            }
+            if !requirePairing {
+                Section {
+                    Warning("Pairing is off. Any device on your network can see and control this Mac.")
+                }
+            }
+            Section {
+                DisclosureGroup("Pairing options", isExpanded: $showPairingOptions) {
+                    Toggle("Require pairing", isOn: $requirePairing)
+                        .disabled(unavailable != nil)
+                    Footnote("Pair each device once with the Mac’s code or over USB. Connections are encrypted.")
+                    Toggle("Show pairing to screen sharing", isOn: $showPairingWindowToScreenSharing)
+                        .padding(.top, 6)
+                    Footnote("For setup through Screen Sharing or another remote desktop app. Anyone viewing that remote screen can read the code. Devices streaming this Mac never show it.")
+                }
+            }
         }
     }
 
@@ -97,13 +96,26 @@ struct DevicesPane: View {
                 Text("\(removedName) can no longer connect. To use it again, pair it again.")
             }
             if let removeProblem {
-                Warning("\(removeProblem.name) is still paired: Sill couldn’t update the keychain (\(withoutFullStop(removeProblem.reason))). Try again.")
+                Warning("\(removeProblem.name) is still paired: DuoDeck Host couldn’t update the keychain (\(withoutFullStop(removeProblem.reason))). Try again.")
             }
             if unavailable != nil {
                 // The trust list lives with the key: unread, not empty.
-                Text("Your paired devices show here once Sill can use its key again.").foregroundStyle(.secondary)
+                Text("Your paired devices show here once DuoDeck Host can use its key again.").foregroundStyle(.secondary)
             } else if status.paired.isEmpty {
-                Text("No paired devices yet.").foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "ipad.and.iphone")
+                        .font(.system(size: 28))
+                        .foregroundStyle(DuoDeckHostStyle.accent)
+                        .frame(width: 38)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Bring your Mac to your device").fontWeight(.medium)
+                        Text("Open DuoDeck on your iPhone or iPad, then pair with this Mac.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.vertical, 8)
             }
             ForEach(status.paired) { device in
                 PairedDeviceRow(device: device, now: now,
@@ -121,6 +133,7 @@ struct DevicesPane: View {
                                 rename: { actions.rename(device.id, $0) })
             }
             Button("Pair iPhone or iPad…") { actions.pair() }
+                .buttonStyle(.borderedProminent)
                 .disabled(unavailable != nil)
         } header: {
             Text("Paired Devices")
@@ -145,7 +158,20 @@ struct PairedDeviceRow: View {
 
     var body: some View {
         LabeledContent {
-            Button("Remove", action: remove)
+            Menu {
+                Button("Rename…") { startEditing() }
+                Divider()
+                Button(role: .destructive, action: remove) {
+                    Label("Remove Device", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Rename or remove \(device.name)")
+            .accessibilityLabel("Options for \(device.name)")
         } label: {
             if editing {
                 TextField("Name", text: $text)

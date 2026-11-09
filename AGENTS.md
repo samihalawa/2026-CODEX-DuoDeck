@@ -12,3 +12,5 @@ Product domain: https://duodeck.megawebs.com. iOS identifier com.agentsai.duodec
 Store and deployment mutations have one coordinator. Worker agents must stay in their assigned paths, never commit/push, publish, change another checkout, or interfere with another worker. Record actual build/test outcomes in .build/orchestration/<worker>-result.md; never mark an operation complete without proof. Do not add TODO placeholders or synthetic successful implementations. No public release claims without actual provider confirmation.
 
 App Store client artifacts must exclude private host APIs and be sandboxed on macOS. Do not disable sandboxing to make a Mac App Store build work. Preserve the separately signed/notarized Mac host for capture and remote input functionality.
+
+Product direction and the current professional execution prompt: docs/PRODUCT_BRIEF.md. Operational release authority: docs/release-checklist.md, script/build_and_run.sh, script/release_mac.sh and Scripts/release-ios.sh. Historical upstream notes are context, not current publishing destinations.

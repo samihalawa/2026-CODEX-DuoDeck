@@ -4,7 +4,7 @@ import SwiftUI
 import SillHostCore
 import StreamProtocol
 
-/// One Settings tab: a grouped Form, 520 pt wide. The controls bind straight to
+/// One Settings tab: a grouped Form, 560 pt wide. The controls bind straight to
 /// `settings.config`, whose didSet is the one path to the host (see HostSettings).
 struct SettingsPane: View {
     let tab: SettingsTab
@@ -18,8 +18,12 @@ struct SettingsPane: View {
     var previewFirewall: FirewallRule.Verdict?
 
     var body: some View {
-        Group {
-            switch tab {
+        VStack(spacing: 0) {
+            if tab == .general {
+                DuoDeckHostBanner()
+            }
+            Group {
+                switch tab {
             case .general: GeneralPane(model: model, settings: model.settings, previewUpdates: previewUpdates,
                                        previewClipboardAccess: previewClipboardAccess, previewFirewall: previewFirewall)
             case .devices: LiveDevicesPane(model: model, settings: model.settings)
@@ -27,10 +31,12 @@ struct SettingsPane: View {
             case .virtualDisplay: VirtualDisplayPane(model: model, settings: model.settings)
             case .permissions: PermissionsPane(model: model)
             case .remoteAccess: LiveRemoteAccessPane(model: model, settings: model.settings)
+                }
             }
+            .formStyle(.grouped)
         }
-        .formStyle(.grouped)
-        .frame(width: 520)
+        .frame(width: 560)
+        .tint(DuoDeckHostStyle.accent)
         // Permissions and the login item change behind Sill's back, in System Settings. Re-read
         // them once a second, only while this tab is on screen, and when Sill becomes active; an
         // idle Sill with Settings closed wakes for nothing. The Devices and Remote Access panes
@@ -83,119 +89,6 @@ func withoutFullStop(_ text: String) -> String {
     text.hasSuffix(".") ? String(text.dropLast()) : text
 }
 
-// MARK: General
-
-private struct GeneralPane: View {
-    let model: AppModel
-    @Bindable var settings: HostSettings
-    var previewUpdates: UpdatePolicy.Pane?
-    var previewClipboardAccess: ClipboardPolicy.MacAccess?
-    var previewFirewall: FirewallRule.Verdict?
-
-    private static let runsFromApplications = Bundle.main.bundlePath.hasPrefix("/Applications/")
-
-    var body: some View {
-        Form {
-            Section {
-                Toggle("Launch at login", isOn: Binding(get: { model.loginItem.isOn }, set: { model.loginItem.set($0) }))
-                    .disabled(!model.loginItem.available)
-                if !model.loginItem.available {
-                    Footnote("Available when Sill runs from its app bundle.")
-                } else if model.loginItem.needsApproval {
-                    LabeledContent("Waiting for your approval") {
-                        Button("Approve in System Settings…") { model.loginItem.openSystemSettings() }
-                    }
-                }
-                if let error = model.loginItem.error {
-                    Text(error).font(.callout).foregroundStyle(.red)
-                }
-            }
-            Section {
-                LabeledContent("Running from") {
-                    Text(Bundle.main.bundlePath)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
-                if !Self.runsFromApplications {
-                    Label("The login item and the permissions follow this copy of Sill. Keep one copy, in Applications.",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                }
-            }
-            Section {
-                LabeledContent("Visible on your network as") { Text(networkName) }
-            } footer: {
-                HStack(spacing: 4) {
-                    Text("This is the Mac’s name.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Button("Change It in Sharing Settings…") {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.Sharing-Settings.extension") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }
-                    .buttonStyle(.link)
-                    .font(.footnote)
-                    Spacer(minLength: 0)
-                }
-            }
-            // Beside the name devices see: the macOS firewall keeping them out (FirewallRule), only
-            // while it does.
-            if let firewall = previewFirewall ?? model.coordinator?.status.snapshot.firewall, firewall.blocksDevices {
-                FirewallSection(verdict: firewall)
-            }
-            // How devices reach this Mac, so beside its name on the network. Applies at once without
-            // restarting the stream (the listener is replaced); enabled in test pattern mode too,
-            // where it is saved and changes only the listener.
-            Section {
-                Toggle("Direct wireless connection", isOn: $settings.config.directWireless)
-            } footer: {
-                Footnote("Lets your iPhone and iPad connect when they’re near this Mac, even without a shared Wi\u{2011}Fi network, the way AirDrop does. While it’s on, this Mac’s Wi\u{2011}Fi keeps stepping away from your network, so streaming over Wi\u{2011}Fi can stutter. Anyone nearby with Sill can find this Mac; only devices you paired can connect, unless Require pairing is off.")
-            }
-            // The clipboard both ways (HostClipboard): at once, no restart. Each device has its own
-            // switch too. macOS's answer is read with the permissions (once a second while this pane
-            // shows, and when Sill becomes active), never in a preview.
-            ClipboardSection(shareClipboard: $settings.config.shareClipboard,
-                             access: previewClipboardAccess ?? model.permissions.clipboardAccess,
-                             allow: { model.permissions.allowClipboard() })
-            if let preview = previewUpdates {
-                UpdatesSection(pane: preview, automatic: .constant(true))
-            } else {
-                UpdatesSection(pane: model.updates.pane, automatic: $settings.updateCheck,
-                               actions: UpdatesSection.Actions(checkNow: { model.updates.checkNow() },
-                                                               openRelease: { NSWorkspace.shared.open($0) }))
-            }
-            Section {
-                HStack {
-                    Button("Show Log…") { model.showLog?() }
-                    Button("Reveal Log File") {
-                        if let url = HostLog.shared.fileURL { NSWorkspace.shared.activateFileViewerSelecting([url]) }
-                    }
-                    .disabled(HostLog.shared.fileURL == nil)
-                }
-            }
-            Section {
-                // A way out when the status item is hidden (a crowded menu bar, the notch).
-                Button("Quit Sill") { NSApp.terminate(nil) }
-            } footer: {
-                Footnote("Sill \(AppModel.version) (\(AppModel.build)). Free and open source.")
-            }
-        }
-    }
-
-    private var networkName: String {
-        let snapshot = model.coordinator?.status.snapshot ?? HostStatusSnapshot()
-        switch snapshot.network {
-        case .advertising(let name): return "“\(name)”"
-        case .notAdvertised: return "Not advertised (test pattern mode)"
-        case .failed: return "Not visible (the listener failed)"
-        case .waiting: return "Not yet (waiting for the network)"
-        case .starting, .registering: return "Registering…"
-        }
-    }
-}
-
 // MARK: Firewall
 
 /// The macOS firewall keeps devices out (FirewallRule; a user's report of 2026-10-29), in the
@@ -222,7 +115,7 @@ struct FirewallSection: View {
                     }
                 } label: {
                     Text("Firewall")
-                    Text(line)
+                    Text(line.replacingOccurrences(of: "Sill’s executable", with: "DuoDeck Host"))
                 }
                 if let lines = FirewallRule.Copy.commandLines(verdict) {
                     // A line for the tool and one for each option, never "--" over "unblockapp".
@@ -265,9 +158,9 @@ struct ClipboardSection: View {
             Toggle("Share clipboard with devices", isOn: $shareClipboard)
             if shareClipboard, let warning = ClipboardPolicy.Copy.macAccessWarning(access) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Warning(warning)
+                    Warning(warning.replacingOccurrences(of: "Sill", with: "DuoDeck Host"))
                     if let hint = ClipboardPolicy.Copy.macAccessHint(access) {
-                        Text(hint)
+                        Text(hint.replacingOccurrences(of: "Sill", with: "DuoDeck Host"))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -322,81 +215,6 @@ struct UpdatesSection: View {
     }
 }
 
-// MARK: Streaming
-
-private struct StreamingPane: View {
-    let model: AppModel
-    @Bindable var settings: HostSettings
-
-    var body: some View {
-        Form {
-            Section {
-                Picker("Frame rate limit", selection: $settings.config.maxFPS) {
-                    Text("60 fps").tag(60)
-                    Text("120 fps").tag(120)
-                }
-                .pickerStyle(.segmented)
-                Picker("Quality", selection: $settings.config.bitrate) {
-                    ForEach(QualityPreset.allCases) { Text($0.title).tag($0.rawValue) }
-                    if QualityPreset(rawValue: settings.config.bitrate) == nil {
-                        Text(QualityPreset.title(forBitrate: settings.config.bitrate)).tag(settings.config.bitrate)
-                    }
-                }
-                Picker("Resolution", selection: $settings.config.captureScale) {
-                    Text("Retina").tag(CGFloat(2))
-                    Text("Standard").tag(CGFloat(1))
-                }
-            } footer: {
-                Footnote("Each device asks for its own screen’s rate, up to this limit. Quality is per 60 fps; a 120 fps stream gets twice as much. \(QualityPreset.fastLinkNote) Changes apply at once: the current stream restarts for a moment.")
-            }
-            // Away from home (docs/remote-bundle-plan.md §5): its own quality, which a device away
-            // sets too; the menu's Quality and Resolution stay the home ones.
-            Section {
-                Picker("Quality", selection: $settings.config.awayBitrate) {
-                    ForEach(QualityPreset.allCases) { Text($0.title).tag($0.rawValue) }
-                    if QualityPreset(rawValue: settings.config.awayBitrate) == nil {
-                        Text(QualityPreset.title(forBitrate: settings.config.awayBitrate)).tag(settings.config.awayBitrate)
-                    }
-                }
-                Picker("Resolution", selection: $settings.config.awayCaptureScale) {
-                    Text("Retina").tag(CGFloat(2))
-                    Text("Standard").tag(CGFloat(1))
-                }
-            } header: {
-                Text("Away from home")
-            } footer: {
-                Footnote("Sill streams at these while every connected device is away from home, through a VPN or over the internet, so a slow connection never starts at your home quality. A device away from home changes these, and never your Quality and Resolution above."
-                         + (model.coordinator?.status.snapshot.away == true ? " Streaming at these now." : ""))
-            }
-            Section {
-                Toggle("Prioritize encoding speed", isOn: $settings.config.prioritizeSpeed)
-            } footer: {
-                Footnote("Lower latency when the Mac is busy, at a softer picture.")
-            }
-            // The Mac's sound (docs/audio-plan.md §6), a beta: its switch and its footnote say so. A device's
-            // Settings panel turns it on and off too, for every device, and mutes it for that device alone
-            // (Q8 as Noah revised it on 2026-10-27).
-            Section {
-                Toggle("Send audio (beta)", isOn: $settings.config.sendAudio)
-                if settings.config.sendAudio, let problem = model.coordinator?.status.snapshot.audio?.problem {
-                    Warning("Sill \(problem). The picture is unaffected.")
-                }
-            } footer: {
-                Footnote("Beta. Devices play the sound of what you stream: all of the streamed window’s app, or every app for the Desktop. The Mac keeps playing it too. A connected iPhone or iPad can also turn this on or off from Sill’s settings there, and mute it for itself alone. Nothing is recorded.")
-            }
-            if let snapshot = model.coordinator?.status.snapshot, snapshot.softwareEncoder {
-                Section {
-                    Label(snapshot.hardwareEncoderStuck
-                          ? "The hardware encoder is stuck, so streams use the software encoder: up to 60 fps at Standard resolution. Restarting the Mac fixes this."
-                          : "The hardware encoder is busy or not answering, so streams use the software encoder: up to 60 fps at Standard resolution. Sill switches back by itself once it keeps up again.",
-                          systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                }
-            }
-        }
-    }
-}
-
 // MARK: Virtual Display
 
 private struct VirtualDisplayPane: View {
@@ -410,7 +228,7 @@ private struct VirtualDisplayPane: View {
             Section {
                 Toggle("Stream from a virtual display", isOn: $settings.config.virtualDisplay)
             } footer: {
-                Footnote("Sill moves the window you pick onto an invisible display made for your device, so it keeps updating when other windows cover it and text is drawn at your device’s scale. The window leaves this screen while it streams and comes back when you stop streaming or quit Sill.")
+                Footnote("DuoDeck Host moves the window you pick onto an invisible display made for your device, so it keeps updating when other windows cover it and text is drawn at your device’s scale. The window leaves this screen while it streams and comes back when you stop streaming or quit DuoDeck Host.")
             }
             Section {
                 LabeledContent("Status") {
@@ -435,7 +253,7 @@ private struct VirtualDisplayPane: View {
                     }
                 }
             } footer: {
-                Footnote("Uses a private macOS interface (CGVirtualDisplay). If a macOS update breaks it, Sill streams the window where it is.")
+                Footnote("Uses a private macOS interface (CGVirtualDisplay). If a macOS update breaks it, DuoDeck Host streams the window where it is.")
             }
         }
     }
@@ -471,22 +289,22 @@ private struct PermissionsPane: View {
             Section {
                 PermissionRow(title: "Screen Recording", allowed: permissions.screenRecording,
                               // Not "on this network": a device connected over Direct Wireless shares none.
-                              explanation: "Lets Sill capture the windows you pick on your iPhone or iPad, and their sound when Send Audio is on. Nothing is recorded or saved; frames and sound go straight to your devices.",
+                              explanation: "Lets DuoDeck Host capture the windows you pick on your iPhone or iPad, and their sound when Send Audio is on. Nothing is recorded or saved; frames and sound go straight to your devices.",
                               button: model.settings.askedScreenRecording ? "Open System Settings…" : "Allow…") {
                     permissions.requestScreenRecording()
                 }
                 PermissionRow(title: "Accessibility", allowed: permissions.accessibility,
-                              explanation: "Lets your iPhone or iPad click, scroll and type on this Mac, and lets Sill move and size the window it streams.",
+                              explanation: "Lets your iPhone or iPad click, scroll and type on this Mac, and lets DuoDeck Host move and size the window it streams.",
                               button: model.settings.askedAccessibility ? "Open System Settings…" : "Allow…") {
                     permissions.requestAccessibility()
                 }
             } footer: {
-                Footnote("Access belongs to Sill itself. Access you gave Terminal for the SillHost command-line tool doesn’t carry over.")
+                Footnote("Access belongs to DuoDeck Host. Access you gave Terminal doesn’t carry over.")
             }
             if permissions.relaunchSuggested, !permissions.screenRecording {
                 Section {
-                    LabeledContent("Screen Recording starts working once Sill opens again.") {
-                        Button(permissions.canRelaunch ? "Relaunch Sill" : "Quit Sill") { permissions.relaunch() }
+                    LabeledContent("Screen Recording starts working once DuoDeck Host opens again.") {
+                        Button(permissions.canRelaunch ? "Relaunch DuoDeck Host" : "Quit DuoDeck Host") { permissions.relaunch() }
                     }
                 }
             }
@@ -496,13 +314,13 @@ private struct PermissionsPane: View {
                         Button("Open Local Network…") { permissions.openPrivacyPane("Privacy_LocalNetwork") }
                     } label: {
                         Text("Local Network")
-                        Text("If your iPhone or iPad can’t find this Mac, allow Sill in Privacy & Security › Local Network.")
+                        Text("If your iPhone or iPad can’t find this Mac, allow DuoDeck Host in Privacy & Security › Local Network.")
                     }
                 }
             }
             if permissions.allGranted {
                 Section {
-                    Label("You’re all set. Open Sill on your iPhone or iPad.", systemImage: "checkmark.seal.fill")
+                    Label("You’re all set. Open DuoDeck on your iPhone or iPad.", systemImage: "checkmark.seal.fill")
                 }
             }
         }

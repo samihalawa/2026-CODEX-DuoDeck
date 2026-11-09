@@ -24,6 +24,7 @@ struct Trackpad: View {
     /// What the pad's vertical motion is measured against: nil is its own height (see
     /// `TrackpadSurface.verticalSpan`).
     var verticalSpan: CGFloat? = nil
+    var pointerSensitivity: CGFloat = 1.25
     /// A three- or four-finger gesture, for the Mac (`StreamClient.sendGesture`). True when it went.
     var sendGesture: (TrackpadGestures.Gesture, Int) -> Bool = { _, _ in false }
 
@@ -35,11 +36,11 @@ struct Trackpad: View {
             DotGrid().allowsHitTesting(false)
             TrackpadView(send: send, setPointer: setPointer, feed: feed, onFingers: onFingers,
                          latched: latched, onModifiersConsumed: onModifiersConsumed,
-                         verticalSpan: verticalSpan, sendGesture: sendGesture)
+                         verticalSpan: verticalSpan, pointerSensitivity: pointerSensitivity, sendGesture: sendGesture)
             VStack {
                 Spacer(minLength: 0)
-                Text("Drag to move the pointer. Tap to click, two fingers to scroll.")
-                    .font(.system(size: 13))
+                Text("Move with one finger · Scroll with two")
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Palette.muted)
                     .multilineTextAlignment(.center)
             }
@@ -48,7 +49,7 @@ struct Trackpad: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(shape)
-        .overlay(shape.strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+        .overlay(shape.strokeBorder(Palette.separator, lineWidth: 1))
     }
 }
 
@@ -58,7 +59,7 @@ private struct DotGrid: View {
         Canvas { context, size in
             let step: CGFloat = 18
             let radius: CGFloat = 1
-            let dot = GraphicsContext.Shading.color(.white.opacity(0.07))
+            let dot = GraphicsContext.Shading.color(Palette.muted.opacity(0.12))
             var y = step / 2
             while y < size.height {
                 var x = step / 2
@@ -84,6 +85,7 @@ struct TrackpadView: UIViewRepresentable {
     let latched: KeyModifiers
     let onModifiersConsumed: () -> Void
     var verticalSpan: CGFloat? = nil
+    var pointerSensitivity: CGFloat = 1.25
     var sendGesture: (TrackpadGestures.Gesture, Int) -> Bool = { _, _ in false }
 
     func makeUIView(context: Context) -> TrackpadSurface {
@@ -103,6 +105,7 @@ struct TrackpadView: UIViewRepresentable {
         uiView.onFingers = onFingers
         uiView.latchedModifiers = latched
         uiView.verticalSpan = verticalSpan
+        uiView.travel = min(2.3, max(0.65, pointerSensitivity))
         uiView.sendGesture = sendGesture
         // Called from a gesture callback, never from inside a SwiftUI update, so the binding write
         // it performs needs no hop to the next runloop turn.
@@ -159,7 +162,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// How far the pointer travels for a full swipe across the pad. The client does not know the
     /// Mac's size, so a real trackpad's pt-for-pt acceleration is not available to copy; 1.25
     /// frames per swipe lands close enough to reach any corner in one comfortable stroke.
-    private static let travel: CGFloat = 1.25
+    var travel: CGFloat = 1.25
 
     // One-finger pointer motion: the tracker, from touch-down.
 
@@ -203,6 +206,9 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// move, a scroll or a coast. iPads have no Taptic Engine; there every call is a silent no-op,
     /// which is UIKit's doing, so there is deliberately no device check here.
     private let clickHaptic = UIImpactFeedbackGenerator(style: .rigid)
+    private var hapticsEnabled: Bool {
+        UserDefaults.standard.object(forKey: "DuoDeck.haptics") as? Bool ?? true
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -272,7 +278,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     private func moveCursor(dx: CGFloat, dy: CGFloat) {
         guard bounds.width > 0, bounds.height > 0 else { return }
         catchUp()
-        pad.move(dx: Double(dx / bounds.width * Self.travel), dy: Double(dy / ySpan * Self.travel))
+        pad.move(dx: Double(dx / bounds.width * travel), dy: Double(dy / ySpan * travel))
         // The sprite first, since it is the feedback the finger is waiting for; then the Mac, whose
         // cursor still has to follow for clicks to land there. No rate limit needed here:
         // sendInput coalesces moves to one every 8 ms.
@@ -498,7 +504,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         case .began:
             dragging = true
             // Firmer than a click: the button is now held down.
-            clickHaptic.impactOccurred(intensity: 1.0)
+            if hapticsEnabled { clickHaptic.impactOccurred(intensity: 1.0) }
             catchUp()
             setPointer(cursor)
             pressModifiers()
@@ -507,7 +513,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
             guard dragging else { return }
             dragging = false
             // Softer: the button coming back up.
-            clickHaptic.impactOccurred(intensity: 0.5)
+            if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.5) }
             catchUp()
             setPointer(cursor)
             send(.pointer(.leftUp, x: cursor.x, y: cursor.y))
@@ -531,13 +537,13 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// when it went (an iPhone's; an iPad has no Taptic Engine). A latched modifier stays latched: a
     /// gesture is not a keystroke.
     private func gestureDecided(_ gesture: TrackpadGestures.Gesture, fingers: Int) {
-        if sendGesture(gesture, fingers) { clickHaptic.impactOccurred(intensity: 0.7) }
+        if sendGesture(gesture, fingers), hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.7) }
     }
 
     /// The click itself carries no position beyond the cursor and no modifiers: pointer events have
     /// no modifier field at all, which is why the latched ones are pressed around it below.
     private func click(down: PointerAction, up: PointerAction) {
-        clickHaptic.impactOccurred(intensity: 0.8)
+        if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.8) }
         catchUp()
         setPointer(cursor)
         pressModifiers()

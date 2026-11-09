@@ -18,7 +18,8 @@ import Security
 enum AppIdentity {
     /// Sill.app's bundle identifier (Packaging/Info.plist), which codesign also makes its signing
     /// identifier (Scripts/make-app.sh), and so the first clause of its designated requirement.
-    static let sill = "me.saffer.sill.mac"
+    static let sill = "me.saffer.sill.mac"    // Legacy source/test identity.
+    static let duoDeck = "com.agentsai.duodeck.host"
 
     /// How the running code is signed.
     enum Signature: Equatable, Sendable {
@@ -61,12 +62,12 @@ enum AppIdentity {
     /// - A `.app` folder, in any case (the rule before 2026-10-29, kept so nothing that refused the
     ///   hooks takes them now).
     static func isSillApp(_ f: Facts) -> Bool {
-        if let id = f.signingIdentifier, id.lowercased() == sill { return true }
+        if let id = f.signingIdentifier, id.lowercased() == sill || id.lowercased() == duoDeck { return true }
         switch f.signature {
         case .certificate, .unreadable: return true
         case .adHoc, .unsigned: break
         }
-        if let id = f.bundleIdentifier, id.lowercased() == sill { return true }
+        if let id = f.bundleIdentifier, id.lowercased() == sill || id.lowercased() == duoDeck { return true }
         return (f.bundlePath as NSString).pathExtension.lowercased() == "app"
     }
 

@@ -60,7 +60,9 @@ struct PairingOverlay: View {
                         content(layout)
                     }
                 }
+                .padding(20)
                 .frame(width: width, alignment: .leading)
+                .background(Palette.bar, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .padding(.vertical, 16)
                 // The Duo half-folded: above the fold only, or, in the book pose, on the leading
                 // page; elsewhere centred, or at the top while the code is typed.
@@ -183,7 +185,7 @@ struct PairingOverlay: View {
             Button(action: pairTyped) {
                 Text("Pair")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(Palette.onAccent)
                     .frame(minWidth: 88, minHeight: 44)
                     .padding(.horizontal, 12)
                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.accent.opacity(working ? 0.4 : 1)))

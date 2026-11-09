@@ -56,7 +56,7 @@ func rowRecordsPolicy() {
     check("records: the cable pulled, the Mac's row Wired, Wired, Wi‑Fi, M by its tag throughout, dialed pinned",
           seen.map(\.word) == [.method(.wired), .method(.wired), .method(.wifi)] && seen.allSatisfy { $0.macID == "M" && !$0.byName && $0.tap == .pinned })
     check("records: listed since its first look throughout, and no Remote row for M beside it", since == [1, 1, 1] && remote == [0, 0, 0])
-    check("records: before the fix, Wired, then Update Sill twice", before == [.method(.wired), .updateSill, .updateSill])
+    check("records: before the fix, Wired, then Update DuoDeck twice", before == [.method(.wired), .updateSill, .updateSill])
     check("records: before the fix, the row named no Mac ID, so M's Remote row came beside it", remoteRowsOfM([row(nil, [en0]).macID], now: 12.5) == ["M"])
 
     // A browser made again (back from the background, or after a failure): the old one's last results
@@ -87,7 +87,7 @@ func rowRecordsPolicy() {
     back = P.rowRecords(back, listed: shown([(k(mac), paired)], [], 100))
     back = P.rowRecords(back, listed: shown([(k(mac), paired)], [(k(mac, 2), nil)], 100.2))
     let other = row(back[k(mac, 2)], [en0])
-    check("records: a service that took M's name while Sill was in the background, listed with no record: by its name alone, Update Sill, nothing dialed",
+    check("records: a service that took M's name while DuoDeck was in the background, listed with no record: by its name alone, Update DuoDeck, nothing dialed",
           back.isEmpty && other.macID == nil && other.byName && other.word == .updateSill && other.tap == .updateSill)
     check("records: …M's Remote row stays, and the reconnect's refused pinned dial of such a row only skips it, never newKey",
           remoteRowsOfM([other.macID]) == ["M"]

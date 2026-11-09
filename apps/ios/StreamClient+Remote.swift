@@ -80,10 +80,10 @@ enum PairingProblem: Equatable {
         case .expired: return "This code expired. Choose Pair iPhone or iPad… on your Mac for a new one."
         case .proofFailed(let host):
             return "Pairing didn’t finish: the Mac at \(host) couldn’t show it knows the code. Pair from the same network as your Mac, or scan the code instead."
-        case .nothingAnswered(let host): return "Nothing answered at \(host). Check the address, and that Sill is open on your Mac."
-        case .notSill(let host): return "Something answered at \(host), but it isn’t Sill, or its Sill is too old to pair."
-        case .localNetwork(let host): return "To reach \(host), allow Local Network for Sill in Settings."
-        case .notALink: return "That’s not a Sill code."
+        case .nothingAnswered(let host): return "Nothing answered at \(host). Check the address, and that DuoDeck is open on your Mac."
+        case .notSill(let host): return "Something answered at \(host), but it isn’t DuoDeck, or its DuoDeck is too old to pair."
+        case .localNetwork(let host): return "To reach \(host), allow Local Network for DuoDeck in Settings."
+        case .notALink: return "That’s not a DuoDeck code."
         case .noKey(let reason): return "This \(StreamClient.deviceWord) couldn’t make its key (\(reason))."
         case .homeStopped(let mac): return DiscoveryPolicy.HomeCopy.stopped(mac: mac)
         case .homeExpired(let mac): return DiscoveryPolicy.HomeCopy.expired(mac: mac)
@@ -104,15 +104,15 @@ enum RemoteCopy {
         let at = candidate?.display ?? "its address"
         switch failure {
         case .wrongMac:
-            return "This isn’t the \(mac) this \(device) paired with. If Sill was set up again on it, forget it here and pair again."
+            return "This isn’t the \(mac) this \(device) paired with. If DuoDeck was set up again on it, forget it here and pair again."
         case .revoked:
-            return "\(mac) no longer accepts this \(device). Pair it again from Sill’s Settings on the Mac."
+            return "\(mac) no longer accepts this \(device). Pair it again from DuoDeck’s Settings on the Mac."
         case .remoteOff:
             return "\(mac) turned off Remote Access."
         case .busy:
             return "\(mac) is already serving 8 devices."
         case .refused:
-            return "\(mac) answered, but Sill isn’t accepting remote connections there. Check that Sill is open and Remote Access is on. If you changed its port, connect at home once."
+            return "\(mac) answered, but DuoDeck isn’t accepting remote connections there. Check that DuoDeck is open and Remote Access is on. If you changed its port, connect at home once."
         case .vpnOff:
             let name = candidate.flatMap { vpnLabel($0) }
             return name.map { "\($0) looks off on this \(device). Turn it on, then tap \(mac)." }
@@ -122,9 +122,9 @@ enum RemoteCopy {
             return RemoteDialPolicy.isTailscaleName(host) ? "This \(device) can’t look up \(host). Is Tailscale on?"
                                                         : "This \(device) can’t look up \(host)."
         case .localNetwork:
-            return "To reach \(at), allow Local Network for Sill in Settings."
+            return "To reach \(at), allow Local Network for DuoDeck in Settings."
         case .notSill:
-            return "Something answered at \(at), but it isn’t Sill. Your home’s internet address may have changed."
+            return "Something answered at \(at), but it isn’t DuoDeck. Your home’s internet address may have changed."
         case .noAnswer:
             if let c = candidate, c.kind == MacAddress.internet, !c.isName {
                 return "\(mac) didn’t answer at \(at). If your home’s internet address changed, connect at home once to update it, or add an address name on the Mac."
@@ -191,7 +191,7 @@ extension StreamClient {
         setGroup(nil, for: macID)
         removePreview(for: macID)
         persistSavedMacs()
-        status = "Forgot \(name). It still lists this \(Self.deviceWord) until you remove it in Sill’s Settings on the Mac."
+        status = "Forgot \(name). It still lists this \(Self.deviceWord) until you remove it in DuoDeck’s Settings on the Mac."
     }
 
     // MARK: Connection groups and preview pictures (ConnectionList)
@@ -312,7 +312,7 @@ extension StreamClient {
     /// ThisDeviceOnly) are useless, and cleared, but only when the Keychain says the key is not
     /// there (DeviceIdentity.knownMissing). DEBUG: `-SillForgetMacs 1` clears them and the key;
     /// `-SillForgetHomeTLS 1` clears what this device learned of their home doors (`homeTLS`), so it
-    /// dials an older Sill.app plainly again (docs/home-pairing-plan.md §3.4); `-SillPairURL`,
+    /// dials an older DuoDeck.app plainly again (docs/home-pairing-plan.md §3.4); `-SillPairURL`,
     /// `-SillPairCode` with `-SillPairAddress`, and `-SillDialSaved 1` start a pairing or a remote
     /// dial as Add a Mac… and a Remote row would, without the link's confirmation: `-SillPairURL`
     /// pairs at the link's own addresses only, where a confirmed link tries the home rows first

@@ -158,7 +158,7 @@ struct PairDeviceView: View {
             if offer.byDevice { return .waiting(triesLeft: triesLeft, wrongFrom: wrongFrom) }
             switch status.listener {
             case .portInUse(let p): return .doorDown("Can’t pair while port \(p) is in use.")
-            case .failed: return .doorDown("Can’t pair: remote access couldn’t start. Sill tries again every 30 seconds.")
+            case .failed: return .doorDown("Can’t pair: remote access couldn’t start. DuoDeck Host tries again every 30 seconds.")
             case .off, .listening: return .waiting(triesLeft: triesLeft, wrongFrom: wrongFrom)
             }
         case .paired(let name): return .paired(name)
@@ -182,6 +182,14 @@ struct PairDeviceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                DuoDeckHostMark(size: 38)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Pair with DuoDeck").font(.title3.weight(.semibold))
+                    Text("Connect your iPhone or iPad.").foregroundStyle(.secondary)
+                }
+            }
+            .padding(.bottom, 2)
             if offer.byDevice {
                 // The name went through SafeText in the host, as every device-supplied name does.
                 Text(Self.askedLine(offer))
@@ -195,7 +203,7 @@ struct PairDeviceView: View {
                         .font(.headline)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("In Sill on your iPhone or iPad, tap this Mac, or tap Add a Mac… when you’re away, then point it at this code.")
+                Text("In DuoDeck on your iPhone or iPad, tap this Mac, or tap Add a Mac… when you’re away, then point it at this code.")
                     .fixedSize(horizontal: false, vertical: true)
             }
             QRCodeView(text: offer.url, spent: isSpent)
@@ -211,6 +219,7 @@ struct PairDeviceView: View {
         }
         .padding(20)
         .frame(width: 440)
+        .tint(DuoDeckHostStyle.accent)
         .task(id: phase) {
             // Paired: closes itself after 3 s, unless the Turn On line still has something to say
             // (never on a window a device opened, which has no such line).
@@ -470,7 +479,7 @@ struct CableNoticeView: View {
                 Text("It paired by itself over the USB cable, and can connect over Wi\u{2011}Fi and nearby from now on too.")
                     .fixedSize(horizontal: false, vertical: true)
                 if let removeProblem {
-                    Warning("\(name) is still paired: Sill couldn’t update the keychain (\(withoutFullStop(removeProblem))). Try again.")
+                    Warning("\(name) is still paired: DuoDeck Host couldn’t update the keychain (\(withoutFullStop(removeProblem))). Try again.")
                 }
             }
             HStack {

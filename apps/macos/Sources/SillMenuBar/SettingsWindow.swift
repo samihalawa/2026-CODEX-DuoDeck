@@ -8,7 +8,7 @@ enum SettingsTab: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .general: "General"
+        case .general: "Overview"
         case .devices: "Devices"
         case .streaming: "Streaming"
         case .virtualDisplay: "Virtual Display"
@@ -19,7 +19,7 @@ enum SettingsTab: String, CaseIterable {
 
     var symbol: String {
         switch self {
-        case .general: "gearshape"
+        case .general: "square.grid.2x2"
         case .devices: "ipad.and.iphone"
         case .streaming: "play.rectangle"
         case .virtualDisplay: "display"
@@ -56,6 +56,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         tabs = SettingsTabController(model: model)
         let window = NSWindow(contentViewController: tabs)
         window.styleMask = [.titled, .closable, .miniaturizable]
+        window.title = "DuoDeck Host"
         window.isReleasedWhenClosed = false
         window.collectionBehavior.insert(.moveToActiveSpace)
         heightCap = tabs.view.heightAnchor.constraint(lessThanOrEqualToConstant: Self.noCap)

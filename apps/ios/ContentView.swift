@@ -32,14 +32,14 @@ struct ContentView: View {
 
     private var app: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Palette.canvas.ignoresSafeArea()
             if client.connected {
                 StreamScreen(client: client)
             } else {
                 ConnectScreen(client: client)
             }
         }
-        .preferredColorScheme(.dark)
+        .tint(Palette.accent)
         // Tells MacMenuHub which window shows this session: the iPad's menu bar shows its menus while
         // it is the app's one window.
         .background(WindowSessionObserver(client: client))
@@ -645,7 +645,7 @@ struct LayoutHarness: View {
             }
         }
         .ignoresSafeArea()
-        .preferredColorScheme(.dark)
+        .tint(Palette.accent)
         .statusBar(hidden: true)
         // The iPad's menu bar follows the client this frame shows, as the app's does.
         .background(WindowSessionObserver(client: spec.live ? live : mock))
@@ -1190,6 +1190,7 @@ struct ConnectScreen: View {
             }
             .duoLog(posture, size: geo.size, screen: "connect screen")
         }
+        .background(Palette.canvas)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .alert("New Group", isPresented: Binding(get: { newGroupFor != nil }, set: { if !$0 { newGroupFor = nil } })) {
             TextField("Name", text: $newGroupName)
@@ -1272,6 +1273,23 @@ struct ConnectScreen: View {
 
     private func column(_ layout: ConnectLayout) -> some View {
         VStack(alignment: .leading, spacing: 6) {
+            if !carded {
+                HStack(spacing: 13) {
+                    DuoDeckMark(size: 52)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("DuoDeck")
+                            .font(.system(size: 30, weight: .bold))
+                            .tracking(-0.8)
+                            .foregroundStyle(Palette.text)
+                        Text("Your Mac, within reach.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Palette.muted)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.bottom, 18)
+                .accessibilityElement(children: .combine)
+            }
             // Leading, so the title never jumps sideways when the hint, a row or the card widens the
             // column. Vertically it is still centred (ColumnOverFooter): what adds height moves it up
             // by half as much. It wraps, never truncates, under the home card ("Pair with" and a
@@ -1348,7 +1366,7 @@ struct ConnectScreen: View {
         // before Sill's App Store address is known (SillLinks): the words say what to do anyway.
         if let notice = client.notice, notice.storeLink, notice.text == client.status, let url = SillLinks.appStore {
             Link(destination: url) {
-                Text("Update Sill in the App Store")
+                Text("Update DuoDeck in the App Store")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.accent)
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -1393,7 +1411,7 @@ struct ConnectScreen: View {
         }
 
         if client.showsNearbyHint {
-            Text("Your Mac has to be on the same Wi\u{2011}Fi network as this \(device), or have Direct Wireless Connection turned on in Sill. Away from home, add it once with a code from your Mac.")
+            Text("Your Mac has to be on the same Wi\u{2011}Fi network as this \(device), or have Direct Wireless Connection turned on in DuoDeck Host. Away from home, add it once with a code from your Mac.")
                 .font(.system(size: 13))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1427,15 +1445,31 @@ struct ConnectScreen: View {
 
         // Always the last line, from the first frame, so nothing moves when it is needed.
         Button(action: unfold) {
-            Text("Add a Mac…")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Palette.accent)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .padding(.horizontal, 10)
-                .contentShape(Rectangle())
+            Label("Pair a Mac", systemImage: "plus.circle.fill")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Palette.onAccent)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(Palette.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityHint("Pairs this \(device) with a Mac so you can reach it away from home.")
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .accessibilityHint("Scan the pairing code from DuoDeck Host, or enter it manually.")
+        if client.macs.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Open DuoDeck Host on your Mac.", systemImage: "desktopcomputer")
+                Label("Use the same Wi-Fi, or connect a USB cable.", systemImage: "wifi")
+                Label("Choose your Mac here to start.", systemImage: "hand.tap")
+            }
+            .font(.subheadline)
+            .foregroundStyle(Palette.muted)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.bar, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 10)
+            .padding(.top, 12)
+        }
     }
 
     /// A saved Mac's row or tile: Connect (a Remote row) or Connect Remotely (its network row, to
@@ -1564,7 +1598,7 @@ struct ConnectScreen: View {
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(highlighted ? Palette.accent.opacity(0.55) : Color.white.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(highlighted ? Palette.accent.opacity(0.55) : Palette.separator, lineWidth: 1)
             )
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
@@ -1622,7 +1656,7 @@ struct ConnectScreen: View {
     /// openURL), and VoiceOver reads it as a link. The addresses are SillLinks'.
     private func footer(_ layout: ConnectLayout) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Needs the free Sill app on your Mac.")
+            Text("Connect with DuoDeck Host on your Mac.")
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
             // All three on one line while they fit, else the download link over the other two,
@@ -1654,7 +1688,7 @@ struct ConnectScreen: View {
     }
 
     private var downloadLink: some View {
-        footerLink("Get it at \(SillLinks.siteName)", to: SillLinks.download)
+        footerLink("Get DuoDeck Host", to: SillLinks.download)
     }
 
     /// Support, then the privacy policy, on one line.

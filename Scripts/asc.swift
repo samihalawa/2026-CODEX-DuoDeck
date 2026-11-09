@@ -18,7 +18,7 @@
 //       beta group too, and to Beta App Review when TestFlight asks for that.
 //
 // Options for all four:
-//   --bundle-id ID        the app, by default me.saffer.sill
+//   --bundle-id ID        the app, by default com.agentsai.duodeck
 //   --wait-minutes N      how long to wait for processing (default 90; App Store Connect usually takes
 //                         5 to 40 minutes)
 //   --poll-seconds N      how often to look meanwhile (default 60)
@@ -105,7 +105,7 @@ struct Options {
     var keyFile = ""
     var keyID = ""
     var issuer = ""
-    var bundleID = "me.saffer.sill"
+    var bundleID = "com.agentsai.duodeck"
     var version = ""
     var build = ""
     var whatsNewFile = ""
@@ -227,7 +227,7 @@ func readWhatsNew(_ path: String) -> String {
     if trimmed.isEmpty { usageError("--whats-new: \(path) is empty") }
     let limit = 4000
     if trimmed.utf16.count <= limit { return trimmed }
-    let tail = "\n… and more: https://github.com/Saffsanity/sill/releases/tag/nightly"
+    let tail = "\n… and more: https://github.com/samihalawa/2026-CODEX-DuoDeck/releases"
     var kept: [Substring] = []
     var count = tail.utf16.count
     for line in trimmed.split(separator: "\n", omittingEmptySubsequences: false) {

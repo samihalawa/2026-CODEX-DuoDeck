@@ -98,19 +98,19 @@ enum StatusText {
         let request = pairingRequest(s.remote, now: now)
         if let request { attention.append(request) }
         if let at = s.remote?.olderDeviceAt, now.timeIntervalSince(at) < olderDeviceShownFor {
-            attention.append(.init(title: "An iPhone or iPad Needs Sill Updated", subtitle: "It tried to connect with an older Sill.",
+            attention.append(.init(title: "Update DuoDeck on Your Device", subtitle: "It tried to connect with an older DuoDeck.",
                                    action: .none))
         }
         let homeDoorClosed = homeDoorUnavailable(s.remote)
         if homeDoorClosed {
-            attention.append(.init(title: "Devices Can’t Connect", subtitle: "Sill couldn’t use its key in your keychain.",
+            attention.append(.init(title: "Devices Can’t Connect", subtitle: "DuoDeck Host couldn’t use its key in your keychain.",
                                    action: .showDevices))
         }
         // The macOS firewall blocks Sill (FirewallRule): its line and command are in Settings › General.
         // Not beside the keychain's: with no home door there is nothing for the firewall to block.
         let firewallBlocks = !homeDoorClosed ? s.firewall.flatMap(FirewallRule.Copy.menuSubtitle) : nil
         if let firewallBlocks {
-            attention.append(.init(title: "Devices Can’t Connect", subtitle: firewallBlocks, action: .showGeneral))
+            attention.append(.init(title: "Devices Can’t Connect", subtitle: firewallBlocks.replacingOccurrences(of: "Sill’s executable", with: "DuoDeck Host"), action: .showGeneral))
         }
 
         // The attention glyph means "Sill needs you". The test pattern needs no permission. A device
@@ -135,7 +135,7 @@ enum StatusText {
         return StatusPresentation(glyph: glyph, header: header, subtitle: subtitle,
                                   source: sourceRow(s), devices: s.devices.map(deviceRow), attention: attention,
                                   virtualDisplayNote: virtualDisplayNote(s),
-                                  tooltip: "Sill — \(header)", accessibilityLabel: "Sill, \(header)",
+                                  tooltip: "DuoDeck Host — \(header)", accessibilityLabel: "DuoDeck Host, \(header)",
                                   advertisedName: name, remoteAccessNote: remoteAccessNote(s.remote),
                                   canPair: s.remote.map { $0.identityProblem == nil } ?? false, away: s.away)
     }
@@ -192,21 +192,21 @@ enum StatusText {
     /// The header and its explanation; the first match wins.
     private static func headline(_ s: HostStatusSnapshot, _ permissions: PermissionState, _ startupError: String?,
                                  _ hasCoordinator: Bool) -> (String, String?) {
-        if let startupError { return ("Sill Couldn’t Start", startupError) }
+        if let startupError { return ("DuoDeck Host Couldn’t Start", startupError) }
         if !hasCoordinator { return ("Starting…", nil) }
         // No listener at all (fail closed): no device can find or reach this Mac.
         if homeDoorUnavailable(s.remote) {
             return ("Not Visible on the Network",
-                    "Sill couldn’t use its key in your keychain. Quit Sill and open it again, and choose Always Allow if the keychain asks.")
+                    "DuoDeck Host couldn’t use its key in your keychain. Quit DuoDeck Host and open it again, and choose Always Allow if the keychain asks.")
         }
         switch s.network {
         case .starting:
             return ("Starting…", nil)
         case .failed(let error):
-            return ("Not Visible on the Network", "\(error). Quit and reopen Sill to try again.")
+            return ("Not Visible on the Network", "\(error). Quit and reopen DuoDeck Host to try again.")
         case .waiting:
             return ("Waiting for the Network",
-                    "Sill appears on your iPhone and iPad once this Mac is on Wi-Fi or Ethernet and Local Network access is allowed.")
+                    "DuoDeck Host appears on your iPhone and iPad once this Mac is on Wi-Fi or Ethernet and Local Network access is allowed.")
         case .notAdvertised(let port):
             return ("Test Pattern Mode", "Not advertised; test clients connect to port \(port).")
         case .registering, .advertising:
@@ -223,7 +223,7 @@ enum StatusText {
             return ("\(connected) Connected", "Pick a window on the device to start streaming.")
         }
         if case .advertising(let name) = s.network {
-            return ("Waiting for a Device", "Open Sill on your iPhone or iPad. This Mac appears as “\(name)”.")
+            return ("Waiting for a Device", "Open DuoDeck on your iPhone or iPad. This Mac appears as “\(name)”.")
         }
         return ("Waiting for a Device", "Registering on the local network…")
     }

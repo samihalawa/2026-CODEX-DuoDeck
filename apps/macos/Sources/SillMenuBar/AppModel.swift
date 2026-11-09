@@ -135,13 +135,13 @@ final class AppModel {
                 settings.onAddressNameChange = { [settings, weak remote] in remote?.setAddressName(settings.remoteAddressName) }
                 await c.start(preselect: nil, promptForPermissions: false)
                 Stats.shared.startPrinting()
-                print("Sill \(Self.version) (\(Self.build)) running from \(Bundle.main.bundlePath); log file \(HostLog.shared.fileURL?.path ?? "none")")
+                print("DuoDeck Host \(Self.version) (\(Self.build)) running from \(Bundle.main.bundlePath); log file \(HostLog.shared.fileURL?.path ?? "none")")
                 // Off by default, and worth seeing in a log someone sends (issue #108).
                 if settings.showPairingWindowToScreenSharing { print(PairingWindowSharing.line(on: true)) }
                 onboardIfNeeded()
             } catch {
                 startupError = "\(error)"
-                print("Sill couldn’t start: \(error)")
+                print("DuoDeck Host couldn’t start: \(error)")
             }
             // Never before the host is up, and also when it could not start: a newer Sill may be the fix.
             startUpdates()
@@ -404,10 +404,10 @@ final class AppModel {
         switch want {
         case .remote:
             napActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .latencyCritical],
-                                                                reason: "Sill is serving a device connected from away")
+                                                                reason: "DuoDeck Host is serving a device connected from away")
         case .connected:
             napActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
-                                                                reason: "Sill is serving a connected device")
+                                                                reason: "DuoDeck Host is serving a connected device")
         case .none:
             break
         }

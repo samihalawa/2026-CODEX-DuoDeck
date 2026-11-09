@@ -531,8 +531,8 @@ private struct TourCard: View {
         }
         .padding(14)
         .background(Self.shape.fill(Palette.bar))
-        .overlay(Self.shape.strokeBorder(Color.white.opacity(0.10), lineWidth: 1))
-        .shadow(color: .black.opacity(0.65), radius: 30, x: 0, y: 24)
+        .overlay(Self.shape.strokeBorder(Palette.separator, lineWidth: 1))
+        .shadow(color: .black.opacity(0.16), radius: 24, x: 0, y: 12)
         .overlay { tail }
         .contentShape(Self.shape)
         .tint(Palette.accent)
@@ -679,7 +679,7 @@ private struct TourCard: View {
         return Button(action: next) {
             Text(run.isLast ? TourPolicy.doneTitle : TourPolicy.nextTitle)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Palette.onAccent)
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.vertical, 4)
@@ -731,7 +731,7 @@ private struct TourCard: View {
                     TailFill(tipX: tail.x - placed.card.minX, up: tail.edge == .up)
                         .fill(Palette.bar)
                     TailEdge(tipX: tail.x - placed.card.minX, up: tail.edge == .up)
-                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                        .stroke(Palette.separator, lineWidth: 1)
                 }
             }
             .frame(width: g.size.width, height: g.size.height)

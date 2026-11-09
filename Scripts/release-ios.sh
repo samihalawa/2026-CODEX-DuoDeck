@@ -147,14 +147,14 @@ docs/release-checklist.md, "TestFlight", has the App Store Connect side.
 USAGE
 }
 
-project=iOSClient/Sill.xcodeproj
+project=apps/ios/Sill.xcodeproj
 pbxproj="$project/project.pbxproj"
 scheme=Sill
-bundle_id=me.saffer.sill
-team=9B2KKVM937
+bundle_id=com.agentsai.duodeck
+team=U549N38BV6
 xcode_major=27
 xcode_minimum=27.1   # the iOS 27.1 SDK: the iPhone Duo's hinge and fold (docs/iphone-duo-plan.md)
-export_options=Packaging/ExportOptions-appstore.plist
+export_options=Packaging/ExportOptions-duodeck.plist
 links=iOSClient/SillLinks.swift
 out=.build/ios
 archive="$out/Sill.xcarchive"

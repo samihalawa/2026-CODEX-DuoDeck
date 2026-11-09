@@ -1,0 +1,7 @@
+**
+!apps/
+!apps/web/
+!apps/web/public/
+!apps/web/public/**
+!apps/web/server.mjs
+!apps/web/package.json

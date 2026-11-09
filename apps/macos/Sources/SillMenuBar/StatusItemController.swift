@@ -18,6 +18,7 @@ struct MenuEntry: Equatable {
         case setDirectWireless(Bool)
         case setSendAudio(Bool)
         case setMaxFPS(Int), setBitrate(Int), setCaptureScale(CGFloat)
+        case applyPerformanceProfile(DuoDeckStreamingPreset)
         case toggleLaunchAtLogin
         case showLog, showSettings, quit
         /// Settings on one tab (Remote Access…); the plain `showSettings` stays for ⌘,. (Swift
@@ -83,73 +84,51 @@ enum MenuBuilder {
                                   subtitle: UpdatePolicy.menuSubtitle(running: update.running), action: .openUpdate(update.offer.url)))
         }
         menu.append(.separator)
+        if p.remoteAccessNote != nil {
+            menu.append(MenuEntry(kind: .item, title: "Pair iPhone or iPad…",
+                                  enabled: p.canPair, action: .showPairing))
+        }
+        menu.append(MenuEntry(kind: .item, title: "Devices…", action: .showSettingsTab(.devices)))
+        menu.append(.separator)
 
-        menu.append(MenuEntry(kind: .item, title: "Virtual Display", subtitle: p.virtualDisplayNote,
-                              checked: config.virtualDisplay, action: .setVirtualDisplay(!config.virtualDisplay)))
-        menu.append(MenuEntry(kind: .item, title: "Frame Rate", children: [60, 120].map { fps in
-            MenuEntry(kind: .item, title: "Up to \(fps) fps", checked: config.maxFPS == fps, action: .setMaxFPS(fps))
-        }))
-        var quality = QualityPreset.allCases.map { preset in
-            MenuEntry(kind: .item, title: preset.title, checked: config.bitrate == preset.rawValue, action: .setBitrate(preset.rawValue))
+        var profiles = DuoDeckStreamingPreset.allCases.map { preset in
+            MenuEntry(kind: .item, title: preset.title, subtitle: preset.detail,
+                      checked: preset.matches(config), action: .applyPerformanceProfile(preset))
         }
-        if QualityPreset(rawValue: config.bitrate) == nil {
-            quality.append(MenuEntry(kind: .item, title: QualityPreset.title(forBitrate: config.bitrate), checked: true, enabled: false))
-        }
-        // The home quality, as ever; while every connected device is away, the subtitle says which
-        // quality runs instead (the away one is set in Settings › Streaming, never here).
-        let qualityNote = p.away
-            ? "Away from home now: \(QualityPreset.shortTitle(bitrate: config.awayBitrate, captureScale: Double(config.awayCaptureScale)))"
-            : "Per 60 fps; a 120 fps stream gets twice as much"
-        menu.append(MenuEntry(kind: .item, title: "Quality", subtitle: qualityNote, children: quality))
-        // Standard is one pixel a point: a quarter of a Retina display's pixels, and on a 1x display
-        // the same capture as Retina (CaptureScale holds the knob to the display's own scale).
-        menu.append(MenuEntry(kind: .item, title: "Resolution", children: [
-            MenuEntry(kind: .item, title: "Retina", checked: config.captureScale >= 1.5, action: .setCaptureScale(2)),
-            MenuEntry(kind: .item, title: "Standard", subtitle: "On a Retina display, a quarter of the pixels to encode",
-                      checked: config.captureScale < 1.5, action: .setCaptureScale(1)),
-        ]))
-        // The last of what streams: the sound of it (docs/audio-plan.md §6), a beta, which its title
-        // says (in the title, so menu.txt and VoiceOver have it too). Absolute, like Virtual Display:
-        // it sets the value it showed.
-        menu.append(MenuEntry(kind: .item, title: "Send Audio (Beta)", subtitle: "The Mac keeps playing it too",
+        profiles += [.separator, MenuEntry(kind: .item, title: "Customize…", action: .showSettingsTab(.streaming))]
+        let profileNote = p.away ? "Using your away settings" : (DuoDeckStreamingPreset.current(in: config)?.title ?? "Custom")
+        menu.append(MenuEntry(kind: .item, title: "Stream Quality", subtitle: profileNote, children: profiles))
+        menu.append(MenuEntry(kind: .item, title: "Send Audio (Beta)",
                               checked: config.sendAudio, action: .setSendAudio(!config.sendAudio)))
         menu.append(.separator)
+        menu.append(MenuEntry(kind: .item, title: "Settings…", key: ",", action: .showSettings))
 
-        // How Sill runs on this Mac, not the picture: devices reach it over peer-to-peer Wi-Fi too.
-        // Here as well as in Settings because it is situational (on in a café, off at home).
-        menu.append(MenuEntry(kind: .item, title: "Direct Wireless Connection",
-                              subtitle: "No shared network needed; Wi\u{2011}Fi streams can stutter",
-                              checked: config.directWireless, action: .setDirectWireless(!config.directWireless)))
-        // Opens the pane rather than toggling: turning it on is worth reading what it does, and the
-        // internet switch stays one deliberate step deeper, never in the menu.
+        var advanced: [MenuEntry] = [
+            MenuEntry(kind: .item, title: "Virtual Display", subtitle: p.virtualDisplayNote,
+                      checked: config.virtualDisplay, action: .setVirtualDisplay(!config.virtualDisplay)),
+            MenuEntry(kind: .item, title: "Direct Wireless Connection",
+                      subtitle: "Connect nearby without a shared network",
+                      checked: config.directWireless, action: .setDirectWireless(!config.directWireless)),
+        ]
         if let note = p.remoteAccessNote {
-            menu.append(MenuEntry(kind: .item, title: "Remote Access…", subtitle: note, action: .showSettingsTab(.remoteAccess)))
+            advanced.append(MenuEntry(kind: .item, title: "Remote Access…", subtitle: note,
+                                      action: .showSettingsTab(.remoteAccess)))
         }
         var loginNote: String?
-        if !login.available { loginNote = "Available when Sill runs from its app bundle" }
+        if !login.available { loginNote = "Available from the app bundle" }
         else if let error = login.error { loginNote = error }
-        else if login.needsApproval { loginNote = "Approve Sill in System Settings › Login Items" }
-        menu.append(MenuEntry(kind: .item, title: "Launch at Login", subtitle: loginNote, checked: login.on,
-                              enabled: login.available, action: .toggleLaunchAtLogin))
-        menu.append(MenuEntry(kind: .item, title: "Permissions", children: [
-            permissions.screenRecording
-                ? MenuEntry(kind: .item, title: "Screen Recording: Allowed", enabled: false)
-                : MenuEntry(kind: .item, title: "Screen Recording: Not Allowed…", action: .allowScreenRecording),
-            permissions.accessibility
-                ? MenuEntry(kind: .item, title: "Accessibility: Allowed", enabled: false)
-                : MenuEntry(kind: .item, title: "Accessibility: Not Allowed…", action: .allowAccessibility),
+        else if login.needsApproval { loginNote = "Approve in System Settings › Login Items" }
+        advanced += [
             .separator,
-            MenuEntry(kind: .item, title: "Open Privacy & Security…", action: .openPrivacy),
-        ]))
+            MenuEntry(kind: .item, title: "Launch at Login", subtitle: loginNote, checked: login.on,
+                      enabled: login.available, action: .toggleLaunchAtLogin),
+            MenuEntry(kind: .item, title: "Permissions…", action: .showSettingsTab(.permissions)),
+            MenuEntry(kind: .item, title: "Privacy & Security…", action: .openPrivacy),
+            MenuEntry(kind: .item, title: "Show Log…", action: .showLog),
+        ]
+        menu.append(MenuEntry(kind: .item, title: "Advanced", children: advanced))
         menu.append(.separator)
-
-        if p.remoteAccessNote != nil {
-            menu.append(MenuEntry(kind: .item, title: "Pair iPhone or iPad…", enabled: p.canPair, action: .showPairing))
-        }
-        menu.append(MenuEntry(kind: .item, title: "Show Log…", action: .showLog))
-        menu.append(MenuEntry(kind: .item, title: "Settings…", key: ",", action: .showSettings))
-        menu.append(.separator)
-        menu.append(MenuEntry(kind: .item, title: "Quit Sill", key: "q", action: .quit))
+        menu.append(MenuEntry(kind: .item, title: "Quit DuoDeck Host", key: "q", action: .quit))
         return menu
     }
 
@@ -223,7 +202,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         card = NSHostingView(rootView: LiveStatusCard(model: model))
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
-        item.autosaveName = "SillStatusItem"
+        item.autosaveName = "DuoDeckHostStatusItem"
         menu.delegate = self
         menu.autoenablesItems = false
         item.menu = menu
@@ -308,6 +287,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         case .setMaxFPS(let fps): model.settings.config.maxFPS = fps
         case .setBitrate(let bitrate): model.settings.config.bitrate = bitrate
         case .setCaptureScale(let scale): model.settings.config.captureScale = scale
+        case .applyPerformanceProfile(let preset):
+            model.settings.config = preset.applying(to: model.settings.config)
         case .toggleLaunchAtLogin: model.loginItem.set(!model.loginItem.isOn)
         case .showLog: model.showLog?()
         case .showSettings: model.showSettings?(nil)

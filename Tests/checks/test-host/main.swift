@@ -53,7 +53,7 @@ func facts(_ id: String?, _ sig: AppIdentity.Signature, _ bundle: String?, _ pat
 
 // The bundle identifier make-app.sh puts in Sill.app (run.sh and the mutants run from the repository).
 let packaged = (NSDictionary(contentsOfFile: "Packaging/Info.plist")?["CFBundleIdentifier"] as? String) ?? "unread"
-check("Sill's identifier is Packaging/Info.plist's", AppIdentity.sill == packaged && packaged == sill, packaged)
+check("DuoDeck's identifier is Packaging/Info.plist's", AppIdentity.duoDeck == packaged && packaged == "com.agentsai.duodeck.host", packaged)
 let cases: [(String, F, Bool)] = [
     // The bare binary: the one test host.
     ("the bare binary as swift build makes it (Apple silicon: the linker's ad hoc signature)",

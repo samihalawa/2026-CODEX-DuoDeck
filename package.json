@@ -1,0 +1,20 @@
+{
+  "name": "duodeck",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @duodeck/web run dev",
+    "start:web": "npm --workspace @duodeck/web run start",
+    "test:web": "npm --workspace @duodeck/web run test",
+    "build:web": "node --check apps/web/server.mjs && node --check apps/web/public/app.js",
+    "test:swift": "bash Tests/checks/run-all.sh",
+    "build:ios": "xcodebuild -project apps/ios/Sill.xcodeproj -scheme Sill -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath .build/ios-release CODE_SIGNING_ALLOWED=NO build",
+    "build:mac": "swift build -c release --product SillMenuBar -j 2",
+    "package:mac": "bash script/build_and_run.sh --package",
+    "check": "npm run build:web && npm run test:web"
+  }
+}
