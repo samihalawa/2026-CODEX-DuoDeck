@@ -2,6 +2,14 @@
 
 **Control your Mac from your iPhone or iPad.**
 
+<img width="2853" height="2007" alt="image" src="https://github.com/user-attachments/assets/0e206c54-42df-4452-9e10-4a7f57fdaf4b" />
+
+<img width="1398" height="2034" alt="image" src="https://github.com/user-attachments/assets/f7a1180f-3b1f-48ca-9d66-2a8e6299a6fd" />
+
+
+
+
+
 DuoDeck shows a Mac window or desktop on your phone or tablet. Point and click with a resizable trackpad, type with the keyboard, and use familiar Mac shortcuts. DuoDeck Host is a native Mac app with a full Dock icon and a resizable window. It handles pairing, screen capture and input, with quick controls also available from the menu bar.
 
 [Website and downloads](https://duodeck.megawebs.com/#downloads) · [Mac releases](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases) · [Support](https://github.com/samihalawa/2026-CODEX-DuoDeck/issues) · [Privacy](https://duodeck.megawebs.com/privacy)
