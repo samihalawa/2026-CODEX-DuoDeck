@@ -1,6 +1,6 @@
 # Authentic iOS store screenshots — en-US
 
-Captured on Mac4 on 2026-11-09 at approximately 16:50 UTC from DuoDeck 1.1.0 (2026110903), bundle `com.agentsai.duodeck`. These replace the earlier teal build 2026110902 captures.
+Captured on Mac4 on 2026-11-09 at 15:50:28–15:50:38 UTC from DuoDeck 1.1.0 (2026110903), bundle `com.agentsai.duodeck`. The UTC time is derived from the Unix timestamps in `capture-provenance.json`. These replace the earlier teal build 2026110902 captures.
 
 ## Images
 
@@ -55,6 +55,8 @@ The final app icon and shared mark were supplied by the release coordinator. The
 ## Scope and limitations
 
 These are authentic discovery, pairing-entry and setup screens. They do not demonstrate a connected streaming session. Separate connected-layout QA images use the repository's existing DEBUG fixture and remain under `.build`; none are store assets.
+
+The depicted Macs, Add Mac and setup-help screens are unchanged in build 2026110904, so these images remain appropriate for its listing. Their original build03 provenance, timestamps and hashes are retained; they are not images recaptured from build 2026110904. The six modern App Asset Library placements were repaired and ordered as these three scenes per family, and Apple-hosted full-size image pixels were verified against these source PNGs.
 
 The release coordinator corrected the camera permission purpose string after these captures. No screenshot contains a camera prompt; that string-only correction does not change the depicted screens. The final archive is rebuilt separately by the release coordinator.
 
