@@ -18,5 +18,9 @@
       "productId": "duodeck_pro_lifetime",
       "priceMinor": 5999
     }
-  }
+  },
+  "tagline": "Your Mac. In your hands.",
+  "currentVersion": "1.1.0",
+  "purchasesEnabled": false,
+  "plansStatus": "planned"
 }

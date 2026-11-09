@@ -39,30 +39,17 @@ enum Palette {
 
 // MARK: - DuoDeck brand system
 
-/// The same paired-surface motif at home and in the connected workspace.
+/// The canonical app identity, shared by connection and connected control surfaces.
 struct DuoDeckMark: View {
     var size: CGFloat = 38
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                .fill(Palette.accent)
-            VStack(spacing: size * 0.065) {
-                RoundedRectangle(cornerRadius: size * 0.075, style: .continuous)
-                    .strokeBorder(Palette.onAccent, lineWidth: max(1.4, size * 0.045))
-                RoundedRectangle(cornerRadius: size * 0.075, style: .continuous)
-                    .fill(Palette.onAccent.opacity(0.22))
-                    .overlay(alignment: .trailing) {
-                        Image(systemName: "cursorarrow")
-                            .font(.system(size: size * 0.27, weight: .bold))
-                            .foregroundStyle(Palette.onAccent)
-                            .padding(.trailing, size * 0.10)
-                    }
-            }
-            .padding(.horizontal, size * 0.18)
-            .padding(.vertical, size * 0.20)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        Image("DuoDeckMark")
+            .resizable()
+            .renderingMode(.original)
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
 

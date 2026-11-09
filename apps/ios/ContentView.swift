@@ -1281,7 +1281,7 @@ struct ConnectScreen: View {
                             .font(.system(size: 30, weight: .bold))
                             .tracking(-0.8)
                             .foregroundStyle(Palette.text)
-                        Text("Your Mac, within reach.")
+                        Text("Your Mac. In your hands.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(Palette.muted)
                     }
