@@ -266,6 +266,18 @@ final class StreamClient: ObservableObject {
     @Published var thumbnails: [UInt32: UIImage] = [:] // by window ID
     @Published var icons: [String: UIImage] = [:]      // by bundle ID
     @Published var apps: [AppInfo] = []                // installed apps, for "All apps"
+    @Published var captureIssue: CaptureIssue?
+    @Published private(set) var awaitingPicture = false
+    @Published private(set) var retryingPicture = false
+    private var hostCaptureIssue: CaptureIssue?
+    private var hasVideoPicture = false
+    private var captureWasLocked = false
+    private var lastRequestedVideoSource: StreamSource = .desktop
+    private var firstPictureRecovery = FirstPictureRecovery()
+    private var firstPictureWork: DispatchWorkItem?
+    private var pictureGeneration: UInt64 = 0        // main thread
+    private var renderGeneration: UInt64 = 0         // network queue
+    private var onVideoGeneration: ((UInt64) -> Void)?
 
     // The Mac's streaming settings (kinds 16 and 17; see the Host settings section below and
     // HostSettingsLedger.swift). Published on main.
@@ -492,42 +504,62 @@ final class StreamClient: ObservableObject {
         // The picture interrupted, then back (HEVCDisplayView.checkLayer): KeyframeRecovery decides
         // when to ask the Mac for a keyframe, which a still window never sends by itself.
         view.onNeedsKeyframe = { [weak self] in
+            guard let self else { return }
+            let generation = self.renderGeneration
             DispatchQueue.main.async {
-                guard let self else { return }
+                guard self.pictureGeneration == generation, self.connected else { return }
+                self.captureIssue = self.hostCaptureIssue ?? .decoding
+                if !self.hasVideoPicture {
+                    self.scheduleFirstPictureCheck()
+                    return
+                }
                 self.keyframeRecovery.interrupted(now: ProcessInfo.processInfo.systemUptime)
                 self.considerKeyframeAsk()
             }
         }
         view.onPictureBack = { [weak self] in
+            guard let self else { return }
+            let generation = self.renderGeneration
             DispatchQueue.main.async {
-                guard let self else { return }
+                guard self.pictureGeneration == generation, self.connected else { return }
                 // A keyframe that comes while the window is away is the background's (KeyframeRecovery).
                 self.keyframeRecovery.pictureBack(now: ProcessInfo.processInfo.systemUptime, active: self.pictureActive)
                 self.keyframeAskWork?.cancel(); self.keyframeAskWork = nil
             }
         }
-        onParameterSets = { ps in view.apply(ps) }
-        onFrame = { data, isKey in view.enqueue(data, isKeyframe: isKey) }
-        onBlank = { view.blank() }
+        view.onReadyForDisplay = { [weak self] generation in
+            DispatchQueue.main.async { self?.pictureBecameReady(generation: generation) }
+        }
+        // Binding and replay are one network-queue operation. A keyframe arriving before SwiftUI
+        // mounts this view is usable only when no later deltas were missed.
+        queue.async { [weak self] in
+            guard let self else { return }
+            self.onParameterSets = { ps in view.apply(ps) }
+            self.onFrame = { data, isKey in view.enqueue(data, isKeyframe: isKey) }
+            self.onBlank = { view.blank() }
+            self.onVideoGeneration = { generation in view.setRecoveryGeneration(generation) }
+            view.setRecoveryGeneration(self.renderGeneration)
+            guard !self.lockListed else { view.blank(); return }
+            if let ps = self.videoReplay.parameterSets { view.apply(ps) }
+            if let kept = self.videoReplay.replayable {
+                view.enqueue(kept.frame, isKeyframe: true)
+            } else if self.videoReplay.keyframe != nil {
+                let generation = self.renderGeneration
+                DispatchQueue.main.async {
+                    guard self.connected, self.pictureGeneration == generation, self.lockWhy == nil else { return }
+                    self.scheduleFirstPictureCheck()
+                }
+            }
+        }
         return view
     }()
     /// On `queue`: the picture removed until the next keyframe (a locked Mac, docs/locked-mac-plan.md).
     /// Nil until the display view exists: then there is no picture to remove.
     var onBlank: (() -> Void)?
 
-    var onParameterSets: ((ParameterSets) -> Void)? {
-        didSet {
-            // The display view is only created once the UI switches to the stream screen, which
-            // can land after the host's parameter sets have already arrived. Replay the last ones
-            // so a stream that is already running is not stuck waiting for the next set.
-            let callback = onParameterSets
-            queue.async { [weak self] in
-                guard let self, let ps = self.lastParameterSets else { return }
-                callback?(ps)
-            }
-        }
-    }
-    var onFrame: ((_ data: Data, _ isKeyframe: Bool) -> Void)?
+    /// Video callbacks are installed and read only on the network queue.
+    private var onParameterSets: ((ParameterSets) -> Void)?
+    private var onFrame: ((_ data: Data, _ isKeyframe: Bool) -> Void)?
 
     // Discovery (main thread). Two browsers: the network one always runs and never uses
     // peer-to-peer; the nearby one runs only when DiscoveryPolicy says, never while connected.
@@ -958,12 +990,13 @@ final class StreamClient: ObservableObject {
     /// the direct connection to the network one (SessionLink).
     private let link = SessionLink()
     let queue = DispatchQueue(label: "sill.net", qos: .userInteractive)
-    private var lastParameterSets: ParameterSets?
+    private var videoReplay = VideoFrameReplayCache()
+    private var lastParameterSets: ParameterSets? { videoReplay.parameterSets }
     /// The session's last keyframe with the parameter sets it came with (the Mac sends them before
     /// every keyframe): a saved Mac's tile picture, decoded when the session ends (KeyframePicture),
     /// since no snapshot of the screen can take the display layer's video on a device. One frame,
     /// replaced at each keyframe, dropped with the session (`tearDown`). On `queue`.
-    private var lastKeyframe: (frame: Data, parameterSets: ParameterSets)?
+    private var lastKeyframe: (frame: Data, parameterSets: ParameterSets)? { videoReplay.keyframe }
     /// Disconnect waits for a keyframe (`freshPictureWait`'s token): the next to come is told to the
     /// main thread. On `queue`.
     private var keyframeWanted: Int?
@@ -1091,6 +1124,7 @@ final class StreamClient: ObservableObject {
                 let view = self.displayView
                 self.queue.async { view.checkLayer("as its window became active") }
                 self.considerKeyframeAsk()
+                self.scheduleFirstPictureCheck()
             }
         }
         for name in [UIApplication.willResignActiveNotification, UIScene.willDeactivateNotification] {
@@ -1098,6 +1132,7 @@ final class StreamClient: ObservableObject {
                 guard let self, ours(note) else { return }
                 self.keyframeRecovery.leftForeground()
                 self.keyframeAskWork?.cancel(); self.keyframeAskWork = nil
+                self.firstPictureWork?.cancel(); self.firstPictureWork = nil
             }
         }
     }
@@ -1107,6 +1142,101 @@ final class StreamClient: ObservableObject {
     private var pictureActive: Bool {
         if let scene = displayView.window?.windowScene { return scene.activationState == .foregroundActive }
         return UIApplication.shared.applicationState == .active
+    }
+
+    private func beginPictureWait(newGeneration: Bool = true) {
+        retryingPicture = false
+        if newGeneration {
+            pictureGeneration &+= 1
+            let generation = pictureGeneration
+            queue.async {
+                self.renderGeneration = generation
+                self.videoReplay.invalidateFrame()
+                self.onVideoGeneration?(generation)
+            }
+        }
+        hasVideoPicture = false
+        awaitingPicture = true
+        firstPictureRecovery.begin()
+        firstPictureWork?.cancel(); firstPictureWork = nil
+        scheduleFirstPictureCheck()
+    }
+
+    private func scheduleFirstPictureCheck() {
+        guard firstPictureWork == nil, connected, firstPictureRecovery.waiting,
+              hostCaptureIssue == nil, lockWhy == nil, pictureActive else { return }
+        let generation = pictureGeneration
+        let delay = max(2, min(8, 4 * Double(lastRttMaxMs ?? 0) / 1000))
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.pictureGeneration == generation else { return }
+            self.firstPictureWork = nil
+            guard self.connected, self.lockWhy == nil, self.hostCaptureIssue == nil, self.pictureActive else { return }
+            switch self.firstPictureRecovery.tick() {
+            case .retry:
+                if self.active == .none { self.request(self.lastRequestedVideoSource) }
+                else { self.send(.keyframeRequest, payload: Data()) }
+                self.scheduleFirstPictureCheck()
+            case .failed:
+                self.awaitingPicture = false
+                self.captureIssue = .noFrames
+                self.desktopRecheck?.cancel(); self.desktopRecheck = nil
+            case .nothing: break
+            }
+        }
+        firstPictureWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func pictureBecameReady(generation: UInt64) {
+        guard connected, pictureGeneration == generation, lockWhy == nil else { return }
+        hasVideoPicture = true
+        firstPictureRecovery.resolved()
+        firstPictureWork?.cancel(); firstPictureWork = nil
+        if hostCaptureIssue == nil {
+            captureIssue = nil
+            awaitingPicture = false
+        }
+    }
+
+    private func updateCaptureIssue(_ issue: CaptureIssue?, locked: Bool) {
+        if locked {
+            captureWasLocked = true
+            hasVideoPicture = false
+            firstPictureRecovery.stop()
+            firstPictureWork?.cancel(); firstPictureWork = nil
+            return
+        }
+        let unlocked = captureWasLocked
+        captureWasLocked = false
+        let hadHostIssue = hostCaptureIssue != nil
+        hostCaptureIssue = issue
+        if let issue {
+            captureIssue = issue
+            hasVideoPicture = false
+            awaitingPicture = false
+            firstPictureRecovery.stop()
+            firstPictureWork?.cancel(); firstPictureWork = nil
+            desktopRecheck?.cancel(); desktopRecheck = nil
+        } else if hasVideoPicture {
+            captureIssue = nil
+            awaitingPicture = false
+        } else if hadHostIssue || unlocked {
+            beginPictureWait(newGeneration: unlocked)
+        }
+    }
+
+    /// The failed window remains the retry target even when the host reports active == none.
+    /// Uses the existing selectSource message, so both old and new Mac hosts can recover.
+    func retryPicture() {
+        guard connected, lockWhy == nil, !retryingPicture else { return }
+        beginPictureWait()
+        retryingPicture = true
+        request(lastRequestedVideoSource)
+        let generation = pictureGeneration
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            guard let self, self.pictureGeneration == generation else { return }
+            self.retryingPicture = false
+        }
     }
 
     /// Asks the Mac for one keyframe (kind 44) when KeyframeRecovery says one is owed and due, and looks
@@ -3539,7 +3669,7 @@ final class StreamClient: ObservableObject {
         // After the picture's keyframe was taken (the block above queued first): nothing of this
         // session's stream outlives it.
         queue.async {
-            self.lastParameterSets = nil; self.lastKeyframe = nil; self.keyframeWanted = nil
+            self.videoReplay.reset(); self.keyframeWanted = nil
             self.pendingMove = nil; self.stopMeasuring()
         }
         firstListDeadline?.cancel()
@@ -3570,6 +3700,12 @@ final class StreamClient: ObservableObject {
         forgetViewport()
         cursorShape = nil
         connected = false
+        pictureGeneration &+= 1
+        firstPictureRecovery = FirstPictureRecovery()
+        firstPictureWork?.cancel(); firstPictureWork = nil
+        captureIssue = nil; hostCaptureIssue = nil
+        hasVideoPicture = false; awaitingPicture = false; retryingPicture = false
+        captureWasLocked = false; lastRequestedVideoSource = .desktop
         connectedDirectly = false
         route = nil
         // The network gets its first seconds again before a remembered Mac is looked for nearby; the
@@ -3594,7 +3730,13 @@ final class StreamClient: ObservableObject {
         icons = [:]
         apps = []
         videoSize = .zero
-        displayView.clear()
+        let view = displayView
+        let generation = pictureGeneration
+        queue.async {
+            self.renderGeneration = generation
+            view.setRecoveryGeneration(generation)
+            view.clear()
+        }
         // Nor an interruption of its picture: the next session's starts afresh.
         keyframeRecovery = KeyframeRecovery()
         keyframeAskWork?.cancel()
@@ -3645,6 +3787,7 @@ final class StreamClient: ObservableObject {
     /// answers with a fresh window list. It counts for the tour as something happening.
     func select(_ source: StreamSource) {
         noteAction()
+        beginPictureWait()
         request(source)
     }
 
@@ -3653,6 +3796,11 @@ final class StreamClient: ObservableObject {
     /// is not the person's doing.
     private func request(_ source: StreamSource) {
         choicesSent += 1
+        if source != .none { lastRequestedVideoSource = source }
+        queue.async {
+            self.videoReplay.invalidateFrame()
+            self.onBlank?()
+        }
         onCaretMayMove?()   // the Mac raises what it picks: its caret is in another window
         sendAfterInput(.selectSource, Wire.encode(source))
         #if DEBUG
@@ -3686,7 +3834,7 @@ final class StreamClient: ObservableObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.desktopRecheck = nil
-            guard self.connected,
+            guard self.connected, self.hostCaptureIssue == nil, !self.firstPictureRecovery.exhausted,
                   DiscoveryPolicy.autoDesktopRecheck(nothingStreams: self.active == .none, choseSince: self.choicesSent != choices,
                                                      askedSince: self.lastAutoDesktop != last) else { return }
             #if DEBUG
@@ -4130,7 +4278,7 @@ final class StreamClient: ObservableObject {
         switch header.kind {
         case .parameterSets:
             if let ps = ParameterSets(encoded: data) {
-                lastParameterSets = ps
+                videoReplay.apply(ps)
                 onParameterSets?(ps)
             }
         case .frame:
@@ -4141,8 +4289,8 @@ final class StreamClient: ObservableObject {
             let age = (Date().timeIntervalSince1970 - header.timestamp) * 1000
             if age.isFinite { frameAgeSamples.append(min(max(age, 0), Self.sampleCeilingMs)) }
             frameCounter += 1
-            if header.isKeyframe, let ps = lastParameterSets {
-                lastKeyframe = (data, ps)       // the tile's picture (ConnectionList); its payload, not a copy
+            if !lockListed { videoReplay.receive(data, isKeyframe: header.isKeyframe) }
+            if header.isKeyframe, lastParameterSets != nil {
                 if let token = keyframeWanted {
                     keyframeWanted = nil
                     DispatchQueue.main.async { self.freshKeyframeCame(token, timedOut: false) }
@@ -4164,7 +4312,14 @@ final class StreamClient: ObservableObject {
             // locked: the Mac streams its lock screen, so the picture stays.
             let why = LockedMac.why(list)
             let wasOffConsole = offConsoleListed
+            if why != nil {
+                videoReplay.invalidateFrame()    // private pixels never replay after a lock/off-console change
+            }
             if why == .otherUser, !wasOffConsole { onBlank?() }
+            if list.captureIssue != nil, why == nil {
+                videoReplay.invalidateFrame()
+                onBlank?()
+            }
             offConsoleListed = why == .otherUser
             // The cover ends at the first keyframe after the Mac's picture comes back (LockedMac.shade): an
             // unlock, or this session back on the console with its screen locked, whose lock screen streams
@@ -4201,6 +4356,8 @@ final class StreamClient: ObservableObject {
                 // The clipboard: subscribe (or stop) as the Mac's word and this device's switch say.
                 self.hostClipboardChanged(list.clipboard)
                 if !self.sessionListed {
+                    self.lastRequestedVideoSource = list.active == .none ? .desktop : list.active
+                    self.beginPictureWait(newGeneration: false)
                     self.sessionListed = true
                     #if DEBUG
                     switch (list.hostVersion, list.protocol) {
@@ -4225,6 +4382,7 @@ final class StreamClient: ObservableObject {
                 let previous = self.active
                 self.windows = list.windows
                 self.active = list.active
+                self.updateCaptureIssue(list.captureIssue, locked: why != nil)
                 // Forget thumbnails for windows that are gone.
                 let live = Set(list.windows.map(\.id))
                 self.thumbnails = self.thumbnails.filter { live.contains($0.key) }
@@ -4249,7 +4407,8 @@ final class StreamClient: ObservableObject {
                 // most once every 10 s, so a host that cannot start the Desktop does not loop; and once
                 // more when those 10 s end if its own request brought nothing that lasted (`askIn`: on
                 // 2026-10-28 the Mac could not start it, and the panel stayed black).
-                if list.active == .none, !Self.noAutoDesktop {
+                if list.active == .none, !Self.noAutoDesktop, self.hostCaptureIssue == nil,
+                   !self.firstPictureRecovery.exhausted {
                     let watched: DiscoveryPolicy.Watched
                     switch previous {
                     case .none: watched = .nothing

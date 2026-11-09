@@ -41,52 +41,34 @@ enum SettingsTab: String, CaseIterable {
     }
 }
 
-/// Settings, owned by AppKit: toolbar tabs over grouped SwiftUI Forms, so it looks like a SwiftUI
-/// Settings scene but opens from anywhere (the menu, ⌘,, reopening the app, onboarding) and is
-/// kept off Sill's own virtual display. The window is made once and hidden on close.
-///
-/// Never taller than its screen (issue #59, docs/settings-window-plan.md). AppKit makes the selected
-/// pane's view as tall as its whole Form, the hosting controller's preferredContentSize, at priority
-/// 501, just over the window's own 500 for keeping its size, and sets the window's frame from that
-/// in the layout pass; the window is not resizable, so nothing shortens it to the screen. `heightCap`
-/// keeps the content at most `SettingsWindowFit.contentLimit` for the window's screen, at 750, and
-/// the Form scrolls. Its constant follows the screen (`refit`); the window is moved back onto the
-/// screen when Sill's own changes leave it partly outside (`place`).
+/// DuoDeck's primary window. Its size belongs to the user and survives navigation and reopening.
+/// The existing Settings routes remain the single navigation path for the app, Dock, and menu.
 @MainActor
 final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private let model: AppModel
     private let tabs: SettingsTabController
-    private let heightCap: NSLayoutConstraint
-    /// The cap's constant until a screen is known (none at all, or only Sill's virtual display, as a
-    /// Mac with no display of its own could have): taller than any display, so no cap, as before.
-    private static let noCap: CGFloat = 10_000
-    /// A move that waits for the mouse buttons to be released (`placeOnRelease`).
     private var releaseWatch: Timer?
+    private static let frameName = "DuoDeckMainWindow"
 
     init(model: AppModel) {
         self.model = model
         tabs = SettingsTabController(model: model)
         let window = NSWindow(contentViewController: tabs)
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.title = "DuoDeck Host"
         window.isReleasedWhenClosed = false
-        window.collectionBehavior.insert(.moveToActiveSpace)
-        heightCap = tabs.view.heightAnchor.constraint(lessThanOrEqualToConstant: Self.noCap)
-        heightCap.priority = .defaultHigh
-        heightCap.identifier = "Sill.settingsScreenCap"
+        window.isExcludedFromWindowsMenu = false
+        window.tabbingMode = .disallowed
+        window.collectionBehavior.formUnion([.moveToActiveSpace, .fullScreenPrimary])
+        window.contentMinSize = NSSize(width: 560, height: 360)
+        window.setContentSize(NSSize(width: 760, height: 620))
         super.init(window: window)
         window.delegate = self
-        // Centred the first time; after that where the user left it.
-        if !window.setFrameUsingName("SillSettings") { window.center() }
-        window.setFrameAutosaveName("SillSettings")
-        // The cap for the screen the window will show on, before it is ever laid out there.
+        if !window.setFrameUsingName(Self.frameName) { window.center() }
+        window.setFrameAutosaveName(Self.frameName)
         refit()
-        heightCap.isActive = true
-        // A tab switch makes a new 501 constraint at that pane's whole height; the cap holds it, and
-        // the screen (the Dock) may have changed since the last look.
         tabs.onSelect = { [weak self] in
             self?.window?.title = "DuoDeck Host"
-            self?.refit()
         }
         NotificationCenter.default.addObserver(self, selector: #selector(screensChanged(_:)),
                                                name: NSApplication.didChangeScreenParametersNotification, object: nil)
@@ -95,75 +77,52 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not from a nib") }
 
-    /// Opens Settings in front, on `tab` or the last one shown, and remembers that tab for the
-    /// next launch. Remembered here as well as on a tab click: a tab selected while the window
-    /// was hidden is not saved by the tab controller (see its `tabView(_:didSelect:)`).
     func show(tab: SettingsTab?) {
         tabs.select(tab ?? model.settings.settingsTab)
         guard let window else { return }
         window.title = "DuoDeck Host"
+        model.settings.settingsTab = tabs.current
+        model.visibleSettingsTab = tabs.current
         refit()
         WindowPlacement.bringForward(window)
-        // At the selected pane's height, and on the screen bringForward chose (it moves a window that
-        // sat on Sill's virtual display), before it is placed there.
         window.layoutIfNeeded()
-        refit()
-        model.visibleSettingsTab = tabs.current
-        model.settings.settingsTab = tabs.current
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        // Closed by the user while a permission is still missing: later launches (a login item)
-        // stop opening it and only mark the status item.
+        // Dismissing setup stops the automatic jump to Permissions, not the host or its main window.
         model.permissions.refresh()
         if !model.permissions.allGranted { model.settings.permissionsOnboardingDismissed = true }
         return true
     }
 
-    func windowWillClose(_ notification: Notification) {
-        model.visibleSettingsTab = nil
-    }
+    func windowWillClose(_ notification: Notification) { model.visibleSettingsTab = nil }
+    func windowDidMiniaturize(_ notification: Notification) { model.visibleSettingsTab = nil }
+    func windowDidDeminiaturize(_ notification: Notification) { model.visibleSettingsTab = tabs.current }
 
-    // MARK: The screen (issue #59)
+    /// Zoom uses the usable display area; the green button also supports native full screen.
+    func windowWillUseStandardFrame(_ window: NSWindow, defaultFrame newFrame: NSRect) -> NSRect {
+        fitVisibleFrame() ?? newFrame
+    }
 
     func windowDidChangeScreen(_ notification: Notification) { refit() }
-
-    /// The layout's resize after a tab switch, a pane that grew or a new cap: back onto the screen if
-    /// it now runs off it.
-    func windowDidResize(_ notification: Notification) { place() }
-
-    /// A display added, removed or rearranged, its resolution, the Dock.
+    func windowDidEndLiveResize(_ notification: Notification) { refit() }
+    func windowDidExitFullScreen(_ notification: Notification) { refit() }
     @objc private func screensChanged(_ notification: Notification) { refit() }
 
-    /// Sets the cap for the window's screen, then moves the window back inside that screen when it is
-    /// partly outside. A new cap resizes a window on screen at once, so the move sees its new height
-    /// (a window placed at its old height, then shortened from the bottom, would keep no margin above).
+    /// Keep a restored/resized window reachable after a display change. Do not fight a live drag
+    /// or native full-screen transition, and never resize the window merely because its tab changed.
     private func refit() {
-        guard let window, let visible = fitVisibleFrame() else { return }
-        let chrome = window.frame.height - window.contentRect(forFrameRect: window.frame).height
-        let limit = SettingsWindowFit.contentLimit(visible: visible, chrome: chrome)
-        if heightCap.constant != limit {
-            heightCap.constant = limit
-            if window.isVisible { window.layoutIfNeeded() }
-        }
-        place()
-    }
-
-    /// Moves the window back inside its screen's visible frame when it runs off it top or bottom
-    /// (SettingsWindowFit.placed), only while it is on screen (a hidden window's frame waits for its
-    /// next layout; `show` places it after that), and never while a mouse button is down: a window
-    /// the user is dragging (across screens, its cap changing on the way) stays under the pointer and
-    /// is placed once every button is up. A window the user leaves partly off the screen stays there
-    /// until Sill next changes its size or shows it.
-    private func place() {
-        guard let window, window.isVisible, let visible = fitVisibleFrame() else { return }
+        guard let window, !window.styleMask.contains(.fullScreen), !window.inLiveResize,
+              let visible = fitVisibleFrame() else { return }
         guard NSEvent.pressedMouseButtons == 0 else { placeOnRelease(); return }
-        let placed = SettingsWindowFit.placed(window.frame, in: visible)
-        if placed.origin != window.frame.origin { window.setFrameOrigin(placed.origin) }
+        var frame = window.frame
+        frame.size.width = min(frame.width, visible.width)
+        frame.size.height = min(frame.height, visible.height)
+        frame.origin.x = min(max(frame.minX, visible.minX), visible.maxX - frame.width)
+        frame.origin.y = min(max(frame.minY, visible.minY), visible.maxY - frame.height)
+        if frame != window.frame { window.setFrame(frame, display: window.isVisible) }
     }
 
-    /// Places the window once no mouse button is down, looking ten times a second until then. A
-    /// run-loop Timer in the common modes, so it also fires while AppKit tracks the mouse.
     private func placeOnRelease() {
         guard releaseWatch == nil else { return }
         let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] timer in
@@ -171,16 +130,14 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 guard NSEvent.pressedMouseButtons == 0 else { return }
                 timer.invalidate()
                 self?.releaseWatch = nil
-                self?.place()
+                self?.refit()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
         releaseWatch = timer
     }
 
-    /// The visible frame the window must fit in: its screen's or, when it is on none or on Sill's
-    /// virtual display, the first other screen's, where bringForward puts it; TEST ONLY, the top
-    /// part of it (-SillTestScreenHeight).
+    /// The app must stay on a real display, never on the virtual display used for a streamed window.
     private func fitVisibleFrame() -> CGRect? {
         let screens = NSScreen.screens
         let ids = screens.map(Self.displayID)
@@ -208,7 +165,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         let frame = window.frame
         let content = window.contentRect(forFrameRect: frame).height
         let host = tabs.tabViewItems[max(0, tabs.selectedTabViewItemIndex)].viewController
-        let pane = host?.preferredContentSize.height ?? 0
+        let pane = host?.view.bounds.height ?? 0
         var shows = "no scroll view"
         if let scroll = host.flatMap({ Self.firstScrollView(in: $0.view) }) {
             let clip = scroll.contentView.bounds, document = scroll.documentView?.frame.height ?? 0
@@ -222,8 +179,9 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 + (DebugHooks.testScreenHeight != nil ? ", as \(r(used)) (-SillTestScreenHeight)" : "")
                 + "; \(n(frame.minY - used.minY)) pt over its bottom, \(n(used.maxY - frame.maxY)) under its top"
         }
+        let available = fitVisibleFrame().map { SettingsWindowFit.contentLimit(visible: $0, chrome: frame.height - content) } ?? content
         return "\(tabs.current.title): window \(r(frame)) (content \(n(content)), chrome \(n(frame.height - content))); "
-            + "pane \(n(pane)) tall, \(shows); limit \(n(heightCap.constant)); \(screen)\(window.isVisible ? "" : "; not on screen")"
+            + "pane \(n(pane)) tall, \(shows); available content \(n(available)); \(screen)\(window.isVisible ? "" : "; not on screen")"
     }
 
     /// Scrolls the pane's Form to its last row, as a scroll to the end would: what a capped pane hides
@@ -253,13 +211,13 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     }
 }
 
-/// One NSHostingController per tab, sized to its pane, so the window resizes as the tabs change (up to
-/// the screen's height: SettingsWindowController's cap).
+/// One hosting controller per navigation group. The containing window controls the size;
+/// content scrolls within it instead of changing the window whenever a section opens.
 @MainActor
 final class SettingsTabController: NSTabViewController {
     private let model: AppModel
     private var lastAdvancedTab: SettingsTab = .advanced
-    /// Every selection, the window's own included: SettingsWindowController sets the cap again.
+    /// Every selection, including programmatic navigation, keeps the app title consistent.
     var onSelect: (() -> Void)?
 
     init(model: AppModel) {
@@ -268,7 +226,7 @@ final class SettingsTabController: NSTabViewController {
         tabStyle = .toolbar
         for tab in SettingsTab.navigationTabs {
             let host = NSHostingController(rootView: SettingsPane(tab: tab, model: model))
-            host.sizingOptions = [.preferredContentSize]
+            host.sizingOptions = []
             host.title = tab.title
             let item = NSTabViewItem(viewController: host)
             item.label = tab.title
@@ -310,11 +268,9 @@ final class SettingsTabController: NSTabViewController {
 /// Where Sill's windows appear, and how they come forward.
 @MainActor
 enum WindowPlacement {
-    /// Centres `window` on the main display when it has no screen or sits on the Sill virtual
-    /// display (a streamed window lives there, off the user's screens), then activates Sill and
-    /// makes the window key. An accessory app's activation can be refused when no click led to
-    /// it; the window is then ordered front anyway on the next turn, visible if not key.
+    /// Restore and activate an app window on a real display, including a Dock-reopened window.
     static func bringForward(_ window: NSWindow) {
+        if window.isMiniaturized { window.deminiaturize(nil) }
         if onNoUsefulScreen(window), let area = NSScreen.screens.first?.visibleFrame {
             let size = window.frame.size
             window.setFrameOrigin(NSPoint(x: area.midX - size.width / 2, y: area.midY - size.height / 2))

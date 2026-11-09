@@ -79,12 +79,59 @@ public struct WindowList: Codable {
     /// login window, or none), left out while its own screen is locked. A device words its cover by it:
     /// nothing typed reaches the Mac then (`LockedMac.Why`).
     public var offConsole: Bool?
+    /// Optional picture failure, independent of a working control/catalog connection. Older clients
+    /// ignore this key; old hosts omit it. No new message kind or protocol version is required.
+    public var captureIssue: CaptureIssue?
 
     public init(macName: String, windows: [WindowInfo], active: StreamSource, launchID: String? = nil,
                 hostVersion: String? = nil, protocol: Int? = nil, gestures: Int? = nil, clipboard: Int? = nil) {
         self.macName = macName; self.windows = windows; self.active = active; self.launchID = launchID
         self.hostVersion = hostVersion; self.protocol = `protocol`; self.gestures = gestures
         self.clipboard = clipboard
+    }
+}
+
+/// A capture/first-picture problem. String codes deliberately tolerate future host reasons without
+/// making the whole WindowList fail to decode. Technical errors stay in the host's log.
+public struct CaptureIssue: Codable, Equatable, Sendable {
+    public var code: String
+    public init(code: String) { self.code = code }
+
+    public static let permission = CaptureIssue(code: "screenRecording")
+    public static let noDisplay = CaptureIssue(code: "noDisplay")
+    public static let unavailable = CaptureIssue(code: "unavailable")
+    public static let timedOut = CaptureIssue(code: "timedOut")
+    public static let startFailed = CaptureIssue(code: "startFailed")
+    public static let stopped = CaptureIssue(code: "stopped")
+    public static let noFrames = CaptureIssue(code: "noFrames")
+    public static let decoding = CaptureIssue(code: "decoding")
+
+    public var title: String {
+        switch code {
+        case "screenRecording": return "Allow screen sharing on your Mac"
+        case "noDisplay": return "Your Mac has no available display"
+        case "timedOut": return "Your Mac’s screen isn’t responding"
+        case "startFailed": return "Screen sharing couldn’t start"
+        case "stopped": return "Screen sharing stopped"
+        case "decoding": return "The picture couldn’t be displayed"
+        case "noFrames": return "Your Mac’s picture hasn’t arrived"
+        default: return "Your Mac’s picture is unavailable"
+        }
+    }
+
+    public var detail: String {
+        switch code {
+        case "screenRecording":
+            return "On your Mac, open DuoDeck Host → Advanced → Permissions and allow Screen Recording. If it is already enabled, check the installed copy shown there and reopen DuoDeck Host, then retry."
+        case "noDisplay":
+            return "Wake or reconnect your Mac’s display, then retry the picture."
+        case "decoding":
+            return "The connection is open, but this device couldn’t display the video. Retry the picture, or reconnect to your Mac from Settings."
+        case "noFrames":
+            return "The controls are connected, but no picture has arrived. Retry the picture. If it continues, check DuoDeck Host on your Mac."
+        default:
+            return "Keep DuoDeck Host open on your Mac and retry the picture. If it continues, quit and reopen the Mac app."
+        }
     }
 }
 

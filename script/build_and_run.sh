@@ -17,6 +17,9 @@ minos="$(xcrun vtool -show-build "$binary" | awk '$1 == "minos" && !found { prin
 xcrun vtool -set-build-version macos "${minos:?Missing deployment target}" \
   "$(xcrun --sdk macosx --show-sdk-version)" -output "$stage/Contents/MacOS/$name" "$binary"
 cp Packaging/Info.plist "$stage/Contents/Info.plist"
+# The host is a normal Dock/app-switcher application, not an agent-only bundle.
+[ "$(/usr/libexec/PlistBuddy -c 'Print LSUIElement' "$stage/Contents/Info.plist")" = "false" ]
+[ -n "$(/usr/libexec/PlistBuddy -c 'Print NSScreenCaptureUsageDescription' "$stage/Contents/Info.plist")" ]
 if [ -n "${DUODECK_BUILD_NUMBER:-}" ]; then /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $DUODECK_BUILD_NUMBER" "$stage/Contents/Info.plist"; fi
 cp LICENSE NOTICE "$stage/Contents/Resources/"
 icon_resources="$(bash script/build_icons.sh)"

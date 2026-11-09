@@ -2,7 +2,7 @@
 
 **Control your Mac from your iPhone or iPad.**
 
-DuoDeck shows a Mac window or desktop on your phone or tablet. Point and click with a resizable trackpad, type with the keyboard, and use familiar Mac shortcuts. DuoDeck Host runs in the Mac menu bar and handles pairing, screen capture and input.
+DuoDeck shows a Mac window or desktop on your phone or tablet. Point and click with a resizable trackpad, type with the keyboard, and use familiar Mac shortcuts. DuoDeck Host is a native Mac app with a full Dock icon and a resizable window. It handles pairing, screen capture and input, with quick controls also available from the menu bar.
 
 [Website and downloads](https://duodeck.megawebs.com/#downloads) · [Mac releases](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases) · [Support](https://github.com/samihalawa/2026-CODEX-DuoDeck/issues) · [Privacy](https://duodeck.megawebs.com/privacy)
 
@@ -39,7 +39,7 @@ The current source contains the iOS client, Mac host and website. Android, Windo
 | Path | Purpose |
 | --- | --- |
 | apps/ios | Native SwiftUI client |
-| apps/macos | Native Mac host and menu bar application |
+| apps/macos | Native Mac app with Dock, window and menu bar controls |
 | apps/web | Product site and interactive browser preview |
 | packages/stream-protocol | Shared Swift streaming protocol |
 | script | Canonical DuoDeck build and release entry points |

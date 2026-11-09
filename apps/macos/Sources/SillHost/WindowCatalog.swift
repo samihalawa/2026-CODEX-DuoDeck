@@ -20,6 +20,29 @@ final class WindowCatalog {
     private(set) var windows: [SCWindow] = []
     private(set) var infos: [WindowInfo] = []
     private(set) var display: SCDisplay?
+    private(set) var captureIssue: CaptureIssue?
+    var onCaptureIssueChanged: (() -> Void)?
+
+    private func setCaptureIssue(_ issue: CaptureIssue?, error: Error? = nil) {
+        guard captureIssue != issue else { return }
+        captureIssue = issue
+        if let issue {
+            let native = error.map { " — \(($0 as NSError).domain) \(($0 as NSError).code): \($0.localizedDescription)" } ?? ""
+            print("Capture unavailable: \(issue.code)\(native)")
+        } else {
+            print("Capture catalog is available again.")
+        }
+        onCaptureIssueChanged?()
+    }
+
+    static func issue(for error: Error, fallback: CaptureIssue = .unavailable) -> CaptureIssue {
+        let native = error as NSError
+        if native.domain == SCStreamErrorDomain, native.code == SCStreamError.Code.userDeclined.rawValue {
+            return .permission
+        }
+        if (error as? CaptureLookup.Failure) == .timedOut { return .timedOut }
+        return fallback
+    }
     private(set) var installedApps: [AppInfo] = []
     /// This process as ScreenCaptureKit lists it, from the last look: the Desktop stream leaves it
     /// out, so Sill's own windows (the pairing code above all) never reach a device. Nil when it
@@ -212,26 +235,25 @@ final class WindowCatalog {
         return Array(ids.prefix(Int(count)))
     }
 
-    /// `SCShareableContent`, but never for longer than `timeout`. Measured 2026-09-22: in a process
-    /// without Screen Recording the call never returned once a virtual display existed (it returns
-    /// promptly, with no windows, without one). The virtual-display paths use this so a hang there
-    /// costs seconds and a fallback, not the coordinator's `switching` flag for good. The default
-    /// path's `refreshWindows` keeps the plain call it always had.
-    nonisolated static func shareableContent(excludingDesktopWindows: Bool, onScreenWindowsOnly: Bool, timeout: TimeInterval) async -> SCShareableContent? {
-        if screenless { return nil }                 // TEST ONLY: ScreenCaptureKit never asked
-        final class Once: @unchecked Sendable {
-            private let lock = NSLock(); private var done = false
-            func first() -> Bool { lock.lock(); defer { lock.unlock() }; if done { return false }; done = true; return true }
-        }
-        let once = Once()
-        return await withCheckedContinuation { (c: CheckedContinuation<SCShareableContent?, Never>) in
-            SCShareableContent.getExcludingDesktopWindows(excludingDesktopWindows, onScreenWindowsOnly: onScreenWindowsOnly) { content, _ in
-                if once.first() { c.resume(returning: content) }
-            }
-            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
-                if once.first() { c.resume(returning: nil) }   // the late answer, if any, is dropped
+    /// A bounded, cancellation-safe catalog read. Keep the native error: listing installed apps is
+    /// independent of capture permission and must never be mistaken for a working picture.
+    nonisolated static func readShareableContent(excludingDesktopWindows: Bool, onScreenWindowsOnly: Bool,
+                                                timeout: TimeInterval) async throws -> SCShareableContent {
+        if screenless { throw CaptureLookup.Failure.unavailable }
+        return try await CaptureLookup.read(timeout: timeout) { complete in
+            SCShareableContent.getExcludingDesktopWindows(excludingDesktopWindows, onScreenWindowsOnly: onScreenWindowsOnly) { content, error in
+                if let error { complete(.failure(error)) }
+                else if let content { complete(.success(content)) }
+                else { complete(.failure(CaptureLookup.Failure.unavailable)) }
             }
         }
+    }
+
+    /// Optional lookups used by the virtual-display fallback retain their existing contract.
+    nonisolated static func shareableContent(excludingDesktopWindows: Bool, onScreenWindowsOnly: Bool,
+                                            timeout: TimeInterval) async -> SCShareableContent? {
+        try? await readShareableContent(excludingDesktopWindows: excludingDesktopWindows,
+                                       onScreenWindowsOnly: onScreenWindowsOnly, timeout: timeout)
     }
 
     /// Every icon we know, for a client that just connected.
@@ -284,7 +306,15 @@ final class WindowCatalog {
         refreshSeq += 1
         let seq = refreshSeq
         guard !Self.screenless else { return }      // TEST ONLY: ScreenCaptureKit never asked
-        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) else { return }
+        let content: SCShareableContent
+        do {
+            content = try await Self.readShareableContent(excludingDesktopWindows: false, onScreenWindowsOnly: true, timeout: 3)
+        } catch {
+            guard !Task.isCancelled, !(error is CancellationError), seq > appliedSeq else { return }
+            appliedSeq = seq    // an older success must not erase this newer failure
+            setCaptureIssue(Self.issue(for: error), error: error)
+            return
+        }
         // The staged window, if the on-screen list dropped it: one extra SCShareableContent call per
         // poll, and only then. Fetched before the sequence check so its await cannot let an older
         // refresh overwrite a newer one.
@@ -294,13 +324,14 @@ final class WindowCatalog {
             pinned = all.windows.first { $0.windowID == id && !Self.isOwn($0) }
             if pinned != nil { print("Catalog: the staged window \(id) is not in the on-screen list; pinned it from the full list.") }
         }
-        guard seq > appliedSeq else { return }      // a newer refresh already landed; don't go backwards
+        guard !Task.isCancelled, seq > appliedSeq else { return }      // success and failure share one ordering gate
         appliedSeq = seq
         lookedAt = .now
         ownApplication = content.applications.first { $0.processID == Self.ownPID }
         display = preferMainDisplay
             ? (content.displays.first { $0.displayID == CGMainDisplayID() } ?? content.displays.first)
             : content.displays.first
+        setCaptureIssue(display == nil ? (CGPreflightScreenCaptureAccess() ? .noDisplay : .permission) : nil)
         var visible = content.windows.filter { w in
             guard let app = w.owningApplication, !app.applicationName.isEmpty else { return false }
             return w.windowLayer == 0                                  // drops widgets, wallpaper, backstop

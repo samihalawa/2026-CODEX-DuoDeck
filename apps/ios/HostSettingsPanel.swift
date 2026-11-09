@@ -76,6 +76,14 @@ struct HostSettingsPanel: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
+                if let issue = client.captureIssue, client.lockWhy == nil {
+                    Section("Screen sharing") {
+                        Text(issue.title).font(.headline)
+                        Text(issue.detail).foregroundStyle(.secondary)
+                        Button("Retry picture") { client.retryPicture() }
+                            .disabled(client.retryingPicture)
+                    }
+                }
                 if let problem = client.settingsProblem {
                     Section { Label(problem, systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
                 }

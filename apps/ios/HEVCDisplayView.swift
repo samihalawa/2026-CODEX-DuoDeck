@@ -35,6 +35,49 @@ final class HEVCDisplayView: UIView {
     /// flush and says so first, then `onNeedsKeyframe`: for the client the picture came back and was
     /// lost again at once, so it asks again, as for a repeat (KeyframeRecovery). On `renderQueue`.
     var onPictureBack: (() -> Void)?
+    /// Modern iOS reports a decoded frame ready for display, separately from accepting a keyframe.
+    var onReadyForDisplay: ((UInt64) -> Void)?
+    private var readiness = PictureReadiness()
+    private var renderingObservation: NSKeyValueObservation?
+
+    /// A new attempt cannot stamp the previous displayed image with its generation.
+    /// Generation and image invalidation are one render-queue operation.
+    func setRecoveryGeneration(_ generation: UInt64) {
+        removePicture(generation: generation)
+    }
+
+    private func removePicture(generation: UInt64? = nil) {
+        readiness.invalidate(generation: generation, at: CACurrentMediaTime())
+        waitingForKeyframe = true
+        displayLayer.flushAndRemoveImage()
+        if #available(iOS 17.4, *) {
+            if !displayLayer.isReadyForDisplay {
+                _ = readiness.observed(ready: false, at: CACurrentMediaTime())
+            }
+        } else if displayLayer.status != .rendering {
+            _ = readiness.observed(ready: false, at: CACurrentMediaTime())
+        }
+    }
+
+    private func reportReadyForDisplay(_ ready: Bool, postedAt: CFTimeInterval) {
+        guard ready else {
+            _ = readiness.observed(ready: false, at: postedAt)
+            return
+        }
+        guard displayLayer.error == nil else { return }
+        if #available(iOS 17.4, *) {
+            guard displayLayer.isReadyForDisplay else { return }
+        } else {
+            // iOS 17.0–17.3 has no first-frame-ready API. Its rendering-status transition
+            // remains a fallback; the real first-picture proof uses iOS 17.4 or later.
+            guard displayLayer.status == .rendering else { return }
+        }
+        guard let generation = readiness.observed(ready: true, at: postedAt) else { return }
+        #if DEBUG
+        print("display: ready for picture generation \(generation)")
+        #endif
+        onReadyForDisplay?(generation)
+    }
     /// The layer's notifications (`observeLayer`).
     private var layerObservers: [NSObjectProtocol] = []
     /// When a keyframe last ended a wait (`CACurrentMediaTime`): a decode failure posted before then
@@ -105,6 +148,26 @@ final class HEVCDisplayView: UIView {
     /// `renderQueue` at once, since a still window sends no frame that would show it (`checkLayer`).
     private func observeLayer() {
         let center = NotificationCenter.default
+        if #available(iOS 17.4, *) {
+            layerObservers.append(center.addObserver(forName: .AVSampleBufferDisplayLayerReadyForDisplayDidChange,
+                                                     object: displayLayer, queue: nil) { [weak self] _ in
+                guard let self else { return }
+                let postedAt = CACurrentMediaTime()
+                let ready = self.displayLayer.isReadyForDisplay
+                self.renderQueue?.async { [weak self] in
+                    self?.reportReadyForDisplay(ready, postedAt: postedAt)
+                }
+            })
+        } else {
+            renderingObservation = displayLayer.observe(\.status, options: [.new]) { [weak self] _, _ in
+                guard let self else { return }
+                let postedAt = CACurrentMediaTime()
+                let ready = self.displayLayer.status == .rendering && self.displayLayer.error == nil
+                self.renderQueue?.async { [weak self] in
+                    self?.reportReadyForDisplay(ready, postedAt: postedAt)
+                }
+            }
+        }
         layerObservers.append(center.addObserver(forName: .AVSampleBufferDisplayLayerFailedToDecode, object: displayLayer,
                                                  queue: nil) { [weak self] note in
             let error = note.userInfo?[AVSampleBufferDisplayLayerFailedToDecodeNotificationErrorKey] as? Error
@@ -310,9 +373,14 @@ final class HEVCDisplayView: UIView {
             allocator: nil, parameterSetCount: pointers.count, parameterSetPointers: pointers,
             parameterSetSizes: sizes, nalUnitHeaderLength: Int32(ps.nalUnitHeaderLength),
             extensions: nil, formatDescriptionOut: &desc)
-        guard status == noErr, let desc else { print("format description failed: \(status)"); return }
+        guard status == noErr, let desc else {
+            print("format description failed: \(status)")
+            formatDescription = nil
+            removePicture()
+            onNeedsKeyframe?()
+            return
+        }
         formatDescription = desc
-        waitingForKeyframe = true
         let dimensions = CMVideoFormatDescriptionGetDimensions(desc)
         let size = CGSize(width: CGFloat(dimensions.width), height: CGFloat(dimensions.height))
         DispatchQueue.main.async { [weak self] in
@@ -324,14 +392,13 @@ final class HEVCDisplayView: UIView {
         }
         // Remove the last frame too: switching sources should show black until the new keyframe,
         // not the previous window frozen in place.
-        displayLayer.flushAndRemoveImage()
+        removePicture()
     }
 
     /// A locked Mac (docs/locked-mac-plan.md): the picture removed at once, nothing shown until the next
     /// keyframe, the format kept. On `renderQueue` (the client's network queue), as `apply` and `enqueue`.
     func blank() {
-        waitingForKeyframe = true
-        displayLayer.flushAndRemoveImage()
+        removePicture()
     }
 
     /// Session over: drop the picture and forget the format so the next Mac starts clean.
@@ -342,7 +409,7 @@ final class HEVCDisplayView: UIView {
         #if DEBUG
         interruptedAt = nil
         #endif
-        displayLayer.flushAndRemoveImage()
+        removePicture()
         // The pointer's copy of the size is main-thread state; the client zeroes its own alongside.
         DispatchQueue.main.async { [weak self] in
             self?.pointerVideoSize = .zero
@@ -351,12 +418,9 @@ final class HEVCDisplayView: UIView {
     }
 
     func enqueue(_ data: Data, isKeyframe: Bool) {
-        guard let desc = formatDescription else { return }
+        guard let desc = formatDescription, !data.isEmpty else { return }
         let resuming = waitingForKeyframe
-        if waitingForKeyframe {
-            guard isKeyframe else { return }
-            waitingForKeyframe = false
-        }
+        if waitingForKeyframe { guard isKeyframe else { return } }
 
         let count = data.count
         var block: CMBlockBuffer?
@@ -393,6 +457,8 @@ final class HEVCDisplayView: UIView {
         #endif
         if checkLayer("at a frame", failedToDecode: lost, droppingKeyframe: resuming) { return }
         if resuming { resumedAt = CACurrentMediaTime() }
+        waitingForKeyframe = false
+        if isKeyframe { readiness.enqueuedKeyframe(at: CACurrentMediaTime()) }
         displayLayer.enqueue(sample)
         if resuming {
             #if DEBUG
@@ -409,7 +475,7 @@ final class HEVCDisplayView: UIView {
     /// Whether the picture was interrupted: the layer failed (its `status`, with its `error`), could
     /// not decode a frame (`failedToDecode`, from its notification), or needs a flush before it
     /// decodes again (Sill was in the background, or another app took the decoder). If so the layer
-    /// is flushed (it keeps the last image it showed), waits for a keyframe, and `onNeedsKeyframe` is
+    /// removes its old image, waits for a keyframe, and `onNeedsKeyframe` is
     /// told, since a still window on the Mac sends none. The Mac sends its parameter sets before
     /// every keyframe and every sample carries the format, so nothing else needs sending again. From
     /// each frame let through, the layer's notifications, and the picture's window becoming active
@@ -432,8 +498,7 @@ final class HEVCDisplayView: UIView {
               + (droppingKeyframe ? " with the keyframe it waited for" : "") + ", waiting for a keyframe")
         if interruptedAt == nil { interruptedAt = CACurrentMediaTime() }
         #endif
-        displayLayer.flush()
-        waitingForKeyframe = true
+        removePicture()
         if droppingKeyframe { onPictureBack?() }    // first: both reach the client in this order
         onNeedsKeyframe?()
         return true

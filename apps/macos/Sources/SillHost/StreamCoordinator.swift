@@ -53,6 +53,9 @@ package final class StreamCoordinator {
     private var lastParameterSets: Data?
     let catalog = WindowCatalog()
     let capture = WindowCapture()
+    private var captureIssue: CaptureIssue?
+    private var pipelineGeneration: UInt64 = 0
+    private var pipelineHasFrame = false
     /// `--synthetic`: the Desktop source streams a test pattern instead of the screen.
     let synthetic: Bool
     let syntheticCapture = SyntheticCapture()
@@ -642,13 +645,9 @@ package final class StreamCoordinator {
             self?.server.broadcast(StreamMessage(kind: .appIcon, timestamp: Date().timeIntervalSince1970, isKeyframe: false,
                                                  payload: ImageBlob.encodeIcon(bundleID: id, png: png)))
         }
-        capture.onStopped = { [weak self] error in
-            print("Capture stopped: \(error.localizedDescription)")
-            // A user switch takes this session's displays away before its notifications arrive (0.12 s on
-            // 2026-11-01), and a device asks for the Desktop again the moment nothing streams: the lock is
-            // read again first, so that pick meets the new reading (LockPolicy; the placeholder off console).
-            SessionLock.shared.lookNow(cause: "the capture stopped")
-            Task { @MainActor in await self?.select(.none) }
+        catalog.onCaptureIssueChanged = { [weak self] in
+            guard let self, self.active == .none else { return }
+            self.broadcastList()    // a failure/recovery matters even when the window list stays empty
         }
         // Status for the menu bar app. The server's callbacks hop here from its network queue; the
         // stats tick runs on the main queue, which under the CLI's dispatchMain is drained by a
@@ -1741,7 +1740,8 @@ package final class StreamCoordinator {
             if let r = restartOf, source != r { pickArrivedWhileSwitching = source }
             return
         }
-        await select(source, bringForward: true)
+        await select(source, bringForward: true,
+                     refreshCatalog: source == active || captureIssue != nil || catalog.captureIssue != nil)
     }
 
     /// Streams `source` in place of whatever streams now. Also how the host restarts the current
@@ -1760,7 +1760,7 @@ package final class StreamCoordinator {
     /// of a window never gets here while locked (`handle` refuses it). The gate is read again after each
     /// await that could let a lock in: before a window is staged and before any capture starts. Unlocked,
     /// a pick forgets the window that would have come back.
-    func select(_ source: StreamSource, bringForward: Bool = false) async {
+    func select(_ source: StreamSource, bringForward: Bool = false, refreshCatalog: Bool = false) async {
         guard !switching, !shuttingDown else { return }
         var source = source
         switch restore.select(source, active: active, pick: bringForward, reading: lockReading) {
@@ -1769,6 +1769,7 @@ package final class StreamCoordinator {
         case .stay: return
         }
         switching = true
+        pipelineGeneration &+= 1     // retires queued stop/first-frame callbacks before any await
         if source != active { missingPolls = 0 }    // a window's looks off the list are its own
         restartOf = (source == active && source != .none) ? source : nil
         defer {
@@ -1900,7 +1901,7 @@ package final class StreamCoordinator {
         // looked at again first. The Desktop reads its display after this and after its own await.
         let lookBefore = (display: catalog.display?.displayID, age: catalog.lookAge)
         if source != .none, !(synthetic && source == .desktop) {
-            await lookAgainIfStale()
+            if refreshCatalog { await catalog.refreshWindows() } else { await lookAgainIfStale() }
             guard !shuttingDown else { active = .none; broadcastList(); return }
         }
 
@@ -1920,6 +1921,7 @@ package final class StreamCoordinator {
         switch source {
         case .none:
             active = .none
+            if catalog.clientCount == 0 { captureIssue = nil }
             broadcastList()
             return
         case .window(let id):
@@ -2021,7 +2023,12 @@ package final class StreamCoordinator {
                 picture = .display
             } else {
                 // The display as the newest look has it, read after every await (`desktopCapture`).
-                guard let plan = await desktopCapture() else { active = .none; broadcastList(); return }
+                guard let plan = await desktopCapture() else {
+                    captureIssue = catalog.captureIssue ?? (CGPreflightScreenCaptureAccess() ? .noDisplay : .permission)
+                    active = .none
+                    broadcastList()
+                    return
+                }
                 if let line = CatalogLook.desktopLine(was: lookBefore.display, now: plan.displayID, age: lookBefore.age) { print(line) }
                 filter = plan.filter
                 displayScale = plan.displayScale
@@ -2065,6 +2072,7 @@ package final class StreamCoordinator {
                                             describe: fallback, title: title, kind: kind, picture: .window)
                 } catch {
                     print("Could not start streaming \(fallback): \(error)")
+                    captureIssue = WindowCatalog.issue(for: error, fallback: .startFailed)
                     active = .none
                 }
             } else if picture == .placeholder {
@@ -2078,6 +2086,7 @@ package final class StreamCoordinator {
                                         testPattern: (width: width, height: height))
             } else {
                 print("Could not start streaming \(describe): \(error)")
+                captureIssue = WindowCatalog.issue(for: error, fallback: .startFailed)
                 if virtualDisplay { stage.release() }   // nothing streams: never leave a window on the virtual display
                 active = .none
             }
@@ -2140,7 +2149,8 @@ package final class StreamCoordinator {
         if !synthetic {
             await catalog.refreshWindows()
             guard !shuttingDown, let next = await desktopCapture() else {
-                if !shuttingDown { print("Could not start streaming \(describe): \(error)") }   // no display in the new look
+                if !shuttingDown { print("Could not start streaming \(describe): \(error)") }
+                captureIssue = catalog.captureIssue ?? WindowCatalog.issue(for: error, fallback: .startFailed)
                 active = .none
                 return
             }
@@ -2157,6 +2167,7 @@ package final class StreamCoordinator {
                                     title: locked ? "Locked" : title, kind: kind, picture: locked ? .placeholder : .display)
         } catch {
             print("Could not start streaming \(describe): \(error)")
+            captureIssue = WindowCatalog.issue(for: error, fallback: .startFailed)
             active = .none
         }
     }
@@ -2171,6 +2182,9 @@ package final class StreamCoordinator {
     private func startPipeline(source: StreamSource, filter: SCContentFilter?, sourceRect: CGRect?, displayScale: CGFloat?,
                                width: Int, height: Int, describe: String,
                                title: String, kind: HostStatusSnapshot.Stream.Kind, picture: LockPolicy.Picture) async throws {
+        pipelineGeneration &+= 1
+        let generation = pipelineGeneration
+        pipelineHasFrame = false
         let enc = try HEVCEncoder(width: width, height: height, fps: fps, bitrate: streamBitrate, prioritizeSpeed: prioritizeSpeed,
                                   software: useSoftwareEncoder)
         enc.onHung = { [weak self, weak enc] in
@@ -2180,7 +2194,23 @@ package final class StreamCoordinator {
             }
         }
         let server = self.server
+        let firstLock = NSLock()
+        var outputSeen = false
         enc.onEncoded = { [weak self] data, isKey, parameterSets in
+            let first = firstLock.withLock { () -> Bool in
+                defer { outputSeen = true }
+                return !outputSeen
+            }
+            if first, picture != .placeholder {
+                Task { @MainActor in
+                    guard let self, self.pipelineGeneration == generation, !self.lockReading.locked else { return }
+                    self.pipelineHasFrame = true   // may precede startCapture returning; keep that success
+                    if self.captureIssue != nil {
+                        self.captureIssue = nil
+                        self.broadcastList()
+                    }
+                }
+            }
             let now = Date().timeIntervalSince1970
             if let ps = parameterSets {
                 let sets = ps.encoded()
@@ -2203,6 +2233,16 @@ package final class StreamCoordinator {
             stillCapture.onFrame = { pixelBuffer, pts in enc.encode(pixelBuffer, pts: pts) }
             stillCapture.start(width: width, height: height)
         } else if let filter {
+            capture.onStopped = { [weak self] error in
+                print("Capture stopped: \(error.localizedDescription)")
+                SessionLock.shared.lookNow(cause: "the capture stopped")
+                Task { @MainActor in
+                    guard let self, self.pipelineGeneration == generation else { return }
+                    self.captureIssue = WindowCatalog.issue(for: error, fallback: .stopped)
+                    self.broadcastList()
+                    await self.select(.none)
+                }
+            }
             capture.onFrame = { pixelBuffer, pts in enc.encode(pixelBuffer, pts: pts) }
             try await capture.start(filter: filter, width: width, height: height, fps: fps, showsCursor: false, sourceRect: sourceRect,
                                     scaleWords: CaptureScale.words(knob: captureScale, displayScale: displayScale))
@@ -2211,6 +2251,16 @@ package final class StreamCoordinator {
             syntheticCapture.start(width: width, height: height, fps: fps)
         }
         encoder = enc
+        if picture != .placeholder {
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(6))
+                guard let self, self.pipelineGeneration == generation, !self.pipelineHasFrame,
+                      !self.lockReading.locked, self.catalog.clientCount > 0 else { return }
+                self.captureIssue = .noFrames
+                print("Capture started but produced no encoded picture within 6 seconds.")
+                self.broadcastList()
+            }
+        }
         placeholderStreams = picture == .placeholder
         active = source
         streamDisplayScale = displayScale
@@ -3327,6 +3377,7 @@ package final class StreamCoordinator {
         // This host repeats a device's held key (KeyRepeat), so a device sends it a hardware keyboard's
         // characters as keys.
         list.keyRepeat = KeyRepeat.generation
+        list.captureIssue = captureIssue ?? (active == .none ? catalog.captureIssue : nil)
         // A locked Mac's list: no windows, no clipboard, `locked`, and off console `offConsole`
         // (LockPolicy); unlocked, as it is, byte for byte. Which went last, for `lockChanged`.
         let reading = lockReading

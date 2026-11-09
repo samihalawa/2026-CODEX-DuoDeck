@@ -1,9 +1,9 @@
 import AppKit
 import SillHostCore
 
-/// Sill.app: the Mac host as a menu bar app. The same StreamCoordinator as the CLI, under the
-/// AppKit loop the virtual display needs, with a status item for what it is doing, Settings for
-/// the knobs, and a Log window for what the CLI would have printed.
+/// DuoDeck Host is a normal Mac app with one primary window and a status-item shortcut.
+/// Its host keeps serving paired devices when the window closes; Quit ends the host through
+/// the existing orderly shutdown path.
 ///
 /// THE MODAL-LOOP RULE. Never start a nested modal loop from `Task { @MainActor }`, an async
 /// continuation or a `DispatchQueue.main` block: NSMenu.popUp, NSAlert.runModal, NSApp.runModal,
@@ -18,7 +18,7 @@ import SillHostCore
 /// runs NSApplication and its main queue is the main thread. The host core may not: the CLI's
 /// dispatchMain drains the main queue on a worker thread, where that call traps.
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenuItemValidation {
     let model = AppModel()
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
@@ -29,8 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         DebugHooks.renderPreviewsIfAsked(model: model)      // exits when asked
-        // A menu bar app with no windows open is exactly what automatic termination would end.
-        ProcessInfo.processInfo.disableAutomaticTermination("DuoDeck Host serves devices from the menu bar")
+        // Closing the window never ends an active/background host.
+        ProcessInfo.processInfo.disableAutomaticTermination("DuoDeck Host serves paired devices while its window is closed")
         ProcessInfo.processInfo.disableSuddenTermination()
         let item = StatusItemController(model: model)        // "Starting…" until the host is up
         statusItem = item
@@ -56,6 +56,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Settings › Devices' "Show the pairing window to screen sharing": a pairing window already
         // made follows a change at once, on screen or not (one made later reads it as it is made).
         model.settings.onPairingWindowSharingChange = { [weak self] in self?.pairingWindow?.applySharing() }
+        // UI-only lifecycle checks stop here, before listeners, capture, identity, or pairing start.
+        ApplicationLifecycleCheck.runIfAsked(delegate: self, model: model)
+        showSettings(tab: .general)
         // Always, not only with the virtual display on: Settings can turn it on at any time, and a
         // kill must then still put the streamed window back.
         HostShutdown.install { [model] in model.coordinator }
@@ -63,11 +66,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DebugHooks.schedule(model: model)
     }
 
-    /// Opening Sill.app again (Finder, Spotlight, `open`) shows Settings: the way back when the
-    /// menu bar has no room for the status item.
+    /// Dock, Finder, Spotlight, and Open restore the same primary window, including after Close
+    /// or Minimize. A remote pairing panel being visible does not prevent this.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         showSettings(tab: nil)
         return false
+    }
+
+    /// Standard Mac behavior: Close hides a window; only Quit stops the host.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        let menu = NSMenu()
+        let open = menu.addItem(withTitle: "Show DuoDeck Host", action: #selector(showMainWindow(_:)), keyEquivalent: "")
+        open.target = self
+        let pair = menu.addItem(withTitle: "Pair iPhone or iPad…", action: #selector(pairDevice(_:)), keyEquivalent: "")
+        pair.target = self
+        pair.isEnabled = model.presentation.canPair
+        menu.autoenablesItems = false
+        return menu
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu === NSApp.windowsMenu,
+              let item = menu.items.first(where: { $0.action == #selector(NSWindow.toggleFullScreen(_:)) }) else { return }
+        item.title = NSApp.keyWindow?.styleMask.contains(.fullScreen) == true ? "Exit Full Screen" : "Enter Full Screen"
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(pairDevice(_:)) { return model.presentation.canPair }
+        if menuItem.action == #selector(showSection(_:)), let raw = menuItem.representedObject as? String,
+           let tab = SettingsTab(rawValue: raw) {
+            menuItem.state = model.settings.settingsTab.navigationGroup == tab ? .on : .off
+        }
+        return true
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
@@ -107,7 +139,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Windows
 
-    /// Settings… (⌘,) from the main menu, which only exists for key equivalents (MainMenu).
+    @objc func showMainWindow(_ sender: Any?) { showSettings(tab: nil) }
+
+    @objc func pairDevice(_ sender: Any?) { model.pairDevice() }
+
+    @objc func showLogWindow(_ sender: Any?) { showLog() }
+
+    @objc func showSection(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let tab = SettingsTab(rawValue: raw) else { return }
+        showSettings(tab: tab)
+    }
+
+    @objc func openHelp(_ sender: Any?) {
+        if let url = URL(string: "https://duodeck.megawebs.com/#how") { NSWorkspace.shared.open(url) }
+    }
+
+    /// Settings… (⌘,) restores the controls in the primary window.
     @objc func showSettings(_ sender: Any?) {
         showSettings(tab: nil)
     }

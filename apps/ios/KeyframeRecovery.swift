@@ -130,3 +130,57 @@ struct KeyframeRecovery {
         return .askNow
     }
 }
+
+/// A new picture gets at most three automatic requests. Known host failures stop these immediately;
+/// Retry starts a new budget. This is separate from recovery of a previously working decoder.
+struct FirstPictureRecovery {
+    enum Step: Equatable { case retry, failed, nothing }
+    private(set) var waiting = false
+    private(set) var attempts = 0
+    private(set) var exhausted = false
+
+    mutating func begin() { waiting = true; attempts = 0; exhausted = false }
+    mutating func resolved() { waiting = false; exhausted = false }
+    mutating func stop() { waiting = false }
+
+    mutating func tick() -> Step {
+        guard waiting else { return .nothing }
+        guard attempts < 3 else { waiting = false; exhausted = true; return .failed }
+        attempts += 1
+        return .retry
+    }
+}
+
+
+/// A readiness notification belongs to the current picture only after the old image was removed,
+/// the layer was observed empty, and a new keyframe was submitted. AVFoundation's ready flag alone
+/// has no source identity. All events and this value are owned by the render queue.
+struct PictureReadiness {
+    private(set) var generation: UInt64 = 0
+    private var boundary: TimeInterval = 0
+    private var keyframeAt: TimeInterval?
+    private var observedEmpty = false
+    private var reported = false
+
+    mutating func invalidate(generation: UInt64? = nil, at time: TimeInterval) {
+        if let generation { self.generation = generation }
+        boundary = time
+        keyframeAt = nil
+        observedEmpty = false
+        reported = false
+    }
+
+    mutating func enqueuedKeyframe(at time: TimeInterval) {
+        guard time >= boundary else { return }
+        if keyframeAt == nil { keyframeAt = time }
+    }
+
+    /// The value/time are captured when AVFoundation posts, not later when the queue drains.
+    mutating func observed(ready: Bool, at time: TimeInterval) -> UInt64? {
+        guard time >= boundary else { return nil }
+        if !ready { observedEmpty = true; return nil }
+        guard observedEmpty, let keyframeAt, time >= keyframeAt, !reported else { return nil }
+        reported = true
+        return generation
+    }
+}

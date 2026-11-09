@@ -1264,6 +1264,7 @@ struct StreamScreen: View {
             }
             .background(Palette.panel)
             // A locked Mac: its cover over the picture (LockedMac), under the link's line.
+            .overlay { VideoRecoveryShade(client: client, openSettings: { setSettings(true) }) }
             .overlay { LockedMacShade(client: client) }
             .overlay(alignment: .top) { LinkLineView(text: shownLinkLine) }
             .clipShape(streamShape)
@@ -1331,6 +1332,63 @@ struct LinkLineView: View {
         .frame(maxWidth: .infinity, alignment: .top)
         .allowsHitTesting(false)
         .animation(.easeOut(duration: 0.2), value: text)
+    }
+}
+
+// MARK: - Picture startup and recovery
+
+/// Control/catalog connectivity does not imply that a video frame exists. This state is confined to
+/// the video pane; Apps, Settings and trackpad controls remain available.
+struct VideoRecoveryShade: View {
+    @ObservedObject var client: StreamClient
+    let openSettings: () -> Void
+
+    var body: some View {
+        if client.connected, client.lockWhy == nil,
+           client.captureIssue != nil || client.awaitingPicture {
+            ViewThatFits(in: .vertical) {
+                message(showDetail: true)
+                message(showDetail: false)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Palette.bar)
+        }
+    }
+
+    private func message(showDetail: Bool) -> some View {
+        VStack(spacing: showDetail ? 12 : 8) {
+            if showDetail {
+                if client.retryingPicture || (client.awaitingPicture && client.captureIssue == nil) {
+                    ProgressView()
+                } else {
+                    Image(systemName: "display.trianglebadge.exclamationmark")
+                        .font(.title2).foregroundStyle(.secondary).accessibilityHidden(true)
+                }
+            }
+            Text(client.captureIssue?.title ?? "Starting screen sharing…")
+                .font(showDetail ? .headline : .subheadline.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            if showDetail {
+                Text(client.captureIssue?.detail ?? "Your Mac’s picture will appear here.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 12) {
+                Button("Retry picture") { client.retryPicture() }
+                    .buttonStyle(.borderedProminent)
+                    .foregroundStyle(Palette.onAccent)
+                    .disabled(client.retryingPicture)
+                    .accessibilityIdentifier("retryPicture")
+                Button("Settings", action: openSettings)
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("pictureRecoverySettings")
+            }
+            .controlSize(.large)
+        }
+        .frame(maxWidth: 480)
     }
 }
 

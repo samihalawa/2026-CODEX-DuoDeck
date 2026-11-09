@@ -91,7 +91,7 @@ enum MenuBuilder {
         menu.append(MenuEntry(kind: .item, title: "Devices…", action: .showSettingsTab(.devices)))
         menu.append(.separator)
 
-        menu.append(MenuEntry(kind: .item, title: "Settings…", key: ",", action: .showSettings))
+        menu.append(MenuEntry(kind: .item, title: "Open DuoDeck Host", key: "0", action: .showSettings))
         menu.append(.separator)
         menu.append(MenuEntry(kind: .item, title: "Quit DuoDeck Host", key: "q", action: .quit))
         return menu

@@ -4,7 +4,7 @@ import SwiftUI
 import SillHostCore
 import StreamProtocol
 
-/// One Settings tab: a grouped Form, 560 pt wide. The controls bind straight to
+/// One navigation section: a native grouped Form inside the resizable main window. The controls bind straight to
 /// `settings.config`, whose didSet is the one path to the host (see HostSettings).
 struct SettingsPane: View {
     let tab: SettingsTab
@@ -33,7 +33,7 @@ struct SettingsPane: View {
             }
             .formStyle(.grouped)
         }
-        .frame(width: 560)
+        .frame(minWidth: 560, maxWidth: .infinity, minHeight: 360, maxHeight: .infinity)
         .tint(DuoDeckHostStyle.accent)
         // Permissions and the login item change behind Sill's back, in System Settings. Re-read
         // them once a second, only while this tab is on screen, and when Sill becomes active; an
@@ -289,20 +289,37 @@ struct PermissionsPane: View {
                 PermissionRow(title: "Screen Recording", allowed: permissions.screenRecording,
                               // Not "on this network": a device connected over Direct Wireless shares none.
                               explanation: "Lets DuoDeck Host capture the windows you pick on your iPhone or iPad, and their sound when Send Audio is on. Nothing is recorded or saved; frames and sound go straight to your devices.",
-                              button: model.settings.askedScreenRecording ? "Open System Settings…" : "Allow…") {
+                              button: "Allow…") {
                     permissions.requestScreenRecording()
                 }
                 PermissionRow(title: "Accessibility", allowed: permissions.accessibility,
                               explanation: "Lets your iPhone or iPad click, scroll and type on this Mac, and lets DuoDeck Host move and size the window it streams.",
-                              button: model.settings.askedAccessibility ? "Open System Settings…" : "Allow…") {
+                              button: "Allow…") {
                     permissions.requestAccessibility()
                 }
             } footer: {
-                Footnote("Access belongs to DuoDeck Host. Access you gave Terminal doesn’t carry over.")
+                Footnote("In System Settings, allow DuoDeck Host itself. macOS decides whether access is granted.")
             }
-            if permissions.relaunchSuggested, !permissions.screenRecording {
+            if !permissions.allGranted {
                 Section {
-                    LabeledContent("Screen Recording starts working once DuoDeck Host opens again.") {
+                    LabeledContent("App requesting access") {
+                        Text(Bundle.main.bundlePath)
+                            .lineLimit(2)
+                            .truncationMode(.middle)
+                            .textSelection(.enabled)
+                    }
+                    Button("Show App in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+                    }
+                } footer: {
+                    Footnote("Enable DuoDeck Host in both Screen Recording and Accessibility. If it is already enabled but still unavailable after an update, select this installed copy in System Settings and reopen DuoDeck Host.")
+                }
+            }
+            if permissions.relaunchSuggested {
+                Section {
+                    LabeledContent(permissions.screenRecording
+                                   ? "If sharing has not started, reopen DuoDeck Host to apply the change."
+                                   : "After enabling Screen Recording, reopen DuoDeck Host to apply the change.") {
                         Button(permissions.canRelaunch ? "Relaunch DuoDeck Host" : "Quit DuoDeck Host") { permissions.relaunch() }
                     }
                 }

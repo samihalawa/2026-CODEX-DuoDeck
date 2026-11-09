@@ -45,30 +45,23 @@ final class PermissionsModel {
         if sr && ax && settings.permissionsOnboardingDismissed { settings.permissionsOnboardingDismissed = false }
     }
 
-    /// Allow… for Screen Recording. The first time, the system's own alert, which offers System
-    /// Settings; it never appears again for this app, so later clicks open the pane directly.
+    /// Explicit user action. macOS decides whether this app identity needs a prompt; a saved UI
+    /// preference must not suppress the request after the app's signing identity changes.
     func requestScreenRecording() {
-        if settings.askedScreenRecording {
-            openPrivacyPane("Privacy_ScreenCapture")
-        } else {
-            settings.askedScreenRecording = true
-            _ = CGRequestScreenCaptureAccess()
-        }
+        settings.askedScreenRecording = true
+        _ = CGRequestScreenCaptureAccess()
         relaunchSuggested = true
         refresh()
+        if !screenRecording { openPrivacyPane("Privacy_ScreenCapture") }
     }
 
-    /// Allow… for Accessibility: the system's alert once, then the pane. A grant takes effect at
-    /// once, no relaunch.
+    /// Accessibility grants take effect without a relaunch. Only a button/menu action calls this.
     func requestAccessibility() {
-        if settings.askedAccessibility {
-            openPrivacyPane("Privacy_Accessibility")
-        } else {
-            settings.askedAccessibility = true
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            _ = AXIsProcessTrustedWithOptions(options)
-        }
+        settings.askedAccessibility = true
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
         refresh()
+        if !accessibility { openPrivacyPane("Privacy_Accessibility") }
     }
 
     /// Allow in System Settings, for the clipboard (Settings › General): Privacy & Security › Paste

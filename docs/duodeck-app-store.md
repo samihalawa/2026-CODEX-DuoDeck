@@ -42,7 +42,7 @@ Keep settings out of the way
 Trackpad, Display & sound, Connection, Help and Advanced have their own settings pages. Extra Mac controls are available under Trackpad > More controls. Both apps follow your system's light or dark appearance.
 
 A straightforward Mac companion
-DuoDeck Host runs in the menu bar. Pair a device, see its connection and choose Smooth, Balanced or Crisp streaming quality. General, Devices, Streaming and Advanced keep setup and everyday settings separate from network options and diagnostics. Audio and clipboard sharing are optional.
+DuoDeck Host opens from your Dock with a resizable Mac window. Pair a device, see its connection and choose Smooth, Balanced or Crisp streaming quality. Quick controls are also available from the menu bar. General, Devices, Streaming and Advanced keep setup and everyday settings separate from network options and diagnostics. Audio and clipboard sharing are optional.
 
 What you need
 A Mac running macOS 14 or later with DuoDeck Host, and an iPhone or iPad running iOS 17 or later. Start with both devices on the same network. Your Mac must remain awake with DuoDeck Host running. Get the Mac companion at duodeck.megawebs.com/#downloads.
@@ -69,6 +69,8 @@ A clearer way to connect and control your Mac.
 • Saved trackpad size and pointer speed, plus an optional shortcut row.
 • Separate settings pages for everyday and advanced controls.
 • Four Mac settings tabs: General, Devices, Streaming and Advanced.
+• A full Mac app with a Dock icon and resizable window.
+• Clear picture-unavailable messages, a retry action and more reliable first-picture delivery.
 ```
 
 ## App Review instructions
@@ -79,7 +81,7 @@ Use these instructions after the exact companion download is published and verif
 DuoDeck is a remote-control client for the reviewer's own Mac. The Mac runs the apps; DuoDeck displays a window or desktop and sends input back to that Mac. There is no account, login, subscription or in-app purchase to test.
 
 MAC SETUP
-Use a Mac with macOS 14 or later, Intel or Apple silicon. Install DuoDeck Host from https://duodeck.megawebs.com/#downloads. Open it and finish the Screen Recording and Accessibility permission steps. Keep the Mac awake. Choose Pair iPhone or iPad... from the DuoDeck menu bar menu to display its pairing code.
+Use a Mac with macOS 14 or later, Intel or Apple silicon. Install DuoDeck Host from https://duodeck.megawebs.com/#downloads. Open DuoDeck Host from the Dock and finish the Screen Recording and Accessibility permission steps. Reopen DuoDeck Host if macOS asks you to apply Screen Recording access. Keep the Mac awake. Choose Pair iPhone or iPad... from the DuoDeck menu bar menu to display its pairing code.
 
 IPHONE OR IPAD SETUP
 Use iOS 17 or later and put both devices on the same network. Allow Local Network access when asked. Open DuoDeck, then Macs > Add Mac. Choose Scan code and allow Camera access to scan the Mac's code. Alternatively, choose Enter code, enter the Mac address and 12-digit code shown on the Mac, and tap Pair Mac. Camera access is not needed for manual entry. A discovered Mac can also be selected from Macs to open its pairing sheet; that route already knows the Mac address.

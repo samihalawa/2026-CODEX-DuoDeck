@@ -85,3 +85,62 @@ enum CatalogLook {
         Double(d.components.seconds) + Double(d.components.attoseconds) / 1e18
     }
 }
+
+/// Bridges ScreenCaptureKit's callbacks without keeping a source switch or a canceled catalog poll
+/// suspended forever. A late callback, timeout and cancellation race for one continuation.
+enum CaptureLookup {
+    enum Failure: Error, Equatable { case timedOut, unavailable }
+
+    private final class Gate<Value>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var continuation: CheckedContinuation<Value, Error>?
+        private var result: Result<Value, Error>?
+
+        func attach(_ continuation: CheckedContinuation<Value, Error>) {
+            lock.lock()
+            if let result {
+                lock.unlock()
+                continuation.resume(with: result)
+            } else {
+                self.continuation = continuation
+                lock.unlock()
+            }
+        }
+
+        var finished: Bool {
+            lock.lock(); defer { lock.unlock() }
+            return result != nil
+        }
+
+        func finish(_ result: Result<Value, Error>) {
+            lock.lock()
+            guard self.result == nil else { lock.unlock(); return }
+            self.result = result
+            let continuation = self.continuation
+            self.continuation = nil
+            lock.unlock()
+            continuation?.resume(with: result)
+        }
+    }
+
+    static func read<Value>(timeout: TimeInterval,
+                            start: (@escaping (Result<Value, Error>) -> Void) -> Void) async throws -> Value {
+        let gate = Gate<Value>()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                gate.attach(continuation)
+                guard !gate.finished else { return }
+                if Task.isCancelled {
+                    gate.finish(.failure(CancellationError()))
+                    return
+                }
+                start { gate.finish($0) }
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + timeout) {
+                    gate.finish(.failure(Failure.timedOut))
+                }
+            }
+        } onCancel: {
+            gate.finish(.failure(CancellationError()))
+        }
+    }
+}

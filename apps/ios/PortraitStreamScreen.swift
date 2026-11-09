@@ -676,6 +676,7 @@ struct PortraitStreamScreen: View {
         }
         .background(Palette.panel)
         // A locked Mac: its cover over the picture (LockedMac), under the link's line.
+        .overlay { VideoRecoveryShade(client: client, openSettings: { setSettings(true, true) }) }
         .overlay { LockedMacShade(client: client) }
         .overlay(alignment: .top) { LinkLineView(text: linkLine) }
         .clipShape(streamShape)

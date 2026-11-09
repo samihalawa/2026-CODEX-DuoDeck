@@ -421,6 +421,7 @@ enum LockPolicy {
         var l = list
         l.windows = []
         l.clipboard = nil
+        l.captureIssue = nil     // the lock's own state takes precedence over capture recovery
         l.locked = true
         l.offConsole = r == .offConsole ? true : nil
         return l

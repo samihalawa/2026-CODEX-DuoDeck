@@ -63,6 +63,10 @@ enum MockCatalog {
         // missing from a network the mock never looked at.
         client.mockDiscovery = true
         client.connected = true
+        // Existing DEBUG layout harness only; never used for authentic store captures.
+        if let code = UserDefaults.standard.string(forKey: "SillCaptureIssue") {
+            client.captureIssue = CaptureIssue(code: code)
+        }
         client.status = "Connected to Mac mini"
         client.macName = "Mac mini"
         client.windows = mockWindows

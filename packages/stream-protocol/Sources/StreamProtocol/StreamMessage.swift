@@ -205,3 +205,40 @@ extension Data {
         return T(bigEndian: v)
     }
 }
+
+/// The latest format/keyframe kept on the receiver's serial queue. A late renderer may replay only
+/// when no delta followed that keyframe: otherwise its next P frame could depend on frames it missed.
+/// The keyframe remains available separately for a connection-list preview.
+public struct VideoFrameReplayCache {
+    public private(set) var parameterSets: ParameterSets?
+    public private(set) var keyframe: (frame: Data, parameterSets: ParameterSets)?
+    private var keyframeIsLatest = false
+
+    public init() {}
+
+    public mutating func apply(_ sets: ParameterSets) {
+        if parameterSets?.encoded() != sets.encoded() { invalidateFrame() }
+        parameterSets = sets
+    }
+
+    public mutating func receive(_ data: Data, isKeyframe: Bool) {
+        keyframeIsLatest = false
+        guard isKeyframe, let parameterSets else { return }
+        keyframe = (data, parameterSets)
+        keyframeIsLatest = true
+    }
+
+    public var replayable: (frame: Data, parameterSets: ParameterSets)? {
+        keyframeIsLatest ? keyframe : nil
+    }
+
+    public mutating func invalidateFrame() {
+        keyframe = nil
+        keyframeIsLatest = false
+    }
+
+    public mutating func reset() {
+        parameterSets = nil
+        invalidateFrame()
+    }
+}

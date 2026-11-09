@@ -52,6 +52,9 @@ final class WindowCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         framesSeen = 0
         do {
             try await stream.startCapture()
+            // A stop callback may arrive while startCapture is awaiting. Do not report a live
+            // pipeline after that same stream has already ended.
+            guard self.stream === stream else { throw CaptureLookup.Failure.unavailable }
         } catch {
             if self.stream === stream { self.stream = nil }
             throw error
@@ -76,7 +79,7 @@ final class WindowCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen else { return }
+        guard type == .screen, stream === self.stream else { return }
         guard let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
               let statusRaw = attachments.first?[.status] as? Int,
               let status = SCFrameStatus(rawValue: statusRaw)
@@ -91,10 +94,11 @@ final class WindowCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     func stream(_ stream: SCStream, didStopWithError error: Error) {
+        let stopped = onStopped
         let current = stream === self.stream
         print("Capture stream stopped (\(current ? "current" : "replaced")): \(error) — \((error as NSError).userInfo)")
         guard current else { return }   // a stream we already replaced
         self.stream = nil
-        onStopped?(error)
+        stopped?(error)
     }
 }

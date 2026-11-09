@@ -28,8 +28,9 @@ if CommandLine.arguments.contains("--virtual-display-selftest") {
 }
 
 let app = NSApplication.shared
-// The bundle says LSUIElement; the bare .build/release/SillMenuBar has no Info.plist to say it.
-app.setActivationPolicy(.accessory)
+// DuoDeck is a regular Mac application, including when run as a development binary.
+// The signed bundle supplies its branded Dock and app-switcher icon.
+app.setActivationPolicy(.regular)
 // NSApplication.delegate is weak: a global keeps the delegate alive for the process.
 let delegate = MainActor.assumeIsolated { AppDelegate() }
 app.delegate = delegate
