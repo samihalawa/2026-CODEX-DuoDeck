@@ -27,6 +27,8 @@ The canonical command is script/release_mac.sh. The compatibility Scripts/releas
 - Distribution must use a valid Agents AI Ltd. Developer ID certificate and hardened runtime with a trusted timestamp.
 - Supply notarization credentials through DUODECK_NOTARY_KEY, DUODECK_NOTARY_KEY_ID and DUODECK_NOTARY_ISSUER. Never commit them.
 - Read Apple's final Accepted result for the actual uploaded artifact. Staple and validate its ticket, verify codesign and Gatekeeper, and generate SHA256SUMS.txt.
+- If an existing submission is still processing, use `--resume-notary` with its ID and `--expected-dmg-sha` with the pristine uploaded checksum. Resume stages that exact DMG, derives the app from it, waits at most three hours, and verifies Apple's accepted log checksum. It never rebuilds or resubmits.
+- The release command freezes the pushed main commit and release notes, retains verified artifacts under `.build/releases/`, and refuses to overwrite an existing release. Inspect native state before handling any ambiguous response.
 - Publish the DMG, ZIP and checksums to the intended DuoDeck release only. Confirm the download URL resolves and its bytes match.
 - Inspect any existing local installation identity before replacing DuoDeck Host, then launch and confirm its actual process and UI. Do not replace Sill or another product.
 
