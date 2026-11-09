@@ -1,1 +1,9 @@
-²ø1šYì
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>DuoDeck</title>
+<defs><linearGradient id="tile" x1="0%" y1="0%" x2="90%" y2="100%"><stop stop-color="#15998c"/><stop offset="1" stop-color="#006e68"/></linearGradient><linearGradient id="porcelain" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#fff"/><stop offset="1" stop-color="#e4f1ec"/></linearGradient><filter id="shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#003f3c" flood-opacity=".18"/></filter></defs>
+<rect width="1024" height="1024" fill="url(#tile)"/>
+<g filter="url(#shadow)"><rect x="202" y="212" width="620" height="250" rx="66" fill="url(#porcelain)"/><rect x="202" y="502" width="620" height="310" rx="66" fill="url(#porcelain)"/></g>
+<rect x="265" y="277" width="494" height="120" rx="25" fill="#007f78" opacity=".13"/>
+<path d="M552 565v166l43-43 38 69 31-17-39-68h61Z" fill="#007f78" stroke="#007f78" stroke-width="8" stroke-linejoin="round"/>
+<path d="M280 585h132M280 631h87M280 677h109" fill="none" stroke="#007f78" stroke-opacity=".36" stroke-width="15" stroke-linecap="round"/>
+</svg>

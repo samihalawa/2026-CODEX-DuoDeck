@@ -296,3 +296,5 @@ nav a:hover, .text-link:hover, .plain-button:hover { color: var(--accent); }
 @media(prefers-reduced-motion:reduce) {
   *, *::before, *::after { scroll-behavior: auto!important; animation: none!important; transition: none!important; }
 }
+
+.symbol { width: 1em; height: 1em; flex: none; vertical-align: middle; }
