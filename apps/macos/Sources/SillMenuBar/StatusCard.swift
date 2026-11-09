@@ -1,111 +1,69 @@
 import AppKit
 import SwiftUI
 
-/// One restrained accent; system materials and text colors provide the rest of the interface.
+/// A single accent for actions and selection; native surfaces and status colors do the rest.
 enum DuoDeckHostStyle {
     static let accent = Color(nsColor: NSColor(name: NSColor.Name("DuoDeckAccent")) { appearance in
-        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua { return .systemTeal }
-        return NSColor(srgbRed: 0, green: 127.0 / 255, blue: 120.0 / 255, alpha: 1)
+        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            return NSColor(srgbRed: 158.0 / 255, green: 188.0 / 255, blue: 1, alpha: 1)
+        }
+        return NSColor(srgbRed: 47.0 / 255, green: 85.0 / 255, blue: 228.0 / 255, alpha: 1)
     })
-}
 
-struct DuoDeckHostMark: View {
-    var size: CGFloat = 43
+    /// Summary rows hide the standard model suffix. Details keep the complete stored name.
+    static func deviceName(_ name: String) -> String {
+        name.replacingOccurrences(of: #" \((iPad|iPhone|iPod)[0-9]+,[0-9]+\)$"#,
+                                  with: "", options: .regularExpression)
+    }
 
-    var body: some View {
-        Group {
-            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
-               let icon = NSImage(contentsOf: url) {
-                Image(nsImage: icon).resizable().interpolation(.high)
-                    .clipShape(RoundedRectangle(cornerRadius: size * 0.22))
-            } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: size * 0.23)
-                        .fill(DuoDeckHostStyle.accent.opacity(0.12))
-                    VStack(spacing: size * 0.08) {
-                        RoundedRectangle(cornerRadius: size * 0.06)
-                            .strokeBorder(DuoDeckHostStyle.accent, lineWidth: size * 0.045)
-                        RoundedRectangle(cornerRadius: size * 0.06)
-                            .fill(DuoDeckHostStyle.accent.opacity(0.24))
-                    }
-                    .padding(size * 0.2)
-                    Image(systemName: "cursorarrow")
-                        .font(.system(size: size * 0.35, weight: .medium))
-                        .foregroundStyle(DuoDeckHostStyle.accent)
-                        .offset(x: size * 0.11, y: size * 0.12)
-                }
-            }
+    static func statusColor(_ state: StatusGlyph.State) -> Color {
+        switch state {
+        case .attention: .orange
+        case .streaming, .connected: .green
+        case .idle: .secondary
         }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+    }
+
+    static func statusSymbol(_ state: StatusGlyph.State) -> String {
+        switch state {
+        case .attention: "exclamationmark.circle.fill"
+        case .streaming, .connected: "checkmark.circle.fill"
+        case .idle: "circle.dotted"
+        }
     }
 }
 
-/// Quiet product identity in the overview; readiness is presented from the live host below.
-struct DuoDeckHostBanner: View {
-    var body: some View {
-        HStack(spacing: 13) {
-            DuoDeckHostMark(size: 54)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("DuoDeck Host")
-                    .font(.system(size: 21, weight: .semibold))
-                Text("Your Mac, within reach.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-        }
-        .padding(.horizontal, 22)
-        .padding(.top, 20)
-        .padding(.bottom, 6)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// A compact native menu header. Its content follows the actual host, including failure states.
+/// The menu leads with the Mac's actual state. Branding belongs in the app and window chrome.
 struct StatusCard: View {
     let presentation: StatusPresentation
 
-    private var statusColor: Color {
-        presentation.glyph == .attention ? .orange : DuoDeckHostStyle.accent
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 9) {
-                DuoDeckHostMark(size: 34)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("DuoDeck Host")
-                        .font(.system(size: 13, weight: .semibold))
-                    if let name = presentation.advertisedName {
-                        Text(name)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: presentation.glyph == .attention ? "exclamationmark.circle.fill" :
-                        presentation.devices.isEmpty ? "circle.dotted" : "checkmark.circle.fill")
-                    .foregroundStyle(statusColor)
-                    .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 8) {
+            if let name = presentation.advertisedName {
+                Text(name)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
-            VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 7) {
+                Image(systemName: DuoDeckHostStyle.statusSymbol(presentation.glyph))
+                    .foregroundStyle(DuoDeckHostStyle.statusColor(presentation.glyph))
+                    .accessibilityHidden(true)
                 Text(presentation.header)
-                    .font(.system(size: 12, weight: .medium))
-                if let subtitle = presentation.subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            if let subtitle = presentation.subtitle {
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let source = presentation.source { DuoDeckStatusRow(row: source, showDetails: false) }
             ForEach(presentation.devices) { DuoDeckStatusRow(row: $0, showDetails: false) }
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, 10)
         .frame(width: 300, alignment: .leading)
         .accessibilityElement(children: .contain)
     }
@@ -120,21 +78,26 @@ struct DuoDeckStatusRow: View {
     let row: StatusPresentation.Row
     var showDetails = true
 
+    private var title: String {
+        guard !showDetails, row.id != "source" else { return row.title }
+        return DuoDeckHostStyle.deviceName(row.title)
+    }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: row.symbol)
-                .foregroundStyle(DuoDeckHostStyle.accent)
+                .foregroundStyle(.secondary)
                 .frame(width: 17)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(row.title)
-                    .font(.system(size: 12, weight: .medium))
+                Text(title)
+                    .font(.system(size: 12))
                     .lineLimit(1)
                     .truncationMode(.middle)
-                if showDetails, let detail = row.detail {
+                if let detail = showDetails ? row.detail : row.issue {
                     Text(detail)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(!showDetails && row.issue != nil ? Color.orange : Color.secondary)
                         .monospacedDigit()
                         .fixedSize(horizontal: false, vertical: true)
                 }

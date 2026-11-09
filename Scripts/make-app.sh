@@ -18,7 +18,7 @@
 # macOS belongs to an app bundle. Screen Recording, Accessibility, Local Network and Login Items
 # are granted to the CFBundleIdentifier plus the code's designated requirement. So: swift build,
 # wrap the SillMenuBar executable with Packaging/Info.plist and an icon compiled from
-# design/AppIcon.svg, sign the whole bundle last, verify.
+# design/AppIcon.png, sign the whole bundle last, verify.
 #
 # Grants survive rebuilds only with a real identity: its designated requirement names the bundle ID
 # and the certificate, not this binary. Ad hoc ("-") is a hash of this exact build, so every
@@ -104,15 +104,11 @@ build_number="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $build_number" "$stage/Contents/Info.plist"
 printf 'APPL????' > "$stage/Contents/PkgInfo"
 
-# The icon. design/AppIcon.svg is the iOS art, a full-bleed square. macOS 26+ masks and lights a
-# full-bleed icon itself when it comes from an asset catalog, but shows a legacy .icns shrunk
-# inside a grey tile (seen on macOS 27). So Quick Look renders the SVG (design/README.md's own
-# tool), the render becomes the one layer of an Icon Composer document, and actool, the compiler
-# Xcode uses, turns that into Assets.car (macOS 26+) plus an AppIcon.icns masked for macOS 14–15.
-# A layered Packaging/AppIcon.icon made in Icon Composer (the SVG's four groups) wins when it
-# exists. Cached in .build/icon until the SVG, that document or this script changes.
+# The shared opaque PNG is the source for both native apps. Compile it as a single-layer
+# Icon Composer document so macOS supplies the current system mask and presentation.
+# Cache until the source, an explicit Icon Composer document, or this script changes.
 icon_out="$PWD/.build/icon"   # absolute: actool resolves relative paths in its helper's directory, not ours
-if [ ! -f "$icon_out/compiled/Assets.car" ] || [ design/AppIcon.svg -nt "$icon_out/compiled/Assets.car" ] \
+if [ ! -f "$icon_out/compiled/Assets.car" ] || [ design/AppIcon.png -nt "$icon_out/compiled/Assets.car" ] \
    || [ "$0" -nt "$icon_out/compiled/Assets.car" ] \
    || { [ -d Packaging/AppIcon.icon ] && [ -n "$(find Packaging/AppIcon.icon -newer "$icon_out/compiled/Assets.car" 2>/dev/null)" ]; }; then
     rm -rf "$icon_out"; mkdir -p "$icon_out/compiled"
@@ -121,22 +117,21 @@ if [ ! -f "$icon_out/compiled/Assets.car" ] || [ design/AppIcon.svg -nt "$icon_o
     else
         doc="$icon_out/AppIcon.icon"
         mkdir -p "$doc/Assets"
-        qlmanage -t -s 1024 -o "$icon_out" "$PWD/design/AppIcon.svg" >/dev/null 2>&1 || true
-        mv "$icon_out/AppIcon.svg.png" "$doc/Assets/Sill.png" 2>/dev/null || true
+        cp "$PWD/design/AppIcon.png" "$doc/Assets/DuoDeck.png"
         cat > "$doc/icon.json" <<'JSON'
 {
   "fill" : { "solid" : "srgb:0.00000,0.00000,0.00000,1.00000" },
-  "groups" : [ { "layers" : [ { "image-name" : "Sill.png", "name" : "Sill" } ] } ],
+  "groups" : [ { "layers" : [ { "image-name" : "DuoDeck.png", "name" : "DuoDeck" } ] } ],
   "supported-platforms" : { "squares" : [ "macOS" ] }
 }
 JSON
     fi
-    if [ -f "$doc/icon.json" ] && { [ "$doc" = "$PWD/Packaging/AppIcon.icon" ] || [ -f "$doc/Assets/Sill.png" ]; }; then
+    if [ -f "$doc/icon.json" ] && { [ "$doc" = "$PWD/Packaging/AppIcon.icon" ] || [ -f "$doc/Assets/DuoDeck.png" ]; }; then
         xcrun actool --compile "$icon_out/compiled" --platform macosx --minimum-deployment-target 14.0 \
             --app-icon AppIcon --output-partial-info-plist "$icon_out/partial.plist" "$doc" >/dev/null \
             || echo "warning: actool could not compile the icon; Sill.app gets the generic icon" >&2
     else
-        echo "warning: Quick Look did not render design/AppIcon.svg; Sill.app gets the generic icon" >&2
+        echo "warning: DuoDeck icon source could not be compiled; app gets the generic icon" >&2
     fi
 fi
 cp "$icon_out"/compiled/* "$stage/Contents/Resources/" 2>/dev/null || true

@@ -6,22 +6,21 @@ case "$mode" in run|--verify|verify|--debug|debug|--logs|logs|--telemetry|teleme
 name=DuoDeckHost
 app="$PWD/dist/DuoDeck Host.app"
 stage="$PWD/dist/.DuoDeck Host.partial.app"
-icon="$PWD/apps/ios/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
 swift build -c release --product SillMenuBar --arch arm64 --arch x86_64 -j 2
 binary="$(swift build -c release --product SillMenuBar --arch arm64 --arch x86_64 --show-bin-path)/SillMenuBar"
 test -x "$binary"
 rm -rf "$stage"
-mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources" .build/branding/icons.iconset
-cp "$binary" "$stage/Contents/MacOS/$name"
+mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources"
+# SwiftPM may record the deployment target as its SDK. Link metadata must name the
+# installed SDK so AppKit and SwiftUI use the current native control appearance.
+minos="$(xcrun vtool -show-build "$binary" | awk '$1 == "minos" && !found { print $2; found = 1 }')"
+xcrun vtool -set-build-version macos "${minos:?Missing deployment target}" \
+  "$(xcrun --sdk macosx --show-sdk-version)" -output "$stage/Contents/MacOS/$name" "$binary"
 cp Packaging/Info.plist "$stage/Contents/Info.plist"
 if [ -n "${DUODECK_BUILD_NUMBER:-}" ]; then /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $DUODECK_BUILD_NUMBER" "$stage/Contents/Info.plist"; fi
 cp LICENSE NOTICE "$stage/Contents/Resources/"
-for points in 16 32 128 256 512; do
-  twice=$((points*2))
-  sips -s format png -z "$points" "$points" "$icon" --out ".build/branding/icons.iconset/icon_${points}x${points}.png" >/dev/null
-  sips -s format png -z "$twice" "$twice" "$icon" --out ".build/branding/icons.iconset/icon_${points}x${points}@2x.png" >/dev/null
-done
-iconutil -c icns .build/branding/icons.iconset -o "$stage/Contents/Resources/AppIcon.icns"
+icon_resources="$(bash script/build_icons.sh)"
+cp "$icon_resources/Assets.car" "$icon_resources/AppIcon.icns" "$stage/Contents/Resources/"
 identity="${DUODECK_SIGN_ID:-}"
 if [ -z "$identity" ]; then
   identity="$(security find-identity -v -p codesigning | awk '/Developer ID Application: Agents AI Ltd/ && !/REVOKED/ {print $2; exit}')"

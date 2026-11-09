@@ -41,8 +41,8 @@ test("homepage has distinct brand and real claims",async()=>{
   assert.match(r.headers.get("content-type"),/text\/html/);
   const body=await r.text();
   assert.match(body,/<title>DuoDeck/);
-  assert.match(body,/Your Mac\./);
-  assert.match(body,/In your hands/);
+  assert.match(body,/Control your Mac from your iPhone or iPad/);
+  assert.match(body,/Get DuoDeck on both devices/);
   assert.match(body,/not a system-wide trackpad/i);
   assert.match(body,/href="\/styles\.css\?v=web-cache-test"/);
   assert.match(body,/src="\/app\.js\?v=web-cache-test"/);

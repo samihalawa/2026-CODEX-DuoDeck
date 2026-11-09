@@ -36,41 +36,66 @@ struct PairingOverlay: View {
     var body: some View {
         GeometryReader { geo in
             let layout = ConnectLayout(size: geo.size, fold: duoFold)
-            let width = min(layout.short ? 640 : 420, (layout.leadingPage ?? geo.size.width) - 32)
-            // The code field has the keyboard: the content goes to the top, so Pair stays above it
-            // (the stream screen ignores the keyboard's safe area, so nothing moves by itself), as
-            // on the connect screen. The half-folded Duo's is in the top half already.
-            let toTop = codeFocused && !layout.topHalf
-            ZStack(alignment: .top) {
-                // No tap gesture here: one on this backdrop took the taps meant for the buttons in
-                // front of it (measured on the simulator). What is under the overlay is not
-                // hit-testable anyway (StreamScreen), so a touch on the backdrop does nothing.
-                Color.black.opacity(0.85)
-                    .accessibilityHidden(true)
-                Group {
+            NavigationStack {
+                Form {
                     if let link = client.pendingLink {
-                        LinkConfirmation(link: link, pair: {
-                            // The overlay stays, now for this link's pairing (StreamScreen holds it open).
-                            linkName = link.name
-                            client.confirmPendingLink()
-                        }, cancel: cancel)
-                    } else if let linkName {
-                        linkProgress(linkName)
+                        Section {
+                            LinkConfirmation(link: link, pair: {
+                                linkName = link.name
+                                client.confirmPendingLink()
+                            }, cancel: cancel)
+                        }
+                    } else if linkName != nil {
+                        Section { status }
                     } else {
-                        content(layout)
+                        Section {
+                            Text(client.overlayAskLine ?? DiscoveryPolicy.HomeCopy.overlayShowing(mac: mac))
+                                .font(.body)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if CodeScanner.isSupported || scannerMode != .live {
+                                Picker("Pairing method", selection: Binding(get: { typed }, set: { value in
+                                    client.pairing = .idle
+                                    codeFocused = false
+                                    typed = value
+                                })) {
+                                    Text("Scan code").tag(false)
+                                    Text("Enter code").tag(true)
+                                }
+                                .pickerStyle(.segmented)
+                                .disabled(working)
+                            }
+                        }
+                        Section {
+                            if typed {
+                                codeField
+                            } else if !working {
+                                CodeScanner(mode: scannerMode,
+                                            onLink: { client.scanned($0, tapped: $1, overlay: true) },
+                                            retryNeedsTap: client.scanRetryNeedsTap)
+                                    .frame(height: layout.short ? 210 : 280)
+                                    .listRowInsets(EdgeInsets())
+                            }
+                        } footer: {
+                            Text(typed ? "Enter the 12-digit code shown on your Mac." : "Point the camera at the pairing code on your Mac.")
+                        }
+                        Section { status }
                     }
                 }
-                .padding(20)
-                .frame(width: width, alignment: .leading)
-                .background(Palette.bar, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .padding(.vertical, 16)
-                // The Duo half-folded: above the fold only, or, in the book pose, on the leading
-                // page; elsewhere centred, or at the top while the code is typed.
-                .frame(maxWidth: layout.leadingPage ?? .infinity, maxHeight: layout.topRoom ?? geo.size.height,
-                       alignment: toTop ? .top : .center)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .navigationTitle("Pair with \(linkName ?? client.pendingLink?.name ?? mac)")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: cancel).keyboardShortcut(.cancelAction)
+                    }
+                }
             }
+            .frame(width: min(layout.leadingPage ?? geo.size.width, 720),
+                   height: layout.roomAboveFold ?? geo.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity,
+                   alignment: layout.leadingPage == nil ? .top : .topLeading)
         }
+        .background(Palette.canvas)
+        .tint(Palette.accent)
         .transition(.opacity)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
@@ -109,70 +134,6 @@ struct PairingOverlay: View {
         close()
     }
 
-    @ViewBuilder private func content(_ layout: ConnectLayout) -> some View {
-        if layout.short && !typed {
-            HStack(alignment: .top, spacing: 16) {
-                CodeScanner(mode: scannerMode, onLink: { client.scanned($0, tapped: $1, overlay: true) },
-                            retryNeedsTap: client.scanRetryNeedsTap)
-                    .frame(width: 260, height: 200)
-                VStack(alignment: .leading, spacing: 8) {
-                    title
-                    status
-                    links
-                }
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
-                title
-                if typed {
-                    codeField
-                } else {
-                    CodeScanner(mode: scannerMode, onLink: { client.scanned($0, tapped: $1, overlay: true) },
-                                retryNeedsTap: client.scanRetryNeedsTap)
-                        .frame(maxWidth: 420, maxHeight: 300)
-                        .frame(height: layout.topHalf ? 220 : 300)
-                }
-                status
-                links
-            }
-        }
-    }
-
-    /// An outside link's pairing, once confirmed: its progress, its error or "Paired with…" (which
-    /// fades the overlay after a second), and Cancel. No scanner: the link may name another Mac
-    /// than the one this session streams.
-    private func linkProgress(_ name: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Pair with \(name)")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityFocused($titleFocused)
-            status
-            cancelButton
-                .buttonStyle(.plain)
-        }
-        .onAppear { titleFocused = true }
-    }
-
-    private var title: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // The typed path is all a device without the scanner gets: it says what to do there.
-            Text(typed ? "Enter the Code from \(mac)" : "Scan the Code on \(mac)")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Palette.text)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityFocused($titleFocused)
-            // Over a door that speaks TLS, what the Mac answered this overlay's ask; over a plain
-            // one, which always opens a window for kind 21, that a code is showing.
-            Text(client.overlayAskLine ?? DiscoveryPolicy.HomeCopy.overlayShowing(mac: mac))
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
     private var codeField: some View {
         VStack(alignment: .leading, spacing: 8) {
             PairingField(prompt: "0000 0000 0000", label: "Code", text: $code, keyboard: PairingField.codeKeyboard, submit: .go, monospaced: true)
@@ -182,17 +143,13 @@ struct PairingOverlay: View {
                     let grouped = PairingField.grouped(typed)
                     if grouped != typed { code = grouped }
                 }
-            Button(action: pairTyped) {
-                Text("Pair")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.onAccent)
-                    .frame(minWidth: 88, minHeight: 44)
-                    .padding(.horizontal, 12)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.accent.opacity(working ? 0.4 : 1)))
-            }
-            .buttonStyle(.plain)
-            .disabled(working)
+            Button("Pair Mac", action: pairTyped)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(working)
+                .frame(maxWidth: .infinity)
         }
+        .disabled(working)
     }
 
     /// The typed path here needs only the code: over a session at home that speaks TLS it goes to
@@ -211,12 +168,12 @@ struct PairingOverlay: View {
                 ProgressView().controlSize(.small).tint(Palette.muted)
                 Text(text)
             }
-            .font(.system(size: 13))
+            .font(.footnote)
             .foregroundStyle(Palette.muted)
             .accessibilityElement(children: .combine)
         case .paired(let name):
             Label("Paired with \(name).", systemImage: "checkmark.circle.fill")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(Palette.text)
                 .onAppear { AccessibilityNotification.Announcement("Paired with \(name).").post() }
         case .failed(let p):
@@ -226,28 +183,4 @@ struct PairingOverlay: View {
         }
     }
 
-    private var links: some View {
-        HStack(spacing: 18) {
-            if CodeScanner.isSupported || scannerMode != .live {
-                Button(typed ? "Scan Code Instead" : "Enter Code Instead") {
-                    client.pairing = .idle
-                    codeFocused = false
-                    typed.toggle()
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Palette.accent)
-                .frame(minHeight: 44)
-            }
-            cancelButton
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var cancelButton: some View {
-        Button("Cancel", action: cancel)
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(Palette.accent)
-            .frame(minHeight: 44)
-            .keyboardShortcut(.cancelAction)
-    }
 }

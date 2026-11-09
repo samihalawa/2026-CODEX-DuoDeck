@@ -3,7 +3,7 @@ import UIKit
 import UIKit.UIGestureRecognizerSubclass
 import StreamProtocol
 
-/// The portrait trackpad: the well, its dot grid, the hint, and the touch surface itself.
+/// The portrait trackpad: a plain surface, a gesture hint, and relative pointer input.
 ///
 /// The opposite input model to `InputOverlay`, which is direct-touch — there the pointer goes where
 /// you touch. Here the pad is relative, like a Mac's, so this side has to remember where the
@@ -33,14 +33,13 @@ struct Trackpad: View {
     var body: some View {
         ZStack {
             Palette.trackpad
-            DotGrid().allowsHitTesting(false)
             TrackpadView(send: send, setPointer: setPointer, feed: feed, onFingers: onFingers,
                          latched: latched, onModifiersConsumed: onModifiersConsumed,
                          verticalSpan: verticalSpan, pointerSensitivity: pointerSensitivity, sendGesture: sendGesture)
             VStack {
                 Spacer(minLength: 0)
                 Text("Move with one finger · Scroll with two")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.caption)
                     .foregroundStyle(Palette.muted)
                     .multilineTextAlignment(.center)
             }
@@ -50,28 +49,6 @@ struct Trackpad: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(shape)
         .overlay(shape.strokeBorder(Palette.separator, lineWidth: 1))
-    }
-}
-
-/// 1 pt dots on an 18 pt grid, the board's texture for "this surface is the one you drag on".
-private struct DotGrid: View {
-    var body: some View {
-        Canvas { context, size in
-            let step: CGFloat = 18
-            let radius: CGFloat = 1
-            let dot = GraphicsContext.Shading.color(Palette.muted.opacity(0.12))
-            var y = step / 2
-            while y < size.height {
-                var x = step / 2
-                while x < size.width {
-                    context.fill(Path(ellipseIn: CGRect(x: x - radius, y: y - radius,
-                                                        width: radius * 2, height: radius * 2)),
-                                 with: dot)
-                    x += step
-                }
-                y += step
-            }
-        }
     }
 }
 

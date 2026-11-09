@@ -182,20 +182,15 @@ struct PairDeviceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                DuoDeckHostMark(size: 38)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Pair with DuoDeck").font(.title3.weight(.semibold))
-                    Text("Connect your iPhone or iPad.").foregroundStyle(.secondary)
-                }
-            }
-            .padding(.bottom, 2)
+            Text("Pair iPhone or iPad")
+                .font(.title3.weight(.semibold))
+                .padding(.bottom, 2)
             if offer.byDevice {
                 // The name went through SafeText in the host, as every device-supplied name does.
                 Text(Self.askedLine(offer))
                     .font(.headline)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Point it at this code, or tap Enter Code Instead and type the code.")
+                Text("Scan this code, or choose Enter code and type it.")
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 if let who = offer.requestedBy {
@@ -203,7 +198,7 @@ struct PairDeviceView: View {
                         .font(.headline)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("In DuoDeck on your iPhone or iPad, tap this Mac, or tap Add a Mac… when you’re away, then point it at this code.")
+                Text("On your iPhone or iPad, open DuoDeck, tap Add Mac, then scan this code.")
                     .fixedSize(horizontal: false, vertical: true)
             }
             QRCodeView(text: offer.url, spent: isSpent)
@@ -256,7 +251,7 @@ struct PairDeviceView: View {
             }
         case .waiting(let triesLeft, let wrongFrom):
             VStack(alignment: .leading, spacing: 10) {
-                Text("Can’t scan? Tap Enter Code Instead, and type:")
+                Text("To enter it manually, choose Enter code and type:")
                 Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 14, verticalSpacing: 6) {
                     GridRow {
                         Text("Address").foregroundStyle(.secondary)

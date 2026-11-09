@@ -19,15 +19,13 @@ struct SettingsPane: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if tab == .general {
-                DuoDeckHostBanner()
-            }
             Group {
                 switch tab {
             case .general: GeneralPane(model: model, settings: model.settings, previewUpdates: previewUpdates,
                                        previewClipboardAccess: previewClipboardAccess, previewFirewall: previewFirewall)
             case .devices: LiveDevicesPane(model: model, settings: model.settings)
             case .streaming: StreamingPane(model: model, settings: model.settings)
+            case .advanced: AdvancedPane(model: model, settings: model.settings)
             case .virtualDisplay: VirtualDisplayPane(model: model, settings: model.settings)
             case .permissions: PermissionsPane(model: model)
             case .remoteAccess: LiveRemoteAccessPane(model: model, settings: model.settings)
@@ -41,10 +39,11 @@ struct SettingsPane: View {
         // them once a second, only while this tab is on screen, and when Sill becomes active; an
         // idle Sill with Settings closed wakes for nothing. The Devices and Remote Access panes
         // follow the host's status, which is pushed, so they poll nothing.
-        .task(id: model.visibleSettingsTab == tab) {
+        .task(id: model.visibleSettingsTab) {
             // General on screen: whether the macOS firewall blocks Sill, asked again (FirewallCheck).
             if model.visibleSettingsTab == tab, tab == .general { model.coordinator?.checkFirewall() }
-            guard model.visibleSettingsTab == tab, tab != .streaming, tab != .devices, tab != .remoteAccess else { return }
+            guard let visible = model.visibleSettingsTab, visible.navigationGroup == tab.navigationGroup,
+                  visible != .streaming, visible != .devices, visible != .remoteAccess, visible != .advanced else { return }
             while !Task.isCancelled {
                 model.permissions.refresh()
                 model.loginItem.refresh()
@@ -217,7 +216,7 @@ struct UpdatesSection: View {
 
 // MARK: Virtual Display
 
-private struct VirtualDisplayPane: View {
+struct VirtualDisplayPane: View {
     let model: AppModel
     @Bindable var settings: HostSettings
     @State private var retrying = false
@@ -279,7 +278,7 @@ private struct VirtualDisplayPane: View {
 
 // MARK: Permissions
 
-private struct PermissionsPane: View {
+struct PermissionsPane: View {
     let model: AppModel
 
     var body: some View {

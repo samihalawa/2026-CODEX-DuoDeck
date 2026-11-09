@@ -3,49 +3,88 @@ import SwiftUI
 import SillHostCore
 import StreamProtocol
 
-/// The everyday controls live here. Connection tuning and diagnostics are deliberate disclosures.
+/// The everyday controls: host state, one setup action, login, clipboard, and updates.
 struct GeneralPane: View {
     let model: AppModel
     @Bindable var settings: HostSettings
     var previewUpdates: UpdatePolicy.Pane?
     var previewClipboardAccess: ClipboardPolicy.MacAccess?
     var previewFirewall: FirewallRule.Verdict?
+    var previewPresentation: StatusPresentation?
+    var previewAllPermissionsGranted: Bool?
 
-    @State private var showConnectionOptions = false
+    private var presentation: StatusPresentation { previewPresentation ?? model.presentation }
+    private var allPermissionsGranted: Bool { previewAllPermissionsGranted ?? model.permissions.allGranted }
+
+    @State private var showConnectionDetails = false
     @State private var showUpdates = false
-    @State private var showDiagnostics = false
 
-    private var installedInApplications: Bool {
-        let path = Bundle.main.bundlePath
-        return path.hasPrefix("/Applications/") || path.hasPrefix(NSHomeDirectory() + "/Applications/")
+    /// Setup and firewall have dedicated controls below; other real issues remain visible.
+    private var attention: [StatusPresentation.Attention] {
+        presentation.attention.filter {
+            switch $0.action {
+            case .allowScreenRecording, .allowAccessibility, .showGeneral: false
+            default: true
+            }
+        }
+    }
+
+    private func review(_ action: StatusPresentation.Attention.Action) {
+        switch action {
+        case .showRemoteAccess: model.showSettings?(.remoteAccess)
+        case .showDevices: model.showSettings?(.devices)
+        case .pairingRequest(let name, let showing): model.showPairingRequest(name: name, showing: showing)
+        case .allowScreenRecording, .allowAccessibility: model.showSettings?(.permissions)
+        case .showGeneral: model.showSettings?(.general)
+        case .none: break
+        }
     }
 
     var body: some View {
         Form {
             Section {
                 LabeledContent {
-                    Image(systemName: model.presentation.glyph == .attention
-                          ? "exclamationmark.circle.fill" : model.presentation.glyph == .idle ? "circle.dotted" : "checkmark.circle.fill")
-                        .foregroundStyle(model.presentation.glyph == .attention ? Color.orange : DuoDeckHostStyle.accent)
+                    Image(systemName: DuoDeckHostStyle.statusSymbol(presentation.glyph))
+                        .foregroundStyle(DuoDeckHostStyle.statusColor(presentation.glyph))
                 } label: {
-                    Text(model.presentation.header).fontWeight(.medium)
-                    Text(model.presentation.subtitle ?? "Open DuoDeck on your iPhone or iPad to connect.")
+                    Text(presentation.header).fontWeight(.medium)
+                    Text(presentation.subtitle ?? "Open DuoDeck on your iPhone or iPad to connect.")
                 }
-                if let source = model.presentation.source { DuoDeckStatusRow(row: source) }
-                ForEach(model.presentation.devices) { DuoDeckStatusRow(row: $0) }
+                ForEach(attention) { item in
+                    LabeledContent {
+                        if item.action != .none {
+                            Button("Review…") { review(item.action) }
+                                .accessibilityLabel("Review \(item.title)")
+                        }
+                    } label: {
+                        Label(item.title, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text(item.subtitle)
+                    }
+                }
+                if let source = presentation.source { DuoDeckStatusRow(row: source, showDetails: false) }
+                ForEach(presentation.devices) { DuoDeckStatusRow(row: $0, showDetails: false) }
                 HStack(spacing: 10) {
-                    if !model.permissions.allGranted {
+                    if !allPermissionsGranted {
                         Button("Finish Setup…") { model.showSettings?(.permissions) }
                             .buttonStyle(.borderedProminent)
+                    } else {
+                        Button("Pair iPhone or iPad…") { model.pairDevice() }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!presentation.canPair)
+                            .keyboardShortcut("p", modifiers: [.command, .shift])
                     }
-                    Button("Pair a Device…") { model.pairDevice() }
-                        .disabled(!model.presentation.canPair)
-                        .keyboardShortcut("p", modifiers: [.command, .shift])
                     Spacer()
                     Button("Devices…") { model.showSettings?(.devices) }
                 }
+                if presentation.source != nil || !presentation.devices.isEmpty {
+                    DisclosureGroup("Connection details", isExpanded: $showConnectionDetails) {
+                        if let source = presentation.source { DuoDeckStatusRow(row: source) }
+                        ForEach(presentation.devices) { DuoDeckStatusRow(row: $0) }
+                    }
+                }
             } header: {
-                Text("Your Mac")
+                Text(presentation.advertisedName ?? "This Mac")
             }
 
             if let firewall = previewFirewall ?? model.coordinator?.status.snapshot.firewall, firewall.blocksDevices {
@@ -53,10 +92,6 @@ struct GeneralPane: View {
             }
 
             Section {
-                Picker("Stream quality", selection: profile) {
-                    ForEach(DuoDeckStreamingPreset.allCases) { Text($0.title).tag($0.rawValue) }
-                    if DuoDeckStreamingPreset.current(in: settings.config) == nil { Text("Custom").tag("custom") }
-                }
                 Toggle("Launch at login", isOn: Binding(get: { model.loginItem.isOn }, set: { model.loginItem.set($0) }))
                     .disabled(!model.loginItem.available)
                 if model.loginItem.needsApproval {
@@ -65,12 +100,6 @@ struct GeneralPane: View {
                 if let error = model.loginItem.error {
                     Text(error).font(.callout).foregroundStyle(.red)
                 }
-            } header: {
-                Text("Everyday settings")
-            } footer: {
-                Footnote(model.presentation.away
-                         ? "Using your away quality now. Adjust it in Streaming settings."
-                         : "Balanced is a good starting point. Changes apply to the current stream.")
             }
 
             ClipboardSection(shareClipboard: $settings.config.shareClipboard,
@@ -78,20 +107,6 @@ struct GeneralPane: View {
                              allow: { model.permissions.allowClipboard() })
 
             Section {
-                DisclosureGroup("Connection options", isExpanded: $showConnectionOptions) {
-                    LabeledContent("Network name", value: networkName)
-                    Toggle("Connect directly over Wi-Fi", isOn: $settings.config.directWireless)
-                    Footnote("Use this when your devices are nearby without a shared network. It can reduce performance on a shared Wi-Fi connection.")
-                    HStack {
-                        Button("Remote Access…") { model.showSettings?(.remoteAccess) }
-                        Button("Rename This Mac…") {
-                            if let url = URL(string: "x-apple.systempreferences:com.apple.Sharing-Settings.extension") {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
-                    }
-                    .padding(.top, 3)
-                }
                 DisclosureGroup("Updates", isExpanded: $showUpdates) {
                     if let preview = previewUpdates {
                         UpdatesSection(pane: preview, automatic: .constant(true))
@@ -101,51 +116,7 @@ struct GeneralPane: View {
                                                                        openRelease: { NSWorkspace.shared.open($0) }))
                     }
                 }
-                DisclosureGroup("About & diagnostics", isExpanded: $showDiagnostics) {
-                    LabeledContent("Version", value: "\(AppModel.version) (\(AppModel.build))")
-                    LabeledContent("Running from") {
-                        Text(Bundle.main.bundlePath)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .textSelection(.enabled)
-                    }
-                    if !installedInApplications {
-                        Footnote("Keep the app in Applications so its login item and permissions stay with the same copy.")
-                    }
-                    HStack {
-                        Button("Show Log…") { model.showLog?() }
-                        Button("Reveal Log File") {
-                            if let url = HostLog.shared.fileURL { NSWorkspace.shared.activateFileViewerSelecting([url]) }
-                        }
-                        .disabled(HostLog.shared.fileURL == nil)
-                        Spacer()
-                        Link("Help", destination: URL(string: "https://duodeck.megawebs.com/#how")!)
-                    }
-                    Footnote("DuoDeck by Agents AI Ltd. Built on the Apache 2.0-licensed Sill streaming engine.")
-                    Button("Quit DuoDeck Host") { NSApp.terminate(nil) }
-                        .padding(.top, 4)
-                }
             }
-        }
-    }
-
-    private var profile: Binding<String> {
-        Binding(get: { DuoDeckStreamingPreset.current(in: settings.config)?.rawValue ?? "custom" },
-                set: { value in
-                    if let preset = DuoDeckStreamingPreset(rawValue: value) {
-                        settings.config = preset.applying(to: settings.config)
-                    }
-                })
-    }
-
-    private var networkName: String {
-        let snapshot = model.coordinator?.status.snapshot ?? HostStatusSnapshot()
-        switch snapshot.network {
-        case .advertising(let name): return name
-        case .notAdvertised: return "Not advertised in test mode"
-        case .failed: return "Unavailable"
-        case .waiting: return "Waiting for the network"
-        case .starting, .registering: return "Registering…"
         }
     }
 }

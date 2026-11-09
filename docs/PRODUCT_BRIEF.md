@@ -2,42 +2,44 @@
 
 ## Goal
 
-Make DuoDeck a distinctive, native Mac control experience for iPhone and iPad, with a coherent Mac companion. Preserve the working streaming, pairing, gesture and keyboard engine. Reclaim trackpad space for useful actions and make everyday use simple.
+Make controlling a Mac from an iPhone or iPad clear and comfortable. Preserve the working streaming, pairing, gesture and keyboard engine. Give the screen and trackpad most of the space, keep the next action obvious, and make the Mac companion feel at home on macOS.
 
 ## Source of direction
 
-The owner's shared conversation, “Enable iPhone Trackpad”, and the 9 November 2026 correction establish the product intent: significant differentiation from Sill, native platform behavior, advanced settings in submenus, matching macOS branding, and verified deployment. Current code and native provider records determine what exists. Prior build or submission claims are leads until verified.
+The owner's shared conversation, “Enable iPhone Trackpad”, and the 9 November 2026 corrections establish the intent: a distinct product, native platform behavior, advanced settings in submenus, consistent Mac branding and verified deployment. The later correction rejects the decorative website and illustrated icon and selects the current MagicInterview website and native apps as the design reference. Current code and native provider records determine what exists. Earlier build or submission claims require their own evidence.
 
-## Product priorities
+## Core journeys
 
-- Make choosing and connecting to a Mac obvious.
-- Keep the live picture, trackpad, keyboard and app switching central.
-- Preserve Small, Medium and Full trackpad sizes, pointer speed, saved preferences and useful shortcut sets.
-- Put advanced streaming, connection, diagnostics and gesture options behind clearly named settings.
-- Actions must perform what their labels promise. A shortcut that cycles windows must say Next Window, not Terminal.
-- Support ordinary iPhone, iPad and Duo layouts, keyboard visibility, larger text and accessible controls.
-- Basic local control remains usable without an account.
-- Use actual native APIs and functional state. Demonstration and fixture content must be visibly identified.
+- On iPhone and iPad, start at **Macs**. **Add Mac** opens a native sheet with **Scan code** and **Enter code**. The manual path uses the Mac address and 12-digit pairing code, then **Pair Mac**. A discovered Mac can also open its pairing sheet directly.
+- Once connected, keep the picture, trackpad, Keyboard and Shortcuts easy to reach. Put trackpad size and pointer speed in **Settings › Trackpad**. Small, Medium and Full sizes apply to the upright layout; pointer speed applies across the on-screen trackpads.
+- Keep the shortcut row optional. Editing, Browsing, Windows and Code groups remain available through Shortcuts. Put extra window, menu and modifier controls under **Trackpad › More controls**.
+- On Mac, use four settings tabs: **General**, **Devices**, **Streaming** and **Advanced**. General explains readiness and offers setup or pairing. Devices manages connections. Streaming holds quality and audio. Advanced contains network options, Remote Access, Virtual Display, Permissions and diagnostics.
+- Preserve saved preferences, pairing and meaningful error states. Support ordinary iPhone, iPad and Duo layouts, keyboard visibility, larger text and accessible controls.
+- Keep the current local-control product free and usable without an account. Planned accounts, subscriptions and entitlements must not appear as working features.
 
 ## Design language
 
-DuoDeck is the product name. Use the dual-panel pointer icon in design/AppIcon.svg and the checked-in raster derivatives. Use the system typeface, native controls and materials, a restrained teal accent, and adaptive light/dark appearance. Live video keeps its appropriate dark canvas. Keep labels short, readable and specific.
+Use the simple paired-D app icon from **design/AppIcon.png**, an opaque 1024×1024 PNG. Native app icons and web icon derivatives share that source. The website header uses a plain **DuoDeck** text wordmark.
 
-Avoid repeated promotional banners, glowing gradients, oversized dashboard cards, decorative metrics and settings on the main control surface. Standard platform conventions should make the product easier to learn. Branding does not require renaming internal protocol or compatibility identifiers.
+The web reference is MagicInterview's current public stylesheet: Instrument Sans, white and light grey surfaces, dark readable text, restrained borders and one blue action color, #2f55e4. Its older typography specimen page is not the current reference. Explain the product with “Control your Mac from your iPhone or iPad.” Follow that with specific actions and clear setup steps.
+
+Native apps use system typography, standard lists, forms, toolbars and semantic light/dark surfaces. Use blue as an accent, not as a large decorative surface. Live video keeps its appropriate dark canvas. Working screens lead with the task and the Mac's name; they do not repeat logo or slogan banners.
+
+Use short, literal labels. A shortcut that cycles windows says Next Window. Place advanced controls behind named settings rather than showing every option at once. Avoid oversized marketing headings inside apps, glowing gradients, decorative metrics and invented device scenes presented as product evidence. Clearly identify the website's interactive preview; release screenshots must come from the actual app.
 
 ## Engineering boundaries
 
 Canonical repository: samihalawa/2026-CODEX-DuoDeck.
 Canonical checkout: /Users/samihalawa/git/PROJECTS_ON_PROCESS/2026-CODEX-DuoDeck.
 
-Preserve unrelated working changes. Keep one canonical source per platform; root Sources and iOSClient symlinks are compatibility paths. Maintain Apache 2.0 attribution and upstream copyright notices.
+Preserve unrelated working changes. Keep one canonical source per platform; root Sources and iOSClient symlinks are compatibility paths. Maintain Apache 2.0 attribution and upstream copyright notices. Internal protocol and engine names may remain where compatibility requires them.
 
-The current shipping code comprises apps/ios, apps/macos and apps/web, plus packages/stream-protocol. Android, Windows, a sandboxed Mac App Store client, account services and paid entitlements are remaining project work; their presence or release must never be inferred from plans or empty directory names. The privileged Mac host is distributed separately from any future Mac App Store client.
+The current implementation comprises apps/ios, apps/macos and apps/web, plus packages/stream-protocol. Android, Windows, a sandboxed Mac App Store client, account services and paid entitlements remain planned work. The privileged Mac host is distributed separately from any future Mac App Store client. Source presence does not establish public availability.
 
 ## Professional execution prompt
 
-Inspect the canonical repository, current provider state and relevant original conversation before changing DuoDeck. Preserve working behavior and user changes. Improve the actual user journey with coherent native design, useful controls and progressive settings. Apply the identity across app surfaces, icons, help, website and release metadata. Verify every affected layout and actual build, resolve concrete defects, commit the reviewed change, and publish through the project's own release paths. Report build, install, upload, processing, submission and availability as separate outcomes supported by direct evidence.
+Inspect the canonical repository, relevant original conversation and current provider state before changing DuoDeck. Preserve working behavior and user changes. Follow the native journeys and the current MagicInterview design reference above. Simplify the actual controls, pairing and settings before adding decoration. Apply one identity across app icons, website, help and release metadata. Verify affected layouts, action behavior and real builds; resolve concrete defects; then commit and publish through DuoDeck's own release paths. Report build, install, upload, processing, submission and public availability as separate outcomes supported by direct evidence.
 
 ## Completion evidence
 
-A source diff is not a release. A release needs successful builds, relevant behavioral checks, rendered UI review, a correct signed identity, and native deployment/readback. Website health must identify the version and source commit. Store preparation and upload do not establish review approval or public availability.
+A release needs successful builds, relevant behavioral checks, rendered UI review, correct signed identities and native deployment readback. Website health must identify the version and source commit. Screenshots must match the selected build. A Mac download requires the exact artifact's notarization and public-byte verification. Store preparation and upload do not establish review approval or public availability. Record current release state in docs/duodeck-app-store-release.md and the release verification record; keep public release notes focused on durable changes.

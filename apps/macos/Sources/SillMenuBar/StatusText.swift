@@ -12,6 +12,8 @@ struct StatusPresentation: Equatable {
         var symbol: String
         var title: String
         var detail: String?
+        /// A short actionable state, retained when technical details are collapsed.
+        var issue: String? = nil
     }
 
     /// Something that needs the user, shown in the menu with an orange warning.
@@ -289,8 +291,14 @@ enum StatusText {
             parts.append("\(fps) fps · frame age \(ms(age)) · RTT \(ms(rtt))")
         }
         if let route = routeWord(d) { parts.append(route) }
+        let issue: String? = d.link.map { link in
+            switch link.state {
+            case .stalled: "Connection interrupted"
+            case .behind: "Connection is slow"
+            }
+        }
         return StatusPresentation.Row(id: String(describing: d.id), symbol: symbol, title: name,
-                                      detail: parts.isEmpty ? nil : parts.joined(separator: " · "))
+                                      detail: parts.isEmpty ? nil : parts.joined(separator: " · "), issue: issue)
     }
 
     /// A device's link that does not keep up, as its row says it: behind, "3 fps, the link can’t carry

@@ -531,7 +531,7 @@ final class VirtualStage {
         let t0 = Date()
         let d: VirtualDisplay
         do {
-            d = try VirtualDisplay(name: "Sill", widthPt: Int(env.width), heightPt: Int(env.height + menuInset), scale: 2,
+            d = try VirtualDisplay(name: "DuoDeck", widthPt: Int(env.width), heightPt: Int(env.height + menuInset), scale: 2,
                                    refreshHz: Double(refreshHz), vendorID: Self.vendorID, productID: Self.productID, serialNum: Self.serialNum)
         } catch {
             creationFailures += 1

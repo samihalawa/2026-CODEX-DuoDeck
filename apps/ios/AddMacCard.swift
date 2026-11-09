@@ -68,100 +68,76 @@ struct AddMacCard: View {
     private var problem: PairingProblem? { if case .failed(let p) = client.pairing { return p }; return nil }
 
     var body: some View {
-        Group {
-            if layout.short && !typed {
-                HStack(alignment: .top, spacing: 16) {
-                    CodeScanner(mode: scannerMode, onLink: { client.scanned($0, tapped: $1, overlay: false) },
-                                retryNeedsTap: client.scanRetryNeedsTap, mac: home)
-                        .frame(width: 260, height: 200)
-                    VStack(alignment: .leading, spacing: 8) {
-                        words
-                        progress
-                        links
+        Form {
+            Section {
+                Text(home.map { "Enter or scan the code shown on \($0)." }
+                     ?? "On your Mac, open DuoDeck and choose Pair iPhone or iPad…")
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+                if CodeScanner.isSupported || scannerMode != .live {
+                    Picker("Pairing method", selection: Binding(get: { typed }, set: { value in
+                        client.pairing = .idle
+                        focus = nil
+                        typed = value
+                    })) {
+                        Text("Scan code").tag(false)
+                        Text("Enter code").tag(true)
                     }
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    words
-                    if typed {
-                        fields
-                    } else if !working {
-                        // Gone while a pairing runs, back after a failure: the new scanner finds the
-                        // code still in view, which StreamClient.scanned holds until it is tapped.
-                        CodeScanner(mode: scannerMode, onLink: { client.scanned($0, tapped: $1, overlay: false) },
-                                    retryNeedsTap: client.scanRetryNeedsTap, mac: home)
-                            .frame(height: layout.short ? 200 : 230)
-                    }
-                    progress
-                    links
+                    .pickerStyle(.segmented)
+                    .disabled(working)
                 }
             }
+            if typed {
+                Section {
+                    if home == nil {
+                        PairingField(prompt: "Mac address", label: "Address", text: $address,
+                                     keyboard: .URL, submit: .next)
+                            .focused($focus, equals: .address)
+                            .onSubmit { focus = .code }
+                        if let problem, problem.field == .address { ProblemLine(text: problem.text) }
+                    }
+                    PairingField(prompt: "0000 0000 0000", label: "Pairing code", text: $code,
+                                 keyboard: PairingField.codeKeyboard, submit: .go, monospaced: true)
+                        .focused($focus, equals: .code)
+                        .onSubmit(pair)
+                        .onChange(of: code) { _, typed in
+                            let grouped = PairingField.grouped(typed)
+                            if grouped != typed { code = grouped }
+                        }
+                    if let problem, problem.field == .code { ProblemLine(text: problem.text) }
+                } footer: {
+                    Text(home == nil
+                         ? "Use the address and 12-digit code shown in DuoDeck on your Mac."
+                         : "The 12-digit code is shown on your Mac.")
+                }
+                .disabled(working)
+                Section {
+                    Button(action: pair) {
+                        Text("Pair Mac").frame(maxWidth: .infinity, minHeight: 30)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(working)
+                    .keyboardShortcut(.defaultAction)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                }
+            } else if !working {
+                Section {
+                    CodeScanner(mode: scannerMode,
+                                onLink: { client.scanned($0, tapped: $1, overlay: false) },
+                                retryNeedsTap: client.scanRetryNeedsTap, mac: home)
+                        .frame(height: layout.short ? 210 : 280)
+                        .listRowInsets(EdgeInsets())
+                } footer: {
+                    Text("Point the camera at the pairing code on your Mac.")
+                }
+            }
+            Section { progress }
         }
         .onChange(of: focus) { _, f in editing = f != nil }
         .accessibilityAction(.escape, close)
         .background(EscapeKey(action: close))
-    }
-
-    // MARK: Words
-
-    @ViewBuilder private var words: some View {
-        if let mac = home {
-            // The home card has one line, the same whether or not the code has the keyboard: the
-            // Mac shows its code now, and the typed path needs no address.
-            Text(typed ? DiscoveryPolicy.HomeCopy.typeCode(mac: mac) : DiscoveryPolicy.HomeCopy.showing(mac: mac, device: device))
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-        } else if editing && (layout.compactPortrait || layout.short) {
-            Text("Type the address and code from your Mac.")
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.muted)
-        } else {
-            Text("Pair once, and DuoDeck reaches your Mac from anywhere, through your VPN or the internet.")
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(typed ? "Type the address and code that DuoDeck Host shows on your Mac."
-                       : "On your Mac, choose Pair iPhone or iPad… in the DuoDeck menu, then point this \(device) at the code.")
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    // MARK: The typed path
-
-    private var fields: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // The home card dials the door its ask reached: the code alone.
-            if home == nil {
-                PairingField(prompt: "100.101.102.103 or mac.example.net", label: "Address", text: $address,
-                             keyboard: .URL, submit: .next)
-                    .focused($focus, equals: .address)
-                    .onSubmit { focus = .code }
-                if let problem, problem.field == .address { ProblemLine(text: problem.text) }
-            }
-            PairingField(prompt: "0000 0000 0000", label: "Code", text: $code, keyboard: PairingField.codeKeyboard, submit: .go, monospaced: true)
-                .focused($focus, equals: .code)
-                .onSubmit(pair)
-                .onChange(of: code) { _, typed in
-                    let grouped = PairingField.grouped(typed)
-                    if grouped != typed { code = grouped }
-                }
-            if let problem, problem.field == .code { ProblemLine(text: problem.text) }
-            Button(action: pair) {
-                Text("Pair")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.onAccent)
-                    .frame(minWidth: 88, minHeight: 44)
-                    .padding(.horizontal, 12)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.accent.opacity(working ? 0.4 : 1)))
-            }
-            .buttonStyle(.plain)
-            .disabled(working)
-            .keyboardShortcut(.defaultAction)
-        }
-        .disabled(working)
     }
 
     private func pair() {
@@ -183,13 +159,13 @@ struct AddMacCard: View {
                 ProgressView().controlSize(.small).tint(Palette.muted)
                 Text(text)
             }
-            .font(.system(size: 13))
+            .font(.footnote)
             .foregroundStyle(Palette.muted)
             .frame(minHeight: 24)
             .accessibilityElement(children: .combine)
         case .paired(let name):
             Label("Paired with \(name).", systemImage: "checkmark.circle.fill")
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(Palette.text)
         case .failed(let p) where p.field == .card || !typed:
             ProblemLine(text: p.text)
@@ -198,39 +174,6 @@ struct AddMacCard: View {
         }
     }
 
-    // MARK: Links
-
-    /// Side by side, or one above the other where the words beside a viewfinder are narrow (a
-    /// 667 pt wide phone on its side).
-    private var links: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 18) { pathToggle; cancelButton }
-            VStack(alignment: .leading, spacing: 0) { pathToggle; cancelButton }
-        }
-        .buttonStyle(.plain)
-    }
-
-    @ViewBuilder private var pathToggle: some View {
-        if CodeScanner.isSupported || scannerMode != .live {
-            Button(typed ? "Scan Code Instead" : "Enter Code Instead") {
-                client.pairing = .idle
-                focus = nil
-                typed.toggle()
-            }
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(Palette.accent)
-            .frame(minHeight: 44)
-            .disabled(working)
-        }
-    }
-
-    private var cancelButton: some View {
-        Button("Cancel", action: close)
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(Palette.accent)
-            .frame(minHeight: 44)
-            .keyboardShortcut(.cancelAction)
-    }
 }
 
 /// A 48 pt field on the drawer's control colour, like the app drawer's search field.
@@ -243,19 +186,20 @@ struct PairingField: View {
     var monospaced = false
 
     var body: some View {
-        TextField("", text: $text, prompt: Text(prompt).foregroundColor(Palette.muted))
-            .font(.system(size: 15).monospacedDigit())
-            .foregroundStyle(Palette.text)
-            .textFieldStyle(.plain)
-            .keyboardType(keyboard)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .submitLabel(submit)
-            .accessibilityLabel(label)
-            .frame(height: 48)
-            .padding(.horizontal, 14)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.control))
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.subheadline).foregroundStyle(.secondary)
+            TextField("", text: $text, prompt: Text(prompt))
+                .font(monospaced ? .body.monospacedDigit() : .body)
+                .foregroundStyle(Palette.text)
+                .textFieldStyle(.plain)
+                .keyboardType(keyboard)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(submit)
+                .accessibilityLabel(label)
+                .frame(minHeight: 32)
+        }
+        .padding(.vertical, 4)
     }
 
     /// The number pad on a phone (the Duo's is what the digits are for). On an iPad the number pad
@@ -284,10 +228,9 @@ struct ProblemLine: View {
             Image(systemName: "exclamationmark.triangle.fill").accessibilityHidden(true)
             Text(text).fixedSize(horizontal: false, vertical: true)
         }
-        .font(.system(size: 13))
+        .font(.footnote)
         .foregroundStyle(Color.orange)
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-        .accessibilityElement(children: .combine)
+                .accessibilityElement(children: .combine)
         .onAppear { AccessibilityNotification.Announcement(text).post() }
         .onChange(of: text) { _, t in AccessibilityNotification.Announcement(t).post() }
     }
@@ -406,7 +349,7 @@ struct LinkConfirmation: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             Text("Only pair with a code your own Mac shows.")
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 18) {

@@ -610,11 +610,11 @@ enum TourPolicy {
                 rows = [row("hand.point.up.left", [strong("Touch and hold"), plain(" a window to close, minimize or go full screen. Keep holding and drag to move it.")])]
             }
             // A phone with Larger Picture has no thumbnails: windows come from Apps, which shows an
-            // open app's next window when it is chosen again (AppDrawer).
+            // app's windows in a native list (AppDrawer).
             if layout == .phone && !thumbnails {
                 rows[0] = voiceOver
-                    ? row("magnifyingglass", [strong("Apps"), plain(" lists the apps on \(mac). Choose an open one again for its next window.")])
-                    : row("magnifyingglass", [strong("Apps"), plain(" lists the apps on \(mac): tap an open one again for its next window.")])
+                    ? row("magnifyingglass", [strong("Apps"), plain(" lists the apps on \(mac). Choose an app, then choose its window.")])
+                    : row("magnifyingglass", [strong("Apps"), plain(" lists the apps on \(mac). Choose an app, then choose its window.")])
             }
             // The Menus button (MacMenuButton): only while it is on screen.
             if features.menus {

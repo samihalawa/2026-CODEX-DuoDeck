@@ -12,11 +12,15 @@ struct StreamingPane: View {
     var body: some View {
         Form {
             Section {
-                HStack(spacing: 8) {
+                Picker("Quality", selection: profile) {
                     ForEach(DuoDeckStreamingPreset.allCases) { preset in
-                        profileButton(preset)
+                        Text(preset.title).tag(preset.rawValue)
+                    }
+                    if DuoDeckStreamingPreset.current(in: settings.config) == nil {
+                        Text("Custom").tag("custom")
                     }
                 }
+                .pickerStyle(.radioGroup)
                 Text(selectedDescription)
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -88,31 +92,12 @@ struct StreamingPane: View {
         return "Custom settings · \(settings.config.maxFPS) fps · \(QualityPreset.shortTitle(bitrate: settings.config.bitrate, captureScale: Double(settings.config.captureScale)))"
     }
 
-    private func profileButton(_ preset: DuoDeckStreamingPreset) -> some View {
-        let selected = preset.matches(settings.config)
-        return Button {
-            settings.config = preset.applying(to: settings.config)
-        } label: {
-            VStack(spacing: 7) {
-                Image(systemName: preset.symbol).font(.system(size: 19))
-                Text(preset.title).font(.system(size: 12, weight: .medium))
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 12))
-                    .opacity(selected ? 1 : 0.25)
-            }
-            .foregroundStyle(selected ? DuoDeckHostStyle.accent : Color.primary)
-            .frame(maxWidth: .infinity, minHeight: 86)
-            .background(selected ? DuoDeckHostStyle.accent.opacity(0.09) : Color.secondary.opacity(0.04),
-                        in: RoundedRectangle(cornerRadius: 9))
-            .overlay {
-                RoundedRectangle(cornerRadius: 9)
-                    .strokeBorder(selected ? DuoDeckHostStyle.accent.opacity(0.5) : Color.secondary.opacity(0.15), lineWidth: 1)
-            }
-            .contentShape(RoundedRectangle(cornerRadius: 9))
-        }
-        .buttonStyle(.plain)
-        .help(preset.detail)
-        .accessibilityLabel("\(preset.title), \(preset.detail)")
-        .accessibilityAddTraits(selected ? .isSelected : [])
+    private var profile: Binding<String> {
+        Binding(get: { DuoDeckStreamingPreset.current(in: settings.config)?.rawValue ?? "custom" },
+                set: { value in
+                    if let preset = DuoDeckStreamingPreset(rawValue: value) {
+                        settings.config = preset.applying(to: settings.config)
+                    }
+                })
     }
 }

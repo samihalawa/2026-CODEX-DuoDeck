@@ -1070,33 +1070,13 @@ enum SettingsScript {
 struct ConnectScreen: View {
     @ObservedObject var client: StreamClient
     @State private var adding: Bool
-    /// The home card's Mac: a tap on its row asked, and the Mac shows its code (`homeAsk`). Kept
-    /// through the pairing's end, "Paired with…", while the session after it comes up.
     @State private var homeCard: String?
     @State private var typed: Bool
-    /// A field of the card has the keyboard.
     @State private var editing = false
-    /// The DEBUG harness's stand-in for the camera (the simulator has none); nil on a device.
-    let scannerOverride: CodeScanner.Mode?
-    @AccessibilityFocusState private var titleFocused: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var typeSize
-    /// The Duo's hinge (iOS 27.1): with the fold, where the column goes (ConnectLayout).
-    @Environment(\.duoEnvironment) private var duoEnvironment
-    /// Rows or tiles on the connect screen (ConnectionList): what the switch beside the title or a saved
-    /// Mac's menu stored, nil while nothing is, which `ConnectionList.storedStyle` reads as the default
-    /// (tiles). Written only by `toggleStyle`.
-    @AppStorage(ConnectionList.styleKey) private var styleRaw: String?
-    /// The saved Mac whose New Group… alert is up, and the name typed there.
     @State private var newGroupFor: String?
     @State private var newGroupName = ""
-
-    private var style: ConnectionList.Style {
-        #if DEBUG
-        if UserDefaults.standard.string(forKey: "SillConnectCase") == "tiles" { return .tiles }
-        #endif
-        return ConnectionList.storedStyle(styleRaw)
-    }
+    let scannerOverride: CodeScanner.Mode?
+    @Environment(\.duoEnvironment) private var duoEnvironment
 
     init(client: StreamClient, adding: Bool = false, typed: Bool = false, scannerOverride: CodeScanner.Mode? = nil) {
         self.client = client
@@ -1106,440 +1086,283 @@ struct ConnectScreen: View {
         _typed = State(initialValue: typed)
     }
 
-    /// A card is up in the rows' place: Add a Mac, or the home card.
-    private var carded: Bool { adding || homeCard != nil }
-
-    /// "Pair with Mac mini" over the home card; "Add a Mac" over Add a Mac and an outside link's
-    /// confirmation.
-    private var title: String {
-        if client.pendingLink != nil || adding { return "Add a Mac" }
-        if let mac = homeCard { return DiscoveryPolicy.HomeCopy.cardTitle(mac: mac) }
-        return "Connect to a Mac"
-    }
-
     private var device: String { StreamClient.deviceWord }
     private var scannerMode: CodeScanner.Mode { scannerOverride ?? CodeScanner.currentMode }
-    /// Where the scanner cannot run (the simulator), the card starts on the typed path.
     private var scannerUsable: Bool { scannerOverride != nil || CodeScanner.isSupported }
-
-    /// The least room between the column and the footer.
-    private static let footerGap: CGFloat = 24
-    /// How far a footer link's tap area reaches above and below its words: a footnote line is about
-    /// 16 pt, so the area is about 44 pt tall at the default size. The layout never sees it (the
-    /// Settings panel's Done does the same).
-    private static let linkReach: CGFloat = 14
+    private var pairingShown: Binding<Bool> {
+        Binding(get: { adding || homeCard != nil || client.pendingLink != nil },
+                set: { if !$0 { cancelPairing() } })
+    }
 
     var body: some View {
         GeometryReader { geo in
             let posture = DuoPosture.read(geo, duoEnvironment)
             let layout = ConnectLayout(size: geo.size, fold: posture.info(in: geo.size))
-            // A field has the keyboard: the column goes to the top (the half-folded Duo's is already
-            // in the top half), so Pair stays above the keyboard. The screen ignores the keyboard's
-            // safe area below, so nothing else moves (the footer stays under the keyboard).
-            let toTop = editing && !layout.topHalf
-            // The column where it sat before there was a footer, and the footer along the bottom:
-            // the footer never moves the title. Only a column that would come within the gap of the
-            // footer rises to keep it; one too tall for that even at the top (many Macs on a phone
-            // held sideways) scrolls above the footer, which stays in reach, as the Settings panel
-            // keeps its header and foot. One scroll view whatever the fit, so a fit that changes
-            // (the card's words folding while a field has the keyboard, a row more) never builds
-            // the column anew: the card keeps its fields and its camera.
-            VStack(spacing: 0) {
-                ScrollView(.vertical) {
-                    ColumnOverFooter(
-                        // The Duo half-folded: centred above the fold, at most 500 pt tall, so nothing
-                        // crosses it and the keyboard has the lower half (the footer stays along the
-                        // bottom, under the keyboard while it is up); where the device reports the
-                        // fold (iOS 27.1) the room above it is the scroll view's, so a long list
-                        // scrolls there rather than run onto it. Elsewhere centred in the whole
-                        // height, as before.
-                        centreHeight: layout.topRoom.map { min($0, 500) } ?? geo.size.height,
-                        visibleHeight: geo.size.height, scrollHeight: layout.roomAboveFold,
-                        gap: Self.footerGap, atTop: toTop) {
-                        column(layout)
-                            .frame(width: carded && layout.short && !typed ? layout.sideBySideWidth : layout.columnWidth,
-                                   alignment: .leading)
-                            // Placed by its leading edge, not centred: the side-by-side card is wider
-                            // than the rows, and centring it moved the title sideways as the card
-                            // unfolded.
-                            .padding(.leading, layout.columnX)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        // The footer's height, measured here; the one shown is the one below.
-                        footer(layout)
-                            .hidden()
-                            .accessibilityHidden(true)
+            NavigationStack {
+                macList
+                    .navigationTitle("Macs")
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(action: unfold) {
+                                Text("Add Mac")
+                            }
+                            .accessibilityHint("Scan or enter a pairing code from your Mac.")
+                        }
                     }
-                }
-                .scrollBounceBehavior(.basedOnSize)
-                .scrollIndicatorsFlash(onAppear: true)
-                // A column that scrolls fades out above the footer instead of being cut off at it, and
-                // keeps a little room before it. Both are in the gap, which a column that fits keeps
-                // clear, so neither ever reaches one.
-                .mask {
-                    VStack(spacing: 0) {
-                        Color.black
-                        LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
-                            .frame(height: Self.footerGap / 2)
-                        Color.clear.frame(height: Self.footerGap / 2)
-                    }
-                }
-                // The laptop pose: the room above the fold, and nothing between it and the footer.
-                .frame(height: layout.roomAboveFold)
-                if layout.roomAboveFold != nil { Spacer(minLength: 0) }
-                footer(layout)
             }
+            .frame(width: min(layout.leadingPage ?? geo.size.width, 720),
+                   height: layout.roomAboveFold ?? geo.size.height)
+            .frame(maxWidth: .infinity, maxHeight: .infinity,
+                   alignment: layout.leadingPage == nil ? .top : .topLeading)
             .duoLog(posture, size: geo.size, screen: "connect screen")
         }
         .background(Palette.canvas)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
-        .alert("New Group", isPresented: Binding(get: { newGroupFor != nil }, set: { if !$0 { newGroupFor = nil } })) {
+        .sheet(isPresented: pairingShown) {
+            NavigationStack {
+                GeometryReader { geo in
+                    if let link = client.pendingLink {
+                        Form {
+                            Section {
+                                LinkConfirmation(link: link, pair: {
+                                    typed = !scannerUsable
+                                    adding = true
+                                    homeCard = nil
+                                    client.confirmPendingLink()
+                                }, cancel: cancelPairing)
+                            }
+                        }
+                    } else {
+                        AddMacCard(client: client, layout: ConnectLayout(size: geo.size),
+                                   typed: $typed, scannerMode: scannerMode, close: cancelPairing,
+                                   editing: $editing, home: homeCard)
+                    }
+                }
+                .navigationTitle(homeCard.map { "Pair with \($0)" } ?? "Add Mac")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: cancelPairing)
+                            .keyboardShortcut(.cancelAction)
+                    }
+                }
+            }
+            .tint(Palette.accent)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
+        .alert("New Group", isPresented: Binding(get: { newGroupFor != nil },
+                                                  set: { if !$0 { newGroupFor = nil } })) {
             TextField("Name", text: $newGroupName)
-            // A blank name, or Other (where the Macs with no group already are), names no group: Add
-            // would only take the Mac out of the one it is in.
             Button("Add") { if let id = newGroupFor { client.setGroup(newGroupName, for: id) } }
                 .disabled(ConnectionList.cleanGroup(newGroupName) == nil)
             Button("Cancel", role: .cancel) {}
         }
-        // The switch beside the title or a saved Mac's menu: the list hides the pictures and keeps their
-        // files, and tiles show them again at once (ConnectionList.previewPlan); none is taken while the
-        // list shows (ConnectionList.takesPreview).
-        .onChange(of: styleRaw) { _, raw in
-            client.syncPreviews(to: ConnectionList.storedStyle(raw))
-        }
         .onChange(of: client.pairing) { old, new in
-            // Paired but no session came (10 s): the card closes, and the Mac is a saved row.
             if case .paired = old, new == .idle, !client.connected { fold() }
         }
         .onChange(of: client.homeAsk) { _, ask in
             if let ask, ask.phase == .shown {
-                // The Mac shows its code: the home card for that row.
-                if homeCard != ask.name { unfoldHome(ask.name) }
+                if homeCard != ask.name {
+                    typed = !scannerUsable
+                    editing = false
+                    adding = false
+                    homeCard = ask.name
+                }
             } else if ask == nil, homeCard != nil {
-                // The ask ended while the card was up. A pairing that went through keeps the card
-                // ("Paired with…") until the session comes, or the 10 s above fold it.
                 switch client.pairing {
                 case .working, .paired: break
-                case .idle, .failed: foldHome()
+                case .idle, .failed: homeCard = nil; editing = false
                 }
             }
         }
-        // VoiceOver hears each status line (§7.8): a remote dial and why it failed, a reconnect,
-        // "Stopped trying…", "… is saved", Forget, and the line a session ended with (why the Mac
-        // closed it), which is already set when this screen comes back. A changed Text alone is
-        // never spoken, and the rows keep the focus.
         .onAppear {
             announce(client.status)
-            // The style changed in another Sill window while this one streamed: its pictures follow it.
-            client.syncPreviews(to: ConnectionList.storedStyle(styleRaw))
-            #if DEBUG
-            print("connect: \(style.rawValue) (Sill.connectionStyle \(styleRaw ?? "unset"))")
-            scheduleStyleToggles()
-            #endif
+            // The native list needs no preview capture. Existing saved previews and pairings remain.
+            UserDefaults.standard.set(ConnectionList.Style.list.rawValue, forKey: ConnectionList.styleKey)
+            client.syncPreviews(to: .list)
         }
         .onChange(of: client.status) { _, line in announce(line) }
     }
 
-    /// Not the idle "Looking for Macs…" lines, which change as the search does.
-    private func announce(_ line: String) {
-        guard !line.isEmpty, line != StreamClient.lookingOnNetwork, line != StreamClient.lookingNearby else { return }
-        AccessibilityNotification.Announcement(line).post()
-    }
-
-    /// The switch beside the title, and Show as List/Tiles in a saved Mac's menu: stores the other style,
-    /// the person's choice from then on (ConnectionList.storedStyle), in every Sill window.
-    private func toggleStyle() {
-        styleRaw = style.toggled.rawValue
-    }
-
-    #if DEBUG
-    /// `-SillStyleToggleAt <s>[,<s>…]`: at each of these seconds after the connect screen shows, the
-    /// style is toggled as the switch beside the title toggles it (`toggleStyle`), so the gates, which
-    /// have no finger, store a choice and see it across a relaunch. Once per run.
-    private static var styleTogglesScheduled = false
-
-    private func scheduleStyleToggles() {
-        guard !Self.styleTogglesScheduled, let spec = UserDefaults.standard.string(forKey: "SillStyleToggleAt") else { return }
-        Self.styleTogglesScheduled = true
-        let times = spec.split(separator: ",").compactMap { Double($0.trimmingCharacters(in: .whitespaces)) }
-        for at in times {
-            DispatchQueue.main.asyncAfter(deadline: .now() + at) { [self] in
-                let from = style
-                toggleStyle()
-                print("connect: \(from.rawValue) → \(from.toggled.rawValue) at \(at) s, as the switch beside the title does (Sill.connectionStyle \(UserDefaults.standard.string(forKey: ConnectionList.styleKey) ?? "unset"))")
-            }
-        }
-    }
-    #endif
-
-    private func column(_ layout: ConnectLayout) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if !carded {
-                HStack(spacing: 13) {
-                    DuoDeckMark(size: 52)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("DuoDeck")
-                            .font(.system(size: 30, weight: .bold))
-                            .tracking(-0.8)
-                            .foregroundStyle(Palette.text)
-                        Text("Your Mac. In your hands.")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(Palette.muted)
+    private var macList: some View {
+        List {
+            if client.macs.isEmpty {
+                Section {
+                    ContentUnavailableView {
+                        Label("No Macs found", systemImage: "desktopcomputer")
+                    } description: {
+                        Text("Open DuoDeck on your Mac and connect both devices to the same Wi-Fi, or use a USB cable.")
+                    } actions: {
+                        Button("Add Mac", action: unfold)
+                            .buttonStyle(.borderedProminent)
                     }
+                    .listRowBackground(Color.clear)
                 }
-                .padding(.horizontal, 10)
-                .padding(.bottom, 18)
-                .accessibilityElement(children: .combine)
-            }
-            // Leading, so the title never jumps sideways when the hint, a row or the card widens the
-            // column. Vertically it is still centred (ColumnOverFooter): what adds height moves it up
-            // by half as much. It wraps, never truncates, under the home card ("Pair with" and a
-            // long Mac name).
-            Text(title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 10)
-                .accessibilityAddTraits(carded ? .isHeader : [])
-                .accessibilityFocused($titleFocused)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                // The switch between rows and tiles: a 44 pt target over the title's line, which it
-                // overhangs above and below (an overlay, so the column is laid out as before it). Always
-                // (Noah, 2026-10-27: "The list/tiles switch should always show"), whichever style is on
-                // and whether or not a Mac is listed; only the card, which takes the title's place, and a
-                // link's confirmation leave it out. #117 showed it for tiles alone while the list was the
-                // default, which with tiles the default left someone with no Mac who chose the list no way
-                // back.
-                .overlay(alignment: .trailing) {
-                    if !carded, client.pendingLink == nil {
-                        Button {
-                            toggleStyle()
-                        } label: {
-                            Image(systemName: style == .tiles ? "list.bullet" : "square.grid.2x2")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(Palette.accent)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(style == .tiles ? "Show as list" : "Show as tiles")
-                    }
-                }
-
-            if let link = client.pendingLink {
-                LinkConfirmation(link: link, pair: {
-                    // The card shows the pairing's progress; should it fail, the scanner (or the
-                    // typed path where there is none) is there to try again. Add a Mac's card, even
-                    // over the home card: the link may name another Mac.
-                    typed = !scannerUsable
-                    adding = true
-                    client.confirmPendingLink()
-                }, cancel: { client.cancelPendingLink() })
-                .padding(.horizontal, 10)
-                .padding(.top, 4)
-            } else if adding {
-                AddMacCard(client: client, layout: layout, typed: $typed, scannerMode: scannerMode, close: fold, editing: $editing)
-                    .padding(.horizontal, 10)
-                    .padding(.top, 4)
-                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
-            } else if let mac = homeCard {
-                AddMacCard(client: client, layout: layout, typed: $typed, scannerMode: scannerMode, close: fold, editing: $editing,
-                           home: mac)
-                    .padding(.horizontal, 10)
-                    .padding(.top, 4)
-                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
             } else {
-                rows(layout)
-            }
-        }
-    }
-
-    @ViewBuilder private func rows(_ layout: ConnectLayout) -> some View {
-        Text(client.status)
-            .font(.system(size: 13))
-            .foregroundStyle(Palette.muted)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 10)
-            .padding(.bottom, 4)
-
-        // A Mac that no longer serves this version said so (GoodbyePolicy's "update", its words the
-        // status line above): where to get the new one, while the status line still says why. Not
-        // before Sill's App Store address is known (SillLinks): the words say what to do anyway.
-        if let notice = client.notice, notice.storeLink, notice.text == client.status, let url = SillLinks.appStore {
-            Link(destination: url) {
-                Text("Update DuoDeck in the App Store")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.accent)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(.horizontal, 10)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint("Opens the App Store.")
-        }
-
-        // Every row of one Mac in its group, a row taken for it by its name too (ConnectionList.tileMac).
-        let sections = ConnectionList.sections(for: client.macs, macID: { ConnectionList.tileMac(macID: $0.macID, savedByName: $0.savedByName) },
-                                               groups: client.macGroups)
-        if style == .list, sections.count <= 1, sections.first?.title == nil {
-            ForEach(client.macs) { mac in
-                macRow(mac)
-            }
-        } else {
-            ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
-                if let sectionTitle = section.title {
-                    Text(sectionTitle)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Palette.muted)
-                        .padding(.horizontal, 10)
-                        .padding(.top, 4)
-                        .accessibilityAddTraits(.isHeader)
-                }
-                if style == .tiles {
-                    let cols = ConnectionList.columns(forWidth: layout.columnWidth, accessibleText: typeSize.isAccessibilitySize)
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: cols), spacing: 10) {
+                let sections = ConnectionList.sections(
+                    for: client.macs,
+                    macID: { ConnectionList.tileMac(macID: $0.macID, savedByName: $0.savedByName) },
+                    groups: client.macGroups)
+                ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                    Section(section.title ?? "Available Macs") {
                         ForEach(section.items) { mac in
-                            macTile(mac)
+                            macRow(mac)
                         }
                     }
-                    .padding(.horizontal, 10)
-                } else {
-                    ForEach(section.items) { mac in
-                        macRow(mac)
+                }
+            }
+            if !client.status.isEmpty,
+               client.status != StreamClient.lookingOnNetwork,
+               client.status != StreamClient.lookingNearby {
+                Section {
+                    Text(client.status)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let notice = client.notice, notice.storeLink,
+                       notice.text == client.status, let url = SillLinks.appStore {
+                        Link("Update DuoDeck", destination: url)
                     }
                 }
             }
-        }
-
-        if client.showsNearbyHint {
-            Text("Your Mac has to be on the same Wi\u{2011}Fi network as this \(device), or have Direct Wireless Connection turned on in DuoDeck Host. Away from home, add it once with a code from your Mac.")
-                .font(.system(size: 13))
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 10)
-            // Once the nearby search runs, a line in the button's place says so, whatever the
-            // status line says (a disconnect's message stays there), at the button's height so
-            // nothing moves.
-            if client.searchingNearby {
-                Text("Also looking nearby")
-                    .font(.system(size: 15))
-                    .foregroundStyle(Palette.muted)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                    .padding(.horizontal, 10)
-            } else {
-                Button(action: {
-                    client.searchNearby()
-                    // The button leaves from under VoiceOver's cursor: say what it started.
-                    AccessibilityNotification.Announcement("Also looking nearby").post()
-                }) {
-                    Text("Search Nearby")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Palette.accent)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .contentShape(Rectangle())
+            Section {
+                NavigationLink {
+                    setupHelp
+                } label: {
+                    Label("Set up your Mac", systemImage: "questionmark.circle")
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Also looks for a Mac with Direct Wireless Connection turned on, without a Wi\u{2011}Fi network.")
+                Link(destination: SillLinks.download) {
+                    Label("Get DuoDeck for Mac", systemImage: "arrow.down.circle")
+                }
             }
         }
-
-        // Always the last line, from the first frame, so nothing moves when it is needed.
-        Button(action: unfold) {
-            Label("Pair a Mac", systemImage: "plus.circle.fill")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Palette.onAccent)
-                .frame(maxWidth: .infinity, minHeight: 50)
-                .background(Palette.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 10)
-        .padding(.top, 12)
-        .accessibilityHint("Scan the pairing code from DuoDeck Host, or enter it manually.")
-        if client.macs.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Open DuoDeck Host on your Mac.", systemImage: "desktopcomputer")
-                Label("Use the same Wi-Fi, or connect a USB cable.", systemImage: "wifi")
-                Label("Choose your Mac here to start.", systemImage: "hand.tap")
-            }
-            .font(.subheadline)
-            .foregroundStyle(Palette.muted)
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.bar, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .padding(.horizontal, 10)
-            .padding(.top, 12)
-        }
+        .listStyle(.insetGrouped)
+        .listSectionSpacing(.compact)
     }
 
-    /// A saved Mac's row or tile: Connect (a Remote row) or Connect Remotely (its network row, to
-    /// try the VPN path at home), Group, Show as Tiles/List, Remove Preview Picture, and Forget.
-    /// Other Macs' rows have no menu.
-    @ViewBuilder private func menu(for mac: FoundMac) -> some View {
-        if let id = mac.macID {
-            if mac.route == .remote {
-                Button { client.connect(to: mac) } label: { Label("Connect", systemImage: "globe") }
-            } else if mac.route == .network {
-                Button { client.connectRemotely(id) } label: { Label("Connect Remotely", systemImage: "globe") }
-            }
-            let currentGroup = ConnectionList.cleanGroup(client.macGroups[id])
-            Menu {
-                // One choice of None and the groups: the system's checkmark on the current one, and
-                // VoiceOver's "selected".
-                Picker("Group", selection: Binding(get: { currentGroup }, set: { client.setGroup($0, for: id) })) {
-                    Text("None").tag(String?.none)
-                    ForEach(ConnectionList.availableGroups(in: client.macGroups), id: \.self) { group in
-                        Text(group).tag(String?.some(group))
+    private var setupHelp: some View {
+        Form {
+            Section {
+                Label {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Open DuoDeck on your Mac")
+                        Text("Use the Mac menu bar app to allow screen recording and control.")
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
+                } icon: {
+                    Image(systemName: "desktopcomputer")
                 }
-                .pickerStyle(.inline)
-                Divider()
-                Button { newGroupName = ""; newGroupFor = id } label: {
-                    Label("New Group…", systemImage: "folder.badge.plus")
+                Label {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Connect your devices")
+                        Text("Use the same Wi-Fi network or connect your iPhone or iPad by USB.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "wifi")
                 }
-            } label: {
-                Label(currentGroup.map { "Group: \($0)" } ?? "Group", systemImage: "folder")
-            }
-            Button {
-                toggleStyle()
-            } label: {
-                Label(style == .tiles ? "Show as List" : "Show as Tiles",
-                      systemImage: style == .tiles ? "list.bullet" : "square.grid.2x2")
-            }
-            if style == .tiles, client.macPreviews[id] != nil {
-                Button(role: .destructive) { client.removePreview(for: id) } label: {
-                    Label("Remove Preview Picture", systemImage: "photo.badge.minus")
+                Label {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Choose your Mac")
+                        Text("Tap its name in Macs. If a code appears on your Mac, scan or enter it.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "hand.tap")
                 }
             }
-            let name = client.savedMac(id) != nil ? client.displayName(id) : mac.name
-            Button(role: .destructive) { client.forget(id) } label: { Label("Forget \(name)", systemImage: "trash") }
+            if client.showsNearbyHint {
+                Section {
+                    if client.searchingNearby {
+                        HStack {
+                            ProgressView()
+                            Text("Searching nearby…").foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Button("Search nearby") {
+                            client.searchNearby()
+                            AccessibilityNotification.Announcement("Searching nearby").post()
+                        }
+                    }
+                } footer: {
+                    Text("To connect without a shared Wi-Fi network, turn on Direct Wireless Connection in DuoDeck on your Mac.")
+                }
+            }
+            Section("Away from home") {
+                Text("Add your Mac once using its pairing code. Remote connections need Remote Access enabled on the Mac and a reachable VPN or internet address.")
+                    .font(.subheadline)
+            }
+            Section {
+                Link("Get DuoDeck for Mac", destination: SillLinks.download)
+                Link("Support", destination: SillLinks.support)
+                Link("Privacy policy", destination: SillLinks.privacy)
+            }
         }
+        .navigationTitle("Set up your Mac")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func macRow(_ mac: FoundMac) -> some View {
-        // The kind of link, never the Wi-Fi network's name: that needs Location access, which
-        // Sill does not ask for (DiscoveryPolicy.method); "Remote" for a saved Mac dialed away
-        // from home; at home, what a tap does first when it pairs ("Not paired", "Wired" over
-        // the cable) or cannot connect ("Update Sill"), with VoiceOver's label and hint for it
-        // (DiscoveryPolicy.RowWord). The row a tap's ask is waiting on is lit, as the drawer
-        // lights the app on screen, while the status line says "Pairing with…".
-        DrawerRow(height: 50, highlighted: asking(mac),
-                  title: mac.name, trailing: mac.word,
-                  action: { client.connect(to: mac) }) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Palette.iconFallback)
+        Button { client.connect(to: mac) } label: {
+            HStack(spacing: 14) {
                 Image(systemName: "desktopcomputer")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(mac.name).font(.body).foregroundStyle(.primary)
+                    if let word = mac.word {
+                        Text(word).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 8)
+                if asking(mac) {
+                    ProgressView()
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
             }
-            .frame(width: 32, height: 32)
+            .frame(minHeight: 48)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(rowLabel(mac))
         .accessibilityHint(rowHint(mac))
         .contextMenu { menu(for: mac) }
     }
 
-    /// The row or tile a tap's ask is waiting on.
+    @ViewBuilder private func menu(for mac: FoundMac) -> some View {
+        if let id = mac.macID {
+            if mac.route == .remote {
+                Button { client.connect(to: mac) } label: { Label("Connect", systemImage: "globe") }
+            } else if mac.route == .network {
+                Button { client.connectRemotely(id) } label: { Label("Connect remotely", systemImage: "globe") }
+            }
+            let currentGroup = ConnectionList.cleanGroup(client.macGroups[id])
+            Menu {
+                Picker("Group", selection: Binding(get: { currentGroup },
+                                                   set: { client.setGroup($0, for: id) })) {
+                    Text("None").tag(String?.none)
+                    ForEach(ConnectionList.availableGroups(in: client.macGroups), id: \.self) { group in
+                        Text(group).tag(String?.some(group))
+                    }
+                }
+                Divider()
+                Button { newGroupName = ""; newGroupFor = id } label: {
+                    Label("New group…", systemImage: "folder.badge.plus")
+                }
+            } label: {
+                Label(currentGroup.map { "Group: \($0)" } ?? "Group", systemImage: "folder")
+            }
+            let name = client.savedMac(id) != nil ? client.displayName(id) : mac.name
+            Button(role: .destructive) { client.forget(id) } label: {
+                Label("Forget \(name)", systemImage: "trash")
+            }
+        }
+    }
+
     private func asking(_ mac: FoundMac) -> Bool {
         client.homeAsk.map { $0.phase == .asking && $0.target.row == mac.id } ?? false
     }
@@ -1553,234 +1376,28 @@ struct ConnectScreen: View {
             : mac.homeWord.hint(name: mac.name, device: device, direct: mac.direct)
     }
 
-    private func macTile(_ mac: FoundMac) -> some View {
-        let highlighted = asking(mac)
-        // Every row of one Mac shows its one picture: Wired, Wi-Fi, Direct and Remote (ConnectionList.tileMac).
-        let preview = ConnectionList.tileMac(macID: mac.macID, savedByName: mac.savedByName).flatMap { client.macPreviews[$0] }
-        return Button(action: { client.connect(to: mac) }) {
-            VStack(alignment: .leading, spacing: 0) {
-                // The band sets the size; the picture fills it as an overlay, which never sizes the
-                // tile, and is clipped to it. In the band's place, a picture wider than its cell (a
-                // 16:9 or 2.39:1 screen) made the tile wider than its column.
-                Rectangle()
-                    .fill(Palette.iconFallback.opacity(0.35))
-                    .frame(height: 92)
-                    .overlay {
-                        if let preview {
-                            Image(uiImage: preview)
-                                .resizable()
-                                .scaledToFill()
-                        } else {
-                            Image(systemName: "desktopcomputer")
-                                .font(.system(size: 24))
-                                .foregroundStyle(.white.opacity(0.85))
-                        }
-                    }
-                    .clipped()
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(mac.name)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Palette.text)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    if let word = mac.word {
-                        Text(word)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Palette.muted)
-                            .lineLimit(1)
-                    }
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity, minHeight: 46, alignment: .leading)
-            }
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(highlighted ? Palette.accent.opacity(0.22) : Palette.control))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(highlighted ? Palette.accent.opacity(0.55) : Palette.separator, lineWidth: 1)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(rowLabel(mac))
-        .accessibilityHint(rowHint(mac))
-        .contextMenu { menu(for: mac) }
+    private func announce(_ line: String) {
+        guard !line.isEmpty, line != StreamClient.lookingOnNetwork, line != StreamClient.lookingNearby else { return }
+        AccessibilityNotification.Announcement(line).post()
     }
 
     private func unfold() {
-        client.cancelHomeAsk()      // a tap's ask still waiting for its answer: Add a Mac is another way
+        client.cancelHomeAsk()
         client.pairing = .idle
         typed = !scannerUsable
-        withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .spring(duration: 0.3, bounce: 0.1)) { adding = true }
-        titleFocused = true
+        homeCard = nil
+        adding = true
     }
 
-    /// The Mac shows its code: its card, on the scanner (the typed path where there is none). The
-    /// pairing is left as it is: the DEBUG gates type the code as the answer arrives.
-    private func unfoldHome(_ mac: String) {
-        typed = !scannerUsable
-        editing = false
-        withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .spring(duration: 0.3, bounce: 0.1)) {
-            adding = false
-            homeCard = mac
-        }
-        titleFocused = true
-    }
-
-    /// Cancel, Esc and the escape gesture, on either card: the ask or pairing in flight stops, and
-    /// the rows come back.
     private func fold() {
         client.cancelPairing()
         editing = false
-        withAnimation(.easeOut(duration: 0.18)) {
-            adding = false
-            homeCard = nil
-        }
-        titleFocused = true
+        adding = false
+        homeCard = nil
     }
 
-    /// The home card's ask ended some other way: nothing left to cancel.
-    private func foldHome() {
-        editing = false
-        withAnimation(.easeOut(duration: 0.18)) { homeCard = nil }
-        titleFocused = true
-    }
-
-    // MARK: The footer
-
-    /// For someone who found Sill here first, and for App Review: what else it needs, where to get
-    /// it, where to get help, and the privacy policy. Muted and 13 pt like the status line, but it
-    /// follows the text size, up to the Settings panel's cap (the column keeps its fixed sizes); it
-    /// wraps, never truncates. Each link opens in Safari (a Link hands its URL to the environment's
-    /// openURL), and VoiceOver reads it as a link. The addresses are SillLinks'.
-    private func footer(_ layout: ConnectLayout) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Connect with DuoDeck Host on your Mac.")
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-            // All three on one line while they fit, else the download link over the other two,
-            // the lines far enough apart that their tap areas meet without overlapping. Upward the
-            // areas reach a little into the line above, which is plain text.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 0) {
-                    downloadLink
-                    linkSeparator
-                    supportAndPrivacy
-                }
-                VStack(alignment: .leading, spacing: 2 * Self.linkReach) {
-                    downloadLink
-                    supportAndPrivacy
-                }
-            }
-        }
-        .font(.footnote)
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-        .padding(.horizontal, 10)
-        // Under the column's own edge and as wide as the rows, so the two line up; on a screen
-        // narrower than 412 pt (a phone, a window in Slide Over) that is the screen's width less
-        // the margins, so the links go to a second line rather than past the edge.
-        .frame(width: layout.columnWidth, alignment: .leading)
-        .padding(.leading, layout.columnX)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        // Room for the last link's tap area, which then stays on the screen.
-        .padding(.bottom, Self.linkReach)
-    }
-
-    private var downloadLink: some View {
-        footerLink("Get DuoDeck Host", to: SillLinks.download)
-    }
-
-    /// Support, then the privacy policy, on one line.
-    private var supportAndPrivacy: some View {
-        HStack(spacing: 0) {
-            footerLink("Support", to: SillLinks.support)
-            linkSeparator
-            footerLink("Privacy Policy", to: SillLinks.privacy)
-        }
-    }
-
-    /// The dot between two links on a line. VoiceOver skips it.
-    private var linkSeparator: some View {
-        Text(" · ")
-            .foregroundStyle(Palette.muted)
-            .accessibilityHidden(true)
-    }
-
-    private func footerLink(_ title: LocalizedStringKey, to url: URL) -> some View {
-        Link(destination: url) {
-            Text(title)
-                .foregroundStyle(Palette.accent)
-                // A link centres a label that wraps (a longer address); keep it on the footer's edge.
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.vertical, Self.linkReach)
-                .contentShape(Rectangle())
-        }
-        .padding(.vertical, -Self.linkReach)
-    }
-}
-
-/// The connect screen's column inside the scroll view that sits above its footer. The column sits
-/// where it would without a footer: centred in `centreHeight` (the whole height, or the Duo's top
-/// half) or, while a field has the keyboard, at the top. A column that would come within `gap` of
-/// the footer rises to keep it, but never closer than 16 pt to the top. The content is then exactly
-/// the scroll view's height, so nothing scrolls; a column that cannot keep both makes the content
-/// taller, with the same 16 pt above it, and scrolls. So at the switch the column neither moves nor
-/// jumps: it rises until it is 16 pt from the top, and from there it scrolls.
-///
-/// The second subview is the footer again, hidden, which only gives the footer's height: the scroll
-/// view is `visibleHeight` less that, and its content never learns its container's height. In the
-/// Duo's laptop pose the scroll view is the room above the fold instead (`scrollHeight`).
-private struct ColumnOverFooter: Layout {
-    /// The height the column is centred in, from the top.
-    let centreHeight: CGFloat
-    /// The scroll view and the footer together: the screen's height.
-    let visibleHeight: CGFloat
-    /// The scroll view's own height when it is not the screen less the footer: the laptop pose's
-    /// room above the fold.
-    var scrollHeight: CGFloat? = nil
-    let gap: CGFloat
-    /// A field has the keyboard: the column at the top.
-    let atTop: Bool
-    /// The least room above the column, however it sits: risen, at the top or scrolling.
-    private let topRoom: CGFloat = 16
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        guard let (column, footer) = sizes(width: proposal.width, subviews) else { return .zero }
-        let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? max(column.width, footer.width)
-        let room = scrollHeight ?? (visibleHeight - footer.height)
-        // A point short of the scroll view while it fits, so no rounding ever lets it scroll.
-        return CGSize(width: width, height: fits(column: column.height, room: room) ? max(0, room - 1)
-                                                                                   : topRoom + column.height + gap)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        guard let (column, footer) = sizes(width: bounds.width, subviews) else { return }
-        let room = scrollHeight ?? (visibleHeight - footer.height)
-        let y: CGFloat
-        if !fits(column: column.height, room: room) || atTop {
-            y = topRoom
-        } else {
-            let centred = centreHeight / 2 - column.height / 2
-            let clear = room - gap - column.height
-            y = max(topRoom, min(centred, clear))
-        }
-        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.minY + y), anchor: .topLeading,
-                          proposal: ProposedViewSize(width: bounds.width, height: column.height))
-        subviews[1].place(at: CGPoint(x: bounds.minX, y: bounds.minY), anchor: .topLeading,
-                          proposal: ProposedViewSize(width: bounds.width, height: footer.height))
-    }
-
-    /// Whether the column keeps the room above it and the gap below without scrolling.
-    private func fits(column: CGFloat, room: CGFloat) -> Bool {
-        topRoom + column + gap <= room
-    }
-
-    /// The column's and the footer's heights at this width, each as tall as it wants.
-    private func sizes(width: CGFloat?, _ subviews: Subviews) -> (CGSize, CGSize)? {
-        guard subviews.count == 2 else { return nil }
-        let proposal = ProposedViewSize(width: width, height: nil)
-        return (subviews[0].sizeThatFits(proposal), subviews[1].sizeThatFits(proposal))
+    private func cancelPairing() {
+        client.cancelPendingLink()
+        fold()
     }
 }

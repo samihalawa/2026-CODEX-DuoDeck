@@ -158,11 +158,31 @@ fi
 printf '%s\n' "$submission" > "$stage/NOTARY_SUBMISSION.txt"
 echo "NOTARY_SUBMISSION=$submission"
 echo "PRISTINE_DMG_SHA256=$pristine_sha"
-# Local notarytool help confirms --timeout accepts durations such as 3h.
+# One bounded wait for the same job. Transient network loss may interrupt notarytool;
+# reconnect only to this job, never submit the artifact a second time.
+notary_deadline=$((SECONDS + 10800))
 wait_exit=0
-xcrun notarytool wait "$submission" "${auth[@]}" --timeout 3h --output-format json > "$stage/notary-wait.json" || wait_exit=$?
-# Native readback is authoritative even if wait timed out or returned an error.
-xcrun notarytool info "$submission" "${auth[@]}" --output-format json > "$stage/notary-info.json"
+notary_status=""
+while [ "$SECONDS" -lt "$notary_deadline" ]; do
+  remaining=$((notary_deadline - SECONDS))
+  wait_exit=0
+  xcrun notarytool wait "$submission" "${auth[@]}" --timeout "${remaining}s" --output-format json > "$stage/notary-wait.json" || wait_exit=$?
+  info_ok=0
+  for read_attempt in 1 2 3; do
+    if xcrun notarytool info "$submission" "${auth[@]}" --output-format json > "$stage/notary-info.pending.json"; then
+      mv "$stage/notary-info.pending.json" "$stage/notary-info.json"
+      info_ok=1
+      break
+    fi
+    [ "$read_attempt" = 3 ] || sleep 10
+  done
+  if [ "$info_ok" = 1 ]; then
+    notary_status="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status", "unknown"))' "$stage/notary-info.json")"
+    case "$notary_status" in Accepted|Invalid|Rejected) break ;; esac
+  fi
+  [ "$SECONDS" -ge "$notary_deadline" ] || sleep 15
+done
+[ -f "$stage/notary-info.json" ] || fail "The existing Apple job could not be read before the bounded wait ended. Nothing was resubmitted or published."
 python3 - "$stage/notary-info.json" "$submission" "$wait_exit" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))

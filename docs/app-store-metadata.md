@@ -1,5 +1,7 @@
 # Sill on the App Store: metadata and review material
 
+> Historical upstream Sill record. Its app identity, provider states, URLs and review instructions do not apply to DuoDeck. Use [DuoDeck store copy](duodeck-app-store.md) and the [DuoDeck release record](duodeck-app-store-release.md) for the current product. The upstream material below is retained for engineering context.
+
 Everything App Store Connect asks for the iOS app, in the order it asks, ready
 to paste, and what App Review needs to try it: the review notes, the demo video
 and the screenshots. Only the iOS app (bundle ID `me.saffer.sill`) goes through

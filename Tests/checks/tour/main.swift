@@ -993,8 +993,8 @@ let T5 = "New: Pinch to zoom the picture here, up to 5×. Zoomed in, two fingers
 let T6 = "New: Swipe with three fingers: up for Mission Control, down for App Exposé, and sideways between Spaces."
 let B1 = "Touch and hold a window to close, minimize or go full screen. Keep holding and drag to move it."
 let B1VO = "Each window has actions: close, minimize, full screen, and move left or right. Swipe up or down to hear them."
-let B1Apps = "Apps lists the apps on Mac mini: tap an open one again for its next window."
-let B1AppsVO = "Apps lists the apps on Mac mini. Choose an open one again for its next window."
+let B1Apps = "Apps lists the apps on Mac mini. Choose an app, then choose its window."
+let B1AppsVO = "Apps lists the apps on Mac mini. Choose an app, then choose its window."
 let B2 = "New: Menus has the menu bar of the app you’re using on Mac mini."
 let B3on = "New: Virtual Display is on: a window you pick streams from a display of its own on Mac mini, so it keeps updating when something covers it; Aa then sizes its text."
 let B3off = "New: Virtual Display, in Settings, streams a window you pick from a display of its own on Mac mini, so it keeps updating when something covers it; Aa then sizes its text."
@@ -1181,7 +1181,7 @@ check(words(.laptop, F, device: "iPhone", first: true, thumbnails: false).hint =
       "Larger Picture's laptop card: the keys under the buttons, its rows as before")
 check([TourTopic.touch, .sharing, .settings].allSatisfy { words($0, F, device: "iPhone", thumbnails: false) == words($0, F, device: "iPhone") },
       "Larger Picture's other cards as before")
-check(texts(words(.bar, F, mac: "Studio", device: "iPhone", thumbnails: false)).first == "Apps lists the apps on Studio: tap an open one again for its next window.",
+check(texts(words(.bar, F, mac: "Studio", device: "iPhone", thumbnails: false)).first == "Apps lists the apps on Studio. Choose an app, then choose its window.",
       "the Mac's name in Apps' row")
 check([L, P].allSatisfy { layout in all.allSatisfy { words($0, layout, thumbnails: false) == words($0, layout) } },
       "no thumbnails changes no words sideways or in the halves")

@@ -91,42 +91,7 @@ enum MenuBuilder {
         menu.append(MenuEntry(kind: .item, title: "Devices…", action: .showSettingsTab(.devices)))
         menu.append(.separator)
 
-        var profiles = DuoDeckStreamingPreset.allCases.map { preset in
-            MenuEntry(kind: .item, title: preset.title, subtitle: preset.detail,
-                      checked: preset.matches(config), action: .applyPerformanceProfile(preset))
-        }
-        profiles += [.separator, MenuEntry(kind: .item, title: "Customize…", action: .showSettingsTab(.streaming))]
-        let profileNote = p.away ? "Using your away settings" : (DuoDeckStreamingPreset.current(in: config)?.title ?? "Custom")
-        menu.append(MenuEntry(kind: .item, title: "Stream Quality", subtitle: profileNote, children: profiles))
-        menu.append(MenuEntry(kind: .item, title: "Send Audio (Beta)",
-                              checked: config.sendAudio, action: .setSendAudio(!config.sendAudio)))
-        menu.append(.separator)
         menu.append(MenuEntry(kind: .item, title: "Settings…", key: ",", action: .showSettings))
-
-        var advanced: [MenuEntry] = [
-            MenuEntry(kind: .item, title: "Virtual Display", subtitle: p.virtualDisplayNote,
-                      checked: config.virtualDisplay, action: .setVirtualDisplay(!config.virtualDisplay)),
-            MenuEntry(kind: .item, title: "Direct Wireless Connection",
-                      subtitle: "Connect nearby without a shared network",
-                      checked: config.directWireless, action: .setDirectWireless(!config.directWireless)),
-        ]
-        if let note = p.remoteAccessNote {
-            advanced.append(MenuEntry(kind: .item, title: "Remote Access…", subtitle: note,
-                                      action: .showSettingsTab(.remoteAccess)))
-        }
-        var loginNote: String?
-        if !login.available { loginNote = "Available from the app bundle" }
-        else if let error = login.error { loginNote = error }
-        else if login.needsApproval { loginNote = "Approve in System Settings › Login Items" }
-        advanced += [
-            .separator,
-            MenuEntry(kind: .item, title: "Launch at Login", subtitle: loginNote, checked: login.on,
-                      enabled: login.available, action: .toggleLaunchAtLogin),
-            MenuEntry(kind: .item, title: "Permissions…", action: .showSettingsTab(.permissions)),
-            MenuEntry(kind: .item, title: "Privacy & Security…", action: .openPrivacy),
-            MenuEntry(kind: .item, title: "Show Log…", action: .showLog),
-        ]
-        menu.append(MenuEntry(kind: .item, title: "Advanced", children: advanced))
         menu.append(.separator)
         menu.append(MenuEntry(kind: .item, title: "Quit DuoDeck Host", key: "q", action: .quit))
         return menu

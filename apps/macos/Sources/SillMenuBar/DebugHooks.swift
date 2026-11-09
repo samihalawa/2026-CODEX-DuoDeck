@@ -398,12 +398,29 @@ enum DebugHooks {
                        appearance: appearance, to: out.appendingPathComponent("pane-\(tab.rawValue)-\(name).png"))
             }
         }
+        // The legacy routes still select the single Advanced toolbar group. Exercise actual
+        // AppKit selection, then render its nested pages with their Back control.
+        let navigation = SettingsTabController(model: model)
+        precondition(navigation.tabViewItems.count == SettingsTab.navigationTabs.count)
+        for route in SettingsTab.allCases {
+            navigation.select(route)
+            precondition(navigation.current == route, "Settings route changed: \(route.rawValue)")
+        }
+        for route: SettingsTab in [.virtualDisplay, .permissions, .remoteAccess] {
+            for (name, appearance) in appearances {
+                render(AdvancedPane(model: model, settings: model.settings, previewTab: route)
+                        .formStyle(.grouped).frame(width: 560).tint(DuoDeckHostStyle.accent)
+                        .background(Color(nsColor: .windowBackgroundColor)),
+                       appearance: appearance, to: out.appendingPathComponent("pane-advanced-\(route.rawValue)-\(name).png"))
+            }
+        }
         for sample in devicesPaneSamples() {
             let pane = DevicesPane(status: sample.status, requirePairing: .constant(sample.requirePairing),
                                    showPairingWindowToScreenSharing: .constant(sample.showPairingWindowToScreenSharing),
                                    requirePairingProblem: nil, actions: DevicesPane.Actions(), now: previewNow)
                 .formStyle(.grouped)
                 .frame(width: 520)
+                .tint(DuoDeckHostStyle.accent)
                 .background(Color(nsColor: .windowBackgroundColor))
             for (name, appearance) in appearances {
                 render(pane, appearance: appearance, to: out.appendingPathComponent("pane-devices-\(sample.name)-\(name).png"))
@@ -421,6 +438,7 @@ enum DebugHooks {
             let section = Form { FirewallSection(verdict: verdict) }
                 .formStyle(.grouped)
                 .frame(width: 520)
+                .tint(DuoDeckHostStyle.accent)
                 .background(Color(nsColor: .windowBackgroundColor))
             for (name, appearance) in appearances {
                 render(section, appearance: appearance, to: out.appendingPathComponent("pane-firewall-\(sampleName)-\(name).png"))
@@ -436,6 +454,7 @@ enum DebugHooks {
             let section = Form { ClipboardSection(shareClipboard: .constant(on), access: access) }
                 .formStyle(.grouped)
                 .frame(width: 520)
+                .tint(DuoDeckHostStyle.accent)
                 .background(Color(nsColor: .windowBackgroundColor))
             for (name, appearance) in appearances {
                 render(section, appearance: appearance, to: out.appendingPathComponent("pane-clipboard-\(sampleName)-\(name).png"))
@@ -445,6 +464,7 @@ enum DebugHooks {
             let section = Form { UpdatesSection(pane: sample.pane, automatic: .constant(sample.automatic)) }
                 .formStyle(.grouped)
                 .frame(width: 520)
+                .tint(DuoDeckHostStyle.accent)
                 .background(Color(nsColor: .windowBackgroundColor))
             for (name, appearance) in appearances {
                 render(section, appearance: appearance, to: out.appendingPathComponent("pane-updates-\(sample.name)-\(name).png"))
@@ -456,6 +476,7 @@ enum DebugHooks {
                                         addressName: sample.status.addressName, actions: RemoteAccessPane.Actions())
                 .formStyle(.grouped)
                 .frame(width: 520)
+                .tint(DuoDeckHostStyle.accent)
                 .background(Color(nsColor: .windowBackgroundColor))
             for (name, appearance) in appearances {
                 render(pane, appearance: appearance, to: out.appendingPathComponent("pane-remote-\(sample.name)-\(name).png"))
@@ -487,6 +508,16 @@ enum DebugHooks {
                 render(StatusCard(presentation: p).padding(.vertical, 4).background(Color(nsColor: .windowBackgroundColor)),
                        appearance: appearance, to: out.appendingPathComponent("card-\(sample.name)-\(name).png"))
             }
+            if ["idle", "streaming", "permissions-missing", "startup-error", "remote-port-in-use", "devices-cant-connect"].contains(sample.name) {
+                for (name, appearance) in appearances {
+                    render(GeneralPane(model: model, settings: model.settings, previewUpdates: neverChecked,
+                                       previewClipboardAccess: .allowed, previewPresentation: p,
+                                       previewAllPermissionsGranted: sample.permissions.screenRecording && sample.permissions.accessibility)
+                            .formStyle(.grouped).frame(width: 560).tint(DuoDeckHostStyle.accent)
+                            .background(Color(nsColor: .windowBackgroundColor)),
+                           appearance: appearance, to: out.appendingPathComponent("pane-general-\(sample.name)-\(name).png"))
+                }
+            }
             var config = model.settings.config
             config.virtualDisplay = sample.snapshot.virtualDisplayOn     // the checkmarks match the sample
             config.sendAudio = sample.snapshot.audio != nil
@@ -513,6 +544,22 @@ enum DebugHooks {
         }
         try? menuText.write(to: out.appendingPathComponent("menu.txt"), atomically: true, encoding: .utf8)
         renderGlyphSheet(to: out.appendingPathComponent("glyphs.png"))
+        // Native toolbar and sizing evidence, before model.start(): no listener, capture, or pairing.
+        let settingsWindow = SettingsWindowController(model: model)
+        var fitting = ""
+        for (name, appearance) in appearances {
+            settingsWindow.window?.appearance = NSAppearance(named: appearance)
+            for route in SettingsTab.navigationTabs + [.permissions, .virtualDisplay, .remoteAccess] {
+                settingsWindow.show(tab: route)
+                RunLoop.current.run(until: Date().addingTimeInterval(0.08))
+                settingsWindow.window?.layoutIfNeeded()
+                precondition(model.settings.settingsTab == route && model.visibleSettingsTab == route)
+                precondition(settingsWindow.writeShot(to: out.appendingPathComponent("window-\(route.rawValue)-\(name).png")))
+                fitting += "\(name) \(settingsWindow.fitReport())\n"
+            }
+        }
+        settingsWindow.close()
+        try? fitting.write(to: out.appendingPathComponent("settings-fit.txt"), atomically: true, encoding: .utf8)
         print("Previews written to \(out.path)")
         exit(0)
     }

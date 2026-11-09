@@ -104,12 +104,12 @@ struct DevicesPane: View {
             } else if status.paired.isEmpty {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "ipad.and.iphone")
-                        .font(.system(size: 28))
-                        .foregroundStyle(DuoDeckHostStyle.accent)
-                        .frame(width: 38)
+                        .font(.system(size: 22))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Bring your Mac to your device").fontWeight(.medium)
-                        Text("Open DuoDeck on your iPhone or iPad, then pair with this Mac.")
+                        Text("No paired devices").fontWeight(.medium)
+                        Text("Pair your iPhone or iPad to stream and control this Mac.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -153,12 +153,14 @@ struct PairedDeviceRow: View {
     let rename: (String) -> Void
 
     @State private var editing = false
+    @State private var showDetails = false
     @State private var text = ""
     @FocusState private var focused: Bool
 
     var body: some View {
         LabeledContent {
             Menu {
+                Button("Details…") { showDetails = true }
                 Button("Rename…") { startEditing() }
                 Divider()
                 Button(role: .destructive, action: remove) {
@@ -170,8 +172,19 @@ struct PairedDeviceRow: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Rename or remove \(device.name)")
+            .help("Details, rename, or remove \(device.name)")
             .accessibilityLabel("Options for \(device.name)")
+            .popover(isPresented: $showDetails) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(device.name).font(.headline)
+                    Text(Self.detail(device, now: now ?? Date()))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(16)
+                .frame(width: 300, alignment: .leading)
+            }
         } label: {
             if editing {
                 TextField("Name", text: $text)
@@ -182,11 +195,11 @@ struct PairedDeviceRow: View {
                     }
                     .onExitCommand { editing = false }
             } else {
-                Text(device.name)
+                Text(DuoDeckHostStyle.deviceName(device.name))
                     .onTapGesture(count: 2) { startEditing() }
                     .accessibilityAction(named: "Rename") { startEditing() }
             }
-            Text(Self.detail(device, now: now ?? Date()))
+            Text(Self.lastConnection(device, now: now ?? Date()))
         }
     }
 
@@ -194,6 +207,15 @@ struct PairedDeviceRow: View {
         text = device.name
         editing = true
         focused = true
+    }
+
+    private static func lastConnection(_ device: PairedDeviceSummary, now: Date) -> String {
+        guard let seen = device.lastSeen else { return "Paired · not connected yet" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        formatter.dateTimeStyle = .named
+        let when = now.timeIntervalSince(seen) < 60 ? "just now" : formatter.localizedString(for: seen, relativeTo: now)
+        return "Last connected \(when)"
     }
 
     /// "Paired Sep 25 over the USB cable · last connected 2 minutes ago over Wi‑Fi", "Paired Sep 24

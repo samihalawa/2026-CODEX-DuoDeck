@@ -22,8 +22,9 @@ enum Palette {
     static let control = Color(uiColor: .tertiarySystemFill)
     static let controlOpen = accent.opacity(0.14)
     static let accent = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .systemTeal
-            : UIColor(red: 0, green: 127.0 / 255, blue: 120.0 / 255, alpha: 1)
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 158.0 / 255, green: 188.0 / 255, blue: 1, alpha: 1)
+            : UIColor(red: 47.0 / 255, green: 85.0 / 255, blue: 228.0 / 255, alpha: 1)
     })
     static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
     static let text = Color.primary
@@ -331,6 +332,18 @@ struct StreamScreen: View {
                     PairingOverlay(client: client, scannerMode: scannerOverride ?? CodeScanner.currentMode,
                                    close: { withAnimation(.easeOut(duration: 0.2)) { pairingOverlay = false } })
                 }
+            }
+            .sheet(isPresented: Binding(get: { settingsOpen }, set: { setSettings($0) })) {
+                HostSettingsPanel(client: client, close: { setSettings(false) },
+                                  pairThisDevice: openPairingOverlay, takeTour: takeTour)
+                    .environment(\.largerPictureOffered, offersLarger)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $drawerOpen) {
+                AppDrawer(client: client, drawerOpen: $drawerOpen)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
             .coordinateSpace(.named(TourSpace.name))
             .onPreferenceChange(TourTargetsKey.self) { tourTargets = $0 }
@@ -1194,7 +1207,7 @@ struct StreamScreen: View {
         return VStack(spacing: 0) {
             TopBar(client: client, metrics: bar, stripWidth: stripWidth, drawerOpen: $drawerOpen,
                    keyboardShown: $keyboardShown,
-                   textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu,
+                   textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
                    settingsOpen: settingsOpen,
                    // Apps, Menus, Aa, Keyboard, Desktop, Settings, and the strip. The Mac's sound has no
                    // button: Send Audio and Mute are the Settings panel's switches (Noah, 2026-10-27).
@@ -1202,7 +1215,7 @@ struct StreamScreen: View {
                                                 gap: bar.gap, thumbWidth: bar.thumbWidth),
                    toggleKeyboard: { overlay.toggleKeyboard() },
                    setSettings: { setSettings($0, restoreKeyboard: $1) },
-                   menusOpened: menusOpened, menusClosed: menusClosed)
+                   menusOpened: menusOpened, menusClosed: menusClosed, forceFullControls: tourOnScreen)
             contentArea(bar: bar)
         }
     }
@@ -1262,41 +1275,12 @@ struct StreamScreen: View {
 
             // The dim comes after the overlay on purpose: with the drawer open a tap on the dim
             // closes the drawer instead of clicking the Mac.
-            if drawerOpen {
-                Color.black.opacity(0.58)
-                    .contentShape(Rectangle())
-                    .onTapGesture { withAnimation(.easeOut(duration: 0.18)) { drawerOpen = false } }
-                    .accessibilityHidden(true)
-                    .transition(.opacity)
 
-                AppDrawer(client: client, drawerOpen: $drawerOpen)
-                    .frame(width: 380)
-                    .frame(maxHeight: .infinity)
-                    .padding(.leading, 22)
-                    .padding(.top, 8)
-                    .padding(.bottom, 14)
-                    .transition(.opacity)
-            }
 
             // The drawer's mirror on the trailing edge, its right side lined up with the Settings
             // button's. No dim: the stream stays as it is, so a change can be watched taking effect.
             // A tap on it closes the panel and never clicks the Mac; the bar above stays live.
-            if settingsOpen {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture { setSettings(false) }
-                    .accessibilityHidden(true)
 
-                HostSettingsPanel(client: client, close: { setSettings(false) }, pairThisDevice: openPairingOverlay,
-                                  takeTour: takeTour)
-                    .frame(width: bar.settingsWidth)
-                    .frame(maxHeight: .infinity, alignment: .top)
-                    .padding(.top, 8)
-                    .padding(.bottom, 14)
-                    .padding(.trailing, bar.padding)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .transition(settingsTransition())
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -1445,6 +1429,7 @@ private struct TopBar: View {
     @Binding var textScale: Double?
     @Binding var scaleOpen: Bool
     @Binding var windowMenu: UInt32?
+    @Binding var latched: KeyModifiers
     let settingsOpen: Bool
     /// Whether the bar holds the Menus button and still a whole thumbnail (`MacMenuButton.fits`).
     let menusFit: Bool
@@ -1456,7 +1441,53 @@ private struct TopBar: View {
     let menusOpened: () -> Void
     let menusClosed: () -> Void
 
+    var forceFullControls = false
+    @AppStorage("DuoDeck.focusMode") private var focusMode = true
+
     var body: some View {
+        Group {
+            if focusMode && !forceFullControls {
+                HStack(spacing: 16) {
+                    Text(client.macName.isEmpty ? "Mac" : client.macName)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer(minLength: 12)
+                    Button {
+                        setSettings(false, false)
+                        drawerOpen.toggle()
+                    } label: {
+                        StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+                    }
+                    .frame(width: 76)
+                    .tourTarget(.apps)
+                    Button {
+                        setSettings(false, false)
+                        toggleKeyboard()
+                    } label: {
+                        StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
+                    }
+                    .frame(width: 82)
+                    .tourTarget(.keyboard)
+                    DuoDeckShortcutsMenu(client: client, latched: $latched)
+                        .frame(width: 82)
+                    Button { setSettings(!settingsOpen, true) } label: {
+                        StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
+                    }
+                    .frame(width: 76)
+                    .tourTarget(.settings)
+                }
+                .buttonStyle(.plain)
+                .frame(height: metrics.height)
+                .padding(.horizontal, metrics.padding)
+                .background(Palette.bar.ignoresSafeArea(edges: .top))
+            } else {
+                fullBar
+            }
+        }
+    }
+
+    private var fullBar: some View {
         HStack(spacing: metrics.gap) {
             button(open: drawerOpen, symbol: "magnifyingglass", label: "Apps",
                    accessibilityLabel: drawerOpen ? "Close the app list" : "Open the app list",
@@ -2194,96 +2225,122 @@ struct AppDrawer: View {
     @ObservedObject var client: StreamClient
     @Binding var drawerOpen: Bool
     @State private var search = ""
-    /// The search field has the keyboard. Set only by DEBUG `-SillDrawerSearch` (ContentView's
-    /// contract); a tap focuses the field as before.
-    @FocusState private var searchFocused: Bool
+    @State private var searchFocused = false
 
     var body: some View {
-        VStack(spacing: 6) {
-            if let why = client.lockWhy {
-                // A locked Mac sends no windows, apps or icons (its LockPolicy, docs/locked-mac-plan.md),
-                // and launches nothing: one line where they would be.
-                lockedLine(why)
-                Spacer(minLength: 0)
-            } else {
-                searchField
-                ScrollView {
-                    VStack(spacing: 6) {
-                        if !openApps.isEmpty {
-                            header("Open now")
-                            ForEach(openApps) { app in
-                                DrawerRow(height: 50,
-                                          highlighted: app.bundleID == activeBundleID,
-                                          title: app.name,
-                                          trailing: app.windows.count == 1 ? "1 window" : "\(app.windows.count) windows",
-                                          action: { show(app) }) {
-                                    AppIcon(image: client.icons[app.bundleID], name: app.name,
-                                            size: 32, radius: 9, fontSize: 12)
-                                }
-                            }
+        NavigationStack {
+            List {
+                if let why = client.lockWhy {
+                    Section {
+                        Label(LockedMac.line(mac: client.macName, why: why),
+                              systemImage: why == .otherUser ? "person.2" : "lock")
+                            .font(.body)
+                    }
+                } else {
+                    Section {
+                        Button {
+                            client.select(.desktop)
+                            drawerOpen = false
+                        } label: {
+                            Label("Desktop", systemImage: "desktopcomputer")
+                                .frame(minHeight: 44)
                         }
-                        if !closedApps.isEmpty {
-                            header("All apps").padding(.top, 2)
-                            ForEach(closedApps) { app in
-                                DrawerRow(height: 46, highlighted: false, title: app.name, trailing: nil,
-                                          action: { client.launch(bundleID: app.bundleID) }) {
-                                    AppIcon(image: client.icons[app.bundleID], name: app.name,
-                                            size: 32, radius: 9, fontSize: 12)
+                    }
+                    if !openApps.isEmpty {
+                        Section("Open apps") {
+                            ForEach(openApps) { app in
+                                if app.windows.count > 1 {
+                                    NavigationLink {
+                                        windowList(app)
+                                    } label: {
+                                        appLabel(name: app.name, bundleID: app.bundleID,
+                                                 detail: "\(app.windows.count) windows")
+                                    }
+                                } else {
+                                    Button { show(app) } label: {
+                                        appLabel(name: app.name, bundleID: app.bundleID,
+                                                 detail: app.bundleID == activeBundleID ? "Showing now" : nil)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                             }
                         }
                     }
+                    if !closedApps.isEmpty {
+                        Section("All apps") {
+                            ForEach(closedApps) { app in
+                                Button { client.launch(bundleID: app.bundleID) } label: {
+                                    appLabel(name: app.name, bundleID: app.bundleID, detail: nil)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    if openApps.isEmpty && closedApps.isEmpty {
+                        ContentUnavailableView {
+                            Label(search.isEmpty ? "No apps available" : "No matching apps",
+                                  systemImage: "magnifyingglass")
+                        } description: {
+                            Text(search.isEmpty ? "Apps will appear here when your Mac sends its app list." : "Try another app name.")
+                        }
+                        .listRowBackground(Color.clear)
+                    }
                 }
-                .scrollIndicators(.hidden)
+            }
+            .listStyle(.insetGrouped)
+            .searchable(text: $search, isPresented: $searchFocused,
+                        placement: .navigationBarDrawer(displayMode: .always), prompt: "Search apps")
+            .navigationTitle("Apps")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { drawerOpen = false }
+                }
+            }
+            #if DEBUG
+            .onAppear(perform: searchFromLaunchArguments)
+            #endif
+        }
+        .tint(Palette.accent)
+    }
+
+    private func appLabel(name: String, bundleID: String, detail: String?) -> some View {
+        HStack(spacing: 12) {
+            AppIcon(image: client.icons[bundleID], name: name, size: 32, radius: 7, fontSize: 12)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(name).font(.body).foregroundStyle(.primary)
+                if let detail {
+                    Text(detail).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+    }
+
+    private func windowList(_ app: OpenApp) -> some View {
+        List {
+            ForEach(app.windows, id: \.id) { window in
+                Button {
+                    client.select(.window(window.id))
+                    drawerOpen = false
+                } label: {
+                    HStack(spacing: 12) {
+                        Text(window.title.isEmpty ? app.name : window.title)
+                            .foregroundStyle(.primary)
+                        Spacer(minLength: 8)
+                        if client.active == .window(window.id) {
+                            Image(systemName: "checkmark").foregroundStyle(Palette.accent)
+                        }
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Palette.bar))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .strokeBorder(Palette.separator, lineWidth: 1))
-        .shadow(color: .black.opacity(0.16), radius: 24, x: 0, y: 12)
-    }
-
-    /// A locked Mac (`StreamClient.lockWhy`): one line in place of the search field and both lists, read
-    /// by VoiceOver as it is (the lock symbol is not).
-    private func lockedLine(_ why: LockedMac.Why) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: why == .otherUser ? "person.2.fill" : "lock.fill")
-                .font(.system(size: 15))
-                .foregroundStyle(Palette.muted)
-                .accessibilityHidden(true)
-            Text(LockedMac.line(mac: client.macName, why: why))
-                .font(.system(size: 15))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.control))
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 18))
-                .foregroundStyle(Palette.muted)
-            TextField("", text: $search,
-                      prompt: Text("Search apps on \(client.macName)").foregroundColor(Palette.muted))
-                .font(.system(size: 15))
-                .foregroundStyle(Palette.text)
-                .textFieldStyle(.plain)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .submitLabel(.search)
-                .accessibilityLabel("Search apps on this Mac")
-                .focused($searchFocused)
-        }
-        .frame(height: 48)
-        .padding(.horizontal, 14)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Palette.control))
-        #if DEBUG
-        .onAppear(perform: searchFromLaunchArguments)
-        #endif
+        .navigationTitle(app.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     #if DEBUG

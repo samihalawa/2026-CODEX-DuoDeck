@@ -131,7 +131,7 @@ public enum LockedMac {
     public static func line(mac: String, why: Why) -> String {
         switch why {
         case .screenLocked: return "\(name(mac)) is locked. Unlock it to see its windows."
-        case .otherUser: return "Another user started controlling this Mac. Log in to your account to reactivate screen sharing with Sill."
+        case .otherUser: return "Another user started controlling this Mac. Log in to your account to reactivate screen sharing with DuoDeck."
         }
     }
 
@@ -154,7 +154,7 @@ public enum LockedMac {
             return paired == true ? "To unlock it from here, type its password and press Return. Its windows come back once it is unlocked."
                                   : "Its windows come back once it is unlocked."
         case .locked(.otherUser):
-            return "Log in to your account to reactivate screen sharing with Sill."
+            return "Log in to your account to reactivate screen sharing with DuoDeck."
         case .unlocking:
             return nil
         }

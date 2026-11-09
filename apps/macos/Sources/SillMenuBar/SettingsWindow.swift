@@ -4,13 +4,24 @@ import SillHostCore
 
 /// The Settings window's tabs, in the toolbar's order.
 enum SettingsTab: String, CaseIterable {
-    case general, devices, streaming, virtualDisplay, permissions, remoteAccess
+    case general, devices, streaming, advanced, virtualDisplay, permissions, remoteAccess
+
+    /// The saved raw routes stay stable; older deep links open inside Advanced.
+    static let navigationTabs: [Self] = [.general, .devices, .streaming, .advanced]
+
+    var navigationGroup: Self {
+        switch self {
+        case .virtualDisplay, .permissions, .remoteAccess: .advanced
+        default: self
+        }
+    }
 
     var title: String {
         switch self {
-        case .general: "Overview"
+        case .general: "General"
         case .devices: "Devices"
         case .streaming: "Streaming"
+        case .advanced: "Advanced"
         case .virtualDisplay: "Virtual Display"
         case .permissions: "Permissions"
         case .remoteAccess: "Remote Access"
@@ -19,9 +30,10 @@ enum SettingsTab: String, CaseIterable {
 
     var symbol: String {
         switch self {
-        case .general: "square.grid.2x2"
+        case .general: "gearshape"
         case .devices: "ipad.and.iphone"
         case .streaming: "play.rectangle"
+        case .advanced: "slider.horizontal.3"
         case .virtualDisplay: "display"
         case .permissions: "lock.shield"
         case .remoteAccess: "globe"
@@ -72,7 +84,10 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         heightCap.isActive = true
         // A tab switch makes a new 501 constraint at that pane's whole height; the cap holds it, and
         // the screen (the Dock) may have changed since the last look.
-        tabs.onSelect = { [weak self] in self?.refit() }
+        tabs.onSelect = { [weak self] in
+            self?.window?.title = "DuoDeck Host"
+            self?.refit()
+        }
         NotificationCenter.default.addObserver(self, selector: #selector(screensChanged(_:)),
                                                name: NSApplication.didChangeScreenParametersNotification, object: nil)
     }
@@ -86,6 +101,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     func show(tab: SettingsTab?) {
         tabs.select(tab ?? model.settings.settingsTab)
         guard let window else { return }
+        window.title = "DuoDeck Host"
         refit()
         WindowPlacement.bringForward(window)
         // At the selected pane's height, and on the screen bringForward chose (it moves a window that
@@ -242,6 +258,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
 @MainActor
 final class SettingsTabController: NSTabViewController {
     private let model: AppModel
+    private var lastAdvancedTab: SettingsTab = .advanced
     /// Every selection, the window's own included: SettingsWindowController sets the cap again.
     var onSelect: (() -> Void)?
 
@@ -249,7 +266,7 @@ final class SettingsTabController: NSTabViewController {
         self.model = model
         super.init(nibName: nil, bundle: nil)
         tabStyle = .toolbar
-        for tab in SettingsTab.allCases {
+        for tab in SettingsTab.navigationTabs {
             let host = NSHostingController(rootView: SettingsPane(tab: tab, model: model))
             host.sizingOptions = [.preferredContentSize]
             host.title = tab.title
@@ -266,11 +283,13 @@ final class SettingsTabController: NSTabViewController {
 
     var current: SettingsTab {
         let index = max(0, selectedTabViewItemIndex)
-        return (tabViewItems[index].identifier as? String).flatMap(SettingsTab.init(rawValue:)) ?? .general
+        let group = (tabViewItems[index].identifier as? String).flatMap(SettingsTab.init(rawValue:)) ?? .general
+        return group == .advanced ? lastAdvancedTab : group
     }
 
     func select(_ tab: SettingsTab) {
-        if let index = tabViewItems.firstIndex(where: { ($0.identifier as? String) == tab.rawValue }) {
+        if tab.navigationGroup == .advanced { lastAdvancedTab = tab }
+        if let index = tabViewItems.firstIndex(where: { ($0.identifier as? String) == tab.navigationGroup.rawValue }) {
             selectedTabViewItemIndex = index
         }
     }

@@ -1,0 +1,74 @@
+[
+  {
+    "file": "iphone-6_3-setup.png",
+    "scene": "normal-setup-help",
+    "width": 1206,
+    "height": 2622,
+    "bytes": 221941,
+    "sha256": "999b81bb05af0b571dd6303be666426e8bcb6c0aea90cfd787fc85496b82b57a",
+    "source": ".build/orchestration/ios-native-v2-ui/phone-store-final-attachments/C1A51153-35CE-405C-96FE-6DCDAB392032.png",
+    "capture_timestamp": 1794239437.173,
+    "build": "2026110903",
+    "launch_arguments": []
+  },
+  {
+    "file": "iphone-6_3-add-mac.png",
+    "scene": "normal-add-mac",
+    "width": 1206,
+    "height": 2622,
+    "bytes": 148596,
+    "sha256": "41d893771902a56d88302d278164b83352f392e53c6e1b2af4ab1ce303712a13",
+    "source": ".build/orchestration/ios-native-v2-ui/phone-store-final-attachments/7A2C9E50-4BAB-4CE4-B744-33DB34FA04AA.png",
+    "capture_timestamp": 1794239431.069,
+    "build": "2026110903",
+    "launch_arguments": []
+  },
+  {
+    "file": "iphone-6_3-connect.png",
+    "scene": "normal-macs",
+    "width": 1206,
+    "height": 2622,
+    "bytes": 133711,
+    "sha256": "67feaf1de0940950f68752df2cdd101b67c263d807c9ec46c8e907f2026479f3",
+    "source": ".build/orchestration/ios-native-v2-ui/phone-store-final-attachments/D000DEF7-F946-4A8C-9C06-8FDAE77481B8.png",
+    "capture_timestamp": 1794239428.951,
+    "build": "2026110903",
+    "launch_arguments": []
+  },
+  {
+    "file": "ipad-13-setup.png",
+    "scene": "normal-setup-help",
+    "width": 2064,
+    "height": 2752,
+    "bytes": 207519,
+    "sha256": "dbb9901c901a019f16935748dbcf3505222677a12f9ee8fe32d6826e332560d6",
+    "source": ".build/orchestration/ios-native-v2-ui/ipad-store-final-attachments/99F3A185-DE8D-4CB7-A397-7BB57C568919.png",
+    "capture_timestamp": 1794239437.735,
+    "build": "2026110903",
+    "launch_arguments": []
+  },
+  {
+    "file": "ipad-13-add-mac.png",
+    "scene": "normal-add-mac",
+    "width": 2064,
+    "height": 2752,
+    "bytes": 261914,
+    "sha256": "5b92b45944a77c6d5143e0da027a55b42015808cf16318fb91141479f7561fcc",
+    "source": ".build/orchestration/ios-native-v2-ui/ipad-store-final-attachments/56B80C98-2C13-49E0-8056-BA2BD0DEF1DD.png",
+    "capture_timestamp": 1794239431.218,
+    "build": "2026110903",
+    "launch_arguments": []
+  },
+  {
+    "file": "ipad-13-connect.png",
+    "scene": "normal-macs",
+    "width": 2064,
+    "height": 2752,
+    "bytes": 149672,
+    "sha256": "d073a0a880ab16ffaac6583023468295ce92d1293a4a42a2f89c70c63698a436",
+    "source": ".build/orchestration/ios-native-v2-ui/ipad-store-final-attachments/32F855E4-7686-4ACB-99FA-1ABE02B28C1C.png",
+    "capture_timestamp": 1794239429.008,
+    "build": "2026110903",
+    "launch_arguments": []
+  }
+]
