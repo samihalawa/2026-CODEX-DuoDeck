@@ -6,19 +6,24 @@ App ID **6832548998**, bundle **com.agentsai.duodeck**, team **U549N38BV6**, SKU
 
 ## Current candidate — 9 November 2026
 
-The simpler second redesign remains version **1.1.0**. This is a local preparation record, not evidence of upload, submission, approval or public availability.
+The simpler second redesign is version **1.1.0**. These states were read from the providers on 9 November 2026; they do not establish public App Store availability.
 
-| Component | Candidate | State at this copy update |
+| Component | Candidate | Verified state |
 | --- | --- | --- |
-| iOS | 1.1.0 (2026110903) | New source candidate; final build, installation, upload and provider validation pending |
-| Mac companion | 1.1.0 (2026110902) | New source candidate; final build, signing, notarization and publication pending |
-| App Store listing | docs/duodeck-app-store.md | New local copy prepared; the corresponding provider update is still required |
-| Store screenshots | Genuine captures of iOS build 2026110903 | Required before final submission; the earlier build02 images describe the previous design |
-| Public iOS release | App ID 6832548998 | Unpublished; no review submission has been established for this redesign |
+| iOS | 1.1.0 (2026110903) | Archive/export succeeded; uploaded, VALID, APP_STORE_ELIGIBLE and selected on the existing version |
+| Mac companion | 1.1.0 (2026110902) | Signed universal package; installed and running; new notarization In Progress |
+| App Store listing | docs/duodeck-app-store.md | New listing copy and review instructions saved; independent native readback matches the canonical text |
+| Store screenshots | Six genuine build03 captures | Normal Macs, Add Mac and setup scenes captured on both families; provider replacement processing |
+| Review draft | 7d3098a7-0a91-49c0-afef-d867f8545bbd | READY_FOR_REVIEW, submittedDate null; no submission attempt |
+| Website | duodeck.megawebs.com | Redesigned production source `2aff42d81bfe664d7613c97a338da487734db3b5` confirmed by health and rendered browser checks |
 
-The earlier iOS build **2026110902** was uploaded and processed for the previous design. It is superseded as the intended release candidate by **2026110903**. Its screenshots and provider selections must not be treated as verification of the new candidate. Earlier Mac notarization covers its exact earlier artifact; it cannot establish approval of the redesigned Mac build.
+Selected iOS build ID: **baa56e48-04e3-40ce-976a-1a777d39af32**. Version ID: **13d239d5-2eb9-4767-a9bd-f33780f4db97**. Exported IPA SHA-256: `032d9d6cb4b17ec3628c65cbe22d44b894254ce191206941c6e1c92eaa17af42`.
 
-The existing review draft **7d3098a7-0a91-49c0-afef-d867f8545bbd** was last verified as **READY_FOR_REVIEW**, with submittedDate null, against the previous build. The version record is **13d239d5-2eb9-4767-a9bd-f33780f4db97**. Reuse and inspect the existing draft; do not create a duplicate. Select the processed build03, replace the prior screenshots with genuine current captures, update the listing and review instructions, then revalidate the exact version, build and draft before submission. These are remaining steps, not completed provider actions.
+Mac notarization job: **1b80fbe5-f7e9-4907-b3f5-9688ed66a816**, created 15:58:45 UTC. Pristine DMG SHA-256: `b172925c67a448ebc32fd3b85f82b37962679ec71f39cdfeb1b637860ead7af0`. The old build02 iOS candidate and build01 Mac candidate remain historical and are superseded; their earlier checks do not verify this redesign.
+
+The intended physical iPhone was unavailable to CoreDevice at the build03 installation attempt. Build03 was not installed on that phone. The installed Mac opens its native Permissions page and requires local Screen Recording and Accessibility approval. Simulator/UI checks and a running Mac process are not a live-stream verification.
+
+The one-shot release continuation is prepared to resume this exact notarization job and checksum. It publishes the verified Mac artifact after Apple acceptance and then submits the existing iOS review draft only after the selected build and new screenshot set pass native readback. No new draft or recurring agent is needed.
 
 ## Required companion and product scope
 
