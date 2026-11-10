@@ -4,24 +4,17 @@
 
 App ID **6832548998**, bundle **com.agentsai.duodeck**, team **U549N38BV6**, SKU **DUODECK2026IOS001**. The record was created and independently read back on 9 November 2026 under Agents AI Ltd.
 
-## Release status — 10 November 2026
+## Release status — 10 November 2026 (seated-Duo rebrand)
 
-Version **1.1.0** now includes the regular Mac Dock application and capture/first-picture recovery fixes. The states below distinguish local verification, Apple processing and public availability.
+The new seated-Duo icon and violet accent replaced the paired-D icon on blue in both apps. The iOS build that was waiting for review was withdrawn and replaced with the rebranded build before review began.
 
 | Component | Candidate | Verified state |
 | --- | --- | --- |
-| iOS | 1.1.0 (2026110904) | Signed archive and export passed. The valid build is selected on the submitted version |
-| Mac companion | 1.1.0 (2026110903) | Public [GitHub release](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v1.1.0) with notarized universal DMG, ZIP and checksums |
-| App Store listing | [Listing material](duodeck-app-store.md) | App Store Connect saved the name **DuoDeck: Mac Remote Control**, subtitle, keywords and promotional text on 10 November |
-| Store screenshots | Six captures from build 2026110903 | Ordered and verified Macs, Add Mac and setup scenes also used for build 2026110904 |
-| App Review | 7d3098a7-0a91-49c0-afef-d867f8545bbd | Submitted at `2026-11-10T08:20:37.384Z`. App Store Connect shows Waiting for Review on the submission and the version |
-| Website | [Downloads](https://duodeck.megawebs.com/#downloads) | The Mac button is enabled. The public DMG returned HTTP 200 and matched the published checksum |
-
-The selected iOS build ID is `ec90336b-fcd4-44c3-867d-5d10f8a90e11` on version `13d239d5-2eb9-4767-a9bd-f33780f4db97`. The exported IPA SHA-256 is `30796cb84f1973cc6dbd2443b98f38b69a425fdff1b0ee5cb5485a335564ddb8`.
-
-Apple accepted Mac notarization job `610d133c-b145-4a35-8170-c514d6a3ad0f`. The release tag `v1.1.0` points to the recorded installer source `d82aaf695232d536d13e34253cde2976646664a1`. The published stapled DMG SHA-256 is `a9e42fcc454efddccdbaaa5f1918458e2832cc3efefa3731581c7a4d0e839e57`.
-
-The six store images remain genuine build03 captures from **15:50 UTC**. Their unchanged setup scenes are appropriate for build 2026110904; they are not recaptured from build 2026110904 or evidence of live streaming. Native placement readback verified three ordered ACTIVE placements in each of `IPAD_13_PROFILE` and `IPHONE_DYNAMIC_ISLAND_MEDIUM_PROFILE`. Apple-hosted full-size image pixels match the source PNGs.
+| iOS | 1.1.0 (2026111001), build ID `4208a23a-193f-4e53-871c-2a405300f4df` | Uploaded through the Q92YCL7C6D API key, processed by Apple and selected on version `13d239d5-2eb9-4767-a9bd-f33780f4db97` |
+| Mac companion | DuoDeck Host 1.1.1 (2026111001) | Public [GitHub release](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v1.1.1), notarized and stapled. The latest-download DMG SHA-256 `cd8fe33430f5a599fa9adf572fcefb2bc9625a5ec04c555a86e32bd377ab613a` matches the release record |
+| Store screenshots | Six captures from build 2026111001 | Replaced in `IPAD_PRO_3GEN_129` and `IPHONE_61`, three each, in the same order |
+| App Review | `efcd0eb4-1f69-4910-b13b-f09cdf1703fd` | Submitted; App Store Connect shows Waiting for Review on the submission and the version. The earlier submission `7d3098a7-0a91-49c0-afef-d867f8545bbd` (build 2026110904) was cancelled before review |
+| Website | [duodeck.megawebs.com](https://duodeck.megawebs.com) | Serves the new mark and violet accent; the Mac download reports available |
 
 ## After App Review
 

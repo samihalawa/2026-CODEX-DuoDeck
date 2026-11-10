@@ -63,7 +63,7 @@ trackpad,touchpad,screen,streaming,sharing,wireless,shortcuts,window,cursor,wifi
 ```text
 A clearer way to connect and control your Mac.
 
-• New paired-D app icon and simpler native screens.
+• A new app icon and simpler native screens.
 • A Macs list with an Add Mac sheet for scanning or entering a pairing code.
 • More room for the trackpad, with Keyboard and Shortcuts close by.
 • Saved trackpad size and pointer speed, plus an optional shortcut row.
