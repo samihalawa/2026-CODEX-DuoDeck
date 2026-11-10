@@ -20,11 +20,11 @@ The owner's shared conversation, “Enable iPhone Trackpad”, and the 9 Novembe
 
 ## Design language
 
-Use the simple paired-D app icon from **design/AppIcon.png**, an opaque 1024×1024 PNG. Native app icons and web icon derivatives share that source. The website header uses a plain **DuoDeck** text wordmark.
+Use the seated-Duo app icon: a violet-to-pink upright half over an orange-to-amber deck on white. **design/AppIcon.svg** is the vector source and **design/AppIcon.png** its opaque 1024×1024 export. Native app icons and web icon derivatives share that source. The website header pairs the mark (design/DuoDeckMark.svg) with a **DuoDeck** text wordmark.
 
-The web reference is MagicInterview's current public stylesheet: Instrument Sans, white and light grey surfaces, dark readable text, restrained borders and one blue action color, #2f55e4. Its older typography specimen page is not the current reference. Explain the product with “Control your Mac from your iPhone or iPad.” Follow that with specific actions and clear setup steps.
+The web reference is MagicInterview's current public stylesheet: Instrument Sans, white and light grey surfaces, dark readable text, restrained borders and one violet action color, #6d28d9 (the mark's upper colour). Its older typography specimen page is not the current reference. Explain the product with “Control your Mac from your iPhone or iPad.” Follow that with specific actions and clear setup steps.
 
-Native apps use system typography, standard lists, forms, toolbars and semantic light/dark surfaces. Use blue as an accent, not as a large decorative surface. Live video keeps its appropriate dark canvas. Working screens lead with the task and the Mac's name; they do not repeat logo or slogan banners.
+Native apps use system typography, standard lists, forms, toolbars and semantic light/dark surfaces. Use violet as an accent, not as a large decorative surface. Live video keeps its appropriate dark canvas. Working screens lead with the task and the Mac's name; they do not repeat logo or slogan banners.
 
 Use short, literal labels. A shortcut that cycles windows says Next Window. Place advanced controls behind named settings rather than showing every option at once. Avoid oversized marketing headings inside apps, glowing gradients, decorative metrics and invented device scenes presented as product evidence. Clearly identify the website's interactive preview; release screenshots must come from the actual app.
 

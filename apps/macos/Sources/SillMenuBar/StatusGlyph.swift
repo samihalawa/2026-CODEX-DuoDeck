@@ -1,6 +1,6 @@
 import AppKit
 
-/// DuoDeck's paired-D mark, drawn as a template with small connection-state indicators.
+/// DuoDeck's seated-Duo mark, drawn as a template with small connection-state indicators.
 enum StatusGlyph {
     enum State: Equatable, CaseIterable { case idle, connected, streaming, attention }
     static let size = NSSize(width: 22, height: 18)
@@ -12,10 +12,8 @@ enum StatusGlyph {
         let image = NSImage(size: size, flipped: true) { _ in
             guard let c = NSGraphicsContext.current?.cgContext else { return false }
             c.setFillColor(NSColor.black.cgColor)
-            for x: CGFloat in [1.25, 11.5] {
-                c.addPath(letterD(in: CGRect(x: x, y: 1.75, width: 8.75, height: 11.75)))
-                c.drawPath(using: .eoFill)
-            }
+            c.addPath(seatedMark())
+            c.drawPath(using: .eoFill)
             switch state {
             case .idle:
                 break
@@ -26,7 +24,7 @@ enum StatusGlyph {
                                  cornerWidth: 1, cornerHeight: 1, transform: nil))
                 c.fillPath()
             case .attention:
-                // A clear halo keeps the badge separate from the D at menu-bar scale.
+                // A clear halo keeps the badge separate from the mark at menu-bar scale.
                 c.setBlendMode(.clear)
                 c.fillEllipse(in: CGRect(x: 15.5, y: 10.5, width: 6.5, height: 6.5))
                 c.setBlendMode(.normal)
@@ -43,30 +41,21 @@ enum StatusGlyph {
         return image
     }
 
-    private static func letterD(in r: CGRect) -> CGPath {
+    /// The seated-Duo mark at menu-bar scale: an upright half over a flared deck with one key slot.
+    private static func seatedMark() -> CGPath {
         let p = CGMutablePath()
-        let x = r.minX, y = r.minY, w = r.width, h = r.height, stroke: CGFloat = 2.15
-        p.move(to: CGPoint(x: x, y: y))
-        p.addLine(to: CGPoint(x: x + w * 0.4, y: y))
-        p.addCurve(to: CGPoint(x: x + w, y: y + h * 0.5),
-                   control1: CGPoint(x: x + w * 0.8, y: y),
-                   control2: CGPoint(x: x + w, y: y + h * 0.22))
-        p.addCurve(to: CGPoint(x: x + w * 0.4, y: y + h),
-                   control1: CGPoint(x: x + w, y: y + h * 0.78),
-                   control2: CGPoint(x: x + w * 0.8, y: y + h))
-        p.addLine(to: CGPoint(x: x, y: y + h))
+        p.addPath(CGPath(roundedRect: CGRect(x: 5.75, y: 0.75, width: 10.5, height: 7),
+                         cornerWidth: 2.2, cornerHeight: 2.2, transform: nil))
+        let deck = [CGPoint(x: 6.4, y: 8.75), CGPoint(x: 15.6, y: 8.75),
+                    CGPoint(x: 18.75, y: 13.25), CGPoint(x: 3.25, y: 13.25)]
+        let radius: CGFloat = 1.2
+        p.move(to: CGPoint(x: 11, y: 8.75))
+        for i in 1...4 {
+            p.addArc(tangent1End: deck[i % 4], tangent2End: deck[(i + 1) % 4], radius: radius)
+        }
         p.closeSubpath()
-
-        p.move(to: CGPoint(x: x + stroke, y: y + stroke))
-        p.addLine(to: CGPoint(x: x + w * 0.4, y: y + stroke))
-        p.addCurve(to: CGPoint(x: x + w - stroke, y: y + h * 0.5),
-                   control1: CGPoint(x: x + w * 0.7, y: y + stroke),
-                   control2: CGPoint(x: x + w - stroke, y: y + h * 0.32))
-        p.addCurve(to: CGPoint(x: x + w * 0.4, y: y + h - stroke),
-                   control1: CGPoint(x: x + w - stroke, y: y + h * 0.68),
-                   control2: CGPoint(x: x + w * 0.7, y: y + h - stroke))
-        p.addLine(to: CGPoint(x: x + stroke, y: y + h - stroke))
-        p.closeSubpath()
+        p.addPath(CGPath(roundedRect: CGRect(x: 8.75, y: 10.75, width: 4.5, height: 1.1),
+                         cornerWidth: 0.55, cornerHeight: 0.55, transform: nil))
         return p
     }
 }

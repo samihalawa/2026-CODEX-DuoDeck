@@ -51,7 +51,8 @@ The current source contains the iOS client, Mac host and website. Android, Windo
 | apps/web | Product site and interactive browser preview |
 | packages/stream-protocol | Shared Swift streaming protocol |
 | script | Canonical DuoDeck build and release entry points |
-| design/AppIcon.png | Shared opaque 1024×1024 app icon source |
+| design/AppIcon.svg | Vector source of the app icon (the seated-Duo mark) |
+| design/AppIcon.png | Shared opaque 1024×1024 app icon, exported from AppIcon.svg |
 | Tests | Engine and UI-policy checks |
 | docs/PRODUCT_BRIEF.md | Product direction and execution prompt |
 

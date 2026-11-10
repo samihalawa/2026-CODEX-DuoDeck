@@ -15,7 +15,7 @@ const mime = Object.freeze({
   ".woff2":"font/woff2",".txt":"text/plain; charset=utf-8",".xml":"application/xml; charset=utf-8",
 });
 const route = Object.freeze({"/":"/index.html","/privacy":"/privacy.html","/terms":"/terms.html"});
-const errorPage = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not found · DuoDeck</title><body style="background:#ffffff;color:#0b0d12;font:16px system-ui;margin:12vh auto;max-width:640px;padding:1.5em"><h1>That page could not be found.</h1><p>Return to <a style="color:#2f55e4" href="/">DuoDeck</a>.</p></body></html>';
+const errorPage = '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Not found · DuoDeck</title><body style="background:#ffffff;color:#0b0d12;font:16px system-ui;margin:12vh auto;max-width:640px;padding:1.5em"><h1>That page could not be found.</h1><p>Return to <a style="color:#6d28d9" href="/">DuoDeck</a>.</p></body></html>';
 function security(res) {
   res.setHeader("X-Content-Type-Options","nosniff");
   res.setHeader("Referrer-Policy","strict-origin-when-cross-origin");

@@ -11,7 +11,7 @@ mkdir -p "$document/Assets" "$compiled"
 cp "$icon" "$document/Assets/DuoDeck.png"
 cat > "$document/icon.json" <<'JSON'
 {
-  "fill": { "solid": "srgb:0.184314,0.333333,0.894118,1.000000" },
+  "fill": { "solid": "srgb:1.000000,1.000000,1.000000,1.000000" },
   "groups": [{ "layers": [{ "image-name": "DuoDeck.png", "name": "DuoDeck" }] }],
   "supported-platforms": { "squares": ["macOS"] }
 }

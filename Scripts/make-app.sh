@@ -120,7 +120,7 @@ if [ ! -f "$icon_out/compiled/Assets.car" ] || [ design/AppIcon.png -nt "$icon_o
         cp "$PWD/design/AppIcon.png" "$doc/Assets/DuoDeck.png"
         cat > "$doc/icon.json" <<'JSON'
 {
-  "fill" : { "solid" : "srgb:0.00000,0.00000,0.00000,1.00000" },
+  "fill" : { "solid" : "srgb:1.00000,1.00000,1.00000,1.00000" },
   "groups" : [ { "layers" : [ { "image-name" : "DuoDeck.png", "name" : "DuoDeck" } ] } ],
   "supported-platforms" : { "squares" : [ "macOS" ] }
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="20 16 200 200">
+  <!-- DuoDeck mark on a transparent ground. -->
+  <defs>
+    <linearGradient id="upper" gradientUnits="userSpaceOnUse" x1="60" y1="20" x2="190" y2="150"><stop offset="0" stop-color="#6D28D9"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+    <linearGradient id="deck" gradientUnits="userSpaceOnUse" x1="40" y1="120" x2="210" y2="210"><stop offset="0" stop-color="#FF5A3C"/><stop offset="1" stop-color="#FFB020"/></linearGradient>
+    <clipPath id="fold"><rect x="52" y="28" width="136" height="112" rx="32"/></clipPath>
+  </defs>
+  <g>
+    <path d="M68 142 L172 142 L194 184 L46 184 Z" fill="url(#deck)" stroke="url(#deck)" stroke-width="36" stroke-linejoin="round"/>
+    <rect x="52" y="28" width="136" height="112" rx="32" fill="url(#upper)"/>
+    <path d="M68 142 L172 142 L194 184 L46 184 Z" fill="#4C1D95" stroke="#4C1D95" stroke-width="36" stroke-linejoin="round" opacity="0.55" clip-path="url(#fold)"/>
+    <rect x="92" y="168" width="56" height="12" rx="6" fill="#ffffff" opacity="0.88"/>
+  </g>
+</svg>

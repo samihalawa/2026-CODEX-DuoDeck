@@ -23,8 +23,8 @@ enum Palette {
     static let controlOpen = accent.opacity(0.14)
     static let accent = Color(uiColor: UIColor { traits in
         traits.userInterfaceStyle == .dark
-            ? UIColor(red: 158.0 / 255, green: 188.0 / 255, blue: 1, alpha: 1)
-            : UIColor(red: 47.0 / 255, green: 85.0 / 255, blue: 228.0 / 255, alpha: 1)
+            ? UIColor(red: 196.0 / 255, green: 181.0 / 255, blue: 253.0 / 255, alpha: 1)
+            : UIColor(red: 109.0 / 255, green: 40.0 / 255, blue: 217.0 / 255, alpha: 1)
     })
     static let onAccent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
     static let text = Color.primary
