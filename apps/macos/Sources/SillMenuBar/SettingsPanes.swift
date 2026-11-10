@@ -308,12 +308,44 @@ struct PermissionsPane: View {
                             .truncationMode(.middle)
                             .textSelection(.enabled)
                     }
+                    LabeledContent {
+                        Button("Repair Permissions") { permissions.repairPermissions() }
+                    } label: {
+                        Text("Already on in System Settings?")
+                        Text("DuoDeck Host clears the old macOS record and asks again for this copy.")
+                    }
                     Button("Show App in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
                     }
                 } footer: {
-                    Footnote("Enable DuoDeck Host in both Screen Recording and Accessibility. If it is already on in System Settings but still shows here, select DuoDeck Host in that list, remove it with the minus button, add this copy again with the plus button, and reopen DuoDeck Host.")
+                    Footnote("Enable DuoDeck Host in both Screen Recording and Accessibility. If a switch is already on but this page still asks, use Repair Permissions.")
                 }
+            }
+            if permissions.outsideApplications {
+                Section {
+                    LabeledContent {
+                        Button("Move to Applications") { permissions.moveToApplications() }
+                    } label: {
+                        Text("DuoDeck Host isn’t in Applications")
+                        Text("Permissions stay with the copy you allowed. Move it to Applications and allow that copy.")
+                    }
+                }
+            }
+            if !permissions.otherCopies.isEmpty {
+                Section {
+                    LabeledContent {
+                        Button("Move to Trash") { permissions.trashOtherCopies() }
+                    } label: {
+                        Text(permissions.otherCopies.count == 1 ? "Another copy of DuoDeck Host" : "\(permissions.otherCopies.count) other copies of DuoDeck Host")
+                        Text(permissions.otherCopies.map { $0.path }.joined(separator: "\n"))
+                            .textSelection(.enabled)
+                    }
+                } footer: {
+                    Footnote("System Settings shows every copy as DuoDeck Host, so a switch can belong to one you don’t use. Keeping one copy avoids that.")
+                }
+            }
+            if let note = permissions.repairNote {
+                Section { Text(note) }
             }
             if permissions.relaunchSuggested {
                 Section {

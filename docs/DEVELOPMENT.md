@@ -77,7 +77,7 @@ the one installed copy. If permissions still look missing, check which
 certificate macOS recorded:
 `sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" "select service, hex(csreq) from access where client='com.agentsai.duodeck.host'"`,
 then `tccutil reset ScreenCapture com.agentsai.duodeck.host` (and `Accessibility`)
-and allow the installed copy again.
+and allow the installed copy again. The app does this itself: Allow… on a permission that was asked for before and is still missing clears DuoDeck Host's own record first, Permissions › Repair Permissions does it for both, the same page offers to move other copies of the app to the Trash, and Move to Applications when the running copy is elsewhere.
 
 `SILL_UNIVERSAL=1 Scripts/make-app.sh` builds a universal Sill.app, arm64 and
 x86_64, as the releases and the nightlies are (#62): one build per architecture,
