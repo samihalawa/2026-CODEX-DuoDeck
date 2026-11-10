@@ -64,6 +64,21 @@ another folder. With no Apple Development identity in the keychain it signs ad
 hoc and says so, and then Screen Recording and Accessibility have to be granted
 again after every rebuild (see Permissions).
 
+Development builds never use the released host's identity. A build signed with
+anything but the Developer ID certificate is **DuoDeck Host Dev**
+(`com.agentsai.duodeck.host.dev`), from both `make-app.sh` and
+`script/build_and_run.sh`. macOS ties Screen Recording and Accessibility to the
+bundle ID plus the signing certificate, so a development copy launched under the
+released ID takes those permissions away from the installed DuoDeck Host, which
+then shows them missing while System Settings shows them on.
+`script/build_and_run.sh --install` and `--package` refuse anything but the
+Developer ID certificate, and `--install` replaces `/Applications/DuoDeck Host.app`,
+the one installed copy. If permissions still look missing, check which
+certificate macOS recorded:
+`sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" "select service, hex(csreq) from access where client='com.agentsai.duodeck.host'"`,
+then `tccutil reset ScreenCapture com.agentsai.duodeck.host` (and `Accessibility`)
+and allow the installed copy again.
+
 `SILL_UNIVERSAL=1 Scripts/make-app.sh` builds a universal Sill.app, arm64 and
 x86_64, as the releases and the nightlies are (#62): one build per architecture,
 each in its own scratch path under `.build/universal`, joined with `lipo`, then

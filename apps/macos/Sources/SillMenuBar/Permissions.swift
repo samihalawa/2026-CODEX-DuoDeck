@@ -7,8 +7,9 @@ import StreamProtocol
 
 /// Screen Recording and Accessibility, for Sill itself, and what macOS lets it do with the clipboard
 /// (`clipboardAccess`). TCC keys them to the bundle ID plus the code's designated requirement, so a
-/// rebuild signed with the same Apple Development identity keeps them, and what Terminal was granted
-/// for the SillHost CLI does not carry over.
+/// rebuild signed with the same certificate keeps them, a copy signed with another certificate is
+/// a different app to macOS (development builds therefore use their own bundle ID), and what
+/// Terminal was granted for the SillHost CLI does not carry over.
 ///
 /// Read on demand, never on a background timer: when the menu opens, once a second while the
 /// Permissions pane is on screen, when Sill becomes active, and whenever the host's status changes

@@ -32,12 +32,31 @@ if [ -z "$identity" ]; then
   identity="$(security find-identity -v -p codesigning | awk '/Apple Development:/ && !/REVOKED/ {print $2; exit}')"
 fi
 test -n "$identity" || { echo "No valid signing identity found." >&2; exit 1; }
+# macOS keys Screen Recording and Accessibility to the bundle ID plus the signing certificate.
+# A build signed with anything but the Developer ID certificate must never claim the released
+# app's identity: launching it once ties those permissions to the wrong certificate, and the
+# installed DuoDeck Host then reports them missing while System Settings shows them on.
+bundle_id="com.agentsai.duodeck.host"
+if security find-identity -v -p codesigning | grep -F "$identity" | grep -q "Developer ID Application: Agents AI Ltd"; then
+  developer_id=1
+else
+  developer_id=0
+  bundle_id="com.agentsai.duodeck.host.dev"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" "$stage/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleName DuoDeck Host Dev" "$stage/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName DuoDeck Host Dev" "$stage/Contents/Info.plist" 2>/dev/null \
+    || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string DuoDeck Host Dev" "$stage/Contents/Info.plist"
+  echo "Not signed with Developer ID: building DuoDeck Host Dev ($bundle_id), which has its own permissions." >&2
+fi
+case "$mode" in --package|package|--install|install)
+  [ "$developer_id" = 1 ] || { echo "Packaging and installing need the Developer ID Application: Agents AI Ltd certificate." >&2; exit 1; } ;;
+esac
 # This privileged companion is distributed outside the Mac App Store. It uses
 # the login keychain unless it holds its own provisioned access-group entitlement.
 # Never reuse upstream's restricted team/keychain entitlements.
 codesign --force --options runtime --timestamp --sign "$identity" "$stage"
 codesign --verify --strict --verbose=2 "$stage"
-[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$stage/Contents/Info.plist")" = "com.agentsai.duodeck.host" ]
+[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$stage/Contents/Info.plist")" = "$bundle_id" ]
 rm -rf "$app"
 mv "$stage" "$app"
 echo "VERIFIED_APP=$app"
@@ -59,9 +78,10 @@ case "$mode" in
     /usr/bin/log stream --info --style compact --predicate 'process == "DuoDeckHost"'
     ;;
   --install|install)
-    dest="$HOME/Applications/DuoDeck Host.app"
-    pending="$HOME/Applications/.DuoDeck Host.installing.app"
-    mkdir -p "$HOME/Applications"
+    # One installed copy, where the release DMG puts it. A second copy elsewhere (~/Applications)
+    # is a separate app to System Settings and LaunchServices, and its permissions look missing.
+    dest="/Applications/DuoDeck Host.app"
+    pending="/Applications/.DuoDeck Host.installing.app"
     rm -rf "$pending"
     ditto "$app" "$pending"
     codesign --verify --strict "$pending"
@@ -71,6 +91,11 @@ case "$mode" in
     /usr/bin/open -n "$dest"
     sleep 3
     pgrep -x "$name" >/dev/null
+    lsregister=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+    "$lsregister" -u "$app" 2>/dev/null || true
+    if [ -d "$HOME/Applications/DuoDeck Host.app" ]; then
+      echo "warning: an older copy is still at ~/Applications/DuoDeck Host.app; remove it so only $dest remains." >&2
+    fi
     echo "INSTALLED=$dest"
     ;;
   --package|package)

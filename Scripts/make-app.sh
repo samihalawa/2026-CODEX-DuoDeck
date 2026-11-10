@@ -102,6 +102,14 @@ xcrun vtool -set-build-version macos "${minos:?vtool reported no deployment targ
 cp Packaging/Info.plist "$stage/Contents/Info.plist"
 build_number="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $build_number" "$stage/Contents/Info.plist"
+# A development build signs with Apple Development or ad hoc. It must not share the released app's
+# bundle ID: macOS would tie Screen Recording and Accessibility to this certificate, and the
+# installed Developer ID DuoDeck Host would then report them missing. It gets its own identity.
+if [ "$release" != 1 ]; then
+    bundle_id="${bundle_id}.dev"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $bundle_id" "$stage/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleName DuoDeck Host Dev" "$stage/Contents/Info.plist"
+fi
 printf 'APPL????' > "$stage/Contents/PkgInfo"
 
 # The shared opaque PNG is the source for both native apps. Compile it as a single-layer

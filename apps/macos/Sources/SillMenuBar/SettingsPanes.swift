@@ -312,7 +312,7 @@ struct PermissionsPane: View {
                         NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
                     }
                 } footer: {
-                    Footnote("Enable DuoDeck Host in both Screen Recording and Accessibility. If it is already enabled but still unavailable after an update, select this installed copy in System Settings and reopen DuoDeck Host.")
+                    Footnote("Enable DuoDeck Host in both Screen Recording and Accessibility. If it is already on in System Settings but still shows here, select DuoDeck Host in that list, remove it with the minus button, add this copy again with the plus button, and reopen DuoDeck Host.")
                 }
             }
             if permissions.relaunchSuggested {
