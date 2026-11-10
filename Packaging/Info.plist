@@ -21,9 +21,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.0</string>
+	<string>1.1.1</string>
 	<key>CFBundleVersion</key>
-	<string>2026110903</string>
+	<string>2026111001</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
@@ -38,10 +38,10 @@
 	<string>DuoDeck © 2026 Agents AI Ltd. Based on Sill © 2026 Noah Saffer, Apache 2.0.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>DuoDeck Host makes this Mac visible to your iPhone and iPad on the same network so they can stream its windows.</string>
-	<key>NSScreenCaptureUsageDescription</key>
-	<string>DuoDeck Host shares your Mac screen and app windows with your paired iPhone or iPad.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>DuoDeck Host shares your Mac screen and app windows with your paired iPhone or iPad.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
