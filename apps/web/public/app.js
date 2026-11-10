@@ -18,6 +18,7 @@ const settings = $("previewSettings");
 const modes = Array.from(document.querySelectorAll(".mode[data-mode]"));
 const tasks = Array.from(document.querySelectorAll(".demo-task"));
 const storageKey = "duodeck.website.preview";
+const defaultMode = shell.dataset.mode;
 let anchor = {x:.72,y:.48};
 let pointerSession = null;
 let statusReset;
@@ -52,7 +53,7 @@ tasks.forEach(task=>task.addEventListener("click",()=>{
   announce(task.textContent.trim()+(checked?" — checked":" — unchecked"));
 }));
 function setMode(selected,notify=true) {
-  if(!["small","medium","full"].includes(selected)) selected="small";
+  if(!modes.some(item=>item.dataset.mode===selected)) selected=defaultMode;
   shell.dataset.mode=selected;
   for(const item of modes) {
     const active=item.dataset.mode===selected;
@@ -141,7 +142,7 @@ $("resetDemo").addEventListener("click",()=>{
   anchor={x:.72,y:.48};speedInput.value="125";speedLabel.value="1.25×";
   sceneSelector.value="editing";shortcuts.open=false;
   tasks.forEach((task,index)=>task.setAttribute("aria-checked",String(index===0)));
-  setMode("small",false);renderScenes();movePointer(0,0);announce("Preview reset");
+  setMode(defaultMode,false);renderScenes();movePointer(0,0);announce("Preview reset");
 });
 let saved;
 try{saved=JSON.parse(localStorage.getItem(storageKey)||"null");}catch{}
@@ -150,31 +151,49 @@ if(saved&&typeof saved==="object"){
   if(Number.isFinite(saved.speed)&&saved.speed>=65&&saved.speed<=230)speedInput.value=String(saved.speed);
   shortcuts.open=saved.shortcuts===true;
 }
-setMode(saved?.mode||"small",false);
+setMode(saved?.mode,false);
 speedLabel.value=(Number(speedInput.value)/100).toFixed(2)+"×";
 renderScenes();movePointer(0,0);
 
 let downloadRefreshTimer;
-async function refreshDownloads(){
-  clearTimeout(downloadRefreshTimer);
+let downloadRefreshInProgress = false;
+function renderMacDownload(mac) {
   const link=$("macDownload");
+  const status=$("macDownloadStatus");
+  const expected="https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
+  if(mac?.available&&mac.url===expected){
+    link.href=expected;
+    link.removeAttribute("aria-disabled");
+    link.removeAttribute("tabindex");
+    link.textContent="Download for Mac";
+    status.textContent="Signed and notarized Mac companion.";
+    return;
+  }
+  link.removeAttribute("href");
+  link.setAttribute("aria-disabled","true");
+  link.setAttribute("tabindex","-1");
+  const pending=mac?.status==="pending";
+  link.textContent=pending?"Mac download coming soon":"Mac download unavailable";
+  status.textContent=pending?"The Mac download is being prepared.":"Couldn’t check the Mac download. See Mac releases below.";
+}
+async function refreshDownloads(){
+  if(downloadRefreshInProgress)return;
+  downloadRefreshInProgress=true;
+  clearTimeout(downloadRefreshTimer);
+  const request=new AbortController();
+  const timeout=setTimeout(()=>request.abort(),9000);
   try{
-    const response=await fetch("/api/downloads",{cache:"no-store"});
-    if(!response.ok)return;
+    const response=await fetch("/api/downloads",{cache:"no-store",signal:request.signal});
+    if(!response.ok)throw new Error("Could not check downloads");
     const {mac}=await response.json();
-    const expected="https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
-    if(mac?.available&&mac.url===expected){
-      link.href=expected;link.removeAttribute("aria-disabled");link.removeAttribute("tabindex");
-      link.textContent="Download for Mac";
-      $("macDownloadStatus").textContent="Signed and notarized Mac companion.";
-    }else if(mac?.available===false){
-      link.removeAttribute("href");link.setAttribute("aria-disabled","true");link.setAttribute("tabindex","-1");
-      link.textContent="Mac download coming soon";
-      $("macDownloadStatus").textContent="The Mac download is being prepared.";
-    }
-  }catch{ /* Keep the current availability and retry while the page is visible. */ }
+    renderMacDownload(mac);
+  }catch{
+    renderMacDownload();
+  }
   finally{
-    if(link.hasAttribute("aria-disabled")&&!document.hidden)downloadRefreshTimer=setTimeout(refreshDownloads,65_000);
+    clearTimeout(timeout);
+    downloadRefreshInProgress=false;
+    if(!document.hidden)downloadRefreshTimer=setTimeout(refreshDownloads,65_000);
   }
 }
 refreshDownloads();

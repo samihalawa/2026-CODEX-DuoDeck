@@ -101,15 +101,15 @@ usage: Scripts/release-ios.sh [--bump | --build-number N] [--upload] [--sign-at-
        Scripts/release-ios.sh --privacy-report [ARCHIVE]
 
   (no option)
-      archives Sill for iPhone and iPad (Release, generic/platform=iOS) into .build/ios/Sill.xcarchive,
+      archives DuoDeck for iPhone and iPad (Release, generic/platform=iOS) into .build/ios/Sill.xcarchive,
       exports it for App Store Connect into .build/ios/export/Sill.ipa and checks the .ipa.
       Nothing goes to App Store Connect.
   --upload
       then uploads the archive to App Store Connect, where it becomes a TestFlight build. It needs
-      the app's record there (bundle ID me.saffer.sill) and a build number not uploaded before.
+      the DuoDeck app record (bundle ID com.agentsai.duodeck) and an unused build number.
       Refuses when the working tree has changes.
   --bump
-      first adds 1 to CURRENT_PROJECT_VERSION in iOSClient/Sill.xcodeproj and commits that alone
+      first adds 1 to CURRENT_PROJECT_VERSION in apps/ios/Sill.xcodeproj and commits that alone
       ("iOS: build N of version V"). Refuses when the working tree has changes.
   --api-key PATH --api-issuer ID [--api-key-id ID]
       an App Store Connect API key (App Store Connect › Users and Access › Integrations › App Store
@@ -127,7 +127,7 @@ usage: Scripts/release-ios.sh [--bump | --build-number N] [--upload] [--sign-at-
       nor uploaded. For CI without the API key.
   --build-number N
       builds with build number N (a whole number) for this run only: xcodebuild gets
-      CURRENT_PROJECT_VERSION=N, and iOSClient/Sill.xcodeproj is never changed. The nightly and
+      CURRENT_PROJECT_VERSION=N, and apps/ios/Sill.xcodeproj is never changed. The nightly and
       TestFlight workflows give the commit count (git rev-list --count HEAD). Not with --bump.
   --whats-new FILE
       with --upload and --api-key: once App Store Connect has processed the upload (Scripts/asc.swift
@@ -143,7 +143,7 @@ usage: Scripts/release-ios.sh [--bump | --build-number N] [--upload] [--sign-at-
       also shows xcodebuild's own output (it always goes to .build/ios/*.log).
 
 Every mode that builds refuses to start unless Xcode 27.1 or a later Xcode 27 is selected.
-docs/release-checklist.md, "TestFlight", has the App Store Connect side.
+See "iOS distribution" in docs/release-checklist.md for App Store Connect steps.
 USAGE
 }
 

@@ -24,22 +24,26 @@ function security(res) {
   res.setHeader("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 }
 const macDownloadURL = "https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
-let downloadState = {available:false,checkedAt:0};
+let downloadState = {status:"unknown",checkedAt:0,confirmedAt:0};
 let downloadCheck;
 async function currentDownloads() {
-  const ttl = downloadState.available ? 300_000 : 60_000;
+  const ttl = downloadState.status==="available" ? 300_000 : 60_000;
   if(Date.now()-downloadState.checkedAt >= ttl && !downloadCheck) {
     downloadCheck = (async()=>{
       try {
         const response = await fetch(macDownloadURL,{method:"HEAD",redirect:"follow",signal:AbortSignal.timeout(6000)});
-        if(response.status===200) downloadState.available=true;
-        else if(response.status===404) downloadState.available=false;
-      } catch { /* Keep the last confirmed availability through a transient outage. */ }
+        if(response.status===200 || response.status===404) {
+          downloadState.status=response.status===200?"available":"pending";
+          downloadState.confirmedAt=Date.now();
+        }
+      } catch { /* A failed lookup is neither a missing release nor a confirmed download. */ }
       downloadState.checkedAt=Date.now();
     })().finally(()=>{downloadCheck=undefined;});
   }
   if(downloadCheck) await downloadCheck;
-  return {mac:{available:downloadState.available,url:downloadState.available?macDownloadURL:null}};
+  const status=Date.now()-downloadState.confirmedAt<600_000?downloadState.status:"unknown";
+  const available=status==="available";
+  return {mac:{available,url:available?macDownloadURL:null,status}};
 }
 const app = http.createServer(async (req,res)=>{
   security(res);

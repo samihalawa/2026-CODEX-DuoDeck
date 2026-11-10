@@ -8,17 +8,20 @@ usage() {
   cat <<'USAGE'
 Usage: script/release_mac.sh [--publish]
        script/release_mac.sh [--publish] --resume-notary ID --expected-dmg-sha SHA256
+                             [--source-commit COMMIT]
 
 Requires DUODECK_NOTARY_KEY, DUODECK_NOTARY_KEY_ID and DUODECK_NOTARY_ISSUER.
 Resume uses dist/DuoDeck-Host-macOS.dmg without rebuilding or uploading it.
 Apple's existing job is awaited for at most 3h. A timeout never publishes.
 Publishing requires clean, committed main sources already pushed to DuoDeck.
+Publishing a resumed artifact requires its recorded full source commit.
 Artifacts and frozen release notes are retained in .build/releases/ for inspection.
 USAGE
 }
 publish=0
 resume_notary=""
 expected_sha=""
+source_commit=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --publish) [ "$publish" = 0 ] || fail "Duplicate --publish."; publish=1; shift ;;
@@ -30,6 +33,9 @@ while [ "$#" -gt 0 ]; do
       [ "$#" -ge 2 ] && [ -z "$expected_sha" ] || fail "--expected-dmg-sha needs one SHA-256."
       [ -n "$2" ] || fail "--expected-dmg-sha needs a nonempty SHA-256."
       expected_sha="$2"; shift 2 ;;
+    --source-commit)
+      [ "$#" -ge 2 ] && [ -n "$2" ] && [ -z "$source_commit" ] || fail "--source-commit needs one full Git commit."
+      source_commit="$2"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -42,6 +48,12 @@ if [ -n "$resume_notary" ]; then
 elif [ -n "$expected_sha" ]; then
   fail "--expected-dmg-sha is only valid with --resume-notary."
 fi
+if [ -n "$source_commit" ]; then
+  [ -n "$resume_notary" ] || fail "--source-commit is only valid with --resume-notary."
+  [[ "$source_commit" =~ ^[a-f0-9]{40}$ ]] || fail "--source-commit needs a full lowercase Git commit."
+elif [ -n "$resume_notary" ] && [ "$publish" = 1 ]; then
+  fail "Resume with --publish requires --source-commit from the original build record."
+fi
 
 : "${DUODECK_NOTARY_KEY:?Path to your App Store Connect notarization key}"
 : "${DUODECK_NOTARY_KEY_ID:?Notarization key ID}"
@@ -51,11 +63,14 @@ auth=(--key "$DUODECK_NOTARY_KEY" --key-id "$DUODECK_NOTARY_KEY_ID" --issuer "$D
 repo="samihalawa/2026-CODEX-DuoDeck"
 bundle_id="com.agentsai.duodeck.host"
 signing_requirement='anchor apple generic and certificate leaf[subject.OU] = "U549N38BV6" and certificate leaf[field.1.2.840.113635.100.6.1.13] exists'
-release_commit="$(git rev-parse --verify HEAD)"
+main_commit="$(git rev-parse --verify HEAD)"
+release_commit="${source_commit:-$main_commit}"
+[ "$(git rev-parse --verify "$release_commit^{commit}")" = "$release_commit" ] || fail "The release source commit does not exist."
+git merge-base --is-ancestor "$release_commit" "$main_commit" || fail "The release source commit is outside the current branch history."
 require_clean() {
   [ -z "$(git status --porcelain)" ] || fail "Commit the verified release sources before publishing."
   [ "$(git symbolic-ref --quiet --short HEAD)" = main ] || fail "Publish from main."
-  [ "$(git rev-parse HEAD)" = "$release_commit" ] || fail "HEAD changed after the release was frozen."
+  [ "$(git rev-parse HEAD)" = "$main_commit" ] || fail "HEAD changed after the release was frozen."
 }
 [ "$publish" = 0 ] || require_clean
 sha256() { /usr/bin/shasum -a 256 "$1" | /usr/bin/awk '{print $1}'; }
@@ -143,7 +158,7 @@ if not (d["full_name"] == sys.argv[2] and d["private"] is False
         and d["default_branch"] == "main" and d.get("permissions", {}).get("push") is True):
     raise SystemExit("Expected the public DuoDeck repository with push access and main as its default branch.")
 PY
-  [ "$(gh api "repos/$repo/commits/main" --jq .sha)" = "$release_commit" ] || fail "Push the frozen main commit before publishing."
+  [ "$(gh api "repos/$repo/commits/main" --jq .sha)" = "$main_commit" ] || fail "Push the frozen main commit before publishing."
   require_no_release
   check_tag
 }
