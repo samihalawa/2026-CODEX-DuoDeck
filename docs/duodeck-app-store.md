@@ -6,8 +6,8 @@ Canonical local copy for the redesigned 1.1.0 candidate. These blocks are prepar
 
 | Field | Value |
 | --- | --- |
-| Name | DuoDeck — Mac Trackpad |
-| Subtitle | Trackpad, keyboard & shortcuts |
+| Name | DuoDeck: Mac Remote Control |
+| Subtitle | Desktop, Mouse & Keyboard |
 | Primary category | Productivity |
 | Secondary category | Utilities |
 | Copyright | 2026 Agents AI Ltd. |
@@ -19,7 +19,7 @@ Canonical local copy for the redesigned 1.1.0 candidate. These blocks are prepar
 ## Promotional text
 
 ```text
-Control your Mac from your iPhone or iPad. Resize the trackpad, type, and use familiar shortcuts. Pair once and keep your setup. No account required.
+See and control your Mac from your iPhone or iPad. Open a window or the whole desktop, click, type, and use shortcuts. Pair with DuoDeck Host. No account needed.
 ```
 
 ## Description
@@ -55,7 +55,7 @@ DuoDeck is an independent project based on the Apache 2.0 licensed Sill engine.
 ## Keywords
 
 ```text
-remote,mouse,keyboard,shortcuts,desktop,screen,control,wireless,productivity,computer
+trackpad,touchpad,screen,streaming,sharing,wireless,shortcuts,window,cursor,wifi,usb,viewer,display
 ```
 
 ## What's new in 1.1.0

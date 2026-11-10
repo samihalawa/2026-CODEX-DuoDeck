@@ -12,7 +12,7 @@ Version **1.1.0** now includes the regular Mac Dock application and capture/firs
 | --- | --- | --- |
 | iOS | 1.1.0 (2026110904) | Signed archive and export passed. The valid build is selected on the submitted version |
 | Mac companion | 1.1.0 (2026110903) | Public [GitHub release](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v1.1.0) with notarized universal DMG, ZIP and checksums |
-| App Store listing | [Listing material](duodeck-app-store.md) | App Store Connect matched the description and review instructions on 9 November |
+| App Store listing | [Listing material](duodeck-app-store.md) | App Store Connect saved the name **DuoDeck: Mac Remote Control**, subtitle, keywords and promotional text on 10 November |
 | Store screenshots | Six captures from build 2026110903 | Ordered and verified Macs, Add Mac and setup scenes also used for build 2026110904 |
 | App Review | 7d3098a7-0a91-49c0-afef-d867f8545bbd | Submitted at `2026-11-10T08:20:37.384Z`. App Store Connect shows Waiting for Review on the submission and the version |
 | Website | [Downloads](https://duodeck.megawebs.com/#downloads) | The Mac button is enabled. The public DMG returned HTTP 200 and matched the published checksum |
