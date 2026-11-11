@@ -7,7 +7,7 @@ import SillHostCore
 /// what the next step is — and leaves every control to Settings (⌘,).
 @MainActor
 final class HomeWindowController: NSWindowController, NSWindowDelegate {
-    private static let frameName = "DuoDeckHomeWindow"
+    private static let frameName = "DuoDeckHomeWindow2"   // 2: the taller window with quick controls
 
     init(model: AppModel) {
         let host = NSHostingController(rootView: HomeView(model: model))
@@ -20,7 +20,7 @@ final class HomeWindowController: NSWindowController, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.tabbingMode = .disallowed
         window.collectionBehavior.formUnion([.moveToActiveSpace])
-        window.contentMinSize = NSSize(width: 460, height: 560)
+        window.contentMinSize = NSSize(width: 460, height: 640)
         window.setContentSize(NSSize(width: 520, height: 760))
         super.init(window: window)
         window.delegate = self
@@ -80,7 +80,8 @@ struct HomeView: View {
                     .padding(.vertical, 12)
             }
         }
-        .frame(minWidth: 460, minHeight: 560)
+        .frame(minWidth: 460, minHeight: 640)
+        .tint(Color(hex: 0x6D28D9))
         .onAppear { model.permissions.refresh() }
     }
 
@@ -176,6 +177,8 @@ private struct QuickControls: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .frame(maxWidth: .infinity)
+            .tint(Color(hex: 0x6D28D9))
             Text(presetDetail).font(.caption).foregroundStyle(.secondary)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 if snapshot?.virtualDisplayAPIMissing != true {
