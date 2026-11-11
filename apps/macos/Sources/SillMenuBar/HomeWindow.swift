@@ -50,6 +50,7 @@ struct HomeView: View {
 
     private var presentation: StatusPresentation { previewPresentation ?? model.presentation }
     private var allGranted: Bool { previewAllGranted ?? model.permissions.allGranted }
+    private var paired: [PairedDeviceSummary] { previewPaired ?? model.coordinator?.status.snapshot.remote?.paired ?? [] }
 
     private static let iosAppURL = "https://apps.apple.com/app/id6832548998"
 
@@ -63,7 +64,7 @@ struct HomeView: View {
                         content
                         if allGranted {
                             QuickControls(model: model, settings: model.settings)
-                            YourDevices(paired: previewPaired ?? model.coordinator?.status.snapshot.remote?.paired ?? [],
+                            YourDevices(paired: paired,
                                         connected: presentation.devices.map { DuoDeckHostStyle.deviceName($0.title) },
                                         pair: { model.pairDevice() }, manage: { model.showSettings?(.devices) })
                         }
@@ -116,6 +117,9 @@ struct HomeView: View {
             SetupCard(permissions: model.permissions)
         } else if !presentation.devices.isEmpty {
             ConnectedCard(source: presentation.source, devices: presentation.devices)
+        } else if !paired.isEmpty {
+            ReadyCard(lastDevice: paired.max { ($0.lastSeen ?? $0.pairedAt) < ($1.lastSeen ?? $1.pairedAt) },
+                      canPair: presentation.canPair) { model.pairDevice() }
         } else {
             WaitingCard(appURL: Self.iosAppURL, canPair: presentation.canPair) { model.pairDevice() }
         }
@@ -432,6 +436,36 @@ private struct Card<Content: View>: View {
     }
 }
 
+/// Paired before, nobody connected now: one line about where to go, and pairing another device.
+private struct ReadyCard: View {
+    let lastDevice: PairedDeviceSummary?
+    let canPair: Bool
+    let pair: () -> Void
+
+    private var device: String { lastDevice?.name ?? "iPhone or iPad" }
+
+    var body: some View {
+        Card {
+            HStack(spacing: 14) {
+                Image(systemName: (lastDevice?.model ?? device).lowercased().contains("iphone") ? "iphone.radiowaves.left.and.right" : "ipad.landscape")
+                    .font(.system(size: 28, weight: .light))
+                    .foregroundStyle(LinearGradient(colors: [Color(hex: 0x6D28D9), Color(hex: 0xEC4899)],
+                                                    startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 44)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Waiting for your \(device)").font(.headline)
+                    Text("Open DuoDeck on it and tap this Mac. It connects by itself on Wi‑Fi, the cable or from away.")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Button(action: pair) { Label("Pair another device…", systemImage: "plus") }
+                .buttonStyle(.borderless)
+                .disabled(!canPair)
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+        }
+    }
+}
+
 /// Nobody connected yet: the two steps, the App Store code for the device, and Pair.
 private struct WaitingCard: View {
     let appURL: String
@@ -509,10 +543,18 @@ private struct ConnectedCard: View {
                     Image(systemName: device.symbol).font(.title2).foregroundStyle(.secondary).frame(width: 30)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(DuoDeckHostStyle.deviceName(device.title)).font(.body.weight(.medium)).lineLimit(1)
-                        if let line = device.issue ?? device.detail {
-                            Text(line).font(.caption).monospacedDigit()
-                                .foregroundStyle(device.issue != nil ? Color.orange : Color.secondary)
-                                .lineLimit(2)
+                        if let issue = device.issue {
+                            Text(issue).font(.caption).foregroundStyle(.orange).lineLimit(2)
+                        } else if let detail = device.detail {
+                            HStack(spacing: 6) {
+                                ForEach(detail.components(separatedBy: " · "), id: \.self) { part in
+                                    Text(part.replacingOccurrences(of: "frame age ", with: "delay "))
+                                        .font(.caption2.weight(.medium)).monospacedDigit()
+                                        .padding(.horizontal, 7).padding(.vertical, 3)
+                                        .background(Color(hex: 0x8B5CF6).opacity(0.14), in: Capsule())
+                                }
+                            }
+                            .padding(.top, 2)
                         }
                     }
                     Spacer(minLength: 0)
