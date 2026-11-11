@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import AppKit
 import Network
 import ScreenCaptureKit
@@ -95,6 +96,9 @@ package final class StreamCoordinator {
     let stage: VirtualStage
     /// What the menu bar app shows. Written here, at the moment things happen; never read back.
     package let status: HostStatus
+    /// The latest thumbnail of the window being streamed, for the Mac's own home window. Filled
+    /// only from thumbnails the catalog already takes for connected devices: no capture of its own.
+    package let preview = LivePreview()
     /// Set by the signal handler: a select in flight when Ctrl-C lands must not stage anything new.
     private var shuttingDown = false
     private var stageLosses = 0
@@ -175,6 +179,7 @@ package final class StreamCoordinator {
     package private(set) var active: StreamSource = .none {
         didSet {
             if case .window(let id) = active { catalog.activeWindowID = id } else { catalog.activeWindowID = nil }
+            if case .window(let id) = active { preview.activeWindowID = id } else { preview.activeWindowID = nil; preview.image = nil }
             if active == .none { status.update { $0.stream = nil } }
             server.setStreaming(active != .none)   // link keepalive ticks while a source is live
             // The Mac's cursor shape, never while it is locked (LockPolicy: another user's, or the lock screen's).
@@ -638,6 +643,10 @@ package final class StreamCoordinator {
             Task { @MainActor in await self?.windowsChanged(infos) }
         }
         catalog.onThumbnail = { [weak self] id, jpeg in
+            Task { @MainActor in
+                guard let self, self.preview.activeWindowID == id, LockPolicy.allowed(self.lockReading).pointer else { return }
+                self.preview.image = jpeg
+            }
             self?.server.broadcast(StreamMessage(kind: .thumbnail, timestamp: Date().timeIntervalSince1970, isKeyframe: false,
                                                  payload: ImageBlob.encodeThumbnail(windowID: id, jpeg: jpeg)))
         }
@@ -1409,6 +1418,7 @@ package final class StreamCoordinator {
     /// looked at again and what streamed back (`afterUnlock`).
     private func lockChanged() async {
         let now = lockReading
+        if !LockPolicy.allowed(now).pointer { preview.image = nil }   // nothing of a locked Mac on its own window
         guard lockGate.established else { return }
         let was = lockActedOn
         lockActedOn = now
@@ -3530,4 +3540,12 @@ extension ClientRoute {
     /// not beside ClientRoute in StreamServer.swift, which the pacing harness compiles without the
     /// coordinator's files.
     var isAway: Bool { AwayPolicy.isAway(remoteDoor: isRemote, origin: origin) }
+}
+
+/// What the Mac's home window shows of the stream: the latest JPEG thumbnail of the streamed window.
+@MainActor @Observable
+package final class LivePreview {
+    package var activeWindowID: UInt32?
+    package var image: Data?
+    package init() {}
 }

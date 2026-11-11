@@ -54,6 +54,7 @@ struct HomeView: View {
     var previewPresentation: StatusPresentation?
     var previewAllGranted: Bool?
     var previewPaired: [PairedDeviceSummary]?
+    var previewImage: Data?
 
     private var presentation: StatusPresentation { previewPresentation ?? model.presentation }
     private var allGranted: Bool { previewAllGranted ?? model.permissions.allGranted }
@@ -63,18 +64,12 @@ struct HomeView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 36) {
-                    heading
-                    stage
-                }
-                .padding(.horizontal, 56)
-                .padding(.top, 64)
-                .padding(.bottom, 40)
-                .frame(maxWidth: 720, alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 40) {
+                heading
+                stage
             }
-            .scrollIndicators(.never)
+            .padding(.horizontal, 64)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
             if allGranted {
                 Divider().ignoresSafeArea()
@@ -101,13 +96,10 @@ struct HomeView: View {
 
     private var heading: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 28, height: 28)
-                    .accessibilityHidden(true)
-                Text("DuoDeck").font(.headline).foregroundStyle(.secondary)
-            }
+            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
+                .accessibilityHidden(true)
             Text(title)
-                .font(.system(size: 46, weight: .bold))
+                .font(.system(size: 52, weight: .bold))
                 .contentTransition(.opacity)
             HStack(spacing: 8) {
                 Circle().fill(stateColor).frame(width: 8, height: 8)
@@ -127,14 +119,7 @@ struct HomeView: View {
         }
     }
 
-    private var subtitle: String {
-        let mac = presentation.advertisedName ?? "This Mac"
-        if !allGranted { return "\(mac) needs two permissions." }
-        switch presentation.glyph {
-        case .idle: return paired.isEmpty ? "\(mac) is ready for its first device." : "\(mac) is waiting for your device."
-        default: return presentation.subtitle.map { "\(mac) · \($0)" } ?? mac
-        }
-    }
+    private var subtitle: String { presentation.advertisedName ?? "This Mac" }
 
     private var stateColor: Color {
         if !allGranted { return .orange }
@@ -151,7 +136,8 @@ struct HomeView: View {
         if !allGranted {
             PermissionsStage(permissions: model.permissions)
         } else if !presentation.devices.isEmpty {
-            StreamingStage(source: presentation.source, devices: presentation.devices)
+            StreamingStage(source: presentation.source, devices: presentation.devices,
+                           preview: previewImage ?? model.coordinator?.preview.image)
         } else if paired.isEmpty {
             FirstDeviceStage(appURL: Self.iosApp, canPair: presentation.canPair) { model.pairDevice() }
         } else {
@@ -160,10 +146,7 @@ struct HomeView: View {
         ForEach(presentation.attention.filter { allGranted || !($0.action == .allowScreenRecording || $0.action == .allowAccessibility) }) { item in
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(item.title).font(.body.weight(.semibold))
-                    Text(item.subtitle).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                }
+                Text(item.title).font(.body.weight(.semibold)).help(item.subtitle)
                 Spacer(minLength: 12)
                 if item.action != .none { Button("Review…") { review(item.action) } }
             }
@@ -193,22 +176,27 @@ struct HomeView: View {
 private struct StreamingStage: View {
     let source: StatusPresentation.Row?
     let devices: [StatusPresentation.Row]
+    let preview: Data?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 32) {
+        VStack(alignment: .leading, spacing: 24) {
+            if let preview, let image = NSImage(data: preview) {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 640, maxHeight: 360, alignment: .leading)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .shadow(color: .black.opacity(0.18), radius: 20, y: 10)
+                    .accessibilityLabel(source.map { "Live preview of \($0.title)" } ?? "Live preview")
+                    .transition(.opacity)
+            }
             if let source {
-                VStack(alignment: .leading, spacing: 6) {
-                    Caption("Showing")
-                    Text(source.title).font(.title.weight(.semibold)).lineLimit(2).truncationMode(.middle)
-                    if let detail = source.detail { Text(detail).foregroundStyle(.secondary).monospacedDigit() }
-                }
+                Text(source.title).font(.title2.weight(.semibold)).lineLimit(1).truncationMode(.middle)
             }
             ForEach(devices) { device in
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 8) {
-                        Image(systemName: device.symbol).foregroundStyle(.secondary)
-                        Text(DuoDeckHostStyle.deviceName(device.title)).font(.title3.weight(.semibold))
-                    }
+                HStack(alignment: .firstTextBaseline, spacing: 28) {
+                    Label(DuoDeckHostStyle.deviceName(device.title), systemImage: device.symbol)
+                        .font(.title3).foregroundStyle(.secondary)
                     if let issue = device.issue {
                         Text(issue).foregroundStyle(.orange)
                     } else if let detail = device.detail {
@@ -217,6 +205,7 @@ private struct StreamingStage: View {
                 }
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: preview)
     }
 }
 
@@ -226,19 +215,20 @@ private struct Stats: View {
 
     private var items: [(value: String, label: String)] {
         parts.map { part in
-            if part.hasSuffix(" fps") { return (part.replacingOccurrences(of: " fps", with: ""), "frames per second") }
+            if part.hasSuffix(" fps") { return (part.replacingOccurrences(of: " fps", with: ""), "fps") }
             if part.hasPrefix("frame age ") { return (part.replacingOccurrences(of: "frame age ", with: ""), "delay") }
             if part.hasPrefix("RTT ") { return (part.replacingOccurrences(of: "RTT ", with: ""), "round trip") }
-            return (part, "connection")
+            return (part, "link")
         }
+        .filter { $0.label != "round trip" }
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 40) {
+        HStack(alignment: .top, spacing: 22) {
             ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.value).font(.system(size: 30, weight: .semibold)).monospacedDigit()
-                    Text(item.label).font(.callout).foregroundStyle(.secondary)
+                    Text(item.value).font(.title3.weight(.semibold)).monospacedDigit()
+                    Text(item.label).font(.caption).foregroundStyle(.secondary)
                 }
             }
         }
@@ -255,9 +245,9 @@ private struct FirstDeviceStage: View {
     var body: some View {
         HStack(alignment: .top, spacing: 48) {
             VStack(alignment: .leading, spacing: 22) {
-                Step(n: 1, title: "Get DuoDeck on your iPhone or iPad", detail: "It's free on the App Store. Scan the code with the device's camera.")
-                Step(n: 2, title: "Pair it with this Mac", detail: "Open DuoDeck on the device and scan the code this Mac shows.")
-                Step(n: 3, title: "Pick a window", detail: "Any app on this Mac, on the device in your hand.")
+                Step(n: 1, title: "Get DuoDeck on your iPhone or iPad")
+                Step(n: 2, title: "Pair it with this Mac")
+                Step(n: 3, title: "Pick a window")
                 Button(action: pair) { Text("Pair iPhone or iPad…").padding(.horizontal, 8) }
                     .controlSize(.large)
                     .prominent()
@@ -269,7 +259,7 @@ private struct FirstDeviceStage: View {
                 VStack(spacing: 8) {
                     Image(decorative: image, scale: 1).interpolation(.none).resizable()
                         .frame(width: 148, height: 148)
-                    Text("DuoDeck for iPhone and iPad").font(.caption).foregroundStyle(.secondary)
+                    Text("App Store").font(.caption).foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("App Store code for DuoDeck on iPhone and iPad")
@@ -281,14 +271,10 @@ private struct FirstDeviceStage: View {
 private struct Step: View {
     let n: Int
     let title: String
-    let detail: String
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
-            Text("\(n)").font(.title3.weight(.semibold)).foregroundStyle(.secondary).frame(width: 18, alignment: .leading)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.title3.weight(.semibold))
-                Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            }
+            Text("\(n)").font(.title3.weight(.semibold)).foregroundStyle(.tertiary).frame(width: 18, alignment: .leading)
+            Text(title).font(.title3)
         }
     }
 }
@@ -297,11 +283,7 @@ private struct Step: View {
 private struct WaitingStage: View {
     let device: String
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Open DuoDeck on your \(device) and tap this Mac.").font(.title2.weight(.medium))
-            Text("It connects on Wi‑Fi, over the USB cable, or from away when Away from home is on.")
-                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        }
+        Text("Open DuoDeck on your \(device).").font(.title2).foregroundStyle(.secondary)
     }
 }
 
@@ -323,10 +305,7 @@ private struct PermissionsStage: View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
             Image(systemName: granted ? "checkmark.circle.fill" : "circle")
                 .font(.title3).foregroundStyle(granted ? Color.green : Color.secondary)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.title3.weight(.semibold))
-                Text(detail).foregroundStyle(.secondary)
-            }
+            Text(title).font(.title3).help(detail)
             Spacer(minLength: 24)
             if !granted { Button("Allow…", action: allow).controlSize(.large).prominent() }
         }
@@ -360,11 +339,11 @@ private struct Sidebar: View {
                         .labelsHidden().fixedSize()
                     }
                     if snapshot?.virtualDisplayAPIMissing != true {
-                        Switch(title: "Fit windows to the device", detail: "Each window gets its own display at your device's size.",
+                        Switch(title: "Fit to device", detail: "Each window gets its own display at your device's size.",
                                isOn: $settings.config.virtualDisplay)
                     }
                     Switch(title: "Sound", detail: settings.config.sendAudio && snapshot?.audio?.problem != nil
-                           ? "Not available right now." : "Your Mac's sound on the device.", isOn: $settings.config.sendAudio)
+                           ? "Not available right now." : "Play your Mac's sound on the device.", isOn: $settings.config.sendAudio)
                     Switch(title: "Clipboard", detail: "Copy on one, paste on the other.", isOn: $settings.config.shareClipboard)
                     Switch(title: "Away from home", detail: remoteNote, isOn: $settings.config.remoteAccess)
                 }
@@ -378,9 +357,6 @@ private struct Sidebar: View {
                                 .font(.callout).foregroundStyle(DuoDeckHostStyle.accent)
                         }
                     }
-                    if paired.isEmpty {
-                        Text("No paired devices yet.").foregroundStyle(.secondary)
-                    }
                     ForEach(sorted.prefix(6), id: \.id) { device in
                         let isConnected = connected.contains(DuoDeckHostStyle.deviceName(device.name))
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -388,13 +364,13 @@ private struct Sidebar: View {
                                 .foregroundStyle(.secondary).frame(width: 16)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(DuoDeckHostStyle.deviceName(device.name))
-                                Text(isConnected ? "Connected now" : Self.lastConnected(device))
+                                Text(isConnected ? "Connected" : Self.lastConnected(device))
                                     .font(.caption).foregroundStyle(isConnected ? Color.green : Color.secondary)
                             }
                         }
                         .accessibilityElement(children: .combine)
                     }
-                    Button { model.pairDevice() } label: { Label("Pair iPhone or iPad…", systemImage: "plus") }
+                    Button { model.pairDevice() } label: { Label("Pair device", systemImage: "plus") }
                         .buttonStyle(.plain).foregroundStyle(DuoDeckHostStyle.accent)
                         .disabled(!canPair)
                         .padding(.top, 2)
@@ -407,8 +383,11 @@ private struct Sidebar: View {
         .scrollIndicators(.never)
     }
 
+    /// Newest first, one line per name (a device paired twice shows once).
     private var sorted: [PairedDeviceSummary] {
-        paired.sorted { ($0.lastSeen ?? $0.pairedAt) > ($1.lastSeen ?? $1.pairedAt) }
+        var seen = Set<String>()
+        return paired.sorted { ($0.lastSeen ?? $0.pairedAt) > ($1.lastSeen ?? $1.pairedAt) }
+            .filter { seen.insert(DuoDeckHostStyle.deviceName($0.name)).inserted }
     }
 
     private var remoteNote: String {
@@ -422,11 +401,11 @@ private struct Sidebar: View {
     }
 
     private static func lastConnected(_ device: PairedDeviceSummary) -> String {
-        guard let seen = device.lastSeen else { return "Not connected yet" }
-        if Date().timeIntervalSince(seen) < 60 { return "Just now" + (device.lastRoute.map { " \($0)" } ?? "") }
-        let f = RelativeDateTimeFormatter(); f.unitsStyle = .full; f.dateTimeStyle = .named
-        let when = f.localizedString(for: seen, relativeTo: Date())
-        return when.prefix(1).uppercased() + when.dropFirst() + (device.lastRoute.map { " \($0)" } ?? "")
+        guard let seen = device.lastSeen else { return "Never connected" }
+        let cal = Calendar.current
+        if cal.isDateInToday(seen) { return "Today" }
+        if cal.isDateInYesterday(seen) { return "Yesterday" }
+        return seen.formatted(.dateTime.month(.abbreviated).day())
     }
 }
 
@@ -435,12 +414,12 @@ private struct Switch: View {
     let detail: String
     @Binding var isOn: Bool
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .help(detail)
             Toggle(title, isOn: $isOn).labelsHidden().toggleStyle(.switch).controlSize(.small)
         }
         .accessibilityElement(children: .combine)

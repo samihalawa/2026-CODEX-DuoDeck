@@ -518,7 +518,8 @@ enum DebugHooks {
                                                             lastSeen: previewNow.addingTimeInterval(-120), lastRoute: "over Wi‑Fi"),
                                         PairedDeviceSummary(id: "b", keyPrefix: "9QX1MM", name: "Sami’s iPhone", model: "iPhone16,1",
                                                             pairedAt: previewNow.addingTimeInterval(-86_400 * 3), method: "cable",
-                                                            lastSeen: previewNow.addingTimeInterval(-86_400), lastRoute: "through Tailscale")])
+                                                            lastSeen: previewNow.addingTimeInterval(-86_400), lastRoute: "through Tailscale")],
+                                    previewImage: sample.name == "streaming" ? homePreviewSample() : nil)
                             .frame(width: 1100, height: 720),
                            appearance: appearance, to: out.appendingPathComponent("home-\(sample.name)-\(name).png"))
                 }
@@ -577,6 +578,14 @@ enum DebugHooks {
         try? fitting.write(to: out.appendingPathComponent("settings-fit.txt"), atomically: true, encoding: .utf8)
         print("Previews written to \(out.path)")
         exit(0)
+    }
+
+    /// A stand-in window thumbnail for the home window's streaming preview: this Mac's desktop picture.
+    private static func homePreviewSample() -> Data? {
+        guard let screen = NSScreen.main, let url = NSWorkspace.shared.desktopImageURL(for: screen),
+              let image = NSImage(contentsOf: url), let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff) else { return nil }
+        return rep.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
     }
 
     private static func render<V: View>(_ view: V, appearance: NSAppearance.Name, to url: URL) {
