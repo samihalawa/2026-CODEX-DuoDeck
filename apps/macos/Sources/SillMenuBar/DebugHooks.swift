@@ -519,7 +519,7 @@ enum DebugHooks {
                                         PairedDeviceSummary(id: "b", keyPrefix: "9QX1MM", name: "Sami’s iPhone", model: "iPhone16,1",
                                                             pairedAt: previewNow.addingTimeInterval(-86_400 * 3), method: "cable",
                                                             lastSeen: previewNow.addingTimeInterval(-86_400), lastRoute: "through Tailscale")])
-                            .frame(width: 460, height: 720),
+                            .frame(width: 1100, height: 720),
                            appearance: appearance, to: out.appendingPathComponent("home-\(sample.name)-\(name).png"))
                 }
             }

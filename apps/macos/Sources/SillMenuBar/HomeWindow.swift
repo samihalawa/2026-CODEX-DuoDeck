@@ -3,12 +3,13 @@ import SwiftUI
 import SillHostCore
 
 /// DuoDeck Host's home: the window the app opens with and that the Dock, the menu bar item and
-/// ⌘0 bring back. A plain macOS grouped form, like a System Settings pane: what is happening now,
-/// the switches people change between sessions, and the paired devices. Everything else stays in
+/// ⌘0 bring back. A large, quiet window: the state and what is happening now on the left in big
+/// type, the switches people change between sessions and the paired devices in a sidebar on the
+/// right. Plain window background, standard controls, no decoration. Everything else stays in
 /// Settings (⌘,).
 @MainActor
 final class HomeWindowController: NSWindowController, NSWindowDelegate {
-    private static let frameName = "DuoDeckHomeWindow4"   // 4: soft gradient, frosted cards
+    private static let frameName = "DuoDeckHomeWindow5"   // 5: the large two-column window
 
     init(model: AppModel) {
         let host = NSHostingController(rootView: HomeView(model: model))
@@ -18,15 +19,19 @@ final class HomeWindowController: NSWindowController, NSWindowDelegate {
         window.title = "DuoDeck"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
         window.tabbingMode = .disallowed
-        window.collectionBehavior.formUnion([.moveToActiveSpace])
-        window.contentMinSize = NSSize(width: 420, height: 420)
-        window.setContentSize(NSSize(width: 480, height: 700))
+        window.collectionBehavior.formUnion([.moveToActiveSpace, .fullScreenPrimary])
+        window.contentMinSize = NSSize(width: 820, height: 540)
         super.init(window: window)
         window.delegate = self
-        if !window.setFrameUsingName(Self.frameName) { window.center() }
+        if !window.setFrameUsingName(Self.frameName) {
+            // First open: most of the screen, centred.
+            let visible = (NSScreen.main ?? NSScreen.screens[0]).visibleFrame
+            let size = NSSize(width: min(1180, visible.width * 0.82), height: min(780, visible.height * 0.86))
+            window.setFrame(NSRect(x: visible.midX - size.width / 2, y: visible.midY - size.height / 2,
+                                   width: size.width, height: size.height), display: false)
+        }
         window.setFrameAutosaveName(Self.frameName)
     }
 
@@ -57,30 +62,30 @@ struct HomeView: View {
     private static let iosApp = URL(string: "https://apps.apple.com/app/id6832548998")!
 
     var body: some View {
-        ZStack {
-            SoftBackground()
+        HStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    hero
-                    if !allGranted {
-                        PermissionsSection(permissions: model.permissions)
-                    } else {
-                        nowSection
-                        if !presentation.attention.isEmpty { attentionSection }
-                        StreamingSection(model: model, settings: model.settings)
-                        devicesSection
-                    }
+                VStack(alignment: .leading, spacing: 36) {
+                    heading
+                    stage
                 }
-                .frame(maxWidth: 520, alignment: .leading)
-                .padding(.horizontal, 28)
-                .padding(.top, 56)
-                .padding(.bottom, 28)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 56)
+                .padding(.top, 64)
+                .padding(.bottom, 40)
+                .frame(maxWidth: 720, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollIndicators(.never)
+
+            if allGranted {
+                Divider().ignoresSafeArea()
+                Sidebar(model: model, settings: model.settings, paired: paired, connected: connectedNames,
+                        canPair: presentation.canPair)
+                    .frame(width: 320)
+            }
         }
+        .background(Color(nsColor: .windowBackgroundColor))
         .tint(DuoDeckHostStyle.accent)
-        .frame(minWidth: 420, minHeight: 420)
+        .frame(minWidth: 820, minHeight: 540)
         .onAppear { model.permissions.refresh() }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -90,29 +95,29 @@ struct HomeView: View {
         }
     }
 
-    // MARK: Hero: the state in large type, this Mac under it
+    private var connectedNames: [String] { presentation.devices.map { DuoDeckHostStyle.deviceName($0.title) } }
 
-    private var hero: some View {
-        HStack(alignment: .center, spacing: 16) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable().frame(width: 64, height: 64)
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(heroTitle)
-                    .font(.system(size: 26, weight: .semibold, design: .rounded))
-                    .contentTransition(.opacity)
-                HStack(spacing: 6) {
-                    Circle().fill(stateColor).frame(width: 7, height: 7)
-                    Text(stateLine).font(.callout).foregroundStyle(.secondary).lineLimit(1)
-                }
+    // MARK: Heading: the state in large type
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 28, height: 28)
+                    .accessibilityHidden(true)
+                Text("DuoDeck").font(.headline).foregroundStyle(.secondary)
             }
-            Spacer(minLength: 0)
+            Text(title)
+                .font(.system(size: 46, weight: .bold))
+                .contentTransition(.opacity)
+            HStack(spacing: 8) {
+                Circle().fill(stateColor).frame(width: 8, height: 8)
+                Text(subtitle).font(.title3).foregroundStyle(.secondary)
+            }
         }
         .accessibilityElement(children: .combine)
     }
 
-    private var heroTitle: String {
+    private var title: String {
         if !allGranted { return "Almost ready" }
         switch presentation.glyph {
         case .streaming: return "Streaming"
@@ -122,11 +127,12 @@ struct HomeView: View {
         }
     }
 
-    private var stateLine: String {
-        if !allGranted { return "Two permissions to go" }
+    private var subtitle: String {
+        let mac = presentation.advertisedName ?? "This Mac"
+        if !allGranted { return "\(mac) needs two permissions." }
         switch presentation.glyph {
-        case .idle: return (presentation.advertisedName ?? "This Mac") + (paired.isEmpty ? " · ready to pair" : " · waiting for a device")
-        default: return presentation.header
+        case .idle: return paired.isEmpty ? "\(mac) is ready for its first device." : "\(mac) is waiting for your device."
+        default: return presentation.subtitle.map { "\(mac) · \($0)" } ?? mac
         }
     }
 
@@ -135,51 +141,38 @@ struct HomeView: View {
         switch presentation.glyph {
         case .streaming, .connected: return .green
         case .attention: return .orange
-        case .idle: return .secondary
+        case .idle: return Color.secondary.opacity(0.6)
         }
     }
 
-    // MARK: Now: what streams and to whom, or how to connect
+    // MARK: Stage: the one thing that matters now
 
-    @ViewBuilder private var nowSection: some View {
-        if !presentation.devices.isEmpty {
-            Panel("Now") {
-                if let source = presentation.source {
-                    Row(symbol: source.symbol, title: source.title, detail: source.detail, tint: DuoDeckHostStyle.accent) { EmptyView() }
-                }
-                ForEach(presentation.devices) { device in
-                    Row(symbol: device.symbol, title: DuoDeckHostStyle.deviceName(device.title),
-                        detail: device.issue ?? device.detail, detailIsWarning: device.issue != nil) {
-                        LiveDot(color: device.issue == nil ? .green : .orange)
-                    }
-                }
-            }
+    @ViewBuilder private var stage: some View {
+        if !allGranted {
+            PermissionsStage(permissions: model.permissions)
+        } else if !presentation.devices.isEmpty {
+            StreamingStage(source: presentation.source, devices: presentation.devices)
         } else if paired.isEmpty {
-            Panel("Get started") {
-                Row(symbol: "qrcode.viewfinder", title: "Connect your iPhone or iPad",
-                    detail: "Open DuoDeck on the device, then pair it with this Mac's code.", tint: DuoDeckHostStyle.accent) {
-                    Button("Pair…") { model.pairDevice() }.prominent().disabled(!presentation.canPair)
-                }
-                Row(symbol: "arrow.down.app", title: "Get DuoDeck for iPhone and iPad", detail: "Free on the App Store.") {
-                    Button("App Store") { NSWorkspace.shared.open(Self.iosApp) }
-                }
-            }
+            FirstDeviceStage(appURL: Self.iosApp, canPair: presentation.canPair) { model.pairDevice() }
         } else {
-            Panel("Now") {
-                Row(symbol: "dot.radiowaves.left.and.right", title: "No device connected",
-                    detail: "Open DuoDeck on your iPhone or iPad and tap this Mac.") { EmptyView() }
+            WaitingStage(device: lastDevice)
+        }
+        ForEach(presentation.attention.filter { allGranted || !($0.action == .allowScreenRecording || $0.action == .allowAccessibility) }) { item in
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.title).font(.body.weight(.semibold))
+                    Text(item.subtitle).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 12)
+                if item.action != .none { Button("Review…") { review(item.action) } }
             }
         }
     }
 
-    private var attentionSection: some View {
-        Panel(nil) {
-            ForEach(presentation.attention) { item in
-                Row(symbol: "exclamationmark.triangle.fill", title: item.title, detail: item.subtitle, tint: .orange) {
-                    if item.action != .none { Button("Review…") { review(item.action) } }
-                }
-            }
-        }
+    private var lastDevice: String {
+        paired.max { ($0.lastSeen ?? $0.pairedAt) < ($1.lastSeen ?? $1.pairedAt) }
+            .map { DuoDeckHostStyle.deviceName($0.name) } ?? "device"
     }
 
     private func review(_ action: StatusPresentation.Attention.Action) {
@@ -192,68 +185,230 @@ struct HomeView: View {
         case .none: break
         }
     }
+}
 
-    // MARK: Devices
+// MARK: - Stages
 
-    private var devicesSection: some View {
-        Panel("Paired devices", trailing: {
-            if !paired.isEmpty { Button("Manage…") { model.showSettings?(.devices) }.buttonStyle(.plain).foregroundStyle(DuoDeckHostStyle.accent) }
-        }) {
-            ForEach(paired.sorted { ($0.lastSeen ?? $0.pairedAt) > ($1.lastSeen ?? $1.pairedAt) }.prefix(6), id: \.id) { device in
-                let connected = presentation.devices.contains { DuoDeckHostStyle.deviceName($0.title) == DuoDeckHostStyle.deviceName(device.name) }
-                Row(symbol: (device.model ?? device.name).lowercased().contains("iphone") ? "iphone" : "ipad",
-                    title: DuoDeckHostStyle.deviceName(device.name),
-                    detail: connected ? "Connected now" : Self.lastConnected(device),
-                    tint: connected ? DuoDeckHostStyle.accent : .secondary) {
-                    if connected { LiveDot(color: .green) }
+/// What is showing, then each device with its live numbers set large.
+private struct StreamingStage: View {
+    let source: StatusPresentation.Row?
+    let devices: [StatusPresentation.Row]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            if let source {
+                VStack(alignment: .leading, spacing: 6) {
+                    Caption("Showing")
+                    Text(source.title).font(.title.weight(.semibold)).lineLimit(2).truncationMode(.middle)
+                    if let detail = source.detail { Text(detail).foregroundStyle(.secondary).monospacedDigit() }
                 }
             }
-            Row(symbol: "plus", title: "Pair iPhone or iPad…", detail: nil, tint: DuoDeckHostStyle.accent) { EmptyView() }
-                .contentShape(Rectangle())
-                .onTapGesture { if presentation.canPair { model.pairDevice() } }
-                .accessibilityAddTraits(.isButton)
+            ForEach(devices) { device in
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 8) {
+                        Image(systemName: device.symbol).foregroundStyle(.secondary)
+                        Text(DuoDeckHostStyle.deviceName(device.title)).font(.title3.weight(.semibold))
+                    }
+                    if let issue = device.issue {
+                        Text(issue).foregroundStyle(.orange)
+                    } else if let detail = device.detail {
+                        Stats(parts: detail.components(separatedBy: " · "))
+                    }
+                }
+            }
         }
-    }
-
-    private static func lastConnected(_ device: PairedDeviceSummary) -> String {
-        guard let seen = device.lastSeen else { return "Not connected yet" }
-        if Date().timeIntervalSince(seen) < 60 { return "Last connected just now" + (device.lastRoute.map { " \($0)" } ?? "") }
-        let f = RelativeDateTimeFormatter(); f.unitsStyle = .full; f.dateTimeStyle = .named
-        return "Last connected \(f.localizedString(for: seen, relativeTo: Date()))" + (device.lastRoute.map { " \($0)" } ?? "")
     }
 }
 
-// MARK: - Sections
+/// "118 fps · frame age 9 ms · RTT 7 ms · Wi-Fi" as big figures with small labels under them.
+private struct Stats: View {
+    let parts: [String]
 
-/// The switches people change between sessions, bound to the same settings as Settings.
-private struct StreamingSection: View {
+    private var items: [(value: String, label: String)] {
+        parts.map { part in
+            if part.hasSuffix(" fps") { return (part.replacingOccurrences(of: " fps", with: ""), "frames per second") }
+            if part.hasPrefix("frame age ") { return (part.replacingOccurrences(of: "frame age ", with: ""), "delay") }
+            if part.hasPrefix("RTT ") { return (part.replacingOccurrences(of: "RTT ", with: ""), "round trip") }
+            return (part, "connection")
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 40) {
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.value).font(.system(size: 30, weight: .semibold)).monospacedDigit()
+                    Text(item.label).font(.callout).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A Mac that has never paired: three steps, the App Store code, and Pair.
+private struct FirstDeviceStage: View {
+    let appURL: URL
+    let canPair: Bool
+    let pair: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 48) {
+            VStack(alignment: .leading, spacing: 22) {
+                Step(n: 1, title: "Get DuoDeck on your iPhone or iPad", detail: "It's free on the App Store. Scan the code with the device's camera.")
+                Step(n: 2, title: "Pair it with this Mac", detail: "Open DuoDeck on the device and scan the code this Mac shows.")
+                Step(n: 3, title: "Pick a window", detail: "Any app on this Mac, on the device in your hand.")
+                Button(action: pair) { Text("Pair iPhone or iPad…").padding(.horizontal, 8) }
+                    .controlSize(.large)
+                    .prominent()
+                    .disabled(!canPair)
+                    .keyboardShortcut("p", modifiers: [.command, .shift])
+                    .padding(.top, 6)
+            }
+            if let image = QRCode.image(for: appURL.absoluteString) {
+                VStack(spacing: 8) {
+                    Image(decorative: image, scale: 1).interpolation(.none).resizable()
+                        .frame(width: 148, height: 148)
+                    Text("DuoDeck for iPhone and iPad").font(.caption).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("App Store code for DuoDeck on iPhone and iPad")
+            }
+        }
+    }
+}
+
+private struct Step: View {
+    let n: Int
+    let title: String
+    let detail: String
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text("\(n)").font(.title3.weight(.semibold)).foregroundStyle(.secondary).frame(width: 18, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title3.weight(.semibold))
+                Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Paired before, nobody connected now.
+private struct WaitingStage: View {
+    let device: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Open DuoDeck on your \(device) and tap this Mac.").font(.title2.weight(.medium))
+            Text("It connects on Wi‑Fi, over the USB cable, or from away when Away from home is on.")
+                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// The two macOS permissions, each with its own button, until both are on.
+private struct PermissionsStage: View {
+    let permissions: PermissionsModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            line("Screen Recording", "Shows your windows on the device.", granted: permissions.screenRecording) {
+                permissions.requestScreenRecording()
+            }
+            line("Accessibility", "Lets your taps and typing reach the Mac.", granted: permissions.accessibility) {
+                permissions.requestAccessibility()
+            }
+        }
+    }
+
+    private func line(_ title: String, _ detail: String, granted: Bool, allow: @escaping () -> Void) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Image(systemName: granted ? "checkmark.circle.fill" : "circle")
+                .font(.title3).foregroundStyle(granted ? Color.green : Color.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title3.weight(.semibold))
+                Text(detail).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 24)
+            if !granted { Button("Allow…", action: allow).controlSize(.large).prominent() }
+        }
+        .frame(maxWidth: 520)
+    }
+}
+
+// MARK: - Sidebar: switches and devices
+
+private struct Sidebar: View {
     let model: AppModel
     @Bindable var settings: HostSettings
+    let paired: [PairedDeviceSummary]
+    let connected: [String]
+    let canPair: Bool
 
     private var snapshot: HostStatusSnapshot? { model.coordinator?.status.snapshot }
 
     var body: some View {
-        Panel("Streaming") {
-            Row(symbol: "sparkles.tv", title: "Picture",
-                detail: DuoDeckStreamingPreset.current(in: settings.config)?.detail ?? "Set in Settings › Streaming") {
-                Picker("Picture", selection: preset) {
-                    ForEach(DuoDeckStreamingPreset.allCases) { Text($0.title).tag($0.rawValue) }
-                    if DuoDeckStreamingPreset.current(in: settings.config) == nil { Text("Custom").tag("custom") }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Caption("Streaming")
+                    HStack {
+                        Text("Picture")
+                        Spacer()
+                        Picker("Picture", selection: preset) {
+                            ForEach(DuoDeckStreamingPreset.allCases) { Text($0.title).tag($0.rawValue) }
+                            if DuoDeckStreamingPreset.current(in: settings.config) == nil { Text("Custom").tag("custom") }
+                        }
+                        .labelsHidden().fixedSize()
+                    }
+                    if snapshot?.virtualDisplayAPIMissing != true {
+                        Switch(title: "Fit windows to the device", detail: "Each window gets its own display at your device's size.",
+                               isOn: $settings.config.virtualDisplay)
+                    }
+                    Switch(title: "Sound", detail: settings.config.sendAudio && snapshot?.audio?.problem != nil
+                           ? "Not available right now." : "Your Mac's sound on the device.", isOn: $settings.config.sendAudio)
+                    Switch(title: "Clipboard", detail: "Copy on one, paste on the other.", isOn: $settings.config.shareClipboard)
+                    Switch(title: "Away from home", detail: remoteNote, isOn: $settings.config.remoteAccess)
                 }
-                .labelsHidden().fixedSize()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Caption("Devices")
+                        Spacer()
+                        if !paired.isEmpty {
+                            Button("Manage") { model.showSettings?(.devices) }.buttonStyle(.plain)
+                                .font(.callout).foregroundStyle(DuoDeckHostStyle.accent)
+                        }
+                    }
+                    if paired.isEmpty {
+                        Text("No paired devices yet.").foregroundStyle(.secondary)
+                    }
+                    ForEach(sorted.prefix(6), id: \.id) { device in
+                        let isConnected = connected.contains(DuoDeckHostStyle.deviceName(device.name))
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Image(systemName: (device.model ?? device.name).lowercased().contains("iphone") ? "iphone" : "ipad")
+                                .foregroundStyle(.secondary).frame(width: 16)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(DuoDeckHostStyle.deviceName(device.name))
+                                Text(isConnected ? "Connected now" : Self.lastConnected(device))
+                                    .font(.caption).foregroundStyle(isConnected ? Color.green : Color.secondary)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                    Button { model.pairDevice() } label: { Label("Pair iPhone or iPad…", systemImage: "plus") }
+                        .buttonStyle(.plain).foregroundStyle(DuoDeckHostStyle.accent)
+                        .disabled(!canPair)
+                        .padding(.top, 2)
+                }
             }
-            if snapshot?.virtualDisplayAPIMissing != true {
-                SwitchRow(symbol: "rectangle.on.rectangle", title: "Fit windows to the device",
-                          detail: "Each window gets its own display at your device's size.", isOn: $settings.config.virtualDisplay)
-            }
-            SwitchRow(symbol: "speaker.wave.2", title: "Sound",
-                      detail: settings.config.sendAudio && snapshot?.audio?.problem != nil
-                        ? "Not available right now." : "Play your Mac's sound on the device.",
-                      isOn: $settings.config.sendAudio)
-            SwitchRow(symbol: "doc.on.clipboard", title: "Clipboard", detail: "Copy on one, paste on the other.",
-                      isOn: $settings.config.shareClipboard)
-            SwitchRow(symbol: "globe", title: "Away from home", detail: remoteNote, isOn: $settings.config.remoteAccess)
+            .padding(.horizontal, 24)
+            .padding(.top, 64)
+            .padding(.bottom, 24)
         }
+        .scrollIndicators(.never)
+    }
+
+    private var sorted: [PairedDeviceSummary] {
+        paired.sorted { ($0.lastSeen ?? $0.pairedAt) > ($1.lastSeen ?? $1.pairedAt) }
     }
 
     private var remoteNote: String {
@@ -265,172 +420,40 @@ private struct StreamingSection: View {
         Binding(get: { DuoDeckStreamingPreset.current(in: settings.config)?.rawValue ?? "custom" },
                 set: { if let p = DuoDeckStreamingPreset(rawValue: $0) { settings.config = p.applying(to: settings.config) } })
     }
-}
 
-/// The two macOS permissions, each with its own button, until both are on.
-private struct PermissionsSection: View {
-    let permissions: PermissionsModel
-
-    var body: some View {
-        Panel("Finish setup") {
-            row("rectangle.dashed.badge.record", "Screen Recording", "Shows your windows on the device.", granted: permissions.screenRecording) {
-                permissions.requestScreenRecording()
-            }
-            row("hand.tap", "Accessibility", "Lets your taps and typing reach the Mac.", granted: permissions.accessibility) {
-                permissions.requestAccessibility()
-            }
-        }
-    }
-
-    private func row(_ symbol: String, _ title: String, _ detail: String, granted: Bool, allow: @escaping () -> Void) -> some View {
-        Row(symbol: symbol, title: title, detail: detail, tint: granted ? .green : DuoDeckHostStyle.accent) {
-            if granted {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title3).accessibilityLabel("Allowed")
-            } else {
-                Button("Allow…", action: allow).prominent()
-            }
-        }
+    private static func lastConnected(_ device: PairedDeviceSummary) -> String {
+        guard let seen = device.lastSeen else { return "Not connected yet" }
+        if Date().timeIntervalSince(seen) < 60 { return "Just now" + (device.lastRoute.map { " \($0)" } ?? "") }
+        let f = RelativeDateTimeFormatter(); f.unitsStyle = .full; f.dateTimeStyle = .named
+        let when = f.localizedString(for: seen, relativeTo: Date())
+        return when.prefix(1).uppercased() + when.dropFirst() + (device.lastRoute.map { " \($0)" } ?? "")
     }
 }
 
-// MARK: - Building blocks
-
-/// A titled group: a small caption above one frosted card whose rows are divided by hairlines.
-private struct Panel<Content: View, Trailing: View>: View {
-    let title: String?
-    let trailing: Trailing
-    let content: Content
-
-    init(_ title: String?, @ViewBuilder trailing: () -> Trailing = { EmptyView() }, @ViewBuilder content: () -> Content) {
-        self.title = title; self.trailing = trailing(); self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let title {
-                HStack {
-                    Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                    Spacer()
-                    trailing.font(.subheadline)
-                }
-                .padding(.horizontal, 6)
-            }
-            Group {
-                if #available(macOS 15.0, *) {
-                    VStack(spacing: 0) {
-                        Group(subviews: content) { rows in
-                            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                                if index > 0 { Divider().padding(.leading, 54) }
-                                row
-                            }
-                        }
-                    }
-                } else {
-                    VStack(spacing: 0) { content }
-                }
-            }
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.35), lineWidth: 0.5))
-            .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
-        }
-    }
-}
-
-/// One line in a panel: a tinted symbol tile, a title with an optional second line, a trailing control.
-private struct Row<Accessory: View>: View {
-    let symbol: String
+private struct Switch: View {
     let title: String
-    let detail: String?
-    var detailIsWarning = false
-    var tint: Color = .secondary
-    @ViewBuilder var accessory: Accessory
-
+    let detail: String
+    @Binding var isOn: Bool
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(tint)
-                .frame(width: 30, height: 30)
-                .background(tint.opacity(0.13), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .accessibilityHidden(true)
+        HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.body).lineLimit(1).truncationMode(.middle)
-                if let detail {
-                    Text(detail).font(.caption).monospacedDigit()
-                        .foregroundStyle(detailIsWarning ? Color.orange : Color.secondary)
-                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                }
+                Text(title)
+                Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 8)
-            accessory
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Toggle(title, isOn: $isOn).labelsHidden().toggleStyle(.switch).controlSize(.small)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
         .accessibilityElement(children: .combine)
     }
 }
 
-private struct SwitchRow: View {
-    let symbol: String
-    let title: String
-    let detail: String
-    @Binding var isOn: Bool
-
-    var body: some View {
-        Row(symbol: symbol, title: title, detail: detail, tint: isOn ? DuoDeckHostStyle.accent : .secondary) {
-            Toggle(title, isOn: $isOn).labelsHidden().toggleStyle(.switch).controlSize(.small)
-        }
-    }
+private struct Caption: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View { Text(text).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary) }
 }
 
-private struct LiveDot: View {
-    let color: Color
-    @State private var on = false
-    var body: some View {
-        Circle().fill(color).frame(width: 8, height: 8)
-            .overlay(Circle().stroke(color.opacity(0.5), lineWidth: 5).scaleEffect(on ? 2 : 1).opacity(on ? 0 : 0.7))
-            .onAppear { withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) { on = true } }
-            .accessibilityHidden(true)
-    }
-}
-
-/// A very soft, slow-moving wash of the mark's colours behind everything (light: pale lilac, blush,
-/// peach; dark: deep plum). Stays still with Reduce Motion.
-private struct SoftBackground: View {
-    @Environment(\.colorScheme) private var scheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var palette: [Color] {
-        scheme == .dark
-            ? [c(0x17121F), c(0x1E1530), c(0x1A1424), c(0x241634), c(0x1B1426), c(0x2A1626), c(0x161219), c(0x1D1522), c(0x22161C)]
-            : [c(0xF6F2FF), c(0xF1EBFF), c(0xFBF1F8), c(0xEFE8FF), c(0xFAF6FF), c(0xFDEFF4), c(0xF8F5FB), c(0xFCF3EE), c(0xFFF4EA)]
-    }
-
-    var body: some View {
-        Group {
-            if #available(macOS 15.0, *) {
-                TimelineView(.animation(minimumInterval: 1 / 15, paused: reduceMotion)) { timeline in
-                    let t = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
-                    let wobble = Float(sin(t / 9) * 0.08), wobble2 = Float(cos(t / 11) * 0.08)
-                    MeshGradient(width: 3, height: 3, points: [
-                        [0, 0], [0.5, 0], [1, 0],
-                        [0, 0.5], [0.5 + wobble, 0.45 + wobble2], [1, 0.5],
-                        [0, 1], [0.5, 1], [1, 1],
-                    ], colors: palette)
-                }
-            } else {
-                LinearGradient(colors: [palette[0], palette[4], palette[8]], startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
-        }
-        .ignoresSafeArea()
-    }
-
-    private func c(_ hex: UInt32) -> Color {
-        Color(.sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255, blue: Double(hex & 0xFF) / 255)
-    }
-}
-
-private extension Button {
+private extension View {
     /// Liquid Glass's prominent button on macOS 26, the bordered prominent one before it.
     @ViewBuilder func prominent() -> some View {
         if #available(macOS 26.0, *) { self.buttonStyle(.glassProminent) } else { self.buttonStyle(.borderedProminent) }
