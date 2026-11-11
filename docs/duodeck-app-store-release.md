@@ -10,7 +10,7 @@ The new seated-Duo icon and violet accent replaced the paired-D icon on blue in 
 
 | Component | Candidate | Verified state |
 | --- | --- | --- |
-| iOS | 1.1.0 (2026111001), build ID `4208a23a-193f-4e53-871c-2a405300f4df` | Uploaded through the Q92YCL7C6D API key, processed by Apple and selected on version `13d239d5-2eb9-4767-a9bd-f33780f4db97` |
+| iOS | 1.1.0 (2026111201), build ID `8714f227-f7d1-4029-b4ca-6e76aed69ec6` | Replaced build 2026111001 on 11 November 2026 (owner decision): submission efcd0eb4 cancelled while waiting for review, the new build selected on version `13d239d5-2eb9-4767-a9bd-f33780f4db97` and sent in submission `76426df0-5d78-409a-93ed-58b77a72d4e7`, waiting for review |
 | Mac companion | DuoDeck Host 1.1.1 (2026111001) | Public [GitHub release](https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v1.1.1), notarized and stapled. The latest-download DMG SHA-256 `cd8fe33430f5a599fa9adf572fcefb2bc9625a5ec04c555a86e32bd377ab613a` matches the release record |
 | Store screenshots | Six captures from build 2026111001 | Replaced in `IPAD_PRO_3GEN_129` and `IPHONE_61`, three each, in the same order |
 | Mac App Store | iPad app on Apple-silicon Macs | Pricing and Availability: "Make this app available" on, Automatic (macOS 14.0); compatibility verified on 2026-11-11 after running the 1.1.0 build as Designed for iPad on an M-series Mac. Lists on the Mac App Store once 1.1.0 is approved |
