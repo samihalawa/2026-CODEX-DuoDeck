@@ -508,6 +508,14 @@ enum DebugHooks {
                 render(StatusCard(presentation: p).padding(.vertical, 4).background(Color(nsColor: .windowBackgroundColor)),
                        appearance: appearance, to: out.appendingPathComponent("card-\(sample.name)-\(name).png"))
             }
+            if ["idle", "streaming", "permissions-missing", "devices-cant-connect"].contains(sample.name) {
+                for (name, appearance) in appearances {
+                    render(HomeView(model: model, previewPresentation: p,
+                                    previewAllGranted: sample.permissions.screenRecording && sample.permissions.accessibility)
+                            .frame(width: 480, height: 640),
+                           appearance: appearance, to: out.appendingPathComponent("home-\(sample.name)-\(name).png"))
+                }
+            }
             if ["idle", "streaming", "permissions-missing", "startup-error", "remote-port-in-use", "devices-cant-connect"].contains(sample.name) {
                 for (name, appearance) in appearances {
                     render(GeneralPane(model: model, settings: model.settings, previewUpdates: neverChecked,

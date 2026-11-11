@@ -5,9 +5,9 @@ import SwiftUI
 enum DuoDeckHostStyle {
     static let accent = Color(nsColor: NSColor(name: NSColor.Name("DuoDeckAccent")) { appearance in
         if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-            return NSColor(srgbRed: 158.0 / 255, green: 188.0 / 255, blue: 1, alpha: 1)
+            return NSColor(srgbRed: 167.0 / 255, green: 139.0 / 255, blue: 250.0 / 255, alpha: 1)   // violet 400
         }
-        return NSColor(srgbRed: 47.0 / 255, green: 85.0 / 255, blue: 228.0 / 255, alpha: 1)
+        return NSColor(srgbRed: 109.0 / 255, green: 40.0 / 255, blue: 217.0 / 255, alpha: 1)   // #6D28D9, the mark's violet
     })
 
     /// Summary rows hide the standard model suffix. Details keep the complete stored name.

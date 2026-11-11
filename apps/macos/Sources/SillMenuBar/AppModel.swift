@@ -52,6 +52,7 @@ final class AppModel {
     /// Wired by the app delegate: the status item's glyph and tooltip, and the windows.
     @ObservationIgnored var onPresentation: ((StatusPresentation) -> Void)?
     @ObservationIgnored var showSettings: ((SettingsTab?) -> Void)?
+    @ObservationIgnored var showHome: (() -> Void)?
     @ObservationIgnored var showLog: (() -> Void)?
     /// Shows the pairing window with this offer (or brings it forward with the same code).
     @ObservationIgnored var showPairing: ((RemoteAccess.PairingOffer) -> Void)?

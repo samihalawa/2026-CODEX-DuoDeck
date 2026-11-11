@@ -55,7 +55,7 @@ enum MainMenu {
         }
 
         let window = submenu(in: main, title: "Window")
-        window.addItem(withTitle: "Show DuoDeck Host", action: #selector(AppDelegate.showMainWindow(_:)), keyEquivalent: "0")
+        window.addItem(withTitle: "Show DuoDeck", action: #selector(AppDelegate.showMainWindow(_:)), keyEquivalent: "0")
         window.addItem(.separator())
         window.addItem(withTitle: "Minimize", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         window.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")

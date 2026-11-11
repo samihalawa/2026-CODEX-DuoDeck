@@ -55,7 +55,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         tabs = SettingsTabController(model: model)
         let window = NSWindow(contentViewController: tabs)
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.title = "DuoDeck Host"
+        window.title = "DuoDeck Settings"
         window.isReleasedWhenClosed = false
         window.isExcludedFromWindowsMenu = false
         window.tabbingMode = .disallowed
@@ -68,7 +68,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.setFrameAutosaveName(Self.frameName)
         refit()
         tabs.onSelect = { [weak self] in
-            self?.window?.title = "DuoDeck Host"
+            self?.window?.title = "DuoDeck Settings"
         }
         NotificationCenter.default.addObserver(self, selector: #selector(screensChanged(_:)),
                                                name: NSApplication.didChangeScreenParametersNotification, object: nil)
@@ -80,7 +80,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     func show(tab: SettingsTab?) {
         tabs.select(tab ?? model.settings.settingsTab)
         guard let window else { return }
-        window.title = "DuoDeck Host"
+        window.title = "DuoDeck Settings"
         model.settings.settingsTab = tabs.current
         model.visibleSettingsTab = tabs.current
         refit()

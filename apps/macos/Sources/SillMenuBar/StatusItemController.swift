@@ -20,7 +20,7 @@ struct MenuEntry: Equatable {
         case setMaxFPS(Int), setBitrate(Int), setCaptureScale(CGFloat)
         case applyPerformanceProfile(DuoDeckStreamingPreset)
         case toggleLaunchAtLogin
-        case showLog, showSettings, quit
+        case showLog, showSettings, showHome, quit
         /// Settings on one tab (Remote Access…); the plain `showSettings` stays for ⌘,. (Swift
         /// allows no second case named `showSettings`.)
         case showSettingsTab(SettingsTab)
@@ -91,7 +91,7 @@ enum MenuBuilder {
         menu.append(MenuEntry(kind: .item, title: "Devices…", action: .showSettingsTab(.devices)))
         menu.append(.separator)
 
-        menu.append(MenuEntry(kind: .item, title: "Open DuoDeck Host", key: "0", action: .showSettings))
+        menu.append(MenuEntry(kind: .item, title: "Open DuoDeck", key: "0", action: .showHome))
         menu.append(.separator)
         menu.append(MenuEntry(kind: .item, title: "Quit DuoDeck Host", key: "q", action: .quit))
         return menu
@@ -257,6 +257,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         case .toggleLaunchAtLogin: model.loginItem.set(!model.loginItem.isOn)
         case .showLog: model.showLog?()
         case .showSettings: model.showSettings?(nil)
+        case .showHome: model.showHome?()
         case .showSettingsTab(let tab): model.showSettings?(tab)
         case .showPairing: model.pairDevice()
         case .showPairingRequest(let name, let showing): model.showPairingRequest(name: name, showing: showing)

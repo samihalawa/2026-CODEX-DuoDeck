@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     let model = AppModel()
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
+    private var homeWindow: HomeWindowController?
     private var logWindow: LogWindowController?
     private var pairingWindow: PairDeviceWindowController?
     private var cableNotice: CableNoticeWindowController?
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         statusItem = item
         model.onPresentation = { [weak item] p in item?.show(p) }
         model.showSettings = { [weak self] tab in self?.showSettings(tab: tab) }
+        model.showHome = { [weak self] in self?.showHome() }
         model.settingsWindowForTests = { [weak self] in self?.settingsWindow }
         model.showLog = { [weak self] in self?.showLog() }
         // An offer can come from a device's request (its ask at the home door, or kind 21), and the
@@ -58,7 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         model.settings.onPairingWindowSharingChange = { [weak self] in self?.pairingWindow?.applySharing() }
         // UI-only lifecycle checks stop here, before listeners, capture, identity, or pairing start.
         ApplicationLifecycleCheck.runIfAsked(delegate: self, model: model)
-        showSettings(tab: .general)
+        showHome()
         // Always, not only with the virtual display on: Settings can turn it on at any time, and a
         // kill must then still put the streamed window back.
         HostShutdown.install { [model] in model.coordinator }
@@ -69,7 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     /// Dock, Finder, Spotlight, and Open restore the same primary window, including after Close
     /// or Minimize. A remote pairing panel being visible does not prevent this.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        showSettings(tab: nil)
+        showHome()
         return false
     }
 
@@ -78,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
 
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
-        let open = menu.addItem(withTitle: "Show DuoDeck Host", action: #selector(showMainWindow(_:)), keyEquivalent: "")
+        let open = menu.addItem(withTitle: "Show DuoDeck", action: #selector(showMainWindow(_:)), keyEquivalent: "")
         open.target = self
         let pair = menu.addItem(withTitle: "Pair iPhone or iPad…", action: #selector(pairDevice(_:)), keyEquivalent: "")
         pair.target = self
@@ -139,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
 
     // MARK: Windows
 
-    @objc func showMainWindow(_ sender: Any?) { showSettings(tab: nil) }
+    @objc func showMainWindow(_ sender: Any?) { showHome() }
 
     @objc func pairDevice(_ sender: Any?) { model.pairDevice() }
 
@@ -163,6 +165,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         let controller = settingsWindow ?? SettingsWindowController(model: model)
         settingsWindow = controller
         controller.show(tab: tab)
+    }
+
+    /// The home window: what the app opens with, and what the Dock, the menu bar item and ⌘0 bring back.
+    func showHome() {
+        let controller = homeWindow ?? HomeWindowController(model: model)
+        homeWindow = controller
+        controller.show()
     }
 
     func showLog() {
