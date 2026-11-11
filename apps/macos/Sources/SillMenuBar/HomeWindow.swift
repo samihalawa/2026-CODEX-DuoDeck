@@ -266,7 +266,7 @@ private struct YourDevices: View {
     let manage: () -> Void
 
     private func isConnected(_ d: PairedDeviceSummary) -> Bool {
-        connected.contains { $0 == d.name || $0.hasPrefix(d.name) || d.name.hasPrefix($0) }
+        connected.contains { $0 == DuoDeckHostStyle.deviceName(d.name) }
     }
 
     private var ordered: [PairedDeviceSummary] {
@@ -330,7 +330,7 @@ private struct DeviceLine: View {
             Image(systemName: symbol).font(.title3).foregroundStyle(connected ? Color(hex: 0x8B5CF6) : .secondary)
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 1) {
-                Text(device.name).font(.callout.weight(.medium)).lineLimit(1)
+                Text(DuoDeckHostStyle.deviceName(device.name)).font(.callout.weight(.medium)).lineLimit(1)
                 Text(line).font(.caption).foregroundStyle(connected ? Color.green : Color.secondary).lineLimit(1)
             }
             Spacer(minLength: 0)
@@ -442,7 +442,7 @@ private struct ReadyCard: View {
     let canPair: Bool
     let pair: () -> Void
 
-    private var device: String { lastDevice?.name ?? "iPhone or iPad" }
+    private var device: String { lastDevice.map { DuoDeckHostStyle.deviceName($0.name) } ?? "iPhone or iPad" }
 
     var body: some View {
         Card {
