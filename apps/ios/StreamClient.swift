@@ -48,6 +48,9 @@ struct FoundMac: Identifiable, Hashable {
     /// The row's word, and VoiceOver's label and hint for it (DiscoveryPolicy.rowWord): how the Mac is
     /// reachable, as before, or "Not paired", "Wired" for an unpaired Mac over the cable, "Update Sill".
     let homeWord: DiscoveryPolicy.RowWord
+    /// A saved Mac shown from memory at launch, before the network has had its first 3 s to list
+    /// it: its row says "Looking…" and a tap dials it by its saved addresses, as a Remote row does.
+    var looking = false
 
     init(name: String, endpoint: NWEndpoint?, route: Route, macID: String? = nil, savedByName: String? = nil,
          carriesTag: Bool = false, method: DiscoveryPolicy.Method? = nil, wired: NWInterface? = nil, wifi: NWInterface? = nil,
@@ -67,7 +70,7 @@ struct FoundMac: Identifiable, Hashable {
     var id: String { route == .remote ? "remote:\(macID ?? name)" : "\(route.rawValue):\(name)" }
     /// The word at the end of its row: "Remote" for a saved Mac dialed away from home, else its home
     /// word (`homeWord`): how its Mac is reachable (`method`), "Not paired" or "Update Sill", or nil.
-    var word: String? { route == .remote ? "Remote" : homeWord.word }
+    var word: String? { route == .remote ? (looking ? "Looking…" : "Remote") : homeWord.word }
 }
 
 /// How the current connection runs (`Session.route`): set when it starts, again at `.ready` and by
@@ -1630,6 +1633,16 @@ final class StreamClient: ObservableObject {
         let remote = DiscoveryPolicy.remoteRows(saved: saved, listedIDs: Set(next.compactMap(\.macID)), now: now,
                                                 searchingSince: searchingSince, localNetworkDenied: localNetworkDenied)
         next += remote.map { FoundMac(name: $0.name, endpoint: nil, route: .remote, macID: $0.macID) }
+        // Before the network's first word, saved Macs show at once from memory ("Looking…"), so the
+        // list is never empty for a returning user; the network's rows replace them as they come.
+        if remote.isEmpty, !localNetworkDenied, now < searchingSince + DiscoveryPolicy.networkFirst {
+            let listed = Set(next.compactMap(\.macID))
+            for entry in saved where !listed.contains(entry.macID) {
+                var row = FoundMac(name: entry.name, endpoint: nil, route: .remote, macID: entry.macID)
+                row.looking = true
+                next.append(row)
+            }
+        }
         guard next != macs else { return }
         #if DEBUG
         // What each row's word was read from, to check it on a device (the cable in and out): its

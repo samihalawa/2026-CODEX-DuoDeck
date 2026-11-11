@@ -346,6 +346,8 @@ private struct Sidebar: View {
                            ? "Not available right now." : "Play your Mac's sound on the device.", isOn: $settings.config.sendAudio)
                     Switch(title: "Clipboard", detail: "Copy on one, paste on the other.", isOn: $settings.config.shareClipboard)
                     Switch(title: "Away from home", detail: remoteNote, isOn: $settings.config.remoteAccess)
+                    Switch(title: "Without Wi‑Fi", detail: "Lets your devices connect directly: on your iPhone's hotspot, or with no shared network. Can add a little lag while on.",
+                           isOn: $settings.config.directWireless)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {

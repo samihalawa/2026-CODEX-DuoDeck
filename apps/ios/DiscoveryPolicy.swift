@@ -97,7 +97,9 @@ enum DiscoveryPolicy {
         let due = i.searchingSince + networkFirst
         let missing = !i.remembered.subtracting(i.onNetwork).isEmpty
         // Sticky once started: rows found nearby must not vanish because another Mac turned up.
-        let browse = i.askedNearby || i.nearbyRunning || (missing && i.now >= due)
+        // Nothing at all on the network once it has had its say (this iPhone's own hotspot, no
+        // shared Wi‑Fi): look nearby by itself, so a Mac with Direct Wireless on turns up untapped.
+        let browse = i.askedNearby || i.nearbyRunning || ((missing || i.onNetwork.isEmpty) && i.now >= due)
         return Output(browseNearby: browse, showHint: i.listed == 0 && i.now >= due,
                       recheckAt: i.now < due ? due : nil)
     }

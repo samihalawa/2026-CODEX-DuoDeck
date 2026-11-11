@@ -48,7 +48,9 @@ check("remembered Mac missing: still at 30 s", P.decide({ var j = i; j.now = 30;
 i = input(0)
 check("first use: no hint before 3 s", run(i, from: 0, to: 2.99) { !$0.showHint && !$0.browseNearby })
 check("first use: the hint at 3 s", P.decide({ var j = i; j.now = 3.0; return j }()).showHint)
-check("first use: never browses by itself", run(i, from: 0, to: 120) { !$0.browseNearby })
+check("first use: nothing nearby before 3 s", run(i, from: 0, to: 2.99) { !$0.browseNearby })
+check("nothing on the network at 3 s (a hotspot, no shared Wi-Fi): browses nearby by itself", run(i, from: 3, to: 120) { $0.browseNearby })
+check("a Mac on the network: never browses by itself", run({ var j = i; j.onNetwork = ["Mac mini"]; j.listed = 1; return j }(), from: 0, to: 120) { !$0.browseNearby })
 i.now = 3.5; i.askedNearby = true
 check("Search Nearby: browses at once", P.decide(i).browseNearby)
 check("Search Nearby: the hint stays (its button goes, since browsing)", P.decide(i).showHint)

@@ -1070,6 +1070,8 @@ enum SettingsScript {
 struct ConnectScreen: View {
     @ObservedObject var client: StreamClient
     @State private var adding: Bool
+    /// The network's first seconds after launch: "Looking…" rather than "No Macs found".
+    @State private var searchingAtLaunch = true
     @State private var homeCard: String?
     @State private var typed: Bool
     @State private var editing = false
@@ -1186,18 +1188,32 @@ struct ConnectScreen: View {
 
     private var macList: some View {
         List {
-            if client.macs.isEmpty {
+            if client.macs.isEmpty && searchingAtLaunch {
+                Section {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Looking for your Macs…").foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 120)
+                    .listRowBackground(Color.clear)
+                }
+                .transition(.opacity)
+            } else if client.macs.isEmpty {
                 Section {
                     ContentUnavailableView {
-                        Label("No Macs found", systemImage: "desktopcomputer")
+                        Label("No Macs found", systemImage: "laptopcomputer.slash")
                     } description: {
-                        Text("Open DuoDeck on your Mac and connect both devices to the same Wi-Fi, or use a USB cable.")
+                        Text("Open DuoDeck on your Mac on the same Wi‑Fi, or connect with a USB cable. On this iPhone's hotspot, use the cable or turn on Direct in DuoDeck on your Mac.")
                     } actions: {
                         Button("Add Mac", action: unfold)
                             .buttonStyle(.borderedProminent)
+                        if !client.searchingNearby {
+                            Button("Search nearby") { client.searchNearby() }
+                        }
                     }
                     .listRowBackground(Color.clear)
                 }
+                .transition(.opacity)
             } else {
                 let sections = ConnectionList.sections(
                     for: client.macs,
@@ -1238,6 +1254,12 @@ struct ConnectScreen: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
+        .animation(.snappy(duration: 0.3), value: client.macs.map(\.id))
+        .animation(.snappy(duration: 0.3), value: searchingAtLaunch)
+        .task {
+            try? await Task.sleep(for: .seconds(DiscoveryPolicy.networkFirst))
+            searchingAtLaunch = false
+        }
     }
 
     private var setupHelp: some View {
@@ -1305,14 +1327,21 @@ struct ConnectScreen: View {
     private func macRow(_ mac: FoundMac) -> some View {
         Button { client.connect(to: mac) } label: {
             HStack(spacing: 14) {
-                Image(systemName: "desktopcomputer")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 30)
+                Image(systemName: "laptopcomputer")
+                    .font(.title2)
+                    .foregroundStyle(mac.looking ? Color.secondary : Color.accentColor)
+                    .symbolEffect(.pulse, isActive: mac.looking)
+                    .frame(width: 36)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(mac.name).font(.body).foregroundStyle(.primary)
+                    Text(mac.name).font(.body.weight(.medium)).foregroundStyle(.primary)
                     if let word = mac.word {
-                        Text(word).font(.subheadline).foregroundStyle(.secondary)
+                        HStack(spacing: 6) {
+                            if !mac.looking && mac.route != .remote {
+                                Circle().fill(.green).frame(width: 7, height: 7)
+                            }
+                            Text(word).font(.subheadline).foregroundStyle(.secondary)
+                                .contentTransition(.opacity)
+                        }
                     }
                 }
                 Spacer(minLength: 8)
