@@ -511,8 +511,15 @@ enum DebugHooks {
             if ["idle", "streaming", "permissions-missing", "devices-cant-connect"].contains(sample.name) {
                 for (name, appearance) in appearances {
                     render(HomeView(model: model, previewPresentation: p,
-                                    previewAllGranted: sample.permissions.screenRecording && sample.permissions.accessibility)
-                            .frame(width: 480, height: 640),
+                                    previewAllGranted: sample.permissions.screenRecording && sample.permissions.accessibility,
+                                    previewPaired: [
+                                        PairedDeviceSummary(id: "a", keyPrefix: "5KD2Q7", name: "iPad", model: "iPad14,1",
+                                                            pairedAt: previewNow.addingTimeInterval(-86_400 * 9), method: "qr",
+                                                            lastSeen: previewNow.addingTimeInterval(-120), lastRoute: "over Wi‑Fi"),
+                                        PairedDeviceSummary(id: "b", keyPrefix: "9QX1MM", name: "Sami’s iPhone", model: "iPhone16,1",
+                                                            pairedAt: previewNow.addingTimeInterval(-86_400 * 3), method: "cable",
+                                                            lastSeen: previewNow.addingTimeInterval(-86_400), lastRoute: "through Tailscale")])
+                            .frame(width: 520, height: 900),
                            appearance: appearance, to: out.appendingPathComponent("home-\(sample.name)-\(name).png"))
                 }
             }
