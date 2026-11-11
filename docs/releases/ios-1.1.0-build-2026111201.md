@@ -1,6 +1,6 @@
-# DuoDeck for iPhone and iPad 1.1.1 (2026111201)
+# DuoDeck for iPhone and iPad 1.1.0, build 2026111201
 
-Held until Apple approves 1.1.0 (version 13d239d5-2eb9-4767-a9bd-f33780f4db97, submission efcd0eb4-1f69-4910-b13b-f09cdf1703fd). Owner decision, 11 November 2026: ship after approval, do not replace 1.1.0 in review.
+Replaces build 2026111001 in the 1.1.0 review. Owner decision, 11 November 2026: 1.1.0 was still waiting for review, so its submission was cancelled and this build sent instead.
 
 ## What's New (App Store text)
 
