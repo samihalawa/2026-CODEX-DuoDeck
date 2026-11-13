@@ -1,11 +1,11 @@
 #!/bin/bash
 # usage: build.sh WT OUT [FILE=OVERRIDE ...]
-# Compiles the check with StreamProtocol's sources as one module, -package-name sill for the host
-# files' `package` access: Sources/SillHost/KeyRepeat.swift and Sources/SillHost/KeyStrokes.swift (the
+# Compiles the check with StreamProtocol's sources as one module, -package-name duodeck for the host
+# files' `package` access: Sources/DuoDeckHost/KeyRepeat.swift and Sources/DuoDeckHost/KeyStrokes.swift (the
 # keys whose repeat it is), each with its `import StreamProtocol` stripped. FILE=OVERRIDE (a basename,
 # then a path) compiles OVERRIDE in FILE's place (the mutants').
 WT=$1; OUT=$2; shift 2; T=$(mktemp -d)
-FILES=(Sources/SillHost/KeyRepeat.swift Sources/SillHost/KeyStrokes.swift)
+FILES=(Sources/DuoDeckHost/KeyRepeat.swift Sources/DuoDeckHost/KeyStrokes.swift)
 cp "$WT"/Sources/StreamProtocol/*.swift "$T"/
 for rel in "${FILES[@]}"; do
     f="$(basename "$rel")"; src="$WT/$rel"
@@ -13,4 +13,4 @@ for rel in "${FILES[@]}"; do
     sed '/^import StreamProtocol$/d' "$src" > "$T/$f"
 done
 cp "$(dirname "$0")/main.swift" "$T/main.swift"
-swiftc -O -package-name sill "$T"/*.swift -o "$OUT" 2>&1 | grep -E "error" ; rm -rf "$T"
+swiftc -O -package-name duodeck "$T"/*.swift -o "$OUT" 2>&1 | grep -E "error" ; rm -rf "$T"

@@ -2,7 +2,7 @@
 // `cableDevice` and "cable"; SavedMac (the device's saved Macs, SavedMacs.swift): `homeTLS` and
 // `revoked`. Records without them decode, lists without them encode byte for byte as before, and
 // an older reader (a mirror of each type as it was at 1f3072a) reads the new records. Compiled with
-// StreamProtocol's sources as one module, `-package-name sill`.
+// StreamProtocol's sources as one module, `-package-name duodeck`.
 import Foundation
 var fails = 0, passes = 0
 func check(_ name: String, _ ok: Bool) { if ok { passes += 1; print("ok   \(name)") } else { fails += 1; print("FAIL \(name)") }; fflush(stdout) }
@@ -121,14 +121,14 @@ check("revoking: a revoked record survives encoding, and the next pairing clears
       SavedMacs.decode(SavedMacs.encode(revokedList!)).first { $0.macID == macID }?.revoked == true
       && SavedMacs.adding(fresh, to: revokedList!).first { $0.macID == macID }?.revoked == nil)
 let forgotten = SavedMacs.forgettingHomeTLS(SavedMacs.seenOverTLS([macID], in: listTwo)!)
-check("forgettingHomeTLS (-SillForgetHomeTLS 1): every homeTLS cleared, nothing else", forgotten.allSatisfy { $0.homeTLS == nil }
+check("forgettingHomeTLS (-DuoDeckForgetHomeTLS 1): every homeTLS cleared, nothing else", forgotten.allSatisfy { $0.homeTLS == nil }
       && forgotten.count == 2 && SavedMacs.encode([forgotten[1]]) == sansTLS(other) && forgotten[0] == macs[0])
 check("forgettingHomeTLS: the record encodes as from before homeTLS", SavedMacs.encode([forgotten[0]]) == oldText)
 
 // MARK: Require pairing's stored record (the security review, 2026-09-27)
 
 // Off only with this Mac's own signature: a record another process of this user wrote first (the
-// keychain item did not exist, and it listed Sill as allowed to read it) cannot turn pairing off.
+// keychain item did not exist, and it listed DuoDeck as allowed to read it) cannot turn pairing off.
 if let keyM = RemoteKey.generate(), let mac = HostIdentity(privateKey: keyM, recognitionKey: Data(repeating: 7, count: 32)),
    let keyX = RemoteKey.generate(), let other = HostIdentity(privateKey: keyX, recognitionKey: Data(repeating: 8, count: 32)) {
     func read(_ record: Data?, as m: HostIdentity = mac) -> Bool {
@@ -151,7 +151,7 @@ if let keyM = RemoteKey.generate(), let mac = HostIdentity(privateKey: keyM, rec
     check("require pairing: a key that cannot sign saves nothing", RequirePairingValue.encode(false, macID: mac.macID, sign: { _ in nil }) == nil
           && RequirePairingValue.encode(false, macID: mac.macID, sign: { _ in Data() }) == nil)
     check("require pairing: the signed message names the purpose and the Mac",
-          String(decoding: RequirePairingValue.offMessage(macID: mac.macID), as: UTF8.self) == "sill-require-pairing-off-v1\n\(mac.macID)")
+          String(decoding: RequirePairingValue.offMessage(macID: mac.macID), as: UTF8.self) == "duodeck-require-pairing-off-v1\n\(mac.macID)")
 } else {
     check("require pairing: two P-256 keys and their identities", false)
 }

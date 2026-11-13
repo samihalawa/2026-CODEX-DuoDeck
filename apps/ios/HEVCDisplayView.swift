@@ -112,7 +112,7 @@ final class HEVCDisplayView: UIView {
     private static let hudZ: CGFloat = 200
 
     #if DEBUG
-    /// The `-SillHUD 1` readout and its subscriptions to the client. nil unless that argument is set.
+    /// The `-DuoDeckHUD 1` readout and its subscriptions to the client. nil unless that argument is set.
     private var hud: DiagnosticsHUDView?
     private var hudSubscriptions = Set<AnyCancellable>()
     #endif
@@ -134,7 +134,7 @@ final class HEVCDisplayView: UIView {
         backgroundColor = .black
         // The picture takes no touch: the input view over it takes every one. Zoomed (StreamZoom) it is
         // drawn far past its pane, and a clip does not clip hit testing: sideways, where the bar comes
-        // before the picture, UIKit's hit test on the bar's buttons found this view at 5× (-SillHitTest).
+        // before the picture, UIKit's hit test on the bar's buttons found this view at 5× (-DuoDeckHitTest).
         isUserInteractionEnabled = false
         displayLayer.videoGravity = .resizeAspect
         layer.addSublayer(cursorLayer)
@@ -144,7 +144,7 @@ final class HEVCDisplayView: UIView {
     deinit { layerObservers.forEach(NotificationCenter.default.removeObserver) }
 
     /// The layer says it could not decode a frame, or that it needs a flush before it decodes again
-    /// (iOS says so when Sill goes to the background, or another app takes the decoder): looked at on
+    /// (iOS says so when DuoDeck goes to the background, or another app takes the decoder): looked at on
     /// `renderQueue` at once, since a still window sends no frame that would show it (`checkLayer`).
     private func observeLayer() {
         let center = NotificationCenter.default
@@ -222,7 +222,7 @@ final class HEVCDisplayView: UIView {
     }
 
     #if DEBUG
-    /// Shows the diagnostics readout fed by `client`, when launched with `-SillHUD 1`. Idempotent:
+    /// Shows the diagnostics readout fed by `client`, when launched with `-DuoDeckHUD 1`. Idempotent:
     /// the view is shared across layouts, so every re-host calls this and only the first one counts.
     func attachDiagnostics(to client: StreamClient) {
         guard DiagnosticsHUDView.isEnabled, hud == nil else { return }
@@ -248,7 +248,7 @@ final class HEVCDisplayView: UIView {
     }
 
     #if DEBUG
-    /// The layout harness (`-SillPointer`): the frame size the sprite needs, as the host's parameter
+    /// The layout harness (`-DuoDeckPointer`): the frame size the sprite needs, as the host's parameter
     /// sets would give it, for a mock that never streams; and a dim rectangle where that frame is
     /// drawn, so a photo shows what the sprite points into (the mock's picture is black).
     func debugFrameSize(_ size: CGSize) {
@@ -449,10 +449,10 @@ final class HEVCDisplayView: UIView {
 
         var lost: Error?
         #if DEBUG
-        if resuming, interruptedAt != nil, keyframesToLose > 0 {     // -SillKeyframeLost
+        if resuming, interruptedAt != nil, keyframesToLose > 0 {     // -DuoDeckKeyframeLost
             keyframesToLose -= 1
-            print("display: -SillKeyframeLost: the keyframe that ends the wait is thrown away, as though the layer still read failed (\(keyframesToLose) more)")
-            lost = NSError(domain: "SillKeyframeLost", code: 0)
+            print("display: -DuoDeckKeyframeLost: the keyframe that ends the wait is thrown away, as though the layer still read failed (\(keyframesToLose) more)")
+            lost = NSError(domain: "DuoDeckKeyframeLost", code: 0)
         }
         #endif
         if checkLayer("at a frame", failedToDecode: lost, droppingKeyframe: resuming) { return }
@@ -474,7 +474,7 @@ final class HEVCDisplayView: UIView {
 
     /// Whether the picture was interrupted: the layer failed (its `status`, with its `error`), could
     /// not decode a frame (`failedToDecode`, from its notification), or needs a flush before it
-    /// decodes again (Sill was in the background, or another app took the decoder). If so the layer
+    /// decodes again (DuoDeck was in the background, or another app took the decoder). If so the layer
     /// removes its old image, waits for a keyframe, and `onNeedsKeyframe` is
     /// told, since a still window on the Mac sends none. The Mac sends its parameter sets before
     /// every keyframe and every sample carries the format, so nothing else needs sending again. From
@@ -507,15 +507,15 @@ final class HEVCDisplayView: UIView {
     #if DEBUG
     /// When the picture was first interrupted, for the console's "back, N ms after" line.
     private var interruptedAt: CFTimeInterval?
-    /// `-SillKeyframeLost <n>` (ContentView's harness contract): the first n keyframes that end a wait
+    /// `-DuoDeckKeyframeLost <n>` (ContentView's harness contract): the first n keyframes that end a wait
     /// after an interruption are thrown away by `checkLayer`'s flush, as though the layer still read
     /// failed when they came (as it can while another app holds the decoder), so the client's next
     /// ask runs for real.
-    private var keyframesToLose = UserDefaults.standard.integer(forKey: "SillKeyframeLost")
-    /// `-SillLayerFail <s>[,<s>…]` (ContentView's harness contract): at each of these seconds after the
+    private var keyframesToLose = UserDefaults.standard.integer(forKey: "DuoDeckKeyframeLost")
+    /// `-DuoDeckLayerFail <s>[,<s>…]` (ContentView's harness contract): at each of these seconds after the
     /// launch's first picture, a frame that cannot decode goes onto the layer, so the recovery runs for
     /// real: the layer's notification, the flush, the client's one ask (kind 44) and the Mac's keyframe.
-    private static let layerFailTimes: [Double] = (UserDefaults.standard.string(forKey: "SillLayerFail") ?? "")
+    private static let layerFailTimes: [Double] = (UserDefaults.standard.string(forKey: "DuoDeckLayerFail") ?? "")
         .split(whereSeparator: { $0 == "," || $0 == " " }).compactMap { Double($0) }.filter { $0 > 0 }
     private var layerFailArmed = true
 
@@ -523,7 +523,7 @@ final class HEVCDisplayView: UIView {
     private func armLayerFailure() {
         guard layerFailArmed, !Self.layerFailTimes.isEmpty, let queue = renderQueue else { return }
         layerFailArmed = false
-        print("display: -SillLayerFail: a frame that cannot decode goes onto the layer at \(Self.layerFailTimes) s")
+        print("display: -DuoDeckLayerFail: a frame that cannot decode goes onto the layer at \(Self.layerFailTimes) s")
         for time in Self.layerFailTimes {
             queue.asyncAfter(deadline: .now() + time) { [weak self] in self?.breakLayer() }
         }
@@ -532,7 +532,7 @@ final class HEVCDisplayView: UIView {
     /// A sample of noise behind an HEVC NAL length far longer than the sample, marked a keyframe to be
     /// shown at once, in the stream's own format: the decoder refuses it.
     private func breakLayer() {
-        guard let desc = formatDescription else { print("display: -SillLayerFail: no picture to break"); return }
+        guard let desc = formatDescription else { print("display: -DuoDeckLayerFail: no picture to break"); return }
         var bytes: [UInt8] = [0x7F, 0xFF, 0xFF, 0xFF, 0x26, 0x01]
         bytes += (0..<506).map { _ in UInt8.random(in: 0...255) }
         var block: CMBlockBuffer?
@@ -546,13 +546,13 @@ final class HEVCDisplayView: UIView {
               CMSampleBufferCreateReady(allocator: nil, dataBuffer: block, formatDescription: desc, sampleCount: 1,
                                         sampleTimingEntryCount: 1, sampleTimingArray: &timing, sampleSizeEntryCount: 1,
                                         sampleSizeArray: &size, sampleBufferOut: &sample) == noErr, let sample else {
-            print("display: -SillLayerFail: could not make the frame"); return
+            print("display: -DuoDeckLayerFail: could not make the frame"); return
         }
         if let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true) as NSArray?,
            let first = attachments.firstObject as? NSMutableDictionary {
             first[kCMSampleAttachmentKey_DisplayImmediately as String] = true
         }
-        print("display: -SillLayerFail: a frame that cannot decode goes onto the layer now")
+        print("display: -DuoDeckLayerFail: a frame that cannot decode goes onto the layer now")
         displayLayer.enqueue(sample)
     }
     #endif

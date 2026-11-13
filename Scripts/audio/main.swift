@@ -25,7 +25,7 @@ import StreamProtocol
 // --switch-at: at T seconds the sound's source changes to a second tone (660 Hz; AudioKey.app, pid 1,
 //   "Second Tone"): a new epoch, as another app's window would be.
 // --audio-at: Send Audio turned on or off at T seconds (a device's or the Mac's change).
-// SILL_TEST_AUDIO_CHUNK and SILL_TEST_AUDIO_PAUSE reach the tone as they do on a synthetic host.
+// DUODECK_TEST_AUDIO_CHUNK and DUODECK_TEST_AUDIO_PAUSE reach the tone as they do on a synthetic host.
 
 setvbuf(stdout, nil, _IOLBF, 0)
 

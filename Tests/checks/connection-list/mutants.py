@@ -4,7 +4,7 @@ import os, subprocess, sys, tempfile
 WT = sys.argv[1]; HERE = os.path.dirname(os.path.abspath(__file__))
 F = os.path.join(WT, "iOSClient/ConnectionList.swift")
 MUTANTS = [
-    # The style: tiles by default (Noah, 2026-10-27), a stored choice always wins.
+    # The style: tiles by default (the maintainer, 2026-10-27), a stored choice always wins.
     ("the list by default again (main before 2026-10-27)", "static let defaultStyle: Style = .tiles",
      "static let defaultStyle: Style = .list"),
     ("the old rule: tiles only when stored", "raw.flatMap(Style.init(rawValue:)) ?? defaultStyle",
@@ -21,11 +21,11 @@ MUTANTS = [
     ("a picture of a Mac not saved", "style == .tiles && sceneActive && saved", "style == .tiles && sceneActive"),
     ("a picture when any condition holds", "style == .tiles && sceneActive && saved", "style == .tiles || sceneActive || saved"),
     ("a picture only with the list", "style == .tiles && sceneActive && saved", "style == .list && sceneActive && saved"),
-    # Every row of one Mac shows its one picture (Noah, 2026-10-27).
+    # Every row of one Mac shows its one picture (the maintainer, 2026-10-27).
     ("a row taken by its name shows no picture", "        macID ?? savedByName\n", "        macID\n"),
     ("the name before the tag", "        macID ?? savedByName\n", "        savedByName ?? macID\n"),
     ("no row stands for a Mac", "        macID ?? savedByName\n", "        nil\n"),
-    # A style never deletes a picture: the list hides them, tiles show them again (Noah, 2026-10-27).
+    # A style never deletes a picture: the list hides them, tiles show them again (the maintainer, 2026-10-27).
     ("the switch to the list deletes the pictures",
      "guard style == .tiles else { return PreviewPlan(delete: delete, show: []) }",
      "guard style == .tiles else { return PreviewPlan(delete: files.filter { $0.hasSuffix(\".jpg\") }, show: []) }"),

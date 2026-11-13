@@ -6,7 +6,7 @@ import Foundation
 // decoding what newer ones send:
 //
 // • A device knows the host supports settings when a `.hostSettings` arrives on this connection,
-//   never by a version: `WindowList.hostVersion` is nil from SillHost, and it and `protocol`
+//   never by a version: `WindowList.hostVersion` is nil from DuoDeckHost, and it and `protocol`
 //   (Switcher.swift) are nil from hosts before 2026-09-25.
 // • Kind numbers are never reused: a new kind takes the next free number, and an older reader maps
 //   a kind it does not know to `.unknown` and skips it (StreamMessage.swift).
@@ -31,13 +31,13 @@ import Foundation
 // • the host: `HostConfig` (`validated()`, `changes(to:)`), `streamSettings(away:)`, `applying`
 //   and `DeviceSettings.accepted` in DeviceSettings.swift, and `StreamCoordinator.restartNeeded`
 //   when the running pipeline depends on it;
-// • Sill.app: `HostSettings` (its key, registered default, load and `save(changedFrom:)`),
-//   `DebugHooks.apply` (`-SillSetAfter`), and the status menu and Settings panes when the Mac
+// • DuoDeck.app: `HostSettings` (its key, registered default, load and `save(changedFrom:)`),
+//   `DebugHooks.apply` (`-DuoDeckSetAfter`), and the status menu and Settings panes when the Mac
 //   shows it;
 // • the device: `SettingsField` and `HostSettingsChange.fields`, `only` and `adding`
 //   (HostSettingsLedger.swift), rule 9 in the ledger's `pick` for an optional field, the panel's
 //   row, and the DEBUG mock's cases (MockCatalog.swift);
-// • Scripts/sillclient.py: the keys `--set` accepts, and `describe`.
+// • Scripts/duodeckclient.py: the keys `--set` accepts, and `describe`.
 //
 // Away from home (docs/remote-bundle-plan.md §5) splits Quality and Resolution in two: the home
 // quality and the away quality. An away variant of a setting goes in HostConfig's away knobs
@@ -114,9 +114,9 @@ public struct RunningStream: Codable, Hashable, Sendable {
 }
 
 /// Away from home (docs/remote-bundle-plan.md §5): the Mac's two qualities, which one runs, and
-/// which one this connection's controls set. From a host with an identity (Sill.app; SillHost
+/// which one this connection's controls set. From a host with an identity (DuoDeck.app; DuoDeckHost
 /// --remote or --pairing); nil from any other host, which has one quality for every device. One
-/// without a remote door (SillHost --pairing alone) sends it too, and no connection there is ever
+/// without a remote door (DuoDeckHost --pairing alone) sends it too, and no connection there is ever
 /// away (`thisConnectionAway` and `awayRunning` false). Every field is required: a host that sends
 /// it sends all of it.
 public struct AwayQuality: Codable, Hashable, Sendable {
@@ -189,9 +189,9 @@ public struct HostSettingsState: Codable, Hashable, Sendable {
     /// the home quality for any other, so a pick is answered in the field it asked about, from an
     /// older device too.
     public var settings: StreamSettings
-    /// Sill.app saves changes; SillHost keeps them until it quits.
+    /// DuoDeck.app saves changes; DuoDeckHost keeps them until it quits.
     public var persistent: Bool
-    /// False: this host cannot run the virtual display at all (SillHost without --virtual-display).
+    /// False: this host cannot run the virtual display at all (DuoDeckHost without --virtual-display).
     public var virtualDisplayAvailable: Bool
     /// Why the virtual display is unavailable or not working; nil when nothing is wrong.
     public var virtualDisplayNote: String?
@@ -205,7 +205,7 @@ public struct HostSettingsState: Codable, Hashable, Sendable {
     public var stream: RunningStream?
     /// Only in the reply to one device: the token of the change it answers.
     public var answering: Int?
-    /// Away from home: nil from a host without an identity (SillHost without --remote or
+    /// Away from home: nil from a host without an identity (DuoDeckHost without --remote or
     /// --pairing), and from older hosts.
     public var away: AwayQuality?
     /// This connection's link while it cannot keep up; nil while it does, and from older hosts.
@@ -217,7 +217,7 @@ public struct HostSettingsState: Codable, Hashable, Sendable {
     /// This connection's key is on the Mac's trust list now: a paired device, which alone changes
     /// Direct Wireless (`HostSettingsChange.directWireless`; at home: away from home the Mac refuses
     /// it whatever this says). False for an unpaired key at a door that lets any device in (Require
-    /// pairing off) and at a plain door (SillHost without --pairing), which sees no key; true
+    /// pairing off) and at a plain door (DuoDeckHost without --pairing), which sees no key; true
     /// through the remote door, which admits only paired keys. Recomputed with the trust list, so a
     /// device that pairs during its session hears true. Nil from hosts before 2026-10-29, which took
     /// Direct Wireless from any session at home. The connection's own, like `away` and `link`.
@@ -254,7 +254,7 @@ public struct HostSettingsChange: Codable, Hashable, Sendable {
     /// the Mac's value; one before took it from any session at home.
     public var directWireless: Bool?
     /// Send Audio from a device's Settings panel: a host applies it for every device, on or off, from
-    /// either door, and Sill.app saves it as a menu click (Noah, 2026-10-27: docs/audio-plan.md's Q8 as
+    /// either door, and DuoDeck.app saves it as a menu click (the maintainer, 2026-10-27: docs/audio-plan.md's Q8 as
     /// revised). The beta's hosts (2026-10-20 to 27) refused it, on or off, and named it in their log
     /// ("send audio (set on this Mac only)"), so a device's switch went back to the Mac's value.
     public var sendAudio: Bool?

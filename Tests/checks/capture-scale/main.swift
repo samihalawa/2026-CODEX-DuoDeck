@@ -1,15 +1,15 @@
-// CaptureScale and InputLanding (Sources/SillHost/CaptureScale.swift): the pixel scale a capture runs
+// CaptureScale and InputLanding (Sources/DuoDeckHost/CaptureScale.swift): the pixel scale a capture runs
 // at, the Resolution knob held to the display's own (2026-10-27: on an external 2560×1440 display at
 // 1x, a window picked at Retina filled the top-left quarter of the picture, and the Desktop was
 // captured at 5120×2880); a window's capture size, an odd side rounded up to even where it is drawn
 // 1:1 (a 1117-point window on a 1x display was asked 1116 pixels and shrunk into them), and the
 // restart rule that compares the same size (no restart at every poll); and where a device's position
 // lands on the Mac: at most on the source's last pixel row and column (the picture's bottom edge was
-// posted at the row past the display's last); and the size of Sill's virtual display, no side under 800
-// points (an iPhone's 754×784 display came up at 1x, five times in Sill.log).
-// Compiled with Sources/SillHost/CaptureScale.swift alone (run.sh):
-//   swiftc -O Sources/SillHost/CaptureScale.swift Tests/checks/capture-scale/main.swift
-// The rule case by case (Sill.log's own sizes among them), then random knobs, displays, windows,
+// posted at the row past the display's last); and the size of DuoDeck's virtual display, no side under 800
+// points (an iPhone's 754×784 display came up at 1x, five times in DuoDeck.log).
+// Compiled with Sources/DuoDeckHost/CaptureScale.swift alone (run.sh):
+//   swiftc -O Sources/DuoDeckHost/CaptureScale.swift Tests/checks/capture-scale/main.swift
+// The rule case by case (DuoDeck.log's own sizes among them), then random knobs, displays, windows,
 // rectangles and fractions against its properties.
 import CoreGraphics
 import Foundation
@@ -22,7 +22,7 @@ func check(_ ok: Bool, _ what: @autoclosure () -> String) {
 typealias C = CaptureScale
 typealias L = InputLanding
 
-/// What `select` asks ScreenCaptureKit for a display, a staged window's crop of Sill's virtual display
+/// What `select` asks ScreenCaptureKit for a display, a staged window's crop of DuoDeck's virtual display
 /// or the test pattern: the content's points at the capture's pixel scale, down to even (`evenPixels`,
 /// CaptureScale.swift's since the window rule; ScreenCaptureKit scales a display to fill any buffer).
 func size(_ w: CGFloat, _ h: CGFloat, knob: CGFloat, display: CGFloat?) -> String {
@@ -40,7 +40,7 @@ func fill(capture: CGFloat, display: CGFloat) -> CGFloat { min(1, display / capt
 
 // MARK: - The capture's pixel scale
 
-// Noah's display, 2026-10-27: an external 2560×1440 at 1x, ScreenCaptureKit's "scale 1.0".
+// the maintainer's display, 2026-10-27: an external 2560×1440 at 1x, ScreenCaptureKit's "scale 1.0".
 check(C.effective(knob: 2, displayScale: 1) == 1, "Retina on a 1x display captures at 1x")
 check(C.effective(knob: 1, displayScale: 1) == 1, "Standard on a 1x display captures at 1x")
 check(C.effective(knob: 2, displayScale: 2) == 2, "Retina on a 2x display captures at 2x, as before")
@@ -58,8 +58,8 @@ for bad: CGFloat in [0, -1, -2, .nan, .infinity, -.infinity] {
     check(C.effective(knob: 2, displayScale: bad) == 2 && C.effective(knob: 1, displayScale: bad) == 1,
           "a display scale of \(bad) is none: the knob")
 }
-// Sill's own virtual display, made at 2x: a staged window captures at the knob, as before.
-check(C.virtualDisplay == 2, "Sill's virtual display is 2x")
+// DuoDeck's own virtual display, made at 2x: a staged window captures at the knob, as before.
+check(C.virtualDisplay == 2, "DuoDeck's virtual display is 2x")
 check(C.effective(knob: 2, displayScale: C.virtualDisplay) == 2 && C.effective(knob: 1, displayScale: C.virtualDisplay) == 1,
       "a staged window captures at the knob")
 
@@ -69,17 +69,17 @@ for bad: Float in [0, -2, .nan, .infinity, -.infinity] {
     check(C.displayScale(pointPixelScale: bad) == nil, "pointPixelScale \(bad) is no scale")
 }
 
-// Sill.log's own captures, 2026-10-27 and before: what was asked, and what is asked now.
+// DuoDeck.log's own captures, 2026-10-27 and before: what was asked, and what is asked now.
 check(size(2560, 1440, knob: 2, display: 1) == "2560×1440",
-      "the 1x Desktop: 2560×1440 (Sill.log: 5120×2880, four times the pixels, upscaled)")
+      "the 1x Desktop: 2560×1440 (DuoDeck.log: 5120×2880, four times the pixels, upscaled)")
 check(window(1117, 610, knob: 2, display: 1) == "1118×610",
-      "the window on the 1x display: 1118×610, drawn whole (Sill.log: 2234×1220, the window in its top-left quarter; #233: 1116×610, shrunk)")
-check(window(2234, 1220, knob: 2, display: 1) == "2234×1220", "a 2234×1220-point window on the 1x display (Sill.log: 4468×2440)")
+      "the window on the 1x display: 1118×610, drawn whole (DuoDeck.log: 2234×1220, the window in its top-left quarter; #233: 1116×610, shrunk)")
+check(window(2234, 1220, knob: 2, display: 1) == "2234×1220", "a 2234×1220-point window on the 1x display (DuoDeck.log: 4468×2440)")
 check(size(1512, 982, knob: 2, display: 2) == "3024×1964" && size(1512, 982, knob: 1, display: 2) == "1512×982",
       "the Retina Desktop as before: 3024×1964 at Retina, 1512×982 at Standard")
-check(window(1091, 753, knob: 2, display: 2) == "2182×1506", "a window on the Retina display as before (Sill.log: 2182×1506)")
+check(window(1091, 753, knob: 2, display: 2) == "2182×1506", "a window on the Retina display as before (DuoDeck.log: 2182×1506)")
 check(size(2234, 1220, knob: 2, display: C.virtualDisplay) == "4468×2440" && size(1117, 610, knob: 2, display: C.virtualDisplay) == "2234×1220",
-      "staged windows as before (Sill.log: 4468×2440 and 2234×1220 of the virtual display)")
+      "staged windows as before (DuoDeck.log: 4468×2440 and 2234×1220 of the virtual display)")
 
 // MARK: - A window's capture size: an odd side rounds up where the window is drawn 1:1
 
@@ -97,7 +97,7 @@ func before(_ points: CGFloat, knob: CGFloat, display: CGFloat?) -> Int {
     evenPixels(points * C.effective(knob: knob, displayScale: display))
 }
 
-// Sill.log's odd windows at Aa 1x on the 1x display (2026-10-27), each now drawn whole.
+// DuoDeck.log's odd windows at Aa 1x on the 1x display (2026-10-27), each now drawn whole.
 for (w, h, now, then) in [(CGFloat(1117), CGFloat(610), "1118×610", "1116×610"), (818, 565, "818×566", "818×564"),
                           (728, 535, "728×536", "728×534"), (377, 235, "378×236", "376×234")] {
     check(window(w, h, knob: 2, display: 1) == now && "\(before(w, knob: 2, display: 1))×\(before(h, knob: 2, display: 1))" == then,
@@ -193,13 +193,13 @@ for bad: CGFloat in [0, -1, .nan, .infinity] {
 func old(_ x: Double, _ y: Double, _ r: CGRect) -> CGPoint {
     CGPoint(x: r.minX + CGFloat(x) * r.width, y: r.minY + CGFloat(y) * r.height)
 }
-/// PointerControl.fraction's inside test (Sources/SillHost/PointerControl.swift): the far edges are out.
+/// PointerControl.fraction's inside test (Sources/DuoDeckHost/PointerControl.swift): the far edges are out.
 func inside(_ p: CGPoint, _ r: CGRect) -> Bool {
     let x = (p.x - r.minX) / r.width, y = (p.y - r.minY) / r.height
     return x >= 0 && x < 1 && y >= 0 && y < 1
 }
 
-// Noah's Desktop: 2560×1440 points at 1x. A drag to the bottom edge of the picture is y = 1 (the
+// the maintainer's Desktop: 2560×1440 points at 1x. A drag to the bottom edge of the picture is y = 1 (the
 // portrait trackpad's cursor stops at 1, the iPad's pointer and a Pencil are held to the edge).
 let desktop = CGRect(x: 0, y: 0, width: 2560, height: 1440)
 check(old(0.5, 1, desktop).y == 1440 && !desktop.contains(old(0.5, 1, desktop)) && !inside(old(0.5, 1, desktop), desktop),
@@ -233,7 +233,7 @@ check(!window.contains(old(1, 1, window)) && window.contains(L.point(x: 1, y: 1,
       "before, a window's bottom-right was past it; now on it")
 let frac = CGRect(x: 100.5, y: 50.25, width: 800, height: 600)
 check(L.point(x: 1, y: 1, in: frac, displayScale: 2) == CGPoint(x: 900, y: 649.75), "a window at half points on a 2x display: half a point in")
-// A window staged on Sill's virtual display (2x): its crop.
+// A window staged on DuoDeck's virtual display (2x): its crop.
 let staged = CGRect(x: -2234, y: 30, width: 1117, height: 610)
 check(L.point(x: 1, y: 1, in: staged, displayScale: C.virtualDisplay) == CGPoint(x: -1117.5, y: 639.5), "a staged window's crop: half a point in")
 
@@ -352,12 +352,12 @@ check(shrinks == 0, "a larger window never asks for fewer pixels (\(shrinks))")
 check(loopsAtOnce == 0, "right after a restart, the same size never needs another (\(loopsAtOnce) would loop)")
 check(pollLoops == 0 && restartsMissed == 0, "2,000 windows resized and polled 20 times: no restart loop, no change of size missed (\(pollLoops), \(restartsMissed))")
 
-// MARK: - Sill's virtual display: no side under 800 points, which macOS kept at 2x
+// MARK: - DuoDeck's virtual display: no side under 800 points, which macOS kept at 2x
 
 typealias V = VirtualDisplaySize
 /// The display VirtualStage.ensureDisplay makes for an envelope (a copy of its arithmetic): the
 /// envelope held, its height capped so the menu bar still fits under the ceiling, then the menu bar on
-/// top (30 points on this Mac: Sill.log's "menu bar 30 pt").
+/// top (30 points on this Mac: DuoDeck.log's "menu bar 30 pt").
 func display(_ env: CGSize, menuBar: CGFloat = 30) -> CGSize {
     var e = V.clamp(env)
     e.height = min(e.height, V.maxSide - menuBar)
@@ -372,7 +372,7 @@ func envelope(_ w: CGFloat, _ h: CGFloat) -> CGSize { V.envelope(panel: CGSize(w
 func text(_ s: CGSize) -> String { "\(Int(s.width))×\(Int(s.height))" }
 
 check(V.minSide == 800 && V.maxSide == 4096, "every side 800 to 4096 points")
-// Sill.log's five displays at 1x: an iPhone held upright, its picture 377 (or 381) points wide.
+// DuoDeck.log's five displays at 1x: an iPhone held upright, its picture 377 (or 381) points wide.
 check(text(oldDisplay(CGSize(width: 754, height: 754))) == "754×784" && text(oldDisplay(CGSize(width: 762, height: 762))) == "762×792",
       "before: an iPhone upright's envelope made a 754×784 (or 762×792) display, which macOS ran at 800×832 at 1x")
 check(text(envelope(377, 235)) == "800×800" && text(display(envelope(377, 235))) == "800×830",
@@ -382,9 +382,9 @@ check(text(display(envelope(386, 241))) == "800×830" && text(display(envelope(3
       "the 18 Pro's 386 and the 17e's 374 points upright: 800×830")
 // Large enough already: the same display as before.
 check(text(envelope(424, 265)) == "848×848" && text(display(envelope(424, 265))) == "848×878",
-      "the Pro Max upright (424×265): 848×878, as before (Sill.log: up at 2x in 379 ms)")
+      "the Pro Max upright (424×265): 848×878, as before (DuoDeck.log: up at 2x in 379 ms)")
 check(text(envelope(1117, 610)) == "2234×2234" && text(display(envelope(1117, 610))) == "2234×2264",
-      "the iPad's 1117×610 panel: 2234×2264, as before (Sill.log's most common, 2x)")
+      "the iPad's 1117×610 panel: 2234×2264, as before (DuoDeck.log's most common, 2x)")
 check(text(envelope(728, 535)) == "1456×1456" && text(display(envelope(728, 535))) == "1456×1486",
       "a 728×535 panel: 1456×1486, as before (2026-10-27, 2x beside a 1x main display)")
 check(text(envelope(535, 728)) == text(envelope(728, 535)), "either orientation: the same envelope")
@@ -399,7 +399,7 @@ check(text(V.envelope(panel: CGSize(width: 0, height: 0), windowSize: CGSize(wid
 check(text(V.envelope(panel: CGSize(width: -5, height: 300), windowSize: CGSize(width: 900, height: 900))) == "900×900",
       "a negative panel counts as none")
 // The grow path's envelope (an app's minimum) and the ceiling.
-check(text(V.clamp(CGSize(width: 754, height: 979))) == "800×979", "Sill.log's 754×979 display (2x then) is 800 wide now")
+check(text(V.clamp(CGSize(width: 754, height: 979))) == "800×979", "DuoDeck.log's 754×979 display (2x then) is 800 wide now")
 check(text(V.clamp(CGSize(width: 9000, height: 5000))) == "4096×4096", "the ceiling: 4096 points a side")
 check(text(display(CGSize(width: 9000, height: 9000))) == "4096×4096", "at the ceiling the menu bar still fits under 4096")
 check(text(envelope(3000, 2000)) == "4096×4096", "a panel too big for the ceiling: 4096")
@@ -437,7 +437,7 @@ check(smallerThanBefore == 0, "never smaller than before (\(smallerThanBefore))"
 check(notMonotonicEnv == 0, "a larger panel never gets a smaller envelope (\(notMonotonicEnv))")
 check(noPanelWrong == 0, "no panel: the window's own size, held to 800…4096 (\(noPanelWrong) not)")
 
-// MARK: - The window's size on Sill's virtual display: held to 1…65536 points, the most a host takes
+// MARK: - The window's size on DuoDeck's virtual display: held to 1…65536 points, the most a host takes
 
 /// Before 2026-10-29 (VirtualStage.windowSize, a copy): the panel ÷ the scale, unheld, so a viewport
 /// of 1e300 points, or a scale of 1e-300, gave a side no Int holds, and the "insists on …" line's

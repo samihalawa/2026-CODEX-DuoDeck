@@ -1,5 +1,5 @@
 #!/bin/bash
-# KeyRepeat (Sources/SillHost): a device's key held down repeats on the Mac as the Mac's own keyboard
+# KeyRepeat (Sources/DuoDeckHost): a device's key held down repeats on the Mac as the Mac's own keyboard
 # repeats a key (#162): after the Mac's Delay Until Repeat, at its Key Repeat Rate, from the settings
 # as NSEvent gives them (Off and nonsense repeat nothing); every key but the modifiers' own, Caps Lock,
 # fn and the media keys; the last key pressed alone, a modifier's change carried by the repeats after
@@ -7,7 +7,7 @@
 # nowhere to land; waiting while input is held for an activation and while its device is quiet, then
 # starting over after the delay. Put through a model of InputInjector's glue with the real KeyStrokes:
 # scenarios with the exact events and times, then random sessions against the invariants.
-# Compiled with StreamProtocol's sources and Sources/SillHost/KeyStrokes.swift as one module (build.sh).
+# Compiled with StreamProtocol's sources and Sources/DuoDeckHost/KeyStrokes.swift as one module (build.sh).
 #   Tests/checks/key-repeat/run.sh             compile and run the check
 #   Tests/checks/key-repeat/run.sh --mutants   one-line mutants of KeyRepeat.swift; each must fail it
 here="$(cd "$(dirname "$0")" && pwd)"

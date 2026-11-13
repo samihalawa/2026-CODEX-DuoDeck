@@ -62,7 +62,7 @@ check(out(refusal, saved: true) == O(text: "Update DuoDeck on your iPad to keep 
                                      remoteAllowed: true, storeLink: true, isNotice: true), "update, with its message")
 check(GoodbyePolicy.isNotice(refusal), "update is a notice")
 check(out(g("update", min: "1.2")).text == "Update DuoDeck on this iPad to keep using Mac mini. It needs version 1.2 or later.", "update without a message")
-check(out(g("update", min: "v2.0.0"), device: "iPhone").text == "Update DuoDeck on this iPhone to keep using Mac mini. It needs version 2.0 or later.", "the version as SillVersion shows it")
+check(out(g("update", min: "v2.0.0"), device: "iPhone").text == "Update DuoDeck on this iPhone to keep using Mac mini. It needs version 2.0 or later.", "the version as DuoDeckVersion shows it")
 check(out(g("update", min: "soon")).text == "Update DuoDeck on this iPad to keep using Mac mini.", "a minimumVersion that does not parse is left out")
 check(out(g("update")).text == "Update DuoDeck on this iPad to keep using Mac mini.", "no minimumVersion")
 check(!out(g("update")).reconnect && !out(g("update", reconnect: false)).reconnect, "update: no reconnect unless asked")

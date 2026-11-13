@@ -18,7 +18,7 @@ MUTANTS = {
     "M6 the cover's poses swapped": ("case .closed: return sideways ? .closedSide : .closedUpright", "case .closed: return sideways ? .closedUpright : .closedSide"),
     "M7 the status bar hidden on the cover": ("pose == .laptop || pose == .flatPortrait || pose == .book || pose == .flatLandscape\n    }",
                                               "pose == .laptop || pose == .flatPortrait || pose == .book || pose == .flatLandscape || pose == .closedUpright\n    }"),
-    "M7b the status bar kept sideways (the rule before Noah's pick)": ("pose == .laptop || pose == .flatPortrait || pose == .book || pose == .flatLandscape\n    }",
+    "M7b the status bar kept sideways (the rule before the maintainer's pick)": ("pose == .laptop || pose == .flatPortrait || pose == .book || pose == .flatLandscape\n    }",
                                                                        "pose == .laptop || pose == .flatPortrait\n    }"),
     "M7c the status bar shown open flat upright": ("pose == .laptop || pose == .flatPortrait || pose == .book || pose == .flatLandscape\n    }",
                                                    "pose == .laptop || pose == .book || pose == .flatLandscape\n    }"),

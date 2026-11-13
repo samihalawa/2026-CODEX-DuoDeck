@@ -32,10 +32,10 @@
 	<false/>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_sill._tcp</string>
+		<string>_duodeck._tcp</string>
 	</array>
 	<key>NSHumanReadableCopyright</key>
-	<string>DuoDeck © 2026 Agents AI Ltd. Based on Sill © 2026 Noah Saffer, Apache 2.0.</string>
+	<string>DuoDeck © 2026 Agents AI Ltd. Apache 2.0.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>DuoDeck Host makes this Mac visible to your iPhone and iPad on the same network so they can stream its windows.</string>
 	<key>NSPrincipalClass</key>

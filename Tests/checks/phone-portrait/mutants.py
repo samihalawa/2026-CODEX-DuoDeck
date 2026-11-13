@@ -97,7 +97,7 @@ MUTANTS = {
                                                       "drawer = CGRect(x: Self.side, y: panelTop, width: rowWidth, height: panelHeight)"),
     "D2 the drawer against row 1 without its gap": ("height: max(0, row1.minY - Self.panelGap - Self.margin))", "height: max(0, row1.minY - Self.margin))"),
     "D3 the drawer from the screen's top edge": ("drawer = CGRect(x: Self.side, y: Self.margin,", "drawer = CGRect(x: Self.side, y: 0,"),
-    # Larger Picture only while a window streams (Noah, 2026-10-15: the Desktop's negative space).
+    # Larger Picture only while a window streams (the maintainer, 2026-10-15: the Desktop's negative space).
     "S1 the Desktop with Larger Picture": ("switchOn && streaming == .window", "switchOn && streaming != .nothing"),
     "S2 nothing streaming with Larger Picture": ("switchOn && streaming == .window", "switchOn && streaming != .desktop"),
     "S3 what streams ignored (the Desktop and nothing with Larger Picture, as before 2026-10-15)": ("switchOn && streaming == .window", "switchOn"),

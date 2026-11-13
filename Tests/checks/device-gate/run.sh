@@ -1,5 +1,5 @@
 #!/bin/bash
-# DeviceGate (Sources/SillHost), the host's device floor: which hello the floor admits, the refusal's
+# DeviceGate (Sources/DuoDeckHost), the host's device floor: which hello the floor admits, the refusal's
 # words ("Update DuoDeck on your iPad to keep using Mac mini. It needs version 1.2 or later."), the
 # Refused, count and hello log lines, and that the shipped floor parses and is "0"
 # (docs/update-notice-plan.md, section 4).

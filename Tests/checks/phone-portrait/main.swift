@@ -129,7 +129,7 @@ for row in table {
                     CGRect(x: 0, y: row.row1.1, width: size.width, height: size.height - row.row1.1)])
 }
 
-// The mockup's own numbers (Noah's approval, its frame()), in the screen's points: on the Pro Max the
+// The mockup's own numbers (the maintainer's approval, its frame()), in the screen's points: on the Pro Max the
 // picture 70–335, Apps 359–409, the thumbnails 431–481, the caps 497–541 and the trackpad 551–940,
 // 389 pt; on the Pro the trackpad 331 pt (the mockup's 330.75: it does not round the picture down).
 check("mockup: Pro Max picture 424×265, buttons 76×50", L(size: proMax.container).picture.size == CGSize(width: 424, height: 265)
@@ -578,7 +578,7 @@ check("the triage's numbers: the 15 Pro 377×235 → 377×340, the 18 Pro Max 42
 check("the keyboard and the switch are inputs: another keyboard, another layout",
       L(size: pro.container, keyboard: 301) != L(size: pro.container) && L(size: pro.container, keyboard: 301) != L(size: pro.container, keyboard: 320))
 
-// Larger Picture only while a window streams (Noah, 2026-10-15, on his iPhone 15 Pro: "when in Desktop
+// Larger Picture only while a window streams (the maintainer, 2026-10-15, on his iPhone 15 Pro: "when in Desktop
 // mode, there is negative space on the bottom, seemingly because of the Mac aspect ratio"). Aa never
 // resizes the Desktop, so the room's extra height could only be black under it: on the 18 Pro Max its
 // 424×275 frame left 147 pt of the 424×422 room black, on the 15 Pro 96 of 340. The Desktop and
@@ -619,7 +619,7 @@ for row in largerTable {
           arrangement(c, switchOn: true, streaming: .desktop).picture.size == off.picture.size && window.picture.size != off.picture.size)
 }
 do {
-    // Noah's finding, in numbers: the branch's Larger Picture drew a 14-inch MacBook Pro's Desktop
+    // the maintainer's finding, in numbers: the branch's Larger Picture drew a 14-inch MacBook Pro's Desktop
     // (3024×1964) at the room's width, from its top, with black under it in the room.
     for (p, frame, room, black) in [(fifteenPro, CGSize(width: 377, height: 244), CGSize(width: 377, height: 340), CGFloat(96)),
                                     (proMax, CGSize(width: 424, height: 275), CGSize(width: 424, height: 422), CGFloat(147))] {

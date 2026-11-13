@@ -1,5 +1,5 @@
 #!/bin/bash
-# PairingWindowSharing (Sources/SillMenuBar), whether screen sharing shows the pairing window (issue
+# PairingWindowSharing (Sources/DuoDeckMenuBar), whether screen sharing shows the pairing window (issue
 # #108): Settings › Devices' "Show the pairing window to screen sharing" alone decides it, whoever
 # opened the window; the window's NSWindow.SharingType for each answer; and the Log's lines for it.
 # Compiled on its own with swiftc (Foundation, and AppKit for that enum alone: no window, no screen).

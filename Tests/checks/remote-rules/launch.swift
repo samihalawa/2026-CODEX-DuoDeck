@@ -1,4 +1,4 @@
-// #140 in the remote-rules check: a saved Mac gone after Sill was force-quit, so the code had to be
+// #140 in the remote-rules check: a saved Mac gone after DuoDeck was force-quit, so the code had to be
 // scanned at every launch. The device's launch, a pairing, a SIGKILL and the next launch, as
 // StreamClient (init, startRemote, paired, storeSavedMacs) and DeviceIdentity (knownMissing,
 // loadOrCreate, makeKey) chain the rules, through a stand-in Keychain and UserDefaults with each way
@@ -21,7 +21,7 @@ private struct Phone {
     typealias K = DeviceKeyPolicy
     var tags: [Data]
     var keys: [Data: [Data]] = [:]          // the Keychain: fingerprints under each tag, kept across launches
-    var defaults: String?                   // UserDefaults' Sill.savedMacs, kept across launches
+    var defaults: String?                   // UserDefaults' DuoDeck.savedMacs, kept across launches
     var previousDefaults: String?
     // How the Keychain and UserDefaults fail (all truthful by default).
     var launchAnswer: K.Answer?             // what the launch's status query says, when not the truth
@@ -130,7 +130,7 @@ private struct Phone {
 
 func launchModel() {
     typealias K = DeviceKeyPolicy
-    let realTag = Data("me.saffer.sill.device-key".utf8), seTag = Data("me.saffer.sill.device-key.se".utf8)
+    let realTag = Data("com.agentsai.duodeck.device-key".utf8), seTag = Data("com.agentsai.duodeck.device-key.se".utf8)
 
     // MARK: The rules, case by case
 
@@ -159,7 +159,7 @@ func launchModel() {
                           addresses: [MacAddress(host: "100.101.102.103", kind: MacAddress.vpn, via: "Tailscale")], typedAddresses: nil,
                           infoIssuedAt: 0, bonjourName: nil, lastWorked: "100.101.102.103|7455",
                           pairedAt: Date(timeIntervalSince1970: 1_800_000_000), method: "qr", lastConnectedAt: nil, lastRoute: nil)
-    /// Launches the person makes: each finds the Mac listed, or scans the code again, then Sill is force-quit.
+    /// Launches the person makes: each finds the Mac listed, or scans the code again, then DuoDeck is force-quit.
     func rounds(_ p: inout Phone, _ n: Int) -> (pairings: Int, cleared: Int) {
         var pairings = 0
         for _ in 0..<n {

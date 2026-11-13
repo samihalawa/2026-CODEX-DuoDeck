@@ -15,7 +15,7 @@ MUTANTS = [
     ("T4 the ceiling 5 s", "static let tenthsRange: ClosedRange<Int> = 2...20", "static let tenthsRange: ClosedRange<Int> = 2...50"),
     ("T5 the range in seconds up to 5 s", "static let range: ClosedRange<Double> = 0.2...2.0", "static let range: ClosedRange<Double> = 0.2...5.0"),
     ("T6 a step of half a second", "static let step = 0.1", "static let step = 0.5"),
-    ("T7 the key renamed", "static let key = \"Sill.thumbnailHold\"", "static let key = \"Sill.thumbnailHoldSeconds\""),
+    ("T7 the key renamed", "static let key = \"DuoDeck.thumbnailHold\"", "static let key = \"DuoDeck.thumbnailHoldSeconds\""),
     # The lengths.
     ("L1 rounded down (a value between steps truncated)", "(kept * 10).rounded(.toNearestOrAwayFromZero)", "(kept * 10).rounded(.down)"),
     ("L2 halves to even (0.25 to 0.2)", "(kept * 10).rounded(.toNearestOrAwayFromZero)", "(kept * 10).rounded(.toNearestOrEven)"),

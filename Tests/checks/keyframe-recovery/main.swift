@@ -124,7 +124,7 @@ check(sp.consider(101.999) == .askAt(102), "just under 2 s: still owed")
 check(!sp.asked, "an owed ask is not counted")
 check(sp.consider(102) == .askNow, "at 2 s: asked")
 
-// A picture that fails again right after each keyframe, Sill active throughout: 2, 4, 8, 16, 32, 32 s.
+// A picture that fails again right after each keyframe, DuoDeck active throughout: 2, 4, 8, 16, 32, 32 s.
 var rep = R()
 var t = 0.0
 rep.interrupted(now: t)
@@ -189,7 +189,7 @@ var out = R()
 out.interrupted(now: 50)
 _ = out.consider(50)
 out.leftForeground()
-check(out.open && !out.asked, "the keyframe may come while Sill is away: the ask is owed again")
+check(out.open && !out.asked, "the keyframe may come while DuoDeck is away: the ask is owed again")
 check(out.consider(now: 51, active: false, streaming: true, wait: W) == .nothing, "not while away")
 check(out.consider(51) == .askAt(52), "back within 2 s: owed at the spacing")
 check(out.consider(53) == .askNow, "then asked")
@@ -199,7 +199,7 @@ late.interrupted(now: 0)
 _ = late.consider(0)
 late.leftForeground()
 check(late.consider(now: 4, active: false, streaming: true, wait: W) == .nothing && late.repeats == 0,
-      "an ask out when Sill went away is never counted unanswered while it is away")
+      "an ask out when DuoDeck went away is never counted unanswered while it is away")
 check(late.consider(9) == .askNow && late.repeats == 0, "back after its wait: asked at once, no repeat")
 
 // Keyframes that come in the background (iOS may refuse them) never count as repeats.
@@ -227,7 +227,7 @@ front.interrupted(now: 0); _ = front.consider(0)
 front.leftForeground()
 front.pictureBack(now: 1, active: true)
 front.interrupted(now: 2)
-check(front.repeats == 1, "a keyframe shown with Sill in front again ends the trip: the next interruption within 10 s is a repeat")
+check(front.repeats == 1, "a keyframe shown with DuoDeck in front again ends the trip: the next interruption within 10 s is a repeat")
 
 // A keyframe shown with nothing open changes nothing.
 var stray = R()
@@ -298,7 +298,7 @@ struct Model {
         return nil
     }
     /// The streak: each open that came less than `calm` after the picture came back, with no trip
-    /// away since the picture last came back with Sill in front, and each unanswered ask, add one; an
+    /// away since the picture last came back with DuoDeck in front, and each unanswered ask, add one; an
     /// open after the calm, or a trip away, starts it again.
     var streak: Int {
         var k = 0
@@ -423,11 +423,11 @@ check(disagreements == 0, "20,000 random sessions: the rule decides as the model
 check(asks > 10_000 && held > 1_000 && due > 10_000 && reasks > 1_000 && lostKeyframes > 1_000,
       "the sessions ask (\(asks)), ask again (\(reasks)), hold asks back (\(held)), wait for keyframes (\(due)) and lose some (\(lostKeyframes))")
 check(tooClose == 0, "no two asks less than 2 s apart (\(tooClose))")
-check(whileIdle == 0, "no ask while Sill is not active or nothing streams (\(whileIdle))")
+check(whileIdle == 0, "no ask while DuoDeck is not active or nothing streams (\(whileIdle))")
 check(earlyReask == 0, "an interruption asked for again only once its last ask's keyframe is overdue (\(earlyReask))")
 check(owedNotAsked == 0, "an ask held back goes at the time it was owed (\(owedNotAsked))")
 check(dueNotOwed == 0, "a keyframe overdue makes the ask owed again, never waited for again (\(dueNotOwed))")
-check(stuck == 0, "an open interruption, Sill active and something streaming: never nothing to do, so never stuck (\(stuck))")
+check(stuck == 0, "an open interruption, DuoDeck active and something streaming: never nothing to do, so never stuck (\(stuck))")
 
 print("\(checks) checks, \(failures) failed")
 exit(failures == 0 ? 0 : 1)

@@ -1,9 +1,9 @@
-"""Mutants of the host's away-from-home rules (Sources/SillHost/HostConfig.swift, DeviceSettings.swift,
+"""Mutants of the host's away-from-home rules (Sources/DuoDeckHost/HostConfig.swift, DeviceSettings.swift,
 AwayPolicy.swift): each changes one file in one place, is compiled with the check by build.sh and
 must make it fail. usage: mutants.py ROOT"""
 import os, subprocess, sys, tempfile
 ROOT = sys.argv[1]; HERE = os.path.dirname(os.path.abspath(__file__))
-H = "Sources/SillHost/"
+H = "Sources/DuoDeckHost/"
 MUTANTS = [
     ("AQ1 standard away at Balanced", H + "HostConfig.swift", "awayBitrate: 4_000_000, awayCaptureScale: 1,", "awayBitrate: 15_000_000, awayCaptureScale: 1,"),
     ("AQ2 standard away at Retina", H + "HostConfig.swift", "awayBitrate: 4_000_000, awayCaptureScale: 1,", "awayBitrate: 4_000_000, awayCaptureScale: 2,"),
@@ -24,7 +24,7 @@ MUTANTS = [
     ("AQ17 standard shares no clipboard", H + "HostConfig.swift", "requirePairing: true, shareClipboard: true, sendAudio: false)", "requirePairing: true, shareClipboard: false, sendAudio: false)"),
     ("AQ18 the clipboard's change unnamed", H + "HostConfig.swift", '        if shareClipboard != new.shareClipboard { parts.append("share clipboard \\(onOff(shareClipboard)) → \\(onOff(new.shareClipboard))") }\n', ""),
     ("AQ19 the clipboard's switch never stored", H + "HostConfig.swift", "        self.shareClipboard = shareClipboard\n", "        self.shareClipboard = true\n"),
-    # Send Audio, a device's to set too (docs/audio-plan.md, Q8 as Noah revised it on 2026-10-27).
+    # Send Audio, a device's to set too (docs/audio-plan.md, Q8 as the maintainer revised it on 2026-10-27).
     ("AQ20 a device's Send Audio dropped, as the beta's hosts did", H + "DeviceSettings.swift",
      "var ok = HostSettingsChange(prioritizeSpeed: c.prioritizeSpeed, sendAudio: c.sendAudio)",
      "var ok = HostSettingsChange(prioritizeSpeed: c.prioritizeSpeed)"),
@@ -37,14 +37,14 @@ MUTANTS = [
     ("AQ25 a device's Send Audio laid over nothing", H + "DeviceSettings.swift", "        if let v = change.sendAudio { c.sendAudio = v }\n", ""),
     ("AQ26 a device's Send Audio dropped away from home", H + "DeviceSettings.swift", "        rest.captureScale = nil\n",
      "        rest.captureScale = nil\n        rest.sendAudio = nil\n"),
-    # Sill.app's defaults: the CLI's with the virtual display on (Noah, 2026-10-27).
-    ("AQ27 Sill.app's virtual display off (the default before 2026-10-27)", H + "HostConfig.swift",
+    # DuoDeck.app's defaults: the CLI's with the virtual display on (the maintainer, 2026-10-27).
+    ("AQ27 DuoDeck.app's virtual display off (the default before 2026-10-27)", H + "HostConfig.swift",
      "        c.virtualDisplay = true\n", "        c.virtualDisplay = false\n"),
     ("AQ28 the CLI's virtual display on by default", H + "HostConfig.swift",
      "prioritizeSpeed: false, virtualDisplay: false, directWireless: false,", "prioritizeSpeed: false, virtualDisplay: true, directWireless: false,"),
-    ("AQ29 Sill.app's defaults another knob off the CLI's too", H + "HostConfig.swift",
+    ("AQ29 DuoDeck.app's defaults another knob off the CLI's too", H + "HostConfig.swift",
      "        c.virtualDisplay = true\n", "        c.virtualDisplay = true\n        c.directWireless = true\n"),
-    ("AQ30 Sill.app's Send Audio off (the default before 2026-10-27)", H + "HostConfig.swift",
+    ("AQ30 DuoDeck.app's Send Audio off (the default before 2026-10-27)", H + "HostConfig.swift",
      "        c.sendAudio = true\n", "        c.sendAudio = false\n"),
     # Direct Wireless only from a paired session at home (2026-10-29, the security scan's finding 8).
     ("AQ31 Direct Wireless from an unpaired session (the rule before 2026-10-29)", H + "DeviceSettings.swift",

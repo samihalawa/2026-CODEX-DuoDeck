@@ -20,9 +20,9 @@ let decoder = JSONDecoder()
 func enc<T: Encodable>(_ v: T) -> Data { try! encoder.encode(v) }
 func dec<T: Decodable>(_ t: T.Type, _ d: Data) -> T? { try? decoder.decode(t, from: d) }
 
-/// The host's acceptance rule, as Sources/SillHost/DeviceSettings.swift has it (that file needs
-/// SillHostCore, so the model carries a copy; Tests/checks/away-quality checks the real one): Send
-/// Audio taken from a device as any switch is (Noah, 2026-10-27; the beta's hosts refused it:
+/// The host's acceptance rule, as Sources/DuoDeckHost/DeviceSettings.swift has it (that file needs
+/// DuoDeckHostCore, so the model carries a copy; Tests/checks/away-quality checks the real one): Send
+/// Audio taken from a device as any switch is (the maintainer, 2026-10-27; the beta's hosts refused it:
 /// `Host.betaSound`), and Direct Wireless only from a paired session, on or off (2026-10-29, the
 /// security scan's finding 8; the hosts before took it from any session at home: `Host.anySession`).
 func accepted(_ c: HostSettingsChange, virtualDisplayAvailable: Bool, paired: Bool = true) -> HostSettingsChange {
@@ -84,10 +84,10 @@ do {   // tapping back to the host's value while a pick is pending sends
     check(l.pick(HostSettingsChange(maxFPS: 120), token: 3, now: 0.2) == nil, "the same value again sends nothing")
 }
 do {   // a refused toggle snaps back, is reported, and the note says why
-    var l = SettingsLedger(); _ = l.receive(st(base, vd: false, note: "Start SillHost with --virtual-display to use it."))
+    var l = SettingsLedger(); _ = l.receive(st(base, vd: false, note: "Start DuoDeckHost with --virtual-display to use it."))
     _ = l.pick(HostSettingsChange(virtualDisplay: true), token: 1, now: 0)
     check(l.displayed?.virtualDisplay == true, "the toggle moves at once")
-    let refused = l.receive(st(base, answering: 1, vd: false, note: "Start SillHost with --virtual-display to use it."))
+    let refused = l.receive(st(base, answering: 1, vd: false, note: "Start DuoDeckHost with --virtual-display to use it."))
     check(refused == [.virtualDisplay] && l.displayed?.virtualDisplay == false && l.host?.virtualDisplayNote != nil,
           "the refused toggle returns, is reported, and the host's reason is there")
 }
@@ -236,7 +236,7 @@ do {   // rule 9: a host without sound is never sent it
     check(mixed == HostSettingsChange(token: 2, bitrate: 25_000_000) && l.pending[.sendAudio] == nil,
           "rule 9: a two-field pick to it sends only the field it reported")
     let old = #"{"settings":{"maxFPS":120,"bitrate":15000000,"captureScale":2,"prioritizeSpeed":false,"virtualDisplay":false,"directWireless":false},"persistent":true,"virtualDisplayAvailable":true,"softwareEncoder":false}"#
-    check(dec(HostSettingsState.self, Data(old.utf8))?.settings.sendAudio == nil, "a state without the key (Sill for Mac 0.3.1) decodes with it nil")
+    check(dec(HostSettingsState.self, Data(old.utf8))?.settings.sendAudio == nil, "a state without the key (DuoDeck Host 0.3.1) decodes with it nil")
 }
 do {   // on at once, cleared by its answer; refused, back; on → off → on; unanswered, back at the timeout
     var withSound = base; withSound.sendAudio = false
@@ -358,7 +358,7 @@ final class Host {
     let persistent: Bool
     /// A host from before Direct Wireless: its state has no such key and it ignores the field.
     let old: Bool
-    /// A host without sound (every Sill for Mac before the sound, 0.3.1 the public one): no sendAudio.
+    /// A host without sound (every DuoDeck Host before the sound, 0.3.1 the public one): no sendAudio.
     let noSound: Bool
     /// A host from the sound's beta (2026-10-20 to 27): it reports Send Audio and refuses a device's
     /// change of it, on or off, as `DeviceSettings.accepted` then did; its own menu still sets it.
@@ -398,7 +398,7 @@ final class Host {
         if self.noSound { self.target.sendAudio = nil }
         persistent = app
         virtualDisplayAvailable = app   // the CLI in this model runs without --virtual-display
-        if !app { self.target.virtualDisplay = false; note = "Start SillHost with --virtual-display to use it." }
+        if !app { self.target.virtualDisplay = false; note = "Start DuoDeckHost with --virtual-display to use it." }
     }
 
     /// Connection `conn`'s key is on the trust list now (`DeviceSettings.paired`).
@@ -479,7 +479,7 @@ final class Host {
         publish()
     }
 
-    func macMenu(_ change: HostSettingsChange) {   // Sill.app: HostSettings.config → setTarget, synchronously
+    func macMenu(_ change: HostSettingsChange) {   // DuoDeck.app: HostSettings.config → setTarget, synchronously
         var change = change
         if old { change.directWireless = nil }   // an older Mac has no such control
         if noSound { change.sendAudio = nil }

@@ -55,7 +55,7 @@ enum MockCatalog {
     ///
     /// `active` is what the Mac would be streaming: the default is Code's window, as the boards
     /// draw it. `.none` is the state a fresh connection starts in — nothing picked yet, so the app
-    /// drawer opens by itself — which the harness asks for with `-SillActive none`.
+    /// drawer opens by itself — which the harness asks for with `-DuoDeckActive none`.
     static func client(active: StreamSource = .window(102), settings: SettingsCase = .default,
                        menus: MenuCase? = .code, pointer: String? = nil, pencilPointer: Bool = false) -> StreamClient {
         let client = StreamClient()
@@ -64,7 +64,7 @@ enum MockCatalog {
         client.mockDiscovery = true
         client.connected = true
         // Existing DEBUG layout harness only; never used for authentic store captures.
-        if let code = UserDefaults.standard.string(forKey: "SillCaptureIssue") {
+        if let code = UserDefaults.standard.string(forKey: "DuoDeckCaptureIssue") {
             client.captureIssue = CaptureIssue(code: code)
         }
         client.status = "Connected to Mac mini"
@@ -73,14 +73,14 @@ enum MockCatalog {
         client.active = active
         client.apps = mockApps
         client.videoSize = CGSize(width: 2800, height: 1800)
-        // `-SillVideoSize 848x844`: the mock's frame at another shape, so the harness draws a phone's
+        // `-DuoDeckVideoSize 848x844`: the mock's frame at another shape, so the harness draws a phone's
         // Larger Picture pane as a window the Mac fitted to its room would make it (or a taller one).
-        if let raw = UserDefaults.standard.string(forKey: "SillVideoSize") {
+        if let raw = UserDefaults.standard.string(forKey: "DuoDeckVideoSize") {
             let parts = raw.lowercased().split(separator: "x").compactMap { Double($0) }
             if parts.count == 2, parts[0] > 0, parts[1] > 0 {
                 client.videoSize = CGSize(width: parts[0], height: parts[1])
             } else {
-                print("-SillVideoSize \(raw): not WxH")
+                print("-DuoDeckVideoSize \(raw): not WxH")
             }
         }
 
@@ -97,11 +97,11 @@ enum MockCatalog {
         client.thumbnails = thumbnails
 
         seed(client, settings: settings)
-        // `-SillMacLocked 1|2|unlocking` (docs/locked-mac-plan.md): the mock Mac's screen is locked (1), it is
+        // `-DuoDeckMacLocked 1|2|unlocking` (docs/locked-mac-plan.md): the mock Mac's screen is locked (1), it is
         // switched to another user (2), as its LockPolicy sends it (no windows, thumbnails, apps or clipboard,
         // its placeholder streaming as the Desktop, the cover over it), or it was just unlocked and its
         // picture is not back yet ("Unlocking…").
-        switch UserDefaults.standard.string(forKey: "SillMacLocked") {
+        switch UserDefaults.standard.string(forKey: "DuoDeckMacLocked") {
         case let value? where value == "1" || value == "2":
             let why: LockedMac.Why = value == "2" ? .otherUser : .screenLocked
             client.lockWhy = why
@@ -116,10 +116,10 @@ enum MockCatalog {
         default:
             break
         }
-        // `-SillOverlayLine asking|shown|openonmac|locked|noanswer`: Pair This iPad…'s line over a
+        // `-DuoDeckOverlayLine asking|shown|openonmac|locked|noanswer`: Pair This iPad…'s line over a
         // session at home that speaks TLS, as the Mac's answer to its ask sets it (the mock never
         // asks: over it the overlay reads "…is showing a code now." as over a plain door).
-        if let line = UserDefaults.standard.string(forKey: "SillOverlayLine") {
+        if let line = UserDefaults.standard.string(forKey: "DuoDeckOverlayLine") {
             let device = StreamClient.deviceWord
             switch line {
             case "asking": client.overlayAskLine = DiscoveryPolicy.HomeCopy.overlayAsking(mac: "Mac mini")
@@ -130,13 +130,13 @@ enum MockCatalog {
             default: break
             }
         }
-        // The clipboard (docs/clipboard-plan.md): `-SillClipboardChip 1` offers the chip over the
-        // stream (as after a copy on this device), and `-SillClipboardNote sent|long|notsent|pasted` shows a
+        // The clipboard (docs/clipboard-plan.md): `-DuoDeckClipboardChip 1` offers the chip over the
+        // stream (as after a copy on this device), and `-DuoDeckClipboardNote sent|long|notsent|pasted` shows a
         // Paste's note in its place and under the Settings group's Paste (`pasted`: with ⌘V, paste right
         // away); neither goes away by itself here.
         if ClipboardPolicy.hostTakes(client.hostClipboard) {
-            if UserDefaults.standard.bool(forKey: "SillClipboardChip") { client.clipboardChip = true }
-            switch UserDefaults.standard.string(forKey: "SillClipboardNote") {
+            if UserDefaults.standard.bool(forKey: "DuoDeckClipboardChip") { client.clipboardChip = true }
+            switch UserDefaults.standard.string(forKey: "DuoDeckClipboardNote") {
             case "sent":
                 client.clipboardNote = ClipboardNote(text: ClipboardPolicy.Copy.sent(mac: "Mac mini"), spoken: ClipboardPolicy.Copy.sentSpoken(mac: "Mac mini"),
                                                      warning: false, at: 0)
@@ -153,19 +153,19 @@ enum MockCatalog {
                 break
             }
         }
-        // nil under `-SillLive 1`: the mock is never shown then, and must say nothing on the console. A
-        // locked mock Mac has no app's menus (`-SillMacLocked 1`: an empty top level, no Menus button).
+        // nil under `-DuoDeckLive 1`: the mock is never shown then, and must say nothing on the console. A
+        // locked mock Mac has no app's menus (`-DuoDeckMacLocked 1`: an empty top level, no Menus button).
         if let menus { client.showMockMenus(macMenus(client.macLocked ? MenuCase.none : menus)) }
         if let pointer { seedPointer(client, pointer, pencilPointer: pencilPointer) }
         return client
     }
 
-    /// `-SillPointer <state>`: the mock's pointer in one of the plan's states (see the harness's
+    /// `-DuoDeckPointer <state>`: the mock's pointer in one of the plan's states (see the harness's
     /// contract in ContentView and `StreamClient.debugSeedPointer`), over the mock's frame, which the
     /// display view is told of since no parameter sets ever arrive; `pencilPointer` is Q2's flip.
     private static func seedPointer(_ client: StreamClient, _ state: String, pencilPointer: Bool) {
         guard client.debugSeedPointer(state, pencilShows: pencilPointer) else {
-            print("-SillPointer \(state): not a state (mac@X,Y, device@X,Y, hidden or pencil@X,Y)")
+            print("-DuoDeckPointer \(state): not a state (mac@X,Y, device@X,Y, hidden or pencil@X,Y)")
             return
         }
         client.displayView.debugFrameSize(client.videoSize)
@@ -173,7 +173,7 @@ enum MockCatalog {
 
     // MARK: - The Mac's menus
 
-    /// `-SillMacMenu`: the Mac's menus in the harness (docs/menu-bar-plan.md §7.8). The mock Mac
+    /// `-DuoDeckMacMenu`: the Mac's menus in the harness (docs/menu-bar-plan.md §7.8). The mock Mac
     /// answers a menu 0.2 s after it opens and a choice 0.2 s after it is made, unless a case says
     /// otherwise.
     enum MenuCase: String {
@@ -181,8 +181,8 @@ enum MockCatalog {
         case blender    // only Blender and Window, as Blender's menu bar reads over Accessibility
         case long       // a Window menu of 300 windows, and a History of 600 (500 sent, and "100 more on the Mac")
         case stale      // Code not answering on the Mac: every menu disabled under the note
-        case noaccess   // no Accessibility for Sill on the Mac: the note, no menus
-        case none       // no menus (nothing streams, Sill itself frontmost): no Menus button
+        case noaccess   // no Accessibility for DuoDeck on the Mac: the note, no menus
+        case none       // no menus (nothing streams, DuoDeck itself frontmost): no Menus button
         case slow       // code's menus, each answered after 1.5 s (UIKit's placeholder meanwhile)
         case timeout    // code's menus, never answered: "Mac mini didn’t answer. Open the menu again." after 4 s
         case refuse     // code's menus, every choice refused: "The menus changed. Open the menu again."
@@ -316,17 +316,17 @@ enum MockCatalog {
 
     // MARK: - The Mac's settings
 
-    /// `-SillSettingsCase`: the states the Settings panel has to look right in. The mock streams
+    /// `-DuoDeckSettingsCase`: the states the Settings panel has to look right in. The mock streams
     /// 2880×1800 · 60 fps · 15 Mbps over Wi-Fi unless a case says otherwise.
     enum SettingsCase: String {
-        case `default`   // Sill.app: saved, the virtual display available and off, Send Audio off (Mute under it shows)
-        case cli         // SillHost without --virtual-display: kept until it quits, the switch off and disabled; its
+        case `default`   // DuoDeck.app: saved, the virtual display available and off, Send Audio off (Mute under it shows)
+        case cli         // DuoDeckHost without --virtual-display: kept until it quits, the switch off and disabled; its
                          // plain door is no paired session, so Direct Wireless is disabled too (2026-10-29)
         case software    // the hardware encoder is down: the callout, a 1440×900 stream under Retina / 120 fps targets
         case custom      // a bitrate set by hand on the Mac: "Custom — 12 Mbps"
         case vdproblem   // the virtual display on, but off for this session after repeated losses
         case vdstream    // a window streaming from the virtual display, 120 fps at Extreme, 300 Mbps: the longest readout
-        case legacy      // an older Sill on the Mac: no state ever arrives (connected 10 s ago)
+        case legacy      // an older DuoDeck on the Mac: no state ever arrives (connected 10 s ago)
         case pending     // a Quality pick sent 1 s ago that is never answered and never expires: its spinner
         case timeout     // the Mac did not answer a pick: the inline problem
         case direct      // Direct Wireless Connection on (every other case has it off, so its row shows)
@@ -341,7 +341,7 @@ enum MockCatalog {
         case remoteoff       // at home over a plain door, Remote Access off: the footnote only
         case noremote        // at home, an older Mac without kind 18: no Away from home group
         // Pairing at home (docs/home-pairing-plan.md §7.6, §7.9): a session at home over TLS.
-        case paired          // a saved Mac, Remote Access on: Paired, and how Sill reaches it from afar
+        case paired          // a saved Mac, Remote Access on: Paired, and how DuoDeck reaches it from afar
         case pairedoff       // a saved Mac, Remote Access off: Paired, and how to turn it on
         case openpair        // not saved, on a Mac that lets any device in (Require pairing off), Remote Access off: Pair This iPad…,
                              // and Direct Wireless disabled, the session not paired (2026-10-29)
@@ -357,7 +357,7 @@ enum MockCatalog {
         case sound           // the Mac sends its sound: the Send Audio row on, and Mute under it
         case soundoff        // a Mac with sound, Send Audio off: the row off (as `default`), and Mute
         case soundnote       // on, and the Mac could not capture it: the note under the row
-        case nosound         // a Mac without sound (Sill for Mac 0.5.1): the row off and disabled, "Update DuoDeck…", no Mute
+        case nosound         // a Mac without sound (DuoDeck Host 0.5.1): the row off and disabled, "Update DuoDeck…", no Mute
     }
 
     /// The away and link cases: the Mac's two qualities (home Pro · Retina, away Low · Standard unless
@@ -438,7 +438,7 @@ enum MockCatalog {
         client.hostClipboard = c == .legacy ? nil : ClipboardPolicy.generation
         guard c != .legacy else { return }
         var state = HostSettingsState(
-            // A Mac with sound, Send Audio off, as Sill for Mac has it since the sound came: the panel's
+            // A Mac with sound, Send Audio off, as DuoDeck Host has it since the sound came: the panel's
             // Send Audio switch and Mute under it show. `nosound` and `nodirect` are older Macs. A
             // paired session (`sessionPaired`, 2026-10-29), whose Direct Wireless switch works.
             settings: StreamSettings(maxFPS: 120, bitrate: 15_000_000, captureScale: 2, prioritizeSpeed: false, virtualDisplay: false,
@@ -450,7 +450,7 @@ enum MockCatalog {
         case .cli:
             state.persistent = false
             state.virtualDisplayAvailable = false
-            state.virtualDisplayNote = "Start SillHost with --virtual-display to use it."
+            state.virtualDisplayNote = "Start DuoDeckHost with --virtual-display to use it."
             state.sessionPaired = false   // the plain door sees no key
         case .software:
             state.softwareEncoder = true
@@ -516,18 +516,18 @@ enum MockCatalog {
         case .default, .legacy, .pending, .timeout, .wired, .noroute:
             break
         }
-        // `-SillSound on|muted`: the Mac sends its sound (Send Audio on), and this device plays it or has it
+        // `-DuoDeckSound on|muted`: the Mac sends its sound (Send Audio on), and this device plays it or has it
         // muted (Mute off or on; the mock plays nothing). Never saved.
-        switch UserDefaults.standard.string(forKey: "SillSound") {
+        switch UserDefaults.standard.string(forKey: "DuoDeckSound") {
         case "on"?: state.settings.sendAudio = true; client.soundMuted = false
         case "muted"?: state.settings.sendAudio = true; client.soundMuted = true
         default: break
         }
-        // `-SillLinkLine behind`: the Mac reports the link behind on this connection, whatever the
+        // `-DuoDeckLinkLine behind`: the Mac reports the link behind on this connection, whatever the
         // case, so the stream screen shows its line (with the panel closed). Its suggestion is the
         // host's for a slow link (LinkJudge.suggestion): Low, with Standard from Retina; at Low, the
         // same bitrate at Standard from Retina, and nothing from Low · Standard.
-        if UserDefaults.standard.string(forKey: "SillLinkLine") == "behind", state.link == nil {
+        if UserDefaults.standard.string(forKey: "DuoDeckLinkLine") == "behind", state.link == nil {
             let bitrate = state.settings.bitrate, retina = state.settings.captureScale >= 1.5, low = QualityPreset.low.rawValue
             let suggestion: (bitrate: Int, captureScale: Double?)? = bitrate > low ? (low, retina ? 1 : nil) : (retina ? (bitrate, 1) : nil)
             state.link = LinkReport(state: LinkReport.behind, withheldPerSecond: 52, bitrate: bitrate, carriedKbps: 2_100,
@@ -546,7 +546,7 @@ enum MockCatalog {
 
     // MARK: - The connect screen
 
-    /// `-SillConnectCase`: the connect screen's discovery states. The mock is not connected and never
+    /// `-DuoDeckConnectCase`: the connect screen's discovery states. The mock is not connected and never
     /// browses (`mockDiscovery`): Search Nearby and a row's tap only change what it shows.
     enum ConnectCase: String {
         case looking   // the first seconds: nothing listed yet
@@ -554,7 +554,7 @@ enum MockCatalog {
         case nearby    // searching nearby: a Wi-Fi row, then Direct rows (one with a long name)
         case methods   // every word a row can end in: Wired, Wi-Fi, none, long names with Wired and Wi-Fi, Direct
         case denied    // Local Network access denied: the status says what to do, and no hint
-        case update    // a Mac refused this version: its words, a Wi‑Fi row, the App Store link (with -SillAppStoreURL)
+        case update    // a Mac refused this version: its words, a Wi‑Fi row, the App Store link (with -DuoDeckAppStoreURL)
         case notice    // a goodbye reason this build does not know: the Mac's two-line message, no link
         case remote        // a network row, a Direct row and two Remote rows (a long name, a "(2)")
         case addmac        // Add a Mac unfolded, scanning (a drawn viewfinder: the simulator has no camera)
@@ -562,11 +562,11 @@ enum MockCatalog {
         case addcodeerror  // the typed path after a wrong code: "That code didn’t work…"
         case pairing       // "Pairing with Mac mini…"
         case remotedial    // "Connecting to Mac mini remotely…"
-        case remotefail    // a remote dial's failure, -SillRemoteFailure vpnoff|timeout|timeoutip|refused|dns|wrongmac|revoked|notsill|gaveup|quit|removed|remoteoff
+        case remotefail    // a remote dial's failure, -DuoDeckRemoteFailure vpnoff|timeout|timeoutip|refused|dns|wrongmac|revoked|notduodeck|gaveup|quit|removed|remoteoff
         case camera        // Add a Mac with the camera refused
-        case externalpair  // an outside sill://pair link waiting for its confirmation
+        case externalpair  // an outside duodeck://pair link waiting for its confirmation
         // Pairing at home (docs/home-pairing-plan.md §7.3–7.9). Each row's word is DiscoveryPolicy.rowWord's.
-        case homerows        // a saved Wi-Fi row, Not paired, an unpaired Wired (the cable), a Wired row through a USB Ethernet adapter (Not paired), an open door's (Not paired), Update Sill, long names
+        case homerows        // a saved Wi-Fi row, Not paired, an unpaired Wired (the cable), a Wired row through a USB Ethernet adapter (Not paired), an open door's (Not paired), Update DuoDeck, long names
         case homeasking      // a tap on a Not paired row: "Pairing with Mac mini…", the row lit
         case homecard        // the Mac shows its code: the home card, scanning (a drawn viewfinder)
         case homecode        // the home card's typed path, empty
@@ -575,7 +575,7 @@ enum MockCatalog {
         case homeopenonmac   // the Mac showed no code by itself: "…choose Pair iPhone or iPad… in the DuoDeck menu…"
         case homerevoked     // the Mac removed this device: its row reads Not paired
         case homecabledone   // paired over the cable, the session on its way: "Paired with Mac mini over the cable."
-        case homeolder       // a tap on an Update Sill row: "Mac mini runs an older DuoDeck…"
+        case homeolder       // a tap on an Update DuoDeck row: "Mac mini runs an older DuoDeck…"
         case pairingrequired // Require pairing turned on while this device was connected without pairing
         case asleep          // the automatic reconnect's dials of a listed row not answered: "Mac mini isn’t answering. It may be asleep…" (issue #69)
         case tiles           // tiles with stored preview pictures and Home / Work / Other groups
@@ -610,12 +610,12 @@ enum MockCatalog {
         /// A row as `recomputeMacs` makes it: Direct only for a Direct row. No wired interface: the
         /// mock never dials.
         func mac(_ name: String, _ method: DiscoveryPolicy.Method?) -> FoundMac {
-            FoundMac(name: name, endpoint: .service(name: name, type: "_sill._tcp", domain: "local.", interface: nil),
+            FoundMac(name: name, endpoint: .service(name: name, type: "_duodeck._tcp", domain: "local.", interface: nil),
                      route: method == .direct ? .direct : .network, method: method)
         }
         func remote(_ name: String, _ id: String) -> FoundMac { FoundMac(name: name, endpoint: nil, route: .remote, macID: id) }
         let remoteRows = [mac("Studio", .wifi), mac("Mac mini", .direct),
-                          remote("Noah Saffer’s MacBook Pro in the Studio", "A3C5HR4RBV67YR21"), remote("Mac mini (2)", "0123456789ABCDEF")]
+                          remote("Agents AI Ltd’s MacBook Pro in the Studio", "A3C5HR4RBV67YR21"), remote("Mac mini (2)", "0123456789ABCDEF")]
         /// A row at home as `recomputeMacs` makes it: its door (`p`), what this device knows of its
         /// Mac, and the word DiscoveryPolicy.rowWord gives them. `cable`: a Wired row whose interface
         /// carries only link-local addresses (the USB cable to the Mac); false for a USB Ethernet
@@ -624,7 +624,7 @@ enum MockCatalog {
                   saved: Bool = false, revoked: Bool = false, homeTLS: Bool = false, cable: Bool = false) -> FoundMac {
             let word = DiscoveryPolicy.rowWord(door: door, saved: saved, revoked: revoked, homeTLS: homeTLS,
                                                debug: StreamClient.debugBuild, method: method, cable: cable)
-            return FoundMac(name: name, endpoint: .service(name: name, type: "_sill._tcp", domain: "local.", interface: nil),
+            return FoundMac(name: name, endpoint: .service(name: name, type: "_duodeck._tcp", domain: "local.", interface: nil),
                             route: method == .direct ? .direct : .network, macID: saved ? "HOMEPAIRING\(name.count)" : nil,
                             method: method, door: door, homeWord: word)
         }
@@ -648,7 +648,7 @@ enum MockCatalog {
             client.status = StreamClient.lookingNearby
             // The long name checks that "Direct" never truncates: the title does.
             client.macs = [mac("Studio", .wifi), mac("Mac mini", .direct),
-                           mac("Noah Saffer’s MacBook Pro in the Studio (2)", .direct)]
+                           mac("Agents AI Ltd’s MacBook Pro in the Studio (2)", .direct)]
         case .methods:
             // Network rows first, then the Direct one, as DiscoveryPolicy.rows orders them. "Office
             // iMac" was seen only on interfaces the device cannot name (DiscoveryPolicy.method: no
@@ -657,8 +657,8 @@ enum MockCatalog {
             client.searchingNearby = true
             client.status = StreamClient.lookingNearby
             client.macs = [mac("Mac Studio", .wired), mac("Mac mini", .wifi), mac("Office iMac", nil),
-                           mac("Noah Saffer’s MacBook Pro in the Studio (2)", .wired),
-                           mac("Noah Saffer’s iMac on the Desk by the Window", .wifi),
+                           mac("Agents AI Ltd’s MacBook Pro in the Studio (2)", .wired),
+                           mac("Agents AI Ltd’s iMac on the Desk by the Window", .wifi),
                            mac("MacBook Air", .direct)]
         case .denied:
             client.status = StreamClient.allowLocalNetwork
@@ -690,11 +690,11 @@ enum MockCatalog {
             client.status = "Connecting to Mac mini remotely…"
         case .remotefail:
             client.macs = remoteRows
-            client.status = failureCopy(UserDefaults.standard.string(forKey: "SillRemoteFailure") ?? "timeout")
+            client.status = failureCopy(UserDefaults.standard.string(forKey: "DuoDeckRemoteFailure") ?? "timeout")
         case .externalpair:
             client.pendingLink = mockLink
         case .homerows:
-            // The long names check that "Not paired" and "Update Sill" never truncate or wrap: the
+            // The long names check that "Not paired" and "Update DuoDeck" never truncate or wrap: the
             // title does.
             client.macs = [home("Mac mini", .wifi, saved: true, homeTLS: true),
                            home("Studio", .wifi),
@@ -702,8 +702,8 @@ enum MockCatalog {
                            home("Office iMac", .wired, cable: false),
                            home("Living Room iMac", .wifi, door: .open),
                            home("Mac Studio", .wifi, door: .plain, saved: true, homeTLS: true),
-                           home("Noah Saffer’s MacBook Pro in the Studio (2)", .wifi),
-                           home("Noah Saffer’s iMac on the Desk by the Window", .wired, door: .plain, saved: true, homeTLS: true)]
+                           home("Agents AI Ltd’s MacBook Pro in the Studio (2)", .wifi),
+                           home("Agents AI Ltd’s iMac on the Desk by the Window", .wired, door: .plain, saved: true, homeTLS: true)]
         case .homeasking:
             let mini = home("Mac mini", .wifi)
             client.macs = [mini, studio]
@@ -729,7 +729,7 @@ enum MockCatalog {
             client.status = Copy.pairedOverCable(mac: "Mac mini")
         case .homeolder:
             client.macs = [home("Mac mini", .wifi, door: .plain, saved: true, homeTLS: true), studio]
-            client.status = DiscoveryPolicy.updateSillStatus(mac: "Mac mini")
+            client.status = DiscoveryPolicy.updateDuoDeckStatus(mac: "Mac mini")
         case .pairingrequired:
             client.macs = [home("Mac mini", .wifi), studio]
             client.status = Copy.pairingRequired(mac: "Mac mini", device: device)
@@ -739,30 +739,30 @@ enum MockCatalog {
             client.macs = [home("Mac mini", .wifi, saved: true, homeTLS: true), studio]
             client.status = DiscoveryPolicy.reconnectLine(mac: "Mac mini", failed: DiscoveryPolicy.reconnectQuietAfter, direct: false)
         case .tiles:
-            // The Mac mini twice, as on Noah's iPad (2026-10-27): its Wired row, taken for it by its Bonjour
+            // The Mac mini twice, as on the maintainer's iPad (2026-10-27): its Wired row, taken for it by its Bonjour
             // name (no tag of a saved Mac's, so its Remote row stays listed), and that Remote row. Both show
             // its one picture (ConnectionList.tileMac); the Office iMac (not saved) and the Mac mini (2) (no
             // picture kept) show the placeholder.
             let wiredWord = DiscoveryPolicy.rowWord(door: .pairingRequired, saved: true, revoked: false, homeTLS: true,
                                                     debug: StreamClient.debugBuild, method: .wired, cable: true)
-            let mini = FoundMac(name: "Mac mini", endpoint: .service(name: "Mac mini", type: "_sill._tcp", domain: "local.", interface: nil),
+            let mini = FoundMac(name: "Mac mini", endpoint: .service(name: "Mac mini", type: "_duodeck._tcp", domain: "local.", interface: nil),
                                 route: .network, savedByName: "HOMEPAIRING8", method: .wired, door: .pairingRequired, homeWord: wiredWord)
             let miniRemote = remote("Mac mini", "HOMEPAIRING8")
-            let pro = remote("Noah Saffer’s MacBook Pro in the Studio", "A3C5HR4RBV67YR21")
+            let pro = remote("Agents AI Ltd’s MacBook Pro in the Studio", "A3C5HR4RBV67YR21")
             let second = remote("Mac mini (2)", "0123456789ABCDEF")
             client.macs = [mini, studio, home("Office iMac", .wired, saved: false), miniRemote, pro, second]
             if client.macGroups.isEmpty {
                 client.macGroups = ["HOMEPAIRING8": "Home", "HOMEPAIRING6": "Home", "A3C5HR4RBV67YR21": "Work"]
             }
-            // `-SillVideoSize WxH`: the pictures at that shape (a 16:9 Desktop, a 2.39:1 ultrawide one), each
+            // `-DuoDeckVideoSize WxH`: the pictures at that shape (a 16:9 Desktop, a 2.39:1 ultrawide one), each
             // 320 pt wide as a session's end keeps it, so a photo shows a tile keeping to its cell.
             var size = CGSize(width: 208, height: 132)
-            if let raw = UserDefaults.standard.string(forKey: "SillVideoSize") {
+            if let raw = UserDefaults.standard.string(forKey: "DuoDeckVideoSize") {
                 let parts = raw.lowercased().split(separator: "x").compactMap { Double($0) }
                 if parts.count == 2, parts[0] > 0, parts[1] > 0 {
                     size = CGSize(width: 320, height: (320 * parts[1] / parts[0]).rounded())
                 } else {
-                    print("-SillVideoSize \(raw): not WxH")
+                    print("-DuoDeckVideoSize \(raw): not WxH")
                 }
             }
             client.macPreviews = ["HOMEPAIRING8": thumbnail(seed: 0, size: size), "HOMEPAIRING6": thumbnail(seed: 1, size: size),
@@ -786,7 +786,7 @@ enum MockCatalog {
         case "dns": return copy(.nameNotFound, name)
         case "wrongmac": return copy(.wrongMac, vpn)
         case "revoked": return copy(.revoked, vpn)
-        case "notsill": return copy(.notSill, router)
+        case "notduodeck": return copy(.notDuoDeck, router)
         case "gaveup": return "Stopped trying to reach Mac mini. Tap it to try again."
         // A session's goodbyes, in the words GoodbyePolicy gives them.
         case "quit": return GoodbyePolicy.outcome(Goodbye(reason: Goodbye.quit), mac: "Mac mini", device: device, saved: true).text

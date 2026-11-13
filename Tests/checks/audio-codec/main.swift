@@ -2,7 +2,7 @@ import Foundation
 
 // H4 of docs/audio-plan.md: the host's encoder and the device's decoder in memory, with the host's
 // packetizer and the test tone between them, and nothing but AudioToolbox:
-//   swiftc -O Sources/SillHost/AudioEncoder.swift Sources/SillHost/AudioPacketizer.swift Sources/SillHost/TestTone.swift \
+//   swiftc -O Sources/DuoDeckHost/AudioEncoder.swift Sources/DuoDeckHost/AudioPacketizer.swift Sources/DuoDeckHost/TestTone.swift \
 //       iOSClient/AudioDecoder.swift Tests/checks/audio-codec/main.swift -o check
 // The tone goes through the packetizer and the encoder in capture-sized chunks (480 and 1024 frames),
 // each packet is decoded at once, and every decoded sample is placed by its packet's stamp (the host

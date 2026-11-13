@@ -18,7 +18,7 @@ AWAY = "        wentAway = true\n        asked = false\n        repeats = 0\n"
 WAIT = "        max(shortestWait, 4 * Double(worstRttMs ?? 0) / 1000)"
 MUTANTS = [
     ("K1 an ask out never waited for", DUE, "            if let last = lastAsk, false { return .keyframeDue(last + wait) }"),
-    ("K2 an ask while Sill is not active", GUARD, "        guard open, streaming else { return .nothing }"),
+    ("K2 an ask while DuoDeck is not active", GUARD, "        guard open, streaming else { return .nothing }"),
     ("K3 an ask while nothing streams", GUARD, "        guard open, active else { return .nothing }"),
     ("K4 an ask with no interruption", GUARD, "        guard active, streaming else { return .nothing }"),
     ("K5 no spacing", HELD, "        if let last = lastAsk, false { return .askAt(last + spacingNow) }"),

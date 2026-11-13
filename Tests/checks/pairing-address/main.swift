@@ -1,6 +1,6 @@
 // The pairing window's address rule (PairingWindowAddress.choose), pure, compiled with
 // StreamProtocol's sources and the host's AddressList and OriginPolicy as one module (build.sh).
-// Noah's store and the other VPNs' go through the real AddressList.build first, so the kinds are
+// the maintainer's store and the other VPNs' go through the real AddressList.build first, so the kinds are
 // the ones the Mac really produces. Only Tailscale's name and addresses take this network's place;
 // any other VPN's address goes under this network's (the review of ae7f5c9, 2026-09-25).
 import Foundation
@@ -18,11 +18,11 @@ func choose(_ a: [MacAddress], lan: String?, port: Int = D) -> C {
 }
 func show(_ c: C) -> String { "\(c.primary) | \(c.secondary ?? "nil")" }
 
-// MARK: Noah's store (scutil and the probe, 2026-09-24), Tailscale's name and addresses made up:
+// MARK: the maintainer's store (scutil and the probe, 2026-09-24), Tailscale's name and addresses made up:
 // utun0–3 link-local and nameless, Tailscale on utun4 (100.88.123.45, fd7a:115c:a1e0::abcd:ef01,
 // MagicDNS tail5678.ts.net), the CoreDevice tunnel's ULA on utun5, en0 10.128.0.34 with a
 // deprecated ULA.
-let noah: [S] = [
+let sample: [S] = [
     S(id: "u0", name: "", interface: "utun0", ipv4: [], ipv6: [V6(address: "fe80::a1", flags: 0)]),
     S(id: "u1", name: "", interface: "utun1", ipv4: [], ipv6: [V6(address: "fe80::a2", flags: 0)]),
     S(id: "u2", name: "", interface: "utun2", ipv4: [], ipv6: [V6(address: "fe80::a3", flags: 0)]),
@@ -34,29 +34,29 @@ let noah: [S] = [
       ipv6: [V6(address: "fe80::869:a388:779d:7833", flags: 1024), V6(address: "fd4e:4f6b:37dc:4a0f:1083:aa29:4357:c7a9", flags: 1104)]),
 ]
 let magic = "lab-macbook-pro.tail5678.ts.net"
-var input = AddressList.Input(services: noah, primaryInterface: "en0", tunnels: [], magicDNS: ["ts": magic])
+var input = AddressList.Input(services: sample, primaryInterface: "en0", tunnels: [], magicDNS: ["ts": magic])
 // With the internet switch on too: an address name, the router's address, a stable global IPv6.
 var withInternet = input
 withInternet.services[6].ipv6.append(V6(address: "2001:db8::20", flags: 0x400))
 withInternet.internet = true
 withInternet.addressName = ParsedAddress(host: "home.example.net", port: 17455, kind: .name)
 withInternet.routerIPv4 = "203.0.113.9"
-let noahList = AddressList.build(input)
-let noahInternet = AddressList.build(withInternet)
+let sampleList = AddressList.build(input)
+let sampleInternet = AddressList.build(withInternet)
 let lan = AddressList.lanAddress(input)
-check("the store as AddressList builds it: name, v4, v6 (vpn), LAN (\(noahList.map { "\($0.host)/\($0.kind)" }))",
-      noahList.map { "\($0.host)/\($0.kind)" } == ["\(magic)/vpn", "100.88.123.45/vpn", "fd7a:115c:a1e0::abcd:ef01/vpn", "10.128.0.34/lan"])
+check("the store as AddressList builds it: name, v4, v6 (vpn), LAN (\(sampleList.map { "\($0.host)/\($0.kind)" }))",
+      sampleList.map { "\($0.host)/\($0.kind)" } == ["\(magic)/vpn", "100.88.123.45/vpn", "fd7a:115c:a1e0::abcd:ef01/vpn", "10.128.0.34/lan"])
 check("with the internet switch: also the address name, the router, the IPv6 (internet)",
-      noahInternet.filter { $0.kind == MacAddress.internet }.map(\.host) == ["home.example.net", "203.0.113.9", "2001:db8::20"])
-check("Noah's store: the MagicDNS name, the Tailscale IPv4 under it (\(show(choose(noahList, lan: lan))))",
-      choose(noahList, lan: lan) == C(primary: magic, secondary: "100.88.123.45"))
+      sampleInternet.filter { $0.kind == MacAddress.internet }.map(\.host) == ["home.example.net", "203.0.113.9", "2001:db8::20"])
+check("the maintainer's store: the MagicDNS name, the Tailscale IPv4 under it (\(show(choose(sampleList, lan: lan))))",
+      choose(sampleList, lan: lan) == C(primary: magic, secondary: "100.88.123.45"))
 check("…the same with the internet switch on: no router or address name in the window",
-      choose(noahInternet, lan: lan) == C(primary: magic, secondary: "100.88.123.45"), show(choose(noahInternet, lan: lan)))
+      choose(sampleInternet, lan: lan) == C(primary: magic, secondary: "100.88.123.45"), show(choose(sampleInternet, lan: lan)))
 check("…on port 7456: both with :7456",
-      choose(noahList, lan: lan, port: 7456) == C(primary: "\(magic):7456", secondary: "100.88.123.45:7456"), show(choose(noahList, lan: lan, port: 7456)))
+      choose(sampleList, lan: lan, port: 7456) == C(primary: "\(magic):7456", secondary: "100.88.123.45:7456"), show(choose(sampleList, lan: lan, port: 7456)))
 check("…on port 17455 with the internet switch: both with :17455, not the address name's port",
-      choose(noahInternet, lan: lan, port: 17455) == C(primary: "\(magic):17455", secondary: "100.88.123.45:17455"))
-check("…on the default port: no port", !choose(noahList, lan: lan).primary.contains(":") && choose(noahList, lan: lan).secondary?.contains(":") == false)
+      choose(sampleInternet, lan: lan, port: 17455) == C(primary: "\(magic):17455", secondary: "100.88.123.45:17455"))
+check("…on the default port: no port", !choose(sampleList, lan: lan).primary.contains(":") && choose(sampleList, lan: lan).secondary?.contains(":") == false)
 
 // MagicDNS not kept (the name did not resolve to the tunnel's address): the IPv4 alone.
 var noName = input; noName.magicDNS = [:]
@@ -71,7 +71,7 @@ var v6Named = input; v6Named.services[4].ipv4 = []
 check("VPN name and IPv6 only: the name alone (an IPv6 is never the line under it)",
       choose(AddressList.build(v6Named), lan: lan) == C(primary: magic, secondary: nil), show(choose(AddressList.build(v6Named), lan: lan)))
 // No VPN at all: this network's address, as before.
-let lanOnlyInput = AddressList.Input(services: [noah[6]], primaryInterface: "en0")
+let lanOnlyInput = AddressList.Input(services: [sample[6]], primaryInterface: "en0")
 check("LAN only: this network's address (\(show(choose(AddressList.build(lanOnlyInput), lan: AddressList.lanAddress(lanOnlyInput)))))",
       choose(AddressList.build(lanOnlyInput), lan: AddressList.lanAddress(lanOnlyInput)) == C(primary: "10.128.0.34", secondary: nil))
 check("LAN only on port 7456", choose(AddressList.build(lanOnlyInput), lan: "10.128.0.34", port: 7456) == C(primary: "10.128.0.34:7456", secondary: nil))
@@ -87,7 +87,7 @@ check("nothing: “this Mac’s address”", choose([], lan: nil) == C(primary: 
 check("nothing on port 7456: still the placeholder, no port", choose([], lan: nil, port: 7456) == C(primary: "this Mac’s address", secondary: nil))
 
 // MARK: Several VPNs
-var more = noah
+var more = sample
 more.append(S(id: "wg", name: "Home WireGuard", interface: "utun7", ipv4: ["10.99.0.2"], ipv6: [V6(address: "fd99::2", flags: 0)]))
 let many = AddressList.Input(services: more, primaryInterface: "en0", tunnels: [AddressList.Tunnel(interface: "utun9", ipv4: ["10.8.0.6"])],
                              magicDNS: ["ts": magic])
@@ -100,7 +100,7 @@ check("WireGuard beside Tailscale: Tailscale's name with Tailscale's IPv4, never
 var manyNoName = many; manyNoName.magicDNS = [:]
 check("several VPNs, no name: Tailscale's IPv4 alone, though WireGuard's comes first in dial order",
       choose(AddressList.build(manyNoName), lan: lan) == C(primary: "100.88.123.45", secondary: nil), show(choose(AddressList.build(manyNoName), lan: lan)))
-let tunnelOnly = AddressList.Input(services: [noah[6]], primaryInterface: "en0", tunnels: [AddressList.Tunnel(interface: "utun9", ipv4: ["10.8.0.6"])])
+let tunnelOnly = AddressList.Input(services: [sample[6]], primaryInterface: "en0", tunnels: [AddressList.Tunnel(interface: "utun9", ipv4: ["10.8.0.6"])])
 check("a point-to-point tunnel, VPN (utun9), beside the LAN: this network's address, the tunnel's IPv4 under it",
       choose(AddressList.build(tunnelOnly), lan: AddressList.lanAddress(tunnelOnly)) == C(primary: "10.128.0.34", secondary: "10.8.0.6"),
       show(choose(AddressList.build(tunnelOnly), lan: AddressList.lanAddress(tunnelOnly))))
@@ -243,7 +243,7 @@ check("a LAN value the parser refuses is shown as it is (as before)", choose([],
 
 // MARK: Random runs: properties, and the window before wherever it had it right
 /// cb0ec55's PairDeviceView.address, verbatim but for its inputs: what the window showed before
-/// Noah's decision.
+/// the maintainer's decision.
 func before(_ addresses: [MacAddress], lan: String?, port: Int) -> String {
     let host = lan
         ?? addresses.first { $0.kind == MacAddress.vpn }?.host

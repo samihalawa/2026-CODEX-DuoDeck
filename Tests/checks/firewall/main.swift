@@ -1,9 +1,9 @@
 import Foundation
 
-// Checks FirewallRule (Sources/SillHost/FirewallRule.swift; a user's report of 2026-10-29): what
-// `socketfilterfw`'s read-only answers mean for Sill, and every word Sill says about it. Compiled
+// Checks FirewallRule (Sources/DuoDeckHost/FirewallRule.swift; a user's report of 2026-10-29): what
+// `socketfilterfw`'s read-only answers mean for DuoDeck, and every word DuoDeck says about it. Compiled
 // alone with swiftc (Foundation only; `package` access needs -package-name), run.sh:
-//   swiftc -O -package-name sill Sources/SillHost/FirewallRule.swift Tests/checks/firewall/main.swift
+//   swiftc -O -package-name duodeck Sources/DuoDeckHost/FirewallRule.swift Tests/checks/firewall/main.swift
 // The answers below are macOS 27.0.1's as measured on 2026-10-29 (as an ordinary user, no sudo), and
 // the legacy form whose strings the tool still holds (`strings socketfilterfw`). The report's Mac is
 // the case that matters most: the bundle allowed, its executable blocked, and the bundle's own answer
@@ -19,28 +19,28 @@ func same<T: Equatable>(_ got: T, _ want: T, _ what: String, line: Int = #line) 
     check(got == want, "\(what): got \(got), want \(want)", line: line)
 }
 
-let exe = "/Applications/Sill.app/Contents/MacOS/Sill"
-let app = "/Applications/Sill.app"
+let exe = "/Applications/DuoDeck.app/Contents/MacOS/DuoDeck"
+let app = "/Applications/DuoDeck.app"
 let bundled = R.Paths(executable: exe, bundle: app)
-let bare = R.Paths(executable: "/private/tmp/sill/.build/arm64-apple-macosx/release/SillMenuBar", bundle: nil)
+let bare = R.Paths(executable: "/private/tmp/duodeck/.build/arm64-apple-macosx/release/DuoDeckMenuBar", bundle: nil)
 let tool = "/usr/libexec/ApplicationFirewall/socketfilterfw"
 
 // MARK: The paths a rule may name
 
-same(R.paths(executable: exe), bundled, "Sill.app's executable and its bundle")
-same(R.paths(executable: "/Users/me/Downloads/Sill 2.app/Contents/MacOS/Sill").bundle, "/Users/me/Downloads/Sill 2.app", "a renamed copy")
-same(R.paths(executable: "/Sill.app/Contents/MacOS/Sill").bundle, "/Sill.app", "a bundle at the root")
-same(R.paths(executable: "/Applications/Outer.app/Contents/Helpers/Sill.app/Contents/MacOS/Sill").bundle,
-     "/Applications/Outer.app/Contents/Helpers/Sill.app", "the innermost bundle")
-same(R.paths(executable: bare.executable), bare, "the bare SillMenuBar binary has no bundle")
-same(R.paths(executable: "/usr/local/bin/SillHost").bundle, nil, "the CLI has none")
+same(R.paths(executable: exe), bundled, "DuoDeck.app's executable and its bundle")
+same(R.paths(executable: "/Users/me/Downloads/DuoDeck 2.app/Contents/MacOS/DuoDeck").bundle, "/Users/me/Downloads/DuoDeck 2.app", "a renamed copy")
+same(R.paths(executable: "/DuoDeck.app/Contents/MacOS/DuoDeck").bundle, "/DuoDeck.app", "a bundle at the root")
+same(R.paths(executable: "/Applications/Outer.app/Contents/Helpers/DuoDeck.app/Contents/MacOS/DuoDeck").bundle,
+     "/Applications/Outer.app/Contents/Helpers/DuoDeck.app", "the innermost bundle")
+same(R.paths(executable: bare.executable), bare, "the bare DuoDeckMenuBar binary has no bundle")
+same(R.paths(executable: "/usr/local/bin/DuoDeckHost").bundle, nil, "the CLI has none")
 same(R.paths(executable: "/usr/local/Contents/MacOS/tool").bundle, nil, "Contents/MacOS outside a .app")
-same(R.paths(executable: "/x/.app/Contents/MacOS/Sill").bundle, nil, "a folder named .app alone")
-same(R.paths(executable: "/x/Sill.app/Contents/MacOS/").bundle, nil, "no executable's name")
-same(R.paths(executable: "/x/Sill.app/Contents/Resources/Sill").bundle, nil, "a file in Resources")
-same(R.paths(executable: "/x/Sill.application/Contents/MacOS/Sill").bundle, nil, "not .app")
-same(R.paths(executable: "/x/Sill.app/contents/macos/Sill").bundle, nil, "the bundle's folders as macOS names them")
-same(R.paths(executable: "Sill.app/Contents/MacOS/Sill").bundle, nil, "too short to be a path to a bundle")
+same(R.paths(executable: "/x/.app/Contents/MacOS/DuoDeck").bundle, nil, "a folder named .app alone")
+same(R.paths(executable: "/x/DuoDeck.app/Contents/MacOS/").bundle, nil, "no executable's name")
+same(R.paths(executable: "/x/DuoDeck.app/Contents/Resources/DuoDeck").bundle, nil, "a file in Resources")
+same(R.paths(executable: "/x/DuoDeck.application/Contents/MacOS/DuoDeck").bundle, nil, "not .app")
+same(R.paths(executable: "/x/DuoDeck.app/contents/macos/DuoDeck").bundle, nil, "the bundle's folders as macOS names them")
+same(R.paths(executable: "DuoDeck.app/Contents/MacOS/DuoDeck").bundle, nil, "too short to be a path to a bundle")
 same(R.paths(executable: "").bundle, nil, "no path")
 
 // MARK: --getglobalstate
@@ -87,9 +87,9 @@ same(R.appAnswer("The application is not part of the firewall \n", path: exe), .
 same(R.appAnswer("Incoming connection to \(exe) is blocked.\n", path: app), .unknown,
      "the bundle's question never takes the executable's answer (its path starts with the bundle's)")
 same(R.appAnswer("Incoming connection to \(app) is blocked.\n", path: exe), .unknown, "another path's answer")
-same(R.appAnswer("Incoming connection to /Users/x/This is blocked/Sill is permitted.\n", path: "/Users/x/This is blocked/Sill"),
+same(R.appAnswer("Incoming connection to /Users/x/This is blocked/DuoDeck is permitted.\n", path: "/Users/x/This is blocked/DuoDeck"),
      .permitted, "a path with \" is blocked\" in it")
-same(R.appAnswer("Incoming connection to /x/Sill. is blocked.\n", path: "/x/Sill."), .blocked, "a path ending in a full stop")
+same(R.appAnswer("Incoming connection to /x/DuoDeck. is blocked.\n", path: "/x/DuoDeck."), .blocked, "a path ending in a full stop")
 same(R.appAnswer("objc[401]: a note\nIncoming connection to \(exe) is blocked.\n", path: exe), .blocked, "a line before the answer")
 same(R.appAnswer("Incoming connection to \(exe) is maybe.\n", path: exe), .unknown, "an answer this build does not know")
 same(R.appAnswer("The file path you specified does not exist \n", path: exe), .unknown, "no such file (legacy)")
@@ -139,8 +139,8 @@ same(R.listed("Total number of apps = 1 \n1 : /a \nnote: a line of something els
      [R.Listed(path: "/a", blocks: true)], "a line that names no rule, between a rule and its state")
 same(R.listed("Total number of apps = 2 \n1 : /a \n             (Allow incoming connections)\n2 :  \n             (Block incoming connections)\n"),
      [R.Listed(path: "/a", blocks: false)], "a number that names nothing is no rule")
-same(R.listed("Total number of apps = 1 \n4 : /Volumes/A : B/Sill.app \n             (Block incoming connections)\n"),
-     [R.Listed(path: "/Volumes/A : B/Sill.app", blocks: true)], "a path with \" : \" in it")
+same(R.listed("Total number of apps = 1 \n4 : /Volumes/A : B/DuoDeck.app \n             (Block incoming connections)\n"),
+     [R.Listed(path: "/Volumes/A : B/DuoDeck.app", blocks: true)], "a path with \" : \" in it")
 same(R.listed("Total number of apps = 1 \n1 : com.example.tool \n             (Block incoming connections)\n"),
      [R.Listed(path: "com.example.tool", blocks: true)], "a rule that names no path is still a rule")
 same(R.listed("Total number of apps = 1 \n   12 : /a   \n             (Maybe incoming connections)\n"),
@@ -282,25 +282,25 @@ same(R.Copy.tool, tool, "the tool")
 same(R.Copy.command(onlyExe), "sudo \(tool) --unblockapp \(exe)", "the report's fix, word for word")
 same(R.Copy.command(onlyApp), "sudo \(tool) --unblockapp \(app)", "the bundle's")
 same(R.Copy.command(both), "sudo \(tool) --unblockapp \(exe) --unblockapp \(app)", "both, the executable's first")
-same(R.Copy.command(.blocks(executable: "/Applications/Sill Beta.app/Contents/MacOS/Sill", bundle: nil)),
-     "sudo \(tool) --unblockapp '/Applications/Sill Beta.app/Contents/MacOS/Sill'", "a path with a space, quoted")
+same(R.Copy.command(.blocks(executable: "/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck", bundle: nil)),
+     "sudo \(tool) --unblockapp '/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck'", "a path with a space, quoted")
 for v: R.Verdict in [.blocksAll, .allows, .off, .unknown("x"), .blocks(executable: nil, bundle: nil)] {
     same(R.Copy.command(v), nil, "no command for \(v)")
 }
 same(R.Copy.paneLine(onlyExe).map { $0 + " " + R.Copy.command(onlyExe)! },
-     "The macOS firewall blocks Sill’s executable, so devices on the network cannot connect. In Terminal: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /Applications/Sill.app/Contents/MacOS/Sill",
+     "The macOS firewall blocks DuoDeck’s executable, so devices on the network cannot connect. In Terminal: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /Applications/DuoDeck.app/Contents/MacOS/DuoDeck",
      "the pane's line and its command, as the task words it")
-same(R.Copy.paneLine(onlyApp), "The macOS firewall blocks Sill.app, so devices on the network cannot connect. In Terminal:", "the bundle's line")
-same(R.Copy.paneLine(.blocks(executable: nil, bundle: "/Users/me/Sill 2.app")),
-     "The macOS firewall blocks Sill 2.app, so devices on the network cannot connect. In Terminal:", "a copy by its own name")
-same(R.Copy.paneLine(both), "The macOS firewall blocks Sill.app and its executable, so devices on the network cannot connect. In Terminal:",
+same(R.Copy.paneLine(onlyApp), "The macOS firewall blocks DuoDeck.app, so devices on the network cannot connect. In Terminal:", "the bundle's line")
+same(R.Copy.paneLine(.blocks(executable: nil, bundle: "/Users/me/DuoDeck 2.app")),
+     "The macOS firewall blocks DuoDeck 2.app, so devices on the network cannot connect. In Terminal:", "a copy by its own name")
+same(R.Copy.paneLine(both), "The macOS firewall blocks DuoDeck.app and its executable, so devices on the network cannot connect. In Terminal:",
      "both")
 // The command as Settings › General shows it: the tool, then each option on a line of its own after
 // the shell's continuation, never "--" over "unblockapp".
 same(R.Copy.commandLines(onlyExe), ["sudo \(tool) \\", "  --unblockapp \(exe)"], "the report's command, a line per option")
 same(R.Copy.commandLines(both), ["sudo \(tool) \\", "  --unblockapp \(exe) \\", "  --unblockapp \(app)"], "both, the executable's first")
-same(R.Copy.commandLines(.blocks(executable: "/Applications/Sill Beta.app/Contents/MacOS/Sill", bundle: nil))?.last,
-     "  --unblockapp '/Applications/Sill Beta.app/Contents/MacOS/Sill'", "a path with a space, quoted on its line")
+same(R.Copy.commandLines(.blocks(executable: "/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck", bundle: nil))?.last,
+     "  --unblockapp '/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck'", "a path with a space, quoted on its line")
 for v: R.Verdict in [.blocksAll, .allows, .off, .unknown("x"), .blocks(executable: nil, bundle: nil)] {
     same(R.Copy.commandLines(v), nil, "no lines for \(v)")
 }
@@ -311,9 +311,9 @@ for v: R.Verdict in [.allows, .off, .unknown("x")] {
     same(R.Copy.paneLine(v), nil, "no line for \(v)")
     same(R.Copy.menuSubtitle(v), nil, "no menu item for \(v)")
 }
-same(R.Copy.menuSubtitle(onlyExe), "The macOS firewall blocks Sill’s executable.", "the menu's subtitle")
-same(R.Copy.menuSubtitle(onlyApp), "The macOS firewall blocks Sill.app.", "the menu's, the bundle")
-same(R.Copy.menuSubtitle(both), "The macOS firewall blocks Sill.app and its executable.", "the menu's, both")
+same(R.Copy.menuSubtitle(onlyExe), "The macOS firewall blocks DuoDeck’s executable.", "the menu's subtitle")
+same(R.Copy.menuSubtitle(onlyApp), "The macOS firewall blocks DuoDeck.app.", "the menu's, the bundle")
+same(R.Copy.menuSubtitle(both), "The macOS firewall blocks DuoDeck.app and its executable.", "the menu's, both")
 same(R.Copy.menuSubtitle(.blocksAll), "The macOS firewall blocks all incoming connections.", "the menu's, block all")
 for v: R.Verdict in [onlyExe, onlyApp, both, .blocksAll] {
     let words = [R.Copy.paneLine(v), R.Copy.menuSubtitle(v), R.Copy.command(v), R.Copy.logLine(from: nil, to: v)].compactMap { $0 }
@@ -326,14 +326,14 @@ for v: R.Verdict in [onlyExe, onlyApp, both, .blocksAll] {
 }
 
 // The log's lines: one when the verdict changes, none for a first one that blocks nothing.
-let blockedLine = "Firewall: the macOS firewall blocks Sill’s executable, so devices on the network cannot connect. In Terminal: sudo \(tool) --unblockapp \(exe)"
-let noLonger = "Firewall: the macOS firewall no longer blocks devices from connecting to Sill."
+let blockedLine = "Firewall: the macOS firewall blocks DuoDeck’s executable, so devices on the network cannot connect. In Terminal: sudo \(tool) --unblockapp \(exe)"
+let noLonger = "Firewall: the macOS firewall no longer blocks devices from connecting to DuoDeck."
 same(R.Copy.logLine(from: nil, to: .allows), nil, "first: allowed, nothing printed")
 same(R.Copy.logLine(from: nil, to: .off), nil, "first: off, nothing printed")
 same(R.Copy.logLine(from: nil, to: onlyExe), blockedLine, "first: blocked")
 same(R.Copy.logLine(from: .allows, to: onlyExe), blockedLine, "blocked from allowed")
 same(R.Copy.logLine(from: onlyExe, to: onlyExe), nil, "the same again, nothing")
-same(R.Copy.logLine(from: onlyExe, to: both), "Firewall: the macOS firewall blocks Sill.app and its executable, so devices on the network cannot connect. In Terminal: sudo \(tool) --unblockapp \(exe) --unblockapp \(app)",
+same(R.Copy.logLine(from: onlyExe, to: both), "Firewall: the macOS firewall blocks DuoDeck.app and its executable, so devices on the network cannot connect. In Terminal: sudo \(tool) --unblockapp \(exe) --unblockapp \(app)",
      "more blocked: the new line")
 same(R.Copy.logLine(from: onlyExe, to: .allows), noLonger, "unblocked")
 same(R.Copy.logLine(from: .blocksAll, to: .off), noLonger, "block all, then off")
@@ -343,12 +343,12 @@ same(R.Copy.logLine(from: .allows, to: .blocksAll),
      "Firewall: the macOS firewall blocks all incoming connections, so devices on the network cannot connect. Turn off Block all incoming connections in System Settings › Network › Firewall › Options.",
      "block all")
 same(R.Copy.logLine(from: nil, to: .unknown("socketfilterfw --getglobalstate didn’t answer in 2 s")),
-     "Firewall: couldn’t read the macOS firewall’s settings (socketfilterfw --getglobalstate didn’t answer in 2 s), so Sill can’t tell whether it blocks devices.",
+     "Firewall: couldn’t read the macOS firewall’s settings (socketfilterfw --getglobalstate didn’t answer in 2 s), so DuoDeck can’t tell whether it blocks devices.",
      "unreadable")
 same(R.Copy.logLine(from: .unknown("x"), to: .unknown("x")), nil, "unreadable again, nothing")
 same(R.Copy.logLine(from: .unknown("x"), to: .allows), nil, "readable again and allowed, nothing")
 same(R.Copy.logLine(from: onlyExe, to: .unknown("x")),
-     "Firewall: couldn’t read the macOS firewall’s settings (x), so Sill can’t tell whether it blocks devices.", "blocked, then unreadable")
+     "Firewall: couldn’t read the macOS firewall’s settings (x), so DuoDeck can’t tell whether it blocks devices.", "blocked, then unreadable")
 same(R.Copy.logLine(from: .unknown("x"), to: onlyExe), blockedLine, "unreadable, then blocked")
 
 // MARK: Shell quoting
@@ -357,7 +357,7 @@ same(R.Copy.shellQuoted(exe), exe, "a plain path stays as it is")
 same(R.Copy.shellQuoted("/a b/c"), "'/a b/c'", "a space")
 same(R.Copy.shellQuoted("/it's/x"), "'/it'\\''s/x'", "a quote inside")
 same(R.Copy.shellQuoted(""), "''", "nothing")
-for path in ["/x/$HOME/y", "/x/`id`", "/x/a;b", "~/x", "/x/=y", "/x/Sillé", "/x/a*b", "/x/a\"b", "/x/a\\b", "/x/(a)", "/x/a&b|c", "/x/a!b",
+for path in ["/x/$HOME/y", "/x/`id`", "/x/a;b", "~/x", "/x/=y", "/x/DuoDecké", "/x/a*b", "/x/a\"b", "/x/a\\b", "/x/(a)", "/x/a&b|c", "/x/a!b",
              "/x/tab\there", "/x/new\nline", "/x/'''", "/x/{a,b}", "/x/a#b"] {
     let quoted = R.Copy.shellQuoted(path)
     check(quoted.hasPrefix("'") && quoted.hasSuffix("'"), "\(path) is quoted: \(quoted)")
@@ -376,8 +376,8 @@ func echoed(_ shell: String, _ word: String) -> String? {
     return String(decoding: data, as: UTF8.self)
 }
 for shell in ["/bin/bash", "/bin/zsh"] where FileManager.default.isExecutableFile(atPath: shell) {
-    for path in [exe, "/Applications/Sill Beta.app/Contents/MacOS/Sill", "/it's/x", "/x/$HOME/y", "/x/`id`", "/x/a;b", "~/x",
-                 "/x/=y", "/x/Sillé", "/x/a*b", "/x/a\"b", "/x/a\\b", "/x/(a)", "/x/a&b|c", "/x/a!b", "/x/'''", "/x/{a,b}", "/x/a#b",
+    for path in [exe, "/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck", "/it's/x", "/x/$HOME/y", "/x/`id`", "/x/a;b", "~/x",
+                 "/x/=y", "/x/DuoDecké", "/x/a*b", "/x/a\"b", "/x/a\\b", "/x/(a)", "/x/a&b|c", "/x/a!b", "/x/'''", "/x/{a,b}", "/x/a#b",
                  "/x/a+b,c:d@e%f"] {
         same(echoed(shell, R.Copy.shellQuoted(path)), path, "\(shell) reads the quoted path back")
     }
@@ -398,7 +398,7 @@ func words(_ shell: String, _ command: String) -> String? {
     return String(decoding: data, as: UTF8.self)
 }
 for shell in ["/bin/bash", "/bin/zsh"] where FileManager.default.isExecutableFile(atPath: shell) {
-    for v: R.Verdict in [onlyExe, onlyApp, both, .blocks(executable: "/Applications/Sill Beta.app/Contents/MacOS/Sill", bundle: "/it's/x.app")] {
+    for v: R.Verdict in [onlyExe, onlyApp, both, .blocks(executable: "/Applications/DuoDeck Beta.app/Contents/MacOS/DuoDeck", bundle: "/it's/x.app")] {
         guard let command = R.Copy.command(v), let lines = R.Copy.commandLines(v) else { check(false, "\(v) has a command"); continue }
         let one = words(shell, command)
         same(words(shell, lines.joined(separator: "\n")), one, "\(shell) reads \(v)'s lines as its command")
@@ -406,7 +406,7 @@ for shell in ["/bin/bash", "/bin/zsh"] where FileManager.default.isExecutableFil
     }
 }
 
-// MARK: TEST ONLY: SILL_TEST_FIREWALL's answers
+// MARK: TEST ONLY: DUODECK_TEST_FIREWALL's answers
 
 same(R.verdict(R.canned("executable", paths: bundled)!, paths: bundled), onlyExe, "executable: the report's Mac")
 same(R.verdict(R.canned("executable", paths: bare)!, paths: bare), .blocks(executable: bare.executable, bundle: nil),
@@ -417,7 +417,7 @@ same(R.verdict(R.canned("both", paths: bundled)!, paths: bundled), both, "both")
 same(R.verdict(R.canned("all", paths: bundled)!, paths: bundled), .blocksAll, "all")
 same(R.verdict(R.canned("off", paths: bundled)!, paths: bundled), .off, "off")
 same(R.verdict(R.canned("allowed", paths: bundled)!, paths: bundled), .allows, "allowed")
-same(R.verdict(R.canned("unreadable", paths: bundled)!, paths: bundled), .unknown("SILL_TEST_FIREWALL=unreadable: nothing answered"),
+same(R.verdict(R.canned("unreadable", paths: bundled)!, paths: bundled), .unknown("DUODECK_TEST_FIREWALL=unreadable: nothing answered"),
      "unreadable")
 same(R.canned("blocked", paths: bundled), nil, "an unknown word")
 same(R.canned("", paths: bundled), nil, "no word")
@@ -434,8 +434,8 @@ same(R.listed(R.canned("allowed", paths: bundled)?.listApps ?? ""), [R.Listed(pa
 same(R.listed(R.canned("bundle", paths: bundled)?.listApps ?? ""), [R.Listed(path: app, blocks: true)], "bundle's list")
 same(R.appAnswer(R.canned("bundle", paths: bundled)?.executable ?? "", path: exe), .permitted, "bundle: the executable's answer")
 
-// Who takes SILL_TEST_FIREWALL, and the line each host prints about it.
-let ignoredLine = "SILL_TEST_FIREWALL ignored: only a test host takes it (one that does not advertise and is not Sill.app itself)."
+// Who takes DUODECK_TEST_FIREWALL, and the line each host prints about it.
+let ignoredLine = "DUODECK_TEST_FIREWALL ignored: only a test host takes it (one that does not advertise and is not DuoDeck.app itself)."
 for value in ["executable", "all", "/tmp/answer", "nonsense"] {
     let taken = R.testSource(value, testHost: false)
     same(taken.source, nil, "a host that is not a test host never takes \(value)")
@@ -443,7 +443,7 @@ for value in ["executable", "all", "/tmp/answer", "nonsense"] {
 }
 same(R.testSource(nil, testHost: true).source, nil, "not set: nothing")
 same(R.testSource(nil, testHost: true).line, nil, "not set: no line")
-same(R.testSource(nil, testHost: false).line, nil, "not set: no line on Sill.app either")
+same(R.testSource(nil, testHost: false).line, nil, "not set: no line on DuoDeck.app either")
 same(R.testSource("", testHost: true).line, nil, "empty: as not set")
 same(R.testSource("executable", testHost: true).source, .word("executable"), "a known word")
 same(R.testSource("executable", testHost: true).line,
@@ -453,7 +453,7 @@ same(R.testSource("/tmp/answer", testHost: true).line,
      "Test firewall: the macOS firewall is never asked; its answers are canned (the word in /tmp/answer, read at each check).", "its line")
 same(R.testSource("blocked", testHost: true).source, nil, "an unknown word is not taken")
 same(R.testSource("blocked", testHost: true).line,
-     "SILL_TEST_FIREWALL=blocked ignored: expected executable, bundle, both, all, off, allowed, unreadable, or a file holding one.", "…and says so")
+     "DUODECK_TEST_FIREWALL=blocked ignored: expected executable, bundle, both, all, off, allowed, unreadable, or a file holding one.", "…and says so")
 same(R.testSource("tmp/answer", testHost: true).source, nil, "a relative path is no file")
 for word in R.cannedWords { same(R.testSource(word, testHost: true).source, .word(word), "\(word) is taken") }
 // Each check's answers: the word's, or the file's first word as it reads now.
@@ -462,11 +462,11 @@ same(R.testAnswers(.file("/f"), fileText: "allowed\n", paths: bundled), R.canned
 same(R.testAnswers(.file("/f"), fileText: "  executable  # the report's Mac\n", paths: bundled), R.canned("executable", paths: bundled)!,
      "the file's first word, after spaces")
 same(R.verdict(R.testAnswers(.file("/f"), fileText: nil, paths: bundled), paths: bundled),
-     .unknown("SILL_TEST_FIREWALL: no known word in /f"), "a file that can't be read answers nothing")
+     .unknown("DUODECK_TEST_FIREWALL: no known word in /f"), "a file that can't be read answers nothing")
 same(R.verdict(R.testAnswers(.file("/f"), fileText: "maybe", paths: bundled), paths: bundled),
-     .unknown("SILL_TEST_FIREWALL: no known word in /f"), "a file whose word is unknown answers nothing")
+     .unknown("DUODECK_TEST_FIREWALL: no known word in /f"), "a file whose word is unknown answers nothing")
 same(R.verdict(R.testAnswers(.file("/f"), fileText: "", paths: bundled), paths: bundled),
-     .unknown("SILL_TEST_FIREWALL: no known word in /f"), "an empty file answers nothing")
+     .unknown("DUODECK_TEST_FIREWALL: no known word in /f"), "an empty file answers nothing")
 
 print("firewall: \(checks) checks, \(failures) failed")
 exit(failures == 0 ? 0 : 1)

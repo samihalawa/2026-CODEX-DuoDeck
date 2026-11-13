@@ -117,7 +117,7 @@ enum KeyChord {
 /// The portrait key row's esc, tab and arrows, held (#162): a cap's key goes down when a finger lands on
 /// it and comes up when the finger lifts, slides off or is cancelled, so the Mac repeats it while it is
 /// held, after its own Delay Until Repeat and at its Key Repeat Rate, as it repeats a key of its own
-/// keyboard (KeyRepeat, on the host: an event Sill posts never repeats by itself). What is latched goes
+/// keyboard (KeyRepeat, on the host: an event DuoDeck posts never repeats by itself). What is latched goes
 /// down with it, its modifiers' own keys first (`KeyChord.down`), and is spent at the touch, so a
 /// modifier latched while the cap is held waits for the next key (the caller spends the latch when a
 /// key goes down with it: `spendsLatch`). One cap at a time, as the Mac repeats one key at a time: a
@@ -225,9 +225,9 @@ struct ForwardedKeys {
     /// and dead keys apply: the letters, the digits, Return, Delete, Tab, Space, the punctuation keys
     /// every layout has (- = [ ] \ ; ' ` , . /), and Shift's two keys, so the Mac knows Shift is held
     /// (a held letter's repeats follow it, and a click with it held is a shift-click). Every one is a key
-    /// every Sill for Mac answers to (KeyStrokes.virtualKeys), so a Mac from before key repeat types them
+    /// every DuoDeck Host answers to (KeyStrokes.virtualKeys), so a Mac from before key repeat types them
     /// too, once each. The keypad, the ISO keyboards' two extra keys (Non-US # and \) and Caps Lock stay
-    /// the text system's whoever types: no Sill for Mac before this one has the first two, and Caps Lock's
+    /// the text system's whoever types: no DuoDeck Host before this one has the first two, and Caps Lock's
     /// state is the iPad's (a letter typed with it on carries Shift: `carried`).
     static let characterUsages: Set<UInt16> = Set(0x04...0x28).union([0x2A, 0x2B, 0x2C]).union(0x2D...0x31)
         .union(0x33...0x38).union([0xE1, 0xE5])

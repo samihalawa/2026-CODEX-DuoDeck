@@ -1,4 +1,4 @@
-"""Mutants of CaptureScale.swift (Sources/SillHost; CaptureScale, VirtualDisplaySize with the window's size on
+"""Mutants of CaptureScale.swift (Sources/DuoDeckHost; CaptureScale, VirtualDisplaySize with the window's size on
 the virtual display, InputLanding): each changes it in one place, is compiled with the check (main.swift) and
 must make it fail. A mutant that does not compile is not counted as caught.
 usage: mutants.py"""
@@ -7,7 +7,7 @@ SP = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(SP, "..", "..", ".."))   # the repository
 OUT = os.path.join(ROOT, ".build", "checks", "capture-scale")
 os.makedirs(OUT, exist_ok=True)
-SRC = os.path.join(ROOT, "Sources/SillHost/CaptureScale.swift")
+SRC = os.path.join(ROOT, "Sources/DuoDeckHost/CaptureScale.swift")
 orig = open(SRC).read()
 HOLD = "        return min(knob, d)\n"
 USABLE = "        guard let s, s.isFinite, s > 0 else { return nil }\n"
@@ -37,7 +37,7 @@ MUTANTS = [
     ("C3 the larger of the two (upscaled)", HOLD, "        return max(knob, d)\n"),
     ("C4 a zero or negative scale taken", USABLE, "        guard let s, s.isFinite else { return nil }\n"),
     ("C5 an infinite scale taken", USABLE, "        guard let s, s > 0 else { return nil }\n"),
-    ("C6 Sill's virtual display at 1x (a staged window's capture held down)",
+    ("C6 DuoDeck's virtual display at 1x (a staged window's capture held down)",
      "    static let virtualDisplay: CGFloat = 2\n", "    static let virtualDisplay: CGFloat = 1\n"),
     # The capture line's words.
     ("C7 the words never say what was asked", WORDS, "        return base\n"),
@@ -87,7 +87,7 @@ MUTANTS = [
     ("L9 NaN lands at the far edge", UNIT, "        v.isNaN ? 1 : min(max(v, 0), 1)\n"),
     ("L10 the fraction of the wrong side", "        let py = rect.minY + CGFloat(unit(y)) * rect.height\n",
      "        let py = rect.minY + CGFloat(unit(y)) * rect.width\n"),
-    # Sill's virtual display: no side under 800 points (an iPhone's 754×784 display came up at 1x).
+    # DuoDeck's virtual display: no side under 800 points (an iPhone's 754×784 display came up at 1x).
     ("V1 the old floor, 320 (an iPhone upright's 754×784 display at 1x)", "    static let minSide: CGFloat = 800\n",
      "    static let minSide: CGFloat = 320\n"),
     ("V2 only the width held to the floor", "height: min(max(s.height, minSide), maxSide))",

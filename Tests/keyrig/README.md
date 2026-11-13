@@ -8,7 +8,7 @@ docs/hardware-keyboard-plan.md (#67, #68) without a device.
 
 **Private interfaces, simulator only**, as `Tests/duorig`: HID.framework's `HIDVirtualEventService` and
 IOKit's `IOHIDEvent` calls through `dlopen`/`dlsym`, posting into the HID event system of the simulator it
-runs in. It is never part of Sill, never built for a device, and refuses to run outside a simulator.
+runs in. It is never part of DuoDeck, never built for a device, and refuses to run outside a simulator.
 Nothing reaches the Mac's own HID system: it runs inside the simulator through `xcrun simctl spawn`.
 
 ```
@@ -33,13 +33,13 @@ attached, so its software keyboard stops coming up (as on a device after a keybo
 - Every booted simulator lists a HID keyboard service of its own (page 1, usage 6), and GameController's
   coalesced keyboard connects about 50 ms after an app launches, so `GCKeyboard.coalesced` is set in
   every simulator run. UIKit can disagree: on a fresh iPhone 18 Pro simulator a first responder still got
-  the 301 pt software keyboard. Sill's hold for a hardware keyboard draws an empty input view, so it shows
+  the 301 pt software keyboard. DuoDeck's hold for a hardware keyboard draws an empty input view, so it shows
   no keyboard either way.
 - A keyrig Esc reaches `pressesBegan` of a `UIKeyInput` first responder (usage 41; its characters are
   "UIKeyInputEscape" alone and "\u{1b}" with a modifier). An Esc key command on that view, with
   `wantsPriorityOverSystemBehavior`, fires only when `pressesBegan` hands the press on to `super`; kept,
   the command never fires. GameController's `keyChangedHandler` sees every key beside UIKit's presses.
-  The reported iPad (#67) never sent Esc at all, so a device can differ: Sill takes both channels and
+  The reported iPad (#67) never sent Esc at all, so a device can differ: DuoDeck takes both channels and
   sends one key press once.
 - With the stream's input view holding the keyboard, ⌘W reaches `pressesBegan` (the iPad's File › Close
   does not take it), and so does F5.
@@ -51,7 +51,7 @@ attached, so its software keyboard stops coming up (as on a device after a keybo
 - (2026-10-28, #130, PR #217; iOS 27.0, a probe app of its own with pans side by side.) A pan's translation
   adds a scroll's events up as a finger's does: three notches read 3, 6 and 9 pt. Its location runs on with
   it while the pointer stays put (the pointer at y 308.8, the pan at 311.8, 314.8, 317.8), so a scroll posted
-  at the pan's location walks off the pointer; Sill's goes where the pointer was as it began
+  at the pan's location walks off the pointer; DuoDeck's goes where the pointer was as it began
   (`PointerScroll`). Zeroing the translation after each reading (`setTranslation(.zero, in:)`) makes each
   reading the movement since the last and changes neither the location nor the velocity. A
   UIPanGestureRecognizer's own `allowedScrollTypesMask` is 0: a pan given none, as 0.5.1's finger pan, gets
@@ -60,4 +60,4 @@ attached, so its software keyboard stops coming up (as on a device after a keybo
 - Its pointer moves reach a `UIHoverGestureRecognizer`.
 - Turning: duorig's orientation event does not turn an iPad simulator, and iPadOS 27's windowing refuses
   `requestGeometryUpdate` ("The current windowing mode does not allow for programmatic changes to
-  interface orientation"); an iPhone simulator's scene turns on request (Sill's DEBUG `-SillTurnAt`).
+  interface orientation"); an iPhone simulator's scene turns on request (DuoDeck's DEBUG `-DuoDeckTurnAt`).

@@ -2,7 +2,7 @@
 
 2026-09-27. It stands alone: the implementer needs no other design document. Written from a
 read-only survey of origin/main at cf05a78 (PR #28) in the worktree
-`/Users/noah/Downloads/winstream-walkthrough` (branch `first-run-walkthrough`); line numbers are at
+`/Users/sample/Downloads/winstream-walkthrough` (branch `first-run-walkthrough`); line numbers are at
 cf05a78, and every file named here is to be read again before it is changed. Revised the same day
 by an adversarial critique against the code and Apple's Human Interface Guidelines (Onboarding,
 Offering help, Modality, Gestures, VoiceOver, Typography, Accessibility, Launching and Popovers,
@@ -11,7 +11,7 @@ built or run for either pass. The SF Symbols named here were looked up in this M
 (`name_availability.plist` in SFSymbols.framework) for the iOS version each first shipped in: the
 app targets iOS 17.0, and every symbol here is iOS 17.0 or older.
 
-**Noah's request (2026-09-26):** "Add to feature list, app usage walkthrough first time after
+**the maintainer's request (2026-09-26):** "Add to feature list, app usage walkthrough first time after
 pairing/connecting".
 
 **Reading of it.**
@@ -90,7 +90,7 @@ kind: tips in context rather than one flow. For this job:
 - It adds a datastore, set up by `Tips.configure()` at launch, where two UserDefaults keys do.
 - Where it could fit later: single hints after the tour, on iOS 18's TipGroup (open question 14).
 
-**Why a flow at all.** The HIG prefers tips in context and teaching by doing. Noah asked for a
+**Why a flow at all.** The HIG prefers tips in context and teaching by doing. the maintainer asked for a
 walkthrough, and the only thing to try here is a click on the person's own Mac, which is not the
 safe test the HIG has in mind (open question 5). So it is a flow, held to the HIG's other rules for
 one: brief, optional, gone for good once skipped, and easy to find again in Settings.
@@ -127,7 +127,7 @@ carries the welcome in its subtitle instead, and one card less is one tap less.
   a second after the new layout is on screen, for the steps only that layout has (upright:
   `laptop`), never for the shared ones: someone who turns the device mid-work is not walked through
   the picture again.
-- **Never on the connect screen.** The pairing card, the Mac's notices ("Update Sill…") and every
+- **Never on the connect screen.** The pairing card, the Mac's notices ("Update DuoDeck…") and every
   status line live there. Never over the pairing overlay: an outside link that arrives during the
   tour puts the tour aside until the overlay has closed.
 
@@ -234,7 +234,7 @@ carries the welcome in its subtitle instead, and one card less is one tap less.
  │           2. TourOverlay: the dim with its cutout and ring, then the card (TourPolicy.place)   │
  │           3. PairingOverlay (an outside link puts the tour aside until it closes)              │
  │   Next ──▶ seen += that step     Done ──▶ the same     Skip ──▶ skipped = true                 │
- │   UserDefaults: Sill.tourSeen [String], Sill.tourSkipped Bool                                  │
+ │   UserDefaults: DuoDeck.tourSeen [String], DuoDeck.tourSkipped Bool                                  │
  └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -339,7 +339,7 @@ struct Moment {
                                     // the pairing overlay or a link), or the app not active
     var offered: Bool               // this session has had its decision in this layout
     var voiceOver: Bool
-    var enabled: Bool               // Release: true; Debug: only with -SillTourState (§10)
+    var enabled: Bool               // Release: true; Debug: only with -DuoDeckTourState (§10)
 }
 enum Reason: Equatable { case nothingOwed, used, busy }          // for the console line
 enum Decision: Equatable { case show([TourTopic]), wait(until: Double?), pass(Reason) }
@@ -402,8 +402,8 @@ the cable or to Wi-Fi keeps the same `StreamScreen` and its `pictureAt`.
 
 | Key (UserDefaults, the app's own) | Type | Written |
 |---|---|---|
-| `Sill.tourSeen` | `[String]`, topic names | When Next or Done passes a step: that step's topic |
-| `Sill.tourSkipped` | `Bool` | When Skip is tapped |
+| `DuoDeck.tourSeen` | `[String]`, topic names | When Next or Done passes a step: that step's topic |
+| `DuoDeck.tourSkipped` | `Bool` | When Skip is tapped |
 
 - **Next** saves the step it leaves; **Done** saves the last; nothing is saved when a step merely
   shows. So a session that ends mid-tour (the Mac quits, a notice, a lost network) leaves the
@@ -412,13 +412,13 @@ the cable or to Wi-Fi keeps the same `StreamScreen` and its `pictureAt`.
 - **Take the Tour** saves each step passed as well (it can only add).
 - **A new topic in a later build** (a new control) is owed to every device that did not skip, and
   shows once: at a session's first picture, or at a turn when only that layout has it.
-- **Per device, not per Mac.** Kept in the app's own defaults, as `Sill.savedMacs` and
-  `Sill.directWirelessMacs` are. A backup and restore keeps it (the person knows the app); a
+- **Per device, not per Mac.** Kept in the app's own defaults, as `DuoDeck.savedMacs` and
+  `DuoDeck.directWirelessMacs` are. A backup and restore keeps it (the person knows the app); a
   delete and reinstall resets it. The privacy manifest's UserDefaults reason (CA92.1) covers it,
   and the App Store label stays Data Not Collected.
 - **No migration.** Only development and TestFlight builds exist before this one, so everyone gets
   the tour once (open question 11). A topic name a later build no longer has is ignored.
-  (Superseded for 0.6: tour version 2 clears an older memory once and stores `Sill.tourVersion`, so
+  (Superseded for 0.6: tour version 2 clears an older memory once and stores `DuoDeck.tourVersion`, so
   the tour shows once more to everyone: "The tour once more, for 0.6", at the end.)
 
 ### 6. The overlay (`TourOverlay.swift`)
@@ -426,7 +426,7 @@ the cable or to Wi-Fi keeps the same `StreamScreen` and its `pictureAt`.
 #### 6.1 Structure
 
 - **Targets.** `View.tourTarget(_ t: TourTarget, inset: EdgeInsets = .init())` reports the view's
-  frame in the named coordinate space `"sill.screen"` through a preference `[TourTarget: CGRect]`
+  frame in the named coordinate space `"duodeck.screen"` through a preference `[TourTarget: CGRect]`
   (a `GeometryReader` in a background, merged by key). `StreamScreen`'s `ZStack` names the space
   and keeps the rects with `onPreferenceChange`. Frames, not anchors, because the layer is a
   sibling drawn after the layouts, the way the pairing overlay is: over the stream's UIKit input
@@ -440,8 +440,8 @@ the cable or to Wi-Fi keeps the same `StreamScreen` and its `pictureAt`.
   screen keeps the top and side safe areas outside its frame (it ignores only the bottom one,
   StreamScreen.swift:169), so a phone upright has about 60 pt above it and a phone sideways its
   Dynamic Island's side, and on an iPad with a status bar the bar's colour runs under it (:475).
-  The targets are measured in `sill.screen`, whose origin is inside those insets, so the dim reads
-  its own frame in `sill.screen` (a `GeometryReader`) and moves the cutout by minus that origin.
+  The targets are measured in `duodeck.screen`, whose origin is inside those insets, so the dim reads
+  its own frame in `duodeck.screen` (a `GeometryReader`) and moves the cutout by minus that origin.
   Unmoved, the ring would sit an inset away from its controls on every phone, which the harness
   never shows: its fake screen has no insets (ContentView.swift:167-171). S1's live photos do.
 - **The dim's touch area leaves out the card.** Its tap (the nudge, §6.4) is on the screen less
@@ -633,7 +633,7 @@ scroll."). The name in each row is semibold. The check pins every string.
 | `touch` | Tap, Hold and Drag | What you do here happens on ‹Mac›. | `hand.tap` · **Tap** to click.<br>`contextualmenu.and.cursorarrow` · **Touch and hold** to right-click.<br>`hand.draw` · **Drag** to scroll.<br>`applepencil` · **Apple Pencil** works as a mouse. (iPad only) | Landscape: "The picture of ‹Mac› fills the screen below the bar." Portrait: "The picture of ‹Mac› fills the top half of the screen." |
 | `bar` | Windows and Text Size | — | `hand.point.up.left` · **Touch and hold** a window to close, minimize or go full screen. Keep holding and drag to move it.<br>`textformat.size` · **Aa**: touch it and slide to make a window’s text larger or smaller.<br>`keyboard` · **Keyboard** types on ‹Mac›, on screen or with a hardware keyboard. (landscape and a phone upright) | Landscape: "In the bar at the top, after Apps." Portrait: "In the bar below the picture, after Apps." A phone upright: "Under the picture: Aa and Keyboard in the first row, the windows in the second." |
 | `settings` | Settings | — | `xmark.circle` · **Disconnect** is at the bottom of Settings.<br>`questionmark.circle` · **Take the Tour** is there too, to see this again.<br>`ipad` or `iphone` · **Hold your ‹device› upright** for a trackpad and keys. (landscape only) | "The last button in the bar." |
-| `laptop` | Keys and Trackpad | Only as a run's first card: "Upright, Sill adds keys and a trackpad." | `command` · **cmd, opt, ctrl and shift** stay on for the next key or trackpad click: tap cmd, then C, to copy.<br>`keyboard` · **The keyboard key** types on ‹Mac›, on screen or with a hardware keyboard.<br>`cursorarrow.click.2` · **Tap with two fingers** on the trackpad to right-click.<br>`hand.draw` · **Touch and hold** the trackpad, **then drag**, to move a window or select text. | "Below the bar: the row of keys, then the trackpad." |
+| `laptop` | Keys and Trackpad | Only as a run's first card: "Upright, DuoDeck adds keys and a trackpad." | `command` · **cmd, opt, ctrl and shift** stay on for the next key or trackpad click: tap cmd, then C, to copy.<br>`keyboard` · **The keyboard key** types on ‹Mac›, on screen or with a hardware keyboard.<br>`cursorarrow.click.2` · **Tap with two fingers** on the trackpad to right-click.<br>`hand.draw` · **Touch and hold** the trackpad, **then drag**, to move a window or select text. | "Below the bar: the row of keys, then the trackpad." |
 
 - **A phone held upright** (§3.1): the picture's hint "The picture of ‹Mac› is at the top of the
   screen."; Settings' "The last button in the row under the picture."; the laptop card has no
@@ -681,28 +681,28 @@ scroll."). The name in each row is semibold. The check pins every string.
   Last because it is this device's, not the Mac's, and the outer display's 259 pt shows the Mac's
   rows first.
 - **The row:** a `Rows { Button }` like Pair This iPad… (:333-342): "Take the Tour", accent,
-  leading, 44 pt. Its footnote: "A short tour of Sill’s controls on this ‹device›." Its
-  accessibility hint: "Shows how to use Sill on this ‹device›."
+  leading, 44 pt. Its footnote: "A short tour of DuoDeck’s controls on this ‹device›." Its
+  accessibility hint: "Shows how to use DuoDeck on this ‹device›."
 - **What it does:** a `takeTour` closure, passed as `pairThisDevice` is (:23-25, StreamScreen.swift
   :365 and PortraitStreamScreen.swift:196), takes the panel's `keyboardBeforeSettings`, closes the
   panel without restoring the keyboard, and once the panel's 0.18 s close has run
   (StreamScreen.swift:273-274) starts every step of the layout on screen, from the first (under
   VoiceOver, less what §3.1 leaves out).
 - **Nothing about the Mac changes:** the row sends nothing, and the panel's other rows are as they
-  are. Every `-SillSettings 1` photo gains the row at the end.
+  are. Every `-DuoDeckSettings 1` photo gains the row at the end.
 
 ### 9. Files
 
 | File | Change |
 |---|---|
 | `iOSClient/TourPolicy.swift` (new; pure: Foundation and CoreGraphics; checked with swiftc) | `TourTopic`, `TourLayout`, `TourTarget`, `TourMemory`, the steps and targets (§3), the rule (§4), `passed`, `skipped` and `carry` (§3.2, §5), `place` and `crease` (§6.3), and every string (§7) as `TourCopy` values built from ‹Mac›, ‹device› and VoiceOver. pbxproj IDs `A1000001000000000000A401` / `…F401` |
-| `iOSClient/TourOverlay.swift` (new) | `TourDim`, `TourCard`, `TourCardLayout`, the `tourTarget` modifier and its preference, `TouchWatcher`, `TourStore` (the two keys, and Debug's `-SillTourState`), the stand-ins (§10) and the console lines. IDs `…A402` / `…F402` |
+| `iOSClient/TourOverlay.swift` (new) | `TourDim`, `TourCard`, `TourCardLayout`, the `tourTarget` modifier and its preference, `TouchWatcher`, `TourStore` (the two keys, and Debug's `-DuoDeckTourState`), the stand-ins (§10) and the console lines. IDs `…A402` / `…F402` |
 | `iOSClient/StreamScreen.swift` | The run and the rule's inputs as `@State` (`tour`, `targets`, `pictureAt`, `layoutAt`, `decided`, `offered`), the coordinate space, the watcher, the layer (§6.1), `startTour` and `endTour` (§6.6), an outside link putting the tour aside, the targets in TopBar and `contentArea`, and the DEBUG init's `tour:` |
 | `iOSClient/PortraitStreamScreen.swift` | The targets in `streamPane`, `windowBar`, `KeyRow` and `Trackpad`; `takeTour` passed to the panel |
 | `iOSClient/HostSettingsPanel.swift` | Take the Tour (§8) and its `takeTour` closure |
 | `iOSClient/StreamClient.swift` | `lastInputAt` in `sendInput`; DEBUG `tourShowing` and the tripwire (§6.6) |
-| `iOSClient/ContentView.swift` | The harness: `Spec` gains `tour` and passes it on; DEBUG `-SillOrientation` in the normal app; the contract comment (§10) |
-| `iOSClient/Sill.xcodeproj/project.pbxproj` | The two files' four entries each, by hand: build file, file reference, group, sources phase |
+| `iOSClient/ContentView.swift` | The harness: `Spec` gains `tour` and passes it on; DEBUG `-DuoDeckOrientation` in the normal app; the contract comment (§10) |
+| `iOSClient/DuoDeck.xcodeproj/project.pbxproj` | The two files' four entries each, by hand: build file, file reference, group, sources phase |
 | `Tests/checks/tour/` (new) | `main.swift`, `run.sh`, `mutants.py` (§13, H2) |
 | `Tests/checks/README.md`, `.github/workflows/ci.yml` | The check's row; `tour` in the mutants matrix (ci.yml:122) |
 
@@ -735,11 +735,11 @@ enum TourPolicy {
 
 ### 10. Harness and DEBUG arguments (ContentView's contract comment at :55-171, and CLAUDE.md)
 
-- **`-SillTour touch|bar|settings|laptop`:** the stream screen starts the tour at that step, as
+- **`-DuoDeckTour touch|bar|settings|laptop`:** the stream screen starts the tour at that step, as
   Take the Tour shows it (every step of the layout, from that one on), with no beat: in the mock at
-  once, and under `-SillLive 1` and in the normal app at the first picture. A step the layout lacks
+  once, and under `-DuoDeckLive 1` and in the normal app at the first picture. A step the layout lacks
   (`laptop` at 1000x710) starts at the first.
-- **`-SillTourState fresh|landscape|done|skipped|saved`:** in the normal app, under `-SillLive 1`
+- **`-DuoDeckTourState fresh|landscape|done|skipped|saved`:** in the normal app, under `-DuoDeckLive 1`
   and in the mock:
   - it turns the automatic tour on, which a Debug build otherwise never shows (open question 10);
   - `fresh` is nothing seen, `landscape` the three landscape steps seen (so an upright size shows
@@ -747,13 +747,13 @@ enum TourPolicy {
   - `saved` reads and writes the saved keys, as a Release build does.
 
   In the mock the picture counts from launch.
-- **`-SillTourPress next@S|skip@S`:** Debug only, a stand-in for a tap, since the gates may not
+- **`-DuoDeckTourPress next@S|skip@S`:** Debug only, a stand-in for a tap, since the gates may not
   drive the UI: S seconds after each card appears, press Next (Done on the last), or once, Skip.
-- **`-SillTourActivityAt S`:** Debug only, a stand-in for a touch S seconds after the picture, for
+- **`-DuoDeckTourActivityAt S`:** Debug only, a stand-in for a touch S seconds after the picture, for
   the rule's pass (the gates may not touch the screen).
-- **`-SillTourVoiceOver 1`:** Debug only, the run and its words as under VoiceOver, for photos
+- **`-DuoDeckTourVoiceOver 1`:** Debug only, the run and its words as under VoiceOver, for photos
   (VoiceOver cannot be turned on from the command line here).
-- **`-SillOrientation landscape|portrait`:** Debug, in the normal app: asks the window scene for
+- **`-DuoDeckOrientation landscape|portrait`:** Debug, in the normal app: asks the window scene for
   that orientation at launch (`UIWindowScene.requestGeometryUpdate`, iOS 16), so a phone simulator
   shows the real layout sideways, its insets included, with no hand on the simulator. Unverified:
   if the simulator does not turn, S1 says what replaces it.
@@ -790,18 +790,18 @@ tour: INPUT SENT WHILE THE TOUR SHOWED: …        (the tripwire; see §6.6)
 | The card | 360 pt wide (480 sideways under 520 pt tall, 560 at accessibility sizes, never more than the screen less 32); 14 pt padding; 16 pt from the edges; 12 pt from its targets while it fits beside them |
 | The tail | 16 × 7 pt; only where §6.3 allows |
 | Motion | In 0.25 s, a step 0.35 s, out 0.2 s; under Reduce Motion 0.2 s fades |
-| Kept | `Sill.tourSeen` (four topic names at most today), `Sill.tourSkipped` |
+| Kept | `DuoDeck.tourSeen` (four topic names at most today), `DuoDeck.tourSkipped` |
 
 ### 12. Edge cases
 
 | Case | Behaviour |
 |---|---|
-| The session ends during the tour (Sill.app quits, a notice, the network goes) | The tour goes with the stream screen. Steps passed stay passed; the next session starts at the first step owed, with its own beat and decision (the automatic reconnect's too, since a run was on screen) |
-| The session ends after its decision, and the automatic reconnect brings the picture back (a Wi-Fi drop, the Mac waking, an eviction after 4 s in another app, Sill.app relaunched) | The reconnect's session goes on with the last one's decision: no tour where it was decided; in a layout it never decided in, only what that layout has alone, a beat after the new picture. A session the person starts decides afresh |
+| The session ends during the tour (DuoDeck.app quits, a notice, the network goes) | The tour goes with the stream screen. Steps passed stay passed; the next session starts at the first step owed, with its own beat and decision (the automatic reconnect's too, since a run was on screen) |
+| The session ends after its decision, and the automatic reconnect brings the picture back (a Wi-Fi drop, the Mac waking, an eviction after 4 s in another app, DuoDeck.app relaunched) | The reconnect's session goes on with the last one's decision: no tour where it was decided; in a layout it never decided in, only what that layout has alone, a beat after the new picture. A session the person starts decides afresh |
 | A Mac refuses this device's version (the floor) | Never shows: no window list, no picture (§4.1) |
 | The first session is remote, or over the cable | The same rule; the tour does not care how the session came |
 | Pairing at home (after `home-pairing` lands) | The card on the connect screen, "Paired with Mac mini.", then the session: the tour follows its picture. Over the cable, "Paired with Mac mini over the cable." then the same |
-| An outside `sill://pair` link during the tour | The tour is put aside (not closed, nothing saved); the pairing overlay shows; when it closes and the session still streams, the tour comes back at the same step. If a turn ends it meanwhile (nothing of it in the new layout), the keyboard stays down under the overlay |
+| An outside `duodeck://pair` link during the tour | The tour is put aside (not closed, nothing saved); the pairing overlay shows; when it closes and the session still streams, the tour comes back at the same step. If a turn ends it meanwhile (nothing of it in the new layout), the keyboard stays down under the overlay |
 | An outside link in the beat | The overlay is open at the decision: not this session |
 | The person rotates, resizes (Split View, Stage Manager) or folds the Duo during the tour | §3.2 |
 | The person rotates or folds within the beat | The beat starts again in the new layout, with every step owed there (§4) |
@@ -810,7 +810,7 @@ tour: INPUT SENT WHILE THE TOUR SHOWED: …        (the tripwire; see §6.6)
 | The software keyboard is up at the decision | Something open: not this session. Take the Tour takes it down and puts it back after |
 | A latched modifier in the key row | Kept through the tour; spent by the next key or trackpad click after it |
 | A Mac with no windows | `bar` lights the empty strip, Aa and Keyboard; the words hold |
-| A Mac with an older Sill (no settings) | The `settings` card's rows hold: Disconnect is there whatever the Mac |
+| A Mac with an older DuoDeck (no settings) | The `settings` card's rows hold: Disconnect is there whatever the Mac |
 | The app goes to the background during the tour | Back within 4 s: the tour is there, at the same step. Longer: the Mac evicts a suspended device after 4 s, the stream screen goes with the session, and the next session's tour starts at the first step not passed |
 | The app goes to the background in the beat | Not active at the decision: not this session |
 | The Desktop cannot stream (the Mac lacks Screen Recording) | No picture, so no tour: the black panel is the Mac's to fix |
@@ -828,7 +828,7 @@ tour: INPUT SENT WHILE THE TOUR SHOWED: …        (the tripwire; see §6.6)
 **Hard rules for the implementing session:**
 - **Disk and build folders:** at least 25 GB free before any build (`df -g /System/Volumes/Data`);
   DerivedData under the session's scratch folder, deleted at the end.
-- **The simulator:** a private one named "Sill walkthrough", deleted at the end:
+- **The simulator:** a private one named "DuoDeck walkthrough", deleted at the end:
   - an iPad Pro 13-inch (M5) for the Duo sizes and the iPad;
   - then, the iPad one deleted, an iPhone SE (3rd generation) of the same name, the smallest screen
     the app runs on;
@@ -837,15 +837,15 @@ tour: INPUT SENT WHILE THE TOUR SHOWED: …        (the tripwire; see §6.6)
   - `xcrun simctl io <udid> screenshot` only: never XCUITest, never `recordVideo`, never the Claude
     iOS Simulator panel.
 - **Live runs:**
-  - only `SillHost --synthetic` on loopback, reached with `-SillConnect 127.0.0.1:P`;
+  - only `DuoDeckHost --synthetic` on loopback, reached with `-DuoDeckConnect 127.0.0.1:P`;
   - only while `Scripts/encoder-check/no-device.sh` passes, before and every 2 s during (the
     synthetic host uses the hardware encoder);
   - each host under 60 s, started with `start_new_session=True`, killed by PID, none left running;
   - **no input is ever sent to a host** (a synthetic host on main posts real events on this Mac);
-  - if macOS's Application Firewall asks about the new SillHost binary, the gate stops and the
+  - if macOS's Application Firewall asks about the new DuoDeckHost binary, the gate stops and the
     hand-off says so.
-- **Never touch** `/Applications/Sill.app` or connect anything to it; never install anything on
-  Noah's devices; never push to main.
+- **Never touch** `/Applications/DuoDeck.app` or connect anything to it; never install anything on
+  the maintainer's devices; never push to main.
 
 **Headless (H):**
 
@@ -855,27 +855,27 @@ tour: INPUT SENT WHILE THE TOUR SHOWED: …        (the tripwire; see §6.6)
 | H1 | **Builds.** iOS Debug and Release for the simulator (`ARCHS=arm64 CODE_SIGNING_ALLOWED=NO`), Debug for a generic device (unsigned) | `** BUILD SUCCEEDED **` with only the known `StreamClient` capture warning |
 | H2 | **The pure check**, `Tests/checks/run-all.sh tour`, at least 150 cases: the steps and targets per layout, with and without VoiceOver; `owed` for each memory; `only`; the rule at every boundary (0.99 and 1.0 s of beat; activity at `opens` − 0.01 and at `opens`; a touch down; `busy`; `offered`; `decided` false and true, a turn offering only `laptop`; `enabled`; `skipped`; nothing owed; the beat starting again when the layout changes before the decision); `passed`, `skipped`, a session ending; `carry` for every step both ways, with and without VoiceOver, and a run with nothing left; `crease` against a copy of `ConnectLayout.topHalf` at 20 sizes; `width` at every size of §6.3's table and at accessibility text; `place` pinned for every step at the four Duo sizes and the iPhone SE's two, with a short and a tall card, and at a 400-size grid of screens by card heights: inside the margins, never across the crease, beside its targets (not over them) whenever it fits there, growing toward the top first and over its targets only when it must, a tail only where allowed and never on an overlapping card, its tip within the card's straight edge; every string of §7 for "Mac mini" and "iPad", "iPhone" (no Pencil row), the "your Mac" fallback, the landscape-only rows, the upright card's subtitle, and under VoiceOver no "tap", "touch and hold", "slide" or "drag" in a spoken row. `--mutants tour`, at least 26 (§14 step 1) | All pass; every mutant caught; `Tests/checks/run-all.sh` passes whole |
 | H3 | **Hard rules by grep** | No `.sheet(`, `.popover(`, `popoverTip`, `fullScreenCover`, `.alert(`, `import TipKit` or `Tips.` in `Tour*.swift`; no `sendInput`, `client.send`, `select(`, `launch(`, `command(` or `changeSettings` there either; `TourPolicy.swift` imports Foundation and CoreGraphics only; `requestGeometryUpdate` only inside `#if DEBUG`; `git diff origin/main --stat -- Sources Packaging Scripts iOSClient/Info.plist iOSClient/PrivacyInfo.xcprivacy` is empty; A401, F401, A402, F402 each appear in their four places |
-| H4 | **Nothing else changed on screen.** At 1000x710, 710x1000, 500x710 and 710x500: the mock with no argument, `-SillDrawer 1`, `-SillWindowMenu 1`, `-SillScaleOpen 1 -SillScale 1.5`, `-SillActive none`, `-SillScanOverlay 1`, `-SillConnectCase methods`, `-SillConnectCase addmac` (32 photos), base against this build | Pixel for pixel equal. `-SillSettings 1` at the four sizes differs only at the rows' end (the new row), or not at all where the end is out of view |
+| H4 | **Nothing else changed on screen.** At 1000x710, 710x1000, 500x710 and 710x500: the mock with no argument, `-DuoDeckDrawer 1`, `-DuoDeckWindowMenu 1`, `-DuoDeckScaleOpen 1 -DuoDeckScale 1.5`, `-DuoDeckActive none`, `-DuoDeckScanOverlay 1`, `-DuoDeckConnectCase methods`, `-DuoDeckConnectCase addmac` (32 photos), base against this build | Pixel for pixel equal. `-DuoDeckSettings 1` at the four sizes differs only at the rows' end (the new row), or not at all where the end is out of view |
 
 **Simulator (S), photographed and sheeted per size:**
 
 | # | Check |
 |---|---|
-| S1 | **Every step at every size.** On the iPad simulator, `-SillTour <step>` for the three landscape steps at 1000x710, 710x500 and 1376x1032 (drawn turned; `sips -r 270`), and the four portrait steps at 710x1000, 500x710 and 1032x1376: 21 photos. On the iPhone SE, the same at 667x375 (turned) and 375x667: 7. On the iPhone 18 Pro Max, the normal app connected to a synthetic host (`-SillConnect`, `-SillTour <step>`), upright: 4 photos with the phone's real insets (the console's `tour: screen` line gives the stream screen's size); then with `-SillOrientation landscape`: 3, rotated back. If the interface does not turn, those 3 come from the harness at 832x440, and the Dynamic Island's side is left to P11. With `-SillTourVoiceOver 1`, at 1000x710 and 500x710: 5. Each photo: the ring on its controls within a point (in the live photos an offset by an inset is the fault to look for, §6.1); the card where §6.3 puts it, with its tail; nothing crosses y = 500 at 710x1000; at 667x375 the `bar` card sits below the bar, not over it; nothing truncated; the iPhone photos read "iPhone", with no Pencil row. Send Noah the sheets |
+| S1 | **Every step at every size.** On the iPad simulator, `-DuoDeckTour <step>` for the three landscape steps at 1000x710, 710x500 and 1376x1032 (drawn turned; `sips -r 270`), and the four portrait steps at 710x1000, 500x710 and 1032x1376: 21 photos. On the iPhone SE, the same at 667x375 (turned) and 375x667: 7. On the iPhone 18 Pro Max, the normal app connected to a synthetic host (`-DuoDeckConnect`, `-DuoDeckTour <step>`), upright: 4 photos with the phone's real insets (the console's `tour: screen` line gives the stream screen's size); then with `-DuoDeckOrientation landscape`: 3, rotated back. If the interface does not turn, those 3 come from the harness at 832x440, and the Dynamic Island's side is left to P11. With `-DuoDeckTourVoiceOver 1`, at 1000x710 and 500x710: 5. Each photo: the ring on its controls within a point (in the live photos an offset by an inset is the fault to look for, §6.1); the card where §6.3 puts it, with its tail; nothing crosses y = 500 at 710x1000; at 667x375 the `bar` card sits below the bar, not over it; nothing truncated; the iPhone photos read "iPhone", with no Pencil row. Send the maintainer the sheets |
 | S2 | **Text size**, `xcrun simctl ui <udid> content_size`: every step at 710x500, 500x710 and 710x1000 on the iPad simulator and at 667x375 on the iPhone SE, at `extra-extra-extra-large` and `accessibility-extra-extra-extra-large` (28 photos). The title and rows wrap; a card too tall for its room grows toward the top (over the bar at 667x375) before its rows scroll, with the footer whole and reachable; at 710x1000 the card stays in the upper half |
-| S3 | **Take the Tour.** `-SillSettings 1 -SillSettingsEnd 1` at 500x710, 710x500 and 1000x710, cases `default`, `legacy` (no settings: the row is still there) and `remotepair`, at the default size and at xxLarge (the panel's cap) |
-| S4 | **The rule, in the mock.** `-SillTourState fresh` at 1000x710: no tour in a photo at 0.5 s, the `touch` card (1 of 3) at 2 s. `landscape` at 710x1000: at 2 s the `laptop` card with its subtitle and no dots. `done` and `skipped`: nothing at 3 s. `fresh` with `-SillDrawer 1`: nothing at 3 s, and the console's "not this session: the Apps list was open". `fresh` with `-SillTourActivityAt 0.5`: nothing at 3 s ("not this session: used within a second of the picture"). `fresh` with `-SillScanOverlay 1`: nothing at 3 s. With `-SillTourPress next@1` at 1000x710: Done after the third card, the console's "tour: done (saved: …)", nothing written (`fresh`) |
-| S5 | **Live**, one host at a time. (a) `-SillLive 1 -SillLayout 1000x710 -SillConnect 127.0.0.1:P -SillTourState fresh`: "tour: showing touch (1 of 3)" between 1.0 and 2.5 s after the console's `host:` line (the first window list; the picture follows it); a photo of the card over the test pattern. (b) On a fresh install (`xcrun simctl uninstall`, then `install`), the same with `saved` and `-SillTourPress next@1.5`: kill the host while the third card shows. Back on the connect screen, `plutil -p "$(xcrun simctl get_app_container "Sill walkthrough" me.saffer.sill data)/Library/Preferences/me.saffer.sill.plist"` lists `Sill.tourSeen` with touch and bar. A new host and the same launch: the tour starts at `settings`, with no dots and Done. (c) A host with `SILL_TEST_MIN_DEVICE_VERSION=99` and `-SillTourState fresh`: the notice on the connect screen and no `tour:` line in 10 s. (d) The console never prints the tripwire |
+| S3 | **Take the Tour.** `-DuoDeckSettings 1 -DuoDeckSettingsEnd 1` at 500x710, 710x500 and 1000x710, cases `default`, `legacy` (no settings: the row is still there) and `remotepair`, at the default size and at xxLarge (the panel's cap) |
+| S4 | **The rule, in the mock.** `-DuoDeckTourState fresh` at 1000x710: no tour in a photo at 0.5 s, the `touch` card (1 of 3) at 2 s. `landscape` at 710x1000: at 2 s the `laptop` card with its subtitle and no dots. `done` and `skipped`: nothing at 3 s. `fresh` with `-DuoDeckDrawer 1`: nothing at 3 s, and the console's "not this session: the Apps list was open". `fresh` with `-DuoDeckTourActivityAt 0.5`: nothing at 3 s ("not this session: used within a second of the picture"). `fresh` with `-DuoDeckScanOverlay 1`: nothing at 3 s. With `-DuoDeckTourPress next@1` at 1000x710: Done after the third card, the console's "tour: done (saved: …)", nothing written (`fresh`) |
+| S5 | **Live**, one host at a time. (a) `-DuoDeckLive 1 -DuoDeckLayout 1000x710 -DuoDeckConnect 127.0.0.1:P -DuoDeckTourState fresh`: "tour: showing touch (1 of 3)" between 1.0 and 2.5 s after the console's `host:` line (the first window list; the picture follows it); a photo of the card over the test pattern. (b) On a fresh install (`xcrun simctl uninstall`, then `install`), the same with `saved` and `-DuoDeckTourPress next@1.5`: kill the host while the third card shows. Back on the connect screen, `plutil -p "$(xcrun simctl get_app_container "DuoDeck walkthrough" com.agentsai.duodeck data)/Library/Preferences/com.agentsai.duodeck.plist"` lists `DuoDeck.tourSeen` with touch and bar. A new host and the same launch: the tour starts at `settings`, with no dots and Done. (c) A host with `DUODECK_TEST_MIN_DEVICE_VERSION=99` and `-DuoDeckTourState fresh`: the notice on the connect screen and no `tour:` line in 10 s. (d) The console never prints the tripwire |
 
-**Noah's devices (P), handed over at the end:** the iPad mini and the iPhone 15 Pro. The automatic
+**the maintainer's devices (P), handed over at the end:** the iPad mini and the iPhone 15 Pro. The automatic
 tour needs a Release or TestFlight build on a fresh install, or the Debug build launched with
-`-SillTourState fresh` (Xcode's scheme, Arguments).
+`-DuoDeckTourState fresh` (Xcode's scheme, Arguments).
 
 | # | Check |
 |---|---|
 | P1 | **The first picture.** About a second after the Mac's Desktop shows, with nothing touched meanwhile, the tour dims the screen and lights the picture. While it shows: tap, hold and drag on the dimmed picture; press keys on a hardware keyboard; hover and touch with the Pencil; use a trackpad or mouse on the iPad. Nothing happens on the Mac (its pointer does not move; the host's `[1s]` lines show no `in.pointer`, `in.scroll`, `in.text` or `in.key` meanwhile), and the picture keeps moving. Then, fresh again: touch the picture within the first second, and no tour comes this session |
 | P2 | **Each step** lights the control it names, in both layouts, and Done ends it. Held upright after a tour in landscape and left alone: the `laptop` card about a second after the turn, once |
-| P3 | **Interrupted.** Quit Sill.app on the Mac at the third card; reopen it. The next session's tour starts at the first step not passed |
+| P3 | **Interrupted.** Quit DuoDeck.app on the Mac at the third card; reopen it. The next session's tour starts at the first step not passed |
 | P4 | **Take the Tour,** in both layouts, with the keyboard up before opening Settings: the tour runs, and the keyboard is back after Done |
 | P5 | **Skip** on the first card: no tour at the next session, nor when held upright |
 | P6 | **VoiceOver:** no `touch` card and no trackpad rows; focus on each card's title as it comes; each row read whole, with no symbol names; the `bar` rows say to swipe up or down; the escape gesture skips; Magic Tap goes on; after Done, the stream screen is read afresh |
@@ -933,13 +933,13 @@ Commit messages end with the session's attribution lines.
    - the UI at every size, text size, VoiceOver and Reduce Motion.
 
    A "Review fixes" commit if needed, then S4 and S5 again on the final build. Hand P1–P11 to
-   Noah. **Stop there.**
+   the maintainer. **Stop there.**
 
 ### 15. Hard rules (for every step)
 
 - **Apple frameworks only:** SwiftUI and UIKit. No TipKit in this step.
 - **No wire change, and nothing sent:** the tour sends nothing to the Mac, and while it shows the
-  device sends no input either (§6.6). `StreamProtocol`, the host, the CLI and Sill.app are
+  device sends no input either (§6.6). `StreamProtocol`, the host, the CLI and DuoDeck.app are
   untouched.
 - **No system presentation:** no sheet, popover, alert or full-screen cover. The tour is a view
   in the stream screen's hierarchy, as the Settings panel and the pairing overlay are.
@@ -952,7 +952,7 @@ Commit messages end with the session's attribution lines.
 - **Every layout:** the Duo's 1000×710, 710×1000, 500×710 and 710×500; iPhone upright and
   sideways, down to the iPhone SE; iPad. VoiceOver, every text size, Reduce Motion.
 - **iOS 17.0 APIs,** or an `#available` check with a fallback.
-- **The harness and every Debug run look as before** unless a `-SillTour…` argument asks.
+- **The harness and every Debug run look as before** unless a `-DuoDeckTour…` argument asks.
 - **New iOS files:** four pbxproj entries each, by hand. Swift 5 language mode.
 - **Tests** follow §13's rules: the private simulator, screenshots only, synthetic hosts on
   loopback while no device is connected, no input to any host.
@@ -971,12 +971,12 @@ Commit messages end with the session's attribution lines.
     touched; touch the picture at once to go without it, or take it once, before the screenshots.
 - **docs/release-checklist.md,** TestFlight §8: the same line for the screenshot session.
 - **site/privacy.html,** "On your iPhone or iPad": "Which parts of the tour you have seen." The
-  site reaches getsill.app with the next republish (the checklist's TestFlight §3).
+  site reaches duodeck.megawebs.com with the next republish (the checklist's TestFlight §3).
 - **Tests/checks/README.md:** the `tour` row.
 
 ### 17. The base, other branches, and what comes later
 
-- **Base:** origin/main at cf05a78. Noah's queue puts this after home pairing
+- **Base:** origin/main at cf05a78. the maintainer's queue puts this after home pairing
   (`home-pairing`, not merged). Whichever lands second takes the other's changes in:
   - `HostSettingsPanel.swift`: home pairing rewrites Away from home; Take the Tour goes after it,
     whatever its cases become;
@@ -1043,7 +1043,7 @@ the HIG pages named at the top. What it found, and what changed:
 6. **The phone was never photographed as it is.** The harness draws a fake screen with no insets,
    and S1's phone sizes (956x440 and 440x956) are sizes the stream screen never has: it keeps the
    top and side safe areas (StreamScreen.swift:169). Now the phone photos come from the normal app
-   against a synthetic host (`-SillOrientation landscape` turns it), and the smallest screen the
+   against a synthetic host (`-DuoDeckOrientation landscape` turns it), and the smallest screen the
    app runs on, the iPhone SE's 667×375 and 375×667, joins every size check.
 7. **The cutout could miss its controls by an inset.** The dim was to cover the safe areas while
    the targets are measured in a space that starts inside them: on a phone upright the ring would
@@ -1060,18 +1060,18 @@ the HIG pages named at the top. What it found, and what changed:
     evicts a suspended device after that, and the next session resumes at the first step not
     passed (§12).
 11. Smaller: TipKit's inline `TipView` considered as well as `popoverTip`; the card's padding the
-    panel's 14 pt; no dots on a one-step run; `-SillTour` in the normal app; the stand-ins
-    `-SillTourActivityAt` and `-SillTourVoiceOver`; the tripwire's one expected case (a coast after
+    panel's 14 pt; no dots on a one-step run; `-DuoDeckTour` in the normal app; the stand-ins
+    `-DuoDeckTourActivityAt` and `-DuoDeckTourVoiceOver`; the tripwire's one expected case (a coast after
     a flick, under Take the Tour).
 
 Kept as it was, against the HIG's preference for tips in context and teaching by doing: the flow
-(Noah asked for a walkthrough) and the paused input (a click on someone's own Mac is not a safe
-test), both open questions for Noah. Kept too: the form (coach marks in the view hierarchy), the
+(the maintainer asked for a walkthrough) and the paused input (a click on someone's own Mac is not a safe
+test), both open questions for the maintainer. Kept too: the form (coach marks in the view hierarchy), the
 two keys, Skip for good, Take the Tour last in Settings, and the Debug rule.
 
 ---
 
-## Open questions for Noah (the implementer uses the default unless Noah says otherwise)
+## Open questions for the maintainer (the implementer uses the default unless the maintainer says otherwise)
 
 1. **The form.** Default: **coach marks over the live controls**, in the view hierarchy, one step
    at a time. The alternatives: a paged card with drawings, or TipKit tips (Decision).
@@ -1093,19 +1093,19 @@ two keys, Skip for good, Take the Tour last in Settings, and the Debug rule.
    tour, as a tip would.
 7. **Back.** Default: **none;** Take the Tour replays. The alternative: a Back button beside Skip.
 8. **The row's name and place.** Default: **"Take the Tour", the last row of the Settings panel's
-   scrolling rows.** The alternatives: "How to Use Sill"; beside Disconnect in the pinned foot; a
+   scrolling rows.** The alternatives: "How to Use DuoDeck"; beside Disconnect in the pinned foot; a
    "?" button in the bar (the outer display's bar has no room for it).
 9. **Text size.** Default: **every size, the accessibility sizes included;** a card too tall for
    its room grows toward the top, over its own targets if it must, then scrolls. The alternatives:
    capped at accessibility-3 (235 % of the default size, past the 200 % the HIG's Accessibility
    page asks for), or at xxLarge like the Settings panel.
-10. **Debug builds.** Default: **the automatic tour only with `-SillTourState`,** so no harness
+10. **Debug builds.** Default: **the automatic tour only with `-DuoDeckTourState`,** so no harness
     photo or other feature's live test ever gets a tour over it; Release and TestFlight always
     follow the rule. The alternative: Debug as Release, and every test run passes
-    `-SillTourState done`.
+    `-DuoDeckTourState done`.
 11. **Existing installs.** Default: **no migration;** everyone sees it once (only development and
     TestFlight builds exist). The alternative: skip it on a device that has connected before (a
-    saved window order or a saved Mac). (For 0.6, Noah: the tour shows once more for everyone who
+    saved window order or a saved Mac). (For 0.6, the maintainer: the tour shows once more for everyone who
     launches that version: "The tour once more, for 0.6".)
 12. **The words.** Default: **§7's table,** in the App Store description's words; the check pins
     them, so a change is one edit there and one in the check.
@@ -1176,7 +1176,7 @@ default.
   card lands where the layout put it; the check asserts that over its whole grid.
 - **The Settings row's group** has 10 pt above it when it follows a row, not a footnote (while
   settings load, and for a Mac without them).
-- **Added:** `-SillTakeTourAt S` (the gates may not tap Take the Tour), and "S s after the picture"
+- **Added:** `-DuoDeckTakeTourAt S` (the gates may not tap Take the Tour), and "S s after the picture"
   on the console's `showing` lines. The scrolling words fade out over 16 pt above the footer instead
   of being cut mid-line; Next and Done get 4 pt more height at large sizes.
 
@@ -1208,7 +1208,7 @@ default.
   nothing active, the pairing overlay, the connect screen's methods and Add a Mac, at the four Duo
   sizes, this build against the base (this plan's commit, built from `git archive`): 28 of 32 equal
   pixel for pixel; the four held-thumbnail photos differ where it wiggles, as two photos of the base
-  do. `-SillSettings 1` equal at the four sizes; with `-SillSettingsEnd 1` the rows end in the new
+  do. `-DuoDeckSettings 1` equal at the four sizes; with `-DuoDeckSettingsEnd 1` the rows end in the new
   row.
 - **S1, S2:** every step at 1000x710, 710x500, 710x1000, 500x710, the iPad Pro 13-inch's
   1376x1032 and 1032x1376, and the iPhone SE's 667x375 and 375x667, at the default text size and at
@@ -1225,29 +1225,29 @@ default.
 - **S4:** in the mock: `fresh` no tour in the first second and the touch card at 1.07–1.17 s;
   `landscape` at 710x1000 the laptop card alone, with its subtitle and no dots; `done` and
   `skipped` nothing ("nothing owed here"); the Apps list open, a stand-in touch at 0.5 s and the
-  pairing overlay each "not this session" with the reason; `-SillTourPress next@1` through Done,
+  pairing overlay each "not this session" with the reason; `-DuoDeckTourPress next@1` through Done,
   "done (saved: touch, bar, settings; this run only)".
-- **The saved keys, in the mock** (a fresh install, `-SillTourState saved`): the first session
+- **The saved keys, in the mock** (a fresh install, `-DuoDeckTourState saved`): the first session
   showed the tour and saved each step as Next and Done passed it; the second said "nothing owed
-  here"; Take the Tour from the Settings panel (`-SillTakeTourAt 2`) showed it again from the
-  first step; the app's plist held `Sill.tourSeen` touch, bar, settings and `Sill.tourSkipped`
+  here"; Take the Tour from the Settings panel (`-DuoDeckTakeTourAt 2`) showed it again from the
+  first step; the app's plist held `DuoDeck.tourSeen` touch, bar, settings and `DuoDeck.tourSkipped`
   false.
-- **S5, live** (03:28–03:40, once Noah's iPad had left Sill.app: it streamed from 01:17 on, and
+- **S5, live** (03:28–03:40, once the maintainer's iPad had left DuoDeck.app: it streamed from 01:17 on, and
   `Scripts/encoder-check/no-device.sh` blocked every try until then). The normal app on an iPhone
-  18 Pro Max against `SillHost --synthetic` on loopback (`-SillConnect`), one host at a time, the
-  guard before each and a watchdog on Sill.log during, each host under 40 s, none left running:
-  - (a, b) on a fresh install with `-SillTourState saved`, the first connection showed the touch
-    card 1.06 s after the picture (1.10 s in the first run) and, `-SillTourPress next@2` pressing
+  18 Pro Max against `DuoDeckHost --synthetic` on loopback (`-DuoDeckConnect`), one host at a time, the
+  guard before each and a watchdog on DuoDeck.log during, each host under 40 s, none left running:
+  - (a, b) on a fresh install with `-DuoDeckTourState saved`, the first connection showed the touch
+    card 1.06 s after the picture (1.10 s in the first run) and, `-DuoDeckTourPress next@2` pressing
     through, saved touch, bar, settings and laptop; the second connection said "nothing owed here
-    (portrait; seen: touch, bar, settings, laptop)"; the third, with `-SillTakeTourAt 2`, opened
+    (portrait; seen: touch, bar, settings, laptop)"; the third, with `-DuoDeckTakeTourAt 2`, opened
     Settings and its Take the Tour showed the tour from the first step, 3.37 s after the picture.
   - A session cut at the third card (the host killed; the stand-in had just passed that card) went
     on at the next connection with what was left: the laptop card alone, 1 of 1, with its
     subtitle.
-  - (c) a host with `SILL_TEST_MIN_DEVICE_VERSION=99`: the connect screen's update notice, and no
+  - (c) a host with `DUODECK_TEST_MIN_DEVICE_VERSION=99`: the connect screen's update notice, and no
     `tour:` line.
   - The phone's real safe areas: every step upright (the stream screen 440x894 under the Dynamic
-    Island) and sideways (`-SillOrientation landscape` turns the normal app; 832x440 between its
+    Island) and sideways (`-DuoDeckOrientation landscape` turns the normal app; 832x440 between its
     insets), at the default size and at accessibility-extra-large: each ring on its controls, not
     an inset away (the critique's §18 item 7), the cards clear of the Dynamic Island and the home
     indicator, "iPhone" and no Pencil row.
@@ -1284,7 +1284,7 @@ TourPolicy) found eight things. Each was checked here before it was fixed, one c
 4. **Every automatic reconnect decided afresh,** so someone at work got the dim a second after a
    dropped picture came back. What a session decided (`TourSession`) lives on StreamClient and the
    automatic reconnect's session goes on with it (open question 20), unless the last one ended
-   before its decision or mid-run. Live, on loopback through the remote door (`SillHost --synthetic
+   before its decision or mid-run. Live, on loopback through the remote door (`DuoDeckHost --synthetic
    --remote=PORT` with its identity kept in a scratch folder, the app paired at launch; the first
    host killed, a second on the same port and identity, the app's own automatic redial 4.1–4.2 s
    after the loss): a first session that passed (a stand-in touch), the reconnect's session kept
@@ -1305,7 +1305,7 @@ TourPolicy) found eight things. Each was checked here before it was fixed, one c
 Found while verifying them: the tour's delayed work (the beat's wait, Take the Tour's start, the
 DEBUG stand-ins) acted on a stream screen that had gone with its session; in the live run a
 stand-in pressed Next on a gone card and saved its step. It now goes ahead only in the session it
-began in. The DEBUG `-SillTourActivityAt` touches in the app run's first session only, so a live run
+began in. The DEBUG `-DuoDeckTourActivityAt` touches in the app run's first session only, so a live run
 can show a reconnect keeping its decision.
 
 ### Merged with main at 5c6a850 (PRs #29, the disk image, and #30, the iPhone's portrait layout)
@@ -1340,24 +1340,24 @@ tour's photos on the iPhone were the same before and after this merge (card fram
   but the bar card's new words and what differs between two runs of either build (the home
   indicator, a thumbnail strip's end); the largest size and accessibility-extra-large at 500x710,
   710x500, 710x1000 and 1000x710, every bar, Settings and laptop card beside its targets with its
-  tail. After it: the phone's arrangement (`-SillIdiom phone`) at 440x894, 402x812, 375x647 and
+  tail. After it: the phone's arrangement (`-DuoDeckIdiom phone`) at 440x894, 402x812, 375x647 and
   500x710, and at two larger sizes; the harness's other states (no tour) against main's build,
   equal but the Settings panel's last row and its scroll indicator, and what differs between two
   runs of main's own build; and, on the iPhone simulator, the halves (710x1000, and 500x710 as an
-  iPad draws it, `-SillIdiom pad`) and both landscape sizes, each card anchored and tailed where it
+  iPad draws it, `-DuoDeckIdiom pad`) and both landscape sizes, each card anchored and tailed where it
   was before the merge (its height differs only by the 3x screen's rounding and the iPhone's
   words).
 - On a private iPhone 18 Pro Max: the harness at 440x894 and 956x440 with the iPhone's words (no
-  Pencil row), and live against `SillHost --synthetic` (the guard before each host, a watchdog on
-  Sill.log during, each host under 30 s, none left running): every step upright (440x894 under the
+  Pencil row), and live against `DuoDeckHost --synthetic` (the guard before each host, a watchdog on
+  DuoDeck.log during, each host under 30 s, none left running): every step upright (440x894 under the
   Dynamic Island) and sideways (832x440), at the default size and accessibility-extra-large, each
   ring on its controls under the real safe areas. After the second merge, again live on the
-  iPhone (the hosts on loopback and the software encoder, `SILL_TEST_LOOPBACK`,
-  `SILL_TEST_SOFTWARE_ENCODER`): the reconnect after a session that passed showed nothing, the one
+  iPhone (the hosts on loopback and the software encoder, `DUODECK_TEST_LOOPBACK`,
+  `DUODECK_TEST_SOFTWARE_ENCODER`): the reconnect after a session that passed showed nothing, the one
   after a run cut at its second card showed the tour from the step not passed, and the phone's
   cards sat where they did before. The tripwire never fired in any live run.
 
-### Untested, for Noah
+### Untested, for the maintainer
 
 §13's P1–P11 on the iPad mini and the iPhone 15 Pro, and the taps themselves: no tap could be made
 here, so Next, Skip, Done, a tap on the dim (the nudge, and whether any tap is lost to it: §6.1's
@@ -1373,7 +1373,7 @@ ring whole, the words scrolling.
 
 ## The tour once more, for 0.6 (2026-10-31)
 
-Noah (2026-10-31): "Mark the new features with “New:” and make the tutorial run for anyone who
+the maintainer (2026-10-31): "Mark the new features with “New:” and make the tutorial run for anyone who
 launches this version for the first time. You don’t need to explain the Aa stuff, maybe add an
 explanation with Virtual Desktop’s explanation." With it: "Those new features will come to 0.6.1"
 (the handoff reads it as the open pull requests and ideas waiting for 0.6.1, this tour going into
@@ -1388,11 +1388,11 @@ new UserDefaults key. This section supersedes §5's "No migration" and open ques
   #78; paste right away, #242); the Mac's sound (StreamClient+Audio, #94; Send Audio on by default,
   #236); Reverse Scrolling (#159); Larger Picture (#79); Hold to Show Window Controls
   (ThumbnailHold, #248); a hardware keyboard's keys without the Keyboard button
-  (HardwareKeyboardPolicy, #80); Virtual Display on by default in Sill for Mac (`HostConfig.app`,
+  (HardwareKeyboardPolicy, #80); Virtual Display on by default in DuoDeck Host (`HostConfig.app`,
   #236). **Not new:** the Menus button (MacMenuButton) and the three-finger gestures
   (TrackpadGestures), both in v0.5.1 and in 0.5 before it; they merged with the tour (#36, #38,
   #35) and the tour never showed them, so their rows come now, without "New:".
-- **Passwords.** Since 2026-10-29 (Noah: "Remove the code that tries to make password copies never
+- **Passwords.** Since 2026-10-29 (the maintainer: "Remove the code that tries to make password copies never
   arrive") a password manager's copies go like any other (ClipboardPolicy.swift); only Universal
   Clipboard's items and the host's own write stay on the Mac. No row speaks of passwords, and the
   check refuses the word.
@@ -1406,7 +1406,7 @@ new UserDefaults key. This section supersedes §5's "No migration" and open ques
 ### The cards
 
 `TourTopic.allCases` is `touch, bar, sharing, settings, laptop`. `sharing` (saved as "sharing" in
-`Sill.tourSeen`) is **Clipboard and Sound**, right before Settings: both light the Settings button,
+`DuoDeck.tourSeen`) is **Clipboard and Sound**, right before Settings: both light the Settings button,
 and the sideways tour still ends on "Hold your iPad upright…".
 
 | layout | steps (sighted) | under VoiceOver |
@@ -1455,9 +1455,9 @@ The words (‹Mac› the Mac's name, ‹device› iPad or iPhone; **bold** a str
 | B4 | | sideways, a phone | **Keyboard** brings up the on-screen keyboard to type on ‹Mac›. |
 | B5 | | sideways, a phone | New: **A hardware keyboard** types on ‹Mac› by itself, Esc included, and **Keyboard** then brings up the keyboard bar. |
 | S1 | sharing, "Clipboard and Sound" ("Clipboard", "Sound") | clipboard | New: With **Share Clipboard**, text you copy on ‹Mac› is ready to paste on this ‹device›. |
-| S2 | | clipboard | New: Copy on this ‹device›, then come back to Sill: **Paste on ‹Mac›**, on the note Sill shows then or in Settings, puts it where ‹Mac›’s cursor is. (Right Away off: "…sends it to ‹Mac›’s clipboard.") |
+| S2 | | clipboard | New: Copy on this ‹device›, then come back to DuoDeck: **Paste on ‹Mac›**, on the note DuoDeck shows then or in Settings, puts it where ‹Mac›’s cursor is. (Right Away off: "…sends it to ‹Mac›’s clipboard.") |
 | S3 | | sound | New: **Send Audio**, a beta, plays ‹Mac›’s sound here, and **Mute** silences this ‹device› alone. |
-| S4 | | neither | New: **Update Sill on ‹Mac›** to copy and paste between it and this ‹device›, and to hear its sound here. |
+| S4 | | neither | New: **Update DuoDeck on ‹Mac›** to copy and paste between it and this ‹device›, and to hear its sound here. |
 | G1, G2 | settings | always | as before (Disconnect, Take the Tour) |
 | G3 | | sighted | New: **Reverse Scrolling** turns a finger’s drag and the on-screen trackpad’s two-finger scroll around. |
 | G4 | | sighted | New: **Hold to Show Window Controls** sets how long you hold a window’s thumbnail before its controls show. |
@@ -1469,7 +1469,7 @@ The words (‹Mac› the Mac's name, ‹device› iPad or iPhone; **bold** a str
 | K6 | | a phone, Larger Picture offered | New: **Larger Picture**, in Settings: a window’s picture takes the place of the thumbnails and reaches down to where the keyboard comes up. |
 
 The old Aa row and the old Keyboard rows ("…on screen or with a hardware keyboard", untrue since a
-hardware keyboard types by itself) are gone; Aa is named only in B3 (Noah's word). Sharing's hint:
+hardware keyboard types by itself) are gone; Aa is named only in B3 (the maintainer's word). Sharing's hint:
 "In Settings, the last button in the row under the picture." on a phone, "In Settings, the last
 button in the bar." elsewhere. A phone's bar hints name Menus while it shows ("Under the picture: Aa
 and Keyboard in the first row, the windows and Menus in the second."; with Larger Picture "…Apps,
@@ -1491,9 +1491,9 @@ other languages and dictation, held keys, the display wake, the Mac's pointer.
 (a fresh install, 0.5 and 0.5.1, which stored none) or an older one is cleared (nothing seen, not
 skipped) and `write` says to store that with version 2; version 2's memory, or a later build's (a
 downgrade back to this one), is kept as it is and the version never lowered. TourStore keeps it in
-`Sill.tourVersion` (an Int, read as nil when absent) beside `Sill.tourSeen` and `Sill.tourSkipped`,
+`DuoDeck.tourVersion` (an Int, read as nil when absent) beside `DuoDeck.tourSeen` and `DuoDeck.tourSkipped`,
 and writes it only in the upgrade; `save(_:)` never does. The upgrade runs in Release always, and
-in Debug only with `-SillTourState saved`: `fresh`, `landscape` (the sideways steps), `done` and
+in Debug only with `-DuoDeckTourState saved`: `fresh`, `landscape` (the sideways steps), `done` and
 `skipped` are this run's alone, and a Debug build with no state reads the memory as it is and
 writes no version, so it never uses up the once more that TestFlight or the App Store gives. It is
 idempotent, as it must be: SwiftUI makes a TourStore at every StreamScreen init and keeps the
@@ -1525,16 +1525,16 @@ reconnect's session keeps the last decision; Take the Tour as before).
   14 pt side margin, where the strip's band ran to its own 6 pt one (the 18 Pro Max: 6 to 426
   instead of 434). The check pins it.
 - **The support page's two lines** (Universal Control, Paste from Other Apps), which the build took
-  from the handoff of 2026-10-30, are gone since the review: Noah closed the Keyboard button under
+  from the handoff of 2026-10-30, are gone since the review: the maintainer closed the Keyboard button under
   Universal Control as iPadOS's own behavior with no support line asked, and the chip's missing Paste
-  (which Settings › Apps › Sill › Paste from Other Apps fixed on his iPad) is not the tour's; a line
+  (which Settings › Apps › DuoDeck › Paste from Other Apps fixed on his iPad) is not the tour's; a line
   for it, if wanted, is a change of its own.
 - **The App Store description's clipboard bullet** still said that a password manager's concealed
   copies stay on the Mac, untrue since 2026-10-29: it loses that sentence, as README's bullet does.
 - **The site's marker** names the branch, not a pull request number, until the pull request is
   open.
 
-### Open questions for Noah (the defaults taken)
+### Open questions for the maintainer (the defaults taken)
 
 1. Mark the Menus and three-finger rows "New:"? **Yes, since the review** (the build's default was
    no: they shipped in 0.5 and 0.5.1). The task asks for every feature added since the tour was
@@ -1548,15 +1548,15 @@ reconnect's session keeps the last decision; Take the Tour as before).
 5. Larger Picture's row on the phone's laptop card? **Default: yes** (the Settings card would miss
    it in a tour taken sideways).
 6. A fresh install stores version 2 at its first stream screen, and Debug writes it only with
-   `-SillTourState saved`? **Default: yes.**
+   `-DuoDeckTourState saved`? **Default: yes.**
 7. The site marker's name, "Tour 0.6", if the tour ships in 0.6.1? **Default: 0.6**, per the
    handoff; renaming is one sed.
 
 ### Results (2026-10-31)
 
 Built on main at e4d30349. Every build with `nice -n 10` while the load average was under 20; the
-test hosts only `SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1
-SILL_TEST_NO_SCREEN=1 .build/release/SillHost --synthetic`, one at a time, each killed by PID within
+test hosts only `DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1
+DUODECK_TEST_NO_SCREEN=1 .build/release/DuoDeckHost --synthetic`, one at a time, each killed by PID within
 55 s, no input sent (no `in.` counter in any host's lines); three private simulators, created for this
 and deleted after; photos with `simctl io … screenshot` or Tests/duorig's `shot`.
 
@@ -1576,12 +1576,12 @@ and deleted after; photos with `simctl io … screenshot` or Tests/duorig's `sho
 - **H3**: no `.sheet(`, `.popover(` or TipKit in Tour*.swift (the one hit is the comment that forbids
   them); TourPolicy imports Foundation and CoreGraphics alone; nothing in `Sources`, `Packaging`,
   `Scripts`, `iOSClient/Info.plist`, the privacy manifest or the project file differs from main.
-- **H4, nothing else changed**: the mock with no tour argument, with `-SillSettings 1` and with
-  `-SillMenusOpen 1`, at 1000x710, 710x1000, 500x710 and 710x500 on the iPad simulator and at 951x669
+- **H4, nothing else changed**: the mock with no tour argument, with `-DuoDeckSettings 1` and with
+  `-DuoDeckMenusOpen 1`, at 1000x710, 710x1000, 500x710 and 710x500 on the iPad simulator and at 951x669
   (open flat) and 466x678 (the cover) on the Duo's, main's build against the branch's: 18 of 18
   identical. (Main's first photo of Settings at 710x1000 differed from its own retake by 6 pixels at a
   step of 1; the retake equals the branch's.)
-- **S1–S3, the photos** (each looked at; in `~/Downloads/sill-handoff/tour-0-6/`, INDEX.md):
+- **S1–S3, the photos** (each looked at; in `~/Downloads/duodeck-handoff/tour-0-6/`, INDEX.md):
   - A private iPad Pro 13-inch (M5) simulator, iOS 27.0 (24A434), the mock: 1000x710 (4 cards),
     710x1000 (5), 500x710 (5), 440x894 as a phone (5) and with Larger Picture (bar, laptop), 832x440 as
     a phone (4); Virtual Display on (the bar sideways and upright, the laptop card), no menus
@@ -1601,18 +1601,18 @@ and deleted after; photos with `simctl io … screenshot` or Tests/duorig's `sho
     the card's fade, the footer in reach and the scroll indicator flashing as it shows (the risk this
     plan took, 5). At 500x710, the iPad's compact halves, the laptop card (five rows now) fills its room
     exactly and its last row scrolls. At accessibility sizes most cards scroll, as before.
-- **The accessibility tree** (`-SillAXDump 3` at 1000x710 and 710x1000, every card): each title
+- **The accessibility tree** (`-DuoDeckAXDump 3` at 1000x710 and 710x1000, every card): each title
   "…, step N of M" with its hint, each new row's label "New: …".
 - **S4, live**: a private iPhone 18 Pro Max simulator, iOS 27.0, the normal app against the test host,
-  `-SillTour` each card upright (5: "Windows", for a synthetic host sends no menus; Virtual Display's
+  `-DuoDeckTour` each card upright (5: "Windows", for a synthetic host sends no menus; Virtual Display's
   off form; the clipboard's and the sound's rows; Larger Picture's on the laptop card) and with
-  `-SillOrientation landscape` (4), at both text sizes, each card clear of the Dynamic Island and the
+  `-DuoDeckOrientation landscape` (4), at both text sizes, each card clear of the Dynamic Island and the
   home indicator. These photos carry this Mac's name and stay out of the handoff folder.
 - **S5, the upgrade, live** on that simulator (the app container's preferences read with plutil after
   each session):
-  - (A) main's build (e4d30349) with `-SillTourState saved -SillTourPress next@1.5` passed its four
-    cards: stored `Sill.tourSeen` touch, bar, settings, laptop, no `Sill.tourVersion`. This build over
-    it, no `-SillTourState`: no tour, nothing written. With `saved`: "tour: memory of tour version 1
+  - (A) main's build (e4d30349) with `-DuoDeckTourState saved -DuoDeckTourPress next@1.5` passed its four
+    cards: stored `DuoDeck.tourSeen` touch, bar, settings, laptop, no `DuoDeck.tourVersion`. This build over
+    it, no `-DuoDeckTourState`: no tour, nothing written. With `saved`: "tour: memory of tour version 1
     (none stored) (seen: touch, bar, settings, laptop) cleared: version 2 shows once", the first card
     "1 of 5" 1.13 s after the picture; stored version 2, nothing seen. All five passed, then a
     relaunch: "nothing owed here".
@@ -1620,15 +1620,15 @@ and deleted after; photos with `simctl io … screenshot` or Tests/duorig's `sho
     "(seen: none; skipped) cleared", 1 of 5 at 1.14 s.
   - (C) a fresh install with `saved`: cleared (nothing stored), version 2 written at the first stream
     screen, the five cards, Done, then nothing owed.
-  - (D) `-Sill.tourVersion 3` over the full memory: no tour, the stored version still 2. (E) version 3
+  - (D) `-DuoDeck.tourVersion 3` over the full memory: no tour, the stored version still 2. (E) version 3
     over version 1's four seen: kept as it is, the new card alone (1 of 1), nothing written. (F)
-    `-Sill.tourVersion 1` over the full memory: cleared once, the whole tour.
-  - Two traps of the harness, not of the code: `xcrun simctl spawn … defaults write me.saffer.sill`
+    `-DuoDeck.tourVersion 1` over the full memory: cleared once, the whole tour.
+  - Two traps of the harness, not of the code: `xcrun simctl spawn … defaults write com.agentsai.duodeck`
     writes a domain the app also reads, outside its container, which an uninstall keeps (it planted a
     memory in one run, deleted with `defaults delete` before the run above); and a launch terminated
     about 2 s after main's stand-in Skip lost that Skip's write (main read it back once the session
     lasted 10 s).
-- Not verified: a device; a Release build's own upgrade (`-SillConnect` is DEBUG only); TestFlight.
+- Not verified: a device; a Release build's own upgrade (`-DuoDeckConnect` is DEBUG only); TestFlight.
 
 ### The review and its fixes (2026-10-31)
 
@@ -1638,18 +1638,18 @@ be fixed before a merge. Its six findings, each checked here first; one commit p
 1. **The Menus and three-finger rows carried no "New:"** (should-fix: the task's "each marked with a
    visible 'New:' prefix" names both). Taken: both are marked, and so is Virtual Display's row in both
    forms (finding 5), since the old tour told of none of them (280fa7dd, open question 1).
-2. **support.html's Universal Control line** (should-fix): Noah closed that case as iPadOS's own with
+2. **support.html's Universal Control line** (should-fix): the maintainer closed that case as iPadOS's own with
    no support line asked. Taken out, with the checklist's grep and marker words and the
    device step (19866a1e).
 3. **support.html's Paste from Other Apps line** (nit: not the tour's). Taken out too, for a change of
    its own if wanted.
 4. **The Duo's cover at accessibility-extra-large**: the bar card's first view shows its title on two
    lines and only the first row's symbol above the fade. Left as it is: the tour's rule (the words
-   scroll beside the controls, Skip and Next in reach), as the card scrolled there before; Noah's call
+   scroll beside the controls, Skip and Next in reach), as the card scrolled there before; the maintainer's call
    (a shorter title on narrow rooms, or no hardware-keyboard row on the cover).
 5. **Virtual Display's off form unmarked**: marked (with 1).
 6. **Small wording points** (c3319e18): (a) the Paste row now says where Paste is ("…: **Paste
-   on ‹Mac›**, on the note Sill shows then or in Settings, puts it…"); (b) Reverse Scrolling's row says "the on-screen
+   on ‹Mac›**, on the note DuoDeck shows then or in Settings, puts it…"); (b) Reverse Scrolling's row says "the on-screen
    trackpad’s two-finger scroll" (ScrollDirection turns a connected trackpad's and a wheel's never);
    (c) the hardware keyboard's rows use `keyboard.badge.ellipsis` (iOS 14), not `escape`, which draws
    as a circular arrow; (d) CLAUDE.md's clipboard entry on this branch already says a password
@@ -1664,11 +1664,11 @@ photos (a private iPhone Duo, iOS 27.1 24A94232, Tests/duorig's poses) taken aga
 arguments and looked at as contact sheets, both simulators deleted after. The upgrade rule did not
 change, so S5 was not run again.
 
-### Untested, for Noah (the iPad mini and the iPhone 15 Pro)
+### Untested, for the maintainer (the iPad mini and the iPhone 15 Pro)
 
-A Debug build from Xcode shows the tour by itself only with `-SillTourState saved` (the scheme's
+A Debug build from Xcode shows the tour by itself only with `-DuoDeckTourState saved` (the scheme's
 Arguments, or `xcrun devicectl device process launch --device <UDID> --terminate-existing
-me.saffer.sill -SillTourState saved`); one without it never stores the version, so TestFlight still
+com.agentsai.duodeck -DuoDeckTourState saved`); one without it never stores the version, so TestFlight still
 shows the tour once. Delete the app to see it fresh.
 
 - **P1, the update**: over 0.5.1 from the App Store, or the current TestFlight build, with the old tour
@@ -1677,15 +1677,15 @@ shows the tour once. Delete the app to see it fresh.
   relaunch.
 - **P2**: the same after having skipped the old tour.
 - **P3, each New row true on the device**: the pinch (1× to 5×, two fingers move the picture, one finger
-  clicks what shows); with Sill for Mac 0.6, Virtual Display "is on", a window picked keeps updating
+  clicks what shows); with DuoDeck Host 0.6, Virtual Display "is on", a window picked keeps updating
   when covered, and Aa sizes it; Menus lit and opening the app's menus; copy on the Mac and paste on the
-  iPad, copy in Notes, back to Sill, Paste on ‹Mac› pastes at the cursor; Send Audio plays and Mute
+  iPad, copy in Notes, back to DuoDeck, Paste on ‹Mac› pastes at the cursor; Send Audio plays and Mute
   silences it; Reverse Scrolling; Hold to Show Window Controls; with the Magic Keyboard, keys and Esc
   reach the Mac without the Keyboard button, which brings up the keyboard bar.
 - **P4, the iPhone**: upright five cards with Larger Picture's row on the laptop card, sideways four,
   every ring on its control, every card clear of the Dynamic Island and the home indicator; the bar
   card's last rows scroll (found here): say whether to shorten it.
-- **P5**: against Sill for Mac 0.5.1, if at hand: "Update Sill on ‹Mac›…", and Virtual Display's row
+- **P5**: against DuoDeck Host 0.5.1, if at hand: "Update DuoDeck on ‹Mac›…", and Virtual Display's row
   in its "in Settings" form.
 - **P6**: Virtual Display off in Settings, then Take the Tour: the row's other form.
 - **P7, VoiceOver**: no touch card; rows read "New: …"; titles "step N of M"; the bar's Virtual Display

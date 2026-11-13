@@ -2,12 +2,12 @@
 # The encoder-free sound harness (docs/audio-plan.md §11: H5, H6, H8, H12): the real StreamServer and
 # the sound's host files with the test tone and fake frames (build.sh), a device that decodes every
 # kind 43 and finds the tone's clicks (Scripts/audiocheck.swift), and on the away cases a shaped path
-# (Scripts/pacing/bottleneck.py, Scripts/sillrelay.py), all on 127.0.0.1. No encoder, no Screen
+# (Scripts/pacing/bottleneck.py, Scripts/duodeckrelay.py), all on 127.0.0.1. No encoder, no Screen
 # Recording, no sound captured or played, no device. Then summarize.py's table and gates; the exit
 # status is the number of gates that failed, plus one for each run that could not run (a device that
 # never reached the host among them). H12's CPU gate (at most 1.5 points more with sound) fails on every
 # full run, a known failure and no regression: AAC-ELD at codec quality Medium measured +2.1 to +3.1
-# points (docs/audio-plan.md, Results, item 9), and Low or Medium is Noah's call (open question 16).
+# points (docs/audio-plan.md, Results, item 9), and Low or Medium is the maintainer's call (open question 16).
 #
 #   Scripts/audio/run.sh                   every case (about 7 minutes)
 #   Scripts/audio/run.sh --cases home,home-off
@@ -21,7 +21,7 @@
 #              device's playout model on the arrivals (audiocheck): nothing late after 2 s, no jump after 3 s
 #   home-off   the same with Send Audio off: no sound, and the picture's net.sent, net.dropped and
 #              frame age as with it (H5), the host's CPU (H12)
-#   home1024   H5 with 1024-frame chunks (SILL_TEST_AUDIO_CHUNK): 93.75 packets a second
+#   home1024   H5 with 1024-frame chunks (DUODECK_TEST_AUDIO_CHUNK): 93.75 packets a second
 #   segments   H8 on two devices: each tone paused 50 ms at 3 s and 500 ms at 6 s after it starts, the
 #              source changed at 12 s: a segment start at each resumed chunk, placed by its stamp (the
 #              clicks), nothing more than 40 ms after its stamp, a new epoch with its format first on
@@ -34,7 +34,7 @@
 #   dip        H6: Low-sized frames on 8 Mbit/s with 0.5 from 20 s to 32 s: sound and frames late
 #              together (the packets no later than the frames + 20 ms and the sound's own time before
 #              it goes out), and back together (the sound's age back in the second the frames' is)
-#   relay2     H6: the remote door's slow link (sillrelay.py, 2 Mbit/s, +150 ms), the synthetic host's
+#   relay2     H6: the remote door's slow link (duodeckrelay.py, 2 Mbit/s, +150 ms), the synthetic host's
 #              frame sizes: no eviction, the sound never dropped
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -51,13 +51,13 @@ done
 cases=(
   "home|60|Home|none|1||home|--audio -- --"
   "home-off|60|Home|none|1||same-as=home|-- --"
-  "home1024|30|Home|none|1|SILL_TEST_AUDIO_CHUNK=1024|home1024|--audio -- --"
-  "segments|20|Home|none|2|SILL_TEST_AUDIO_PAUSE=0.05@3,0.5@6|segments|--audio --switch-at 12 -- --"
+  "home1024|30|Home|none|1|DUODECK_TEST_AUDIO_CHUNK=1024|home1024|--audio -- --"
+  "segments|20|Home|none|2|DUODECK_TEST_AUDIO_PAUSE=0.05@3,0.5@6|segments|--audio --switch-at 12 -- --"
   "away8|45|Remote|bottleneck|1||away-drops|--audio --kf 1500000 --delta 30000 -- --rate-mbps 8 --delay-ms 70 --queue-bytes 262144 --"
   "away8-off|45|Remote|bottleneck|1||none|--kf 1500000 --delta 30000 -- --rate-mbps 8 --delay-ms 70 --queue-bytes 262144 --"
   "away4|45|Remote|bottleneck|1||away-drops|--audio --kf 1500000 --delta 30000 -- --rate-mbps 4 --delay-ms 70 --queue-bytes 262144 --"
   "dip|50|Remote|bottleneck|1||dip=20-32|--audio --kf 100000 --delta 8000 -- --rate-mbps 8 --rate-at 20:0.5,32:8 --delay-ms 70 --queue-bytes 1048576 --"
-  "relay2|60|Remote|sillrelay|1||away|--audio --kf 100000 --delta 2000 -- --rate-mbps 2 --delay-ms 150 --"
+  "relay2|60|Remote|duodeckrelay|1||away|--audio --kf 100000 --delta 2000 -- --rate-mbps 2 --delay-ms 150 --"
 )
 if [ "$list" = 1 ]; then printf '%s\n' "${cases[@]}"; exit 0; fi
 "$here/build.sh" || exit 1

@@ -539,7 +539,7 @@ do {
     check(abs(lone.cover(now: 12.6) - 0.300) < 1e-9, "the same away: 300 ms (away's bounds 60–600)")
     _ = lone.packet(epoch: 1, seq: 3, stamp: 12.7 - 0.910, segmentStart: false, now: 12.7)
     check(abs(lone.cover(now: 12.7) - 0.600) < 1e-9, "900 ms over away: held at 600 ms")
-    // Rule 6: a packet taken 80 ms after it came, behind Sill's own engine starting, gives when it came:
+    // Rule 6: a packet taken 80 ms after it came, behind DuoDeck's own engine starting, gives when it came:
     // the floor and the cover take that (taken when the playout took it, the cover would be 81 ms).
     var waited = AudioPlayout()
     _ = waited.format(epoch: 1, framesPerPacket: 480, primingFrames: 240, cookie: Data())

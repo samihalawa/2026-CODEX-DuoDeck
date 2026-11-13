@@ -22,7 +22,7 @@ enum GoodbyePolicy {
         var reconnect: Bool
         /// That reconnect may dial the saved Mac through the remote door (only a saved Mac).
         var remoteAllowed: Bool
-        /// "Update Sill in the App Store" under the status line ("update" only).
+        /// "Update DuoDeck in the App Store" under the status line ("update" only).
         var storeLink = false
         /// The Mac's own words: a goodbye this build shows as the host wrote it. Looked at before a
         /// remote dial's failure rules (RemoteDialPolicy), which know only the older reasons.
@@ -73,7 +73,7 @@ enum GoodbyePolicy {
         case Goodbye.update:
             // The host always sends its message; these words are for one that does not.
             var own = "Update DuoDeck on this \(device) to keep using \(mac)."
-            if let floor = goodbye.minimumVersion.flatMap({ SillVersion($0) }) { own += " It needs version \(floor) or later." }
+            if let floor = goodbye.minimumVersion.flatMap({ DuoDeckVersion($0) }) { own += " It needs version \(floor) or later." }
             return Outcome(text: message(goodbye) ?? own, reconnect: goodbye.reconnect == true, remoteAllowed: saved,
                            storeLink: true, isNotice: true)
         default:

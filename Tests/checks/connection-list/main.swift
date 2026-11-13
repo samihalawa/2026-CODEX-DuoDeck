@@ -13,7 +13,7 @@ func check(_ ok: Bool, _ what: String) {
 }
 typealias C = ConnectionList
 
-// Style: tiles by default (Noah, 2026-10-27: "make tiles not list the default behavior of the app"), so
+// Style: tiles by default (the maintainer, 2026-10-27: "make tiles not list the default behavior of the app"), so
 // an install that never chose shows tiles; a stored choice always wins, the list included, so a person
 // who chose the list keeps it. A value no build writes reads as the default.
 check(C.defaultStyle == .tiles, "the default style is tiles")
@@ -46,7 +46,7 @@ for style in C.Style.allCases {
     }
 }
 
-// A style never deletes a picture (Noah, 2026-10-27): the list hides the kept pictures and keeps their
+// A style never deletes a picture (the maintainer, 2026-10-27): the list hides the kept pictures and keeps their
 // files, tiles show them again at once; only the files of Macs no longer saved go, at a launch or a
 // change of style in either style. The round trip, step by step, as StreamClient.syncPreviews applies it.
 typealias Plan = C.PreviewPlan
@@ -75,7 +75,7 @@ check(C.previewPlan(style: .tiles, files: ["M1.png", "M1.jpg.jpg", ".jpg", "M2.j
 check(C.previewPlan(style: .tiles, files: [], savedMacIDs: saved) == Plan(delete: [], show: []), "no files: nothing to show or delete")
 check(C.previewPlan(style: .tiles, files: ["M2.jpg", "M1.jpg"], savedMacIDs: saved).show == ["M1", "M2"], "the shown Macs in order")
 
-// Every row of one Mac shows that Mac's one picture, whatever way it reaches the Mac (Noah, 2026-10-27):
+// Every row of one Mac shows that Mac's one picture, whatever way it reaches the Mac (the maintainer, 2026-10-27):
 // a network row whose tag names the saved Mac, a row taken for it by its Bonjour name alone, its Remote
 // row. Another Mac's rows show its own; a row of no saved Mac shows the placeholder.
 struct Tile: Equatable { let word: String; let macID: String?; let savedByName: String? }
@@ -236,7 +236,7 @@ for style in C.Style.allCases {
 }
 check(C.decodeBound == 1, "a decode is given up after 1 s")
 
-// Disconnect's fresh keyframe: asked of every Mac (Noah, 2026-10-27: one from main on answers within a
+// Disconnect's fresh keyframe: asked of every Mac (the maintainer, 2026-10-27: one from main on answers within a
 // frame, one from before kind 44 skips it and costs the 300 ms wait), only when the session's end keeps
 // a picture and something streams; within the picture's recovery's spacing (2 s) of its last ask, no
 // other ask: wait for its keyframe while that is due, else the keyframe kept is the one it brought.

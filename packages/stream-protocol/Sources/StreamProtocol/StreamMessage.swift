@@ -32,8 +32,8 @@ public enum StreamMessageKind: UInt8 {
     // Remote access (Remote.swift, Pairing.swift). Older readers map all five to `.unknown` and skip them.
     case macInfo = 18        // host → device: JSON SignedMacInfo — who this Mac is and how to reach it from afar, signed
                              // with its identity key. In the catalog right after kind 16, on both doors, and again whenever
-                             // it changes. Only from a host with an identity (Sill.app always; SillHost with --remote)
-    case pairRequest = 19    // device → host: JSON PairRequest — the one message of a pairing connection (ALPN sill-pair/1),
+                             // it changes. Only from a host with an identity (DuoDeck.app always; DuoDeckHost with --remote)
+    case pairRequest = 19    // device → host: JSON PairRequest — the one message of a pairing connection (ALPN duodeck-pair/1),
                              // at most `maxPairingPayload` bytes, within 10 s of the connection
     case pairResult = 20     // host → device: JSON PairResult — the answer to 19; the host then closes the connection
     case pairingWanted = 21  // device → host, empty payload: "show your pairing code" (Pair This iPad…). Home door only,
@@ -76,7 +76,7 @@ public enum StreamMessageKind: UInt8 {
                              // to a host whose window list says `clipboard` 1 or more. Host → device: text copied
                              // on the Mac (or sent by another device), only to a connection that subscribed
     // The Mac's sound (Audio.swift), after the menus' 24, 25 and 27, the pointer's 26 and the trackpad gesture's 28,
-    // and after 29–42, which PR #66 (Sill Viewer, with #72 and #73) and #78 (the clipboard's 32) take. Older readers
+    // and after 29–42, which PR #66 (DuoDeck Viewer, with #72 and #73) and #78 (the clipboard's 32) take. Older readers
     // map it to `.unknown` and skip it.
     case audio = 43          // host → device: AudioMessage — the sound of what streams: a format (JSON AudioFormat),
                              // then packets (binary AudioPackets). Only to a device whose hello lists the codec
@@ -85,7 +85,7 @@ public enum StreamMessageKind: UInt8 {
     // to 43). Older hosts map it to `.unknown` and skip it: the device's picture then waits for the
     // stream's next keyframe, as it always did.
     case keyframeRequest = 44 // device → host, empty payload: this device's picture was interrupted (its display
-                             // layer failed, or iOS stopped it while Sill was away) and waits for a keyframe,
+                             // layer failed, or iOS stopped it while DuoDeck was away) and waits for a keyframe,
                              // which a still window never sends by itself. The host asks its encoder for one
                              // (every device gets it, as when a device joins); never a pick of the source again.
                              // From the device once per interruption while its keyframe is due, again when it

@@ -1,5 +1,5 @@
 #!/bin/bash
-# DisplayWake (Sources/SillHost/DisplayWake.swift) with the wire's message kinds and input events
+# DisplayWake (Sources/DuoDeckHost/DisplayWake.swift) with the wire's message kinds and input events
 # (StreamMessage.swift, Input.swift): when the host declares user activity on the Mac for a device, as
 # a key press would (issue #134): which of a device's messages are a person at it (a connect, kinds 7,
 # 8, 15, 25 and 28; never a pick, nor a bare pointer move just after the host's own stream restart),

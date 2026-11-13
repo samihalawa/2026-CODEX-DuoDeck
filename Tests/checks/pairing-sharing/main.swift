@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-// Checks PairingWindowSharing (Sources/SillMenuBar, issue #108): whether screen sharing (Screen
+// Checks PairingWindowSharing (Sources/DuoDeckMenuBar, issue #108): whether screen sharing (Screen
 // Sharing, Apple Remote Desktop, VNC apps) shows the pairing window. Settings › Devices' "Show the
 // pairing window to screen sharing" decides it alone: hidden while off, as before the switch; shown
 // while on, whoever opened the window, the Mac's user from the menu or a pane, or a device by asking

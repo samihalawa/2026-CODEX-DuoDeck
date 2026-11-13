@@ -1,4 +1,4 @@
 Sources/StreamProtocol/*.swift
-Sources/SillHost/LockPolicy.swift
-Sources/SillHost/CatalogLook.swift
+Sources/DuoDeckHost/LockPolicy.swift
+Sources/DuoDeckHost/CatalogLook.swift
 iOSClient/KeyframeRecovery.swift

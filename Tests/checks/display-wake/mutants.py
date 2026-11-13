@@ -4,7 +4,7 @@ import os, subprocess, sys
 WT = sys.argv[1]; HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(WT, ".build", "checks", "display-wake")   # the mutants' sources and binaries
 os.makedirs(OUT, exist_ok=True)
-SRC = os.path.join(WT, "Sources/SillHost/DisplayWake.swift")
+SRC = os.path.join(WT, "Sources/DuoDeckHost/DisplayWake.swift")
 orig = open(SRC).read()
 HELD = "if activity != .connect, let last = lastDeclared, now >= last, now - last < Self.interval {"
 WINDOW = "if case .pointer(.move, _, _) = input, let changed = streamChangedAt, now >= changed,\n                   now - changed < Self.recentre {"
@@ -77,7 +77,7 @@ MUTANTS = {
     "M52 a refusal looked at again": ("return (DisplayWake.failedLine(result), nil)",
                                       "return (DisplayWake.failedLine(result), Look(device: device, activity: activity, wasAsleep: wasAsleep, wakesBefore: wakesSaid))"),
     # The constants
-    "M53 the assertion's name": ('static let assertionName = "Sill: a device is using this Mac"', 'static let assertionName = "Sill is streaming a Mac screen"'),
+    "M53 the assertion's name": ('static let assertionName = "DuoDeck: a device is using this Mac"', 'static let assertionName = "DuoDeck is streaming a Mac screen"'),
     "M54 the declaration's stats key": ('static let declaredKey = "disp.wake"', 'static let declaredKey = "in.wake"'),
     "M55 the test host's stats key": ('static let dryKey = "disp.wakeDry"', 'static let dryKey = "disp.wake"'),
     "M56 success is not 0": ("static let success: Int32 = 0", "static let success: Int32 = 1"),
@@ -86,7 +86,7 @@ MUTANTS = {
     "M58 a test host takes remote": ("        guard !testHost else {", "        guard testHost || !testHost else {"),
     "M59 another value echoed": ('return (false, "\\(userActiveVariable) ignored: it takes local or remote; user activity is declared as local.")',
                                  'return (false, "\\(userActiveVariable)=\\(value) ignored: it takes local or remote; user activity is declared as local.")'),
-    "M60 the variable's name": ('static let userActiveVariable = "SILL_TEST_USER_ACTIVE"', 'static let userActiveVariable = "SILL_TEST_USERACTIVE"'),
+    "M60 the variable's name": ('static let userActiveVariable = "DUODECK_TEST_USER_ACTIVE"', 'static let userActiveVariable = "DUODECK_TEST_USERACTIVE"'),
 }
 caught = 0
 for name, (old, new) in MUTANTS.items():

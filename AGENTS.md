@@ -1,7 +1,7 @@
 # DuoDeck: canonical engineering instructions
 
 Canonical checkout: /Users/samihalawa/git/PROJECTS_ON_PROCESS/2026-CODEX-DuoDeck.
-Canonical repository: samihalawa/2026-CODEX-DuoDeck. Independent repo; preserve Sill Apache-2.0 attribution.
+Canonical repository: samihalawa/2026-CODEX-DuoDeck. Keep the LICENSE and NOTICE files unchanged.
 
 Keep the working Swift streaming engine. This is a polyglot monorepo: apps/ios (native SwiftUI), apps/macos (native Mac host and a separate App Store client where needed), apps/android, apps/windows, apps/web (marketing/account), apps/api (account/billing), packages/stream-protocol (the existing Swift wire protocol). Root Sources and iOSClient are compatibility symlinks for the proven engine tests/scripts; do not create duplicate source copies.
 
@@ -13,4 +13,4 @@ Store and deployment mutations have one coordinator. Worker agents must stay in 
 
 App Store client artifacts must exclude private host APIs and be sandboxed on macOS. Do not disable sandboxing to make a Mac App Store build work. Preserve the separately signed/notarized Mac host for capture and remote input functionality.
 
-Product direction and the current professional execution prompt: docs/PRODUCT_BRIEF.md. Operational release authority: docs/release-checklist.md, script/build_and_run.sh, script/release_mac.sh and Scripts/release-ios.sh. Historical upstream notes are context, not current publishing destinations.
+Product direction and the current professional execution prompt: docs/PRODUCT_BRIEF.md. Operational release authority: docs/release-checklist.md, script/build_and_run.sh, script/release_mac.sh and Scripts/release-ios.sh. Older engineering notes are context, not current publishing destinations.

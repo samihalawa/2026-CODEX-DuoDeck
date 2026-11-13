@@ -1,9 +1,9 @@
-"""H3 (docs/audio-plan.md): each mutant changes Sources/SillHost/AudioPacketizer.swift in one place, is
+"""H3 (docs/audio-plan.md): each mutant changes Sources/DuoDeckHost/AudioPacketizer.swift in one place, is
 compiled with the check (main.swift) and must fail it. usage: mutants.py WORKTREE"""
 import os, subprocess, sys, tempfile
 WT = sys.argv[1]
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(WT, "Sources/SillHost/AudioPacketizer.swift")
+SRC = os.path.join(WT, "Sources/DuoDeckHost/AudioPacketizer.swift")
 MUTANTS = [
     # The packet size and the stamps
     ("512 for any multiple of 256", "frames > 0 && frames % 512 == 0 ? 512 : 480", "frames > 0 && frames % 256 == 0 ? 512 : 480"),

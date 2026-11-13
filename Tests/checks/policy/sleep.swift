@@ -34,7 +34,7 @@ func afterSleepPolicy() {
           && rebuild(10, 3, 14) == (true, nil) && rebuild(10, 6, 39) == (false, 40) && rebuild(10, 9, 40) == (true, nil))
     check("rebuildBrowser: never in the background, however long since", rebuild(10, 1, fg: false, 11) == (false, nil)
           && rebuild(10, 1, fg: false, 9999) == (false, nil))
-    // `-SillBrowserFail 3`: each of the first three browsers fails half a second after it starts; the
+    // `-DuoDeckBrowserFail 3`: each of the first three browsers fails half a second after it starts; the
     // rebuilds follow the glue (StreamClient.browserFailed, rebuildIfDue).
     var made = [0.0], failures = 0, started = 0.0
     for _ in 0..<3 {
@@ -44,7 +44,7 @@ func afterSleepPolicy() {
         while !rebuild(failedAt, failures, t).0 { t = rebuild(failedAt, failures, t).1! }
         made.append(t); started = t
     }
-    check("rebuildBrowser (-SillBrowserFail 3): made at 0, 1.5, 4 and 8.5 s", made == [0, 1.5, 4, 8.5])
+    check("rebuildBrowser (-DuoDeckBrowserFail 3): made at 0, 1.5, 4 and 8.5 s", made == [0, 1.5, 4, 8.5])
 
     // What a browser made again shows while it settles.
     typealias R = (name: String, from: String)
@@ -192,7 +192,7 @@ func afterSleepPolicy() {
     // The Mac wakes 100 s in (opened by someone at it): the next dial, at 125 s, connects.
     check("reconnect model: a Mac that wakes 100 s in is reached at the next dial (125 s)",
           reconnect(until: 600, answersFrom: 100).connectedAt == 125)
-    // Its row goes and comes back at 50 s (Sill relaunched on the Mac, its record renewed): dialled at once.
+    // Its row goes and comes back at 50 s (DuoDeck relaunched on the Mac, its record renewed): dialled at once.
     let relisted = reconnect(until: 600, answersFrom: 50, listing: { $0 < 49 ? 0 : ($0 < 50 ? nil : 50) })
     check("reconnect model: a row listed afresh is dialled at once", relisted.dials.last == 50 && relisted.connectedAt == 50)
     // In the background from 40 to 300 s: no dial there, the count starts again on the return.
@@ -228,7 +228,7 @@ func afterSleepPolicy() {
 
     // DuoDeck.app could not start the Desktop the iPad asked for on its first list (a display gone while no
     // device was connected), and its next lists, 0.18 and 0.25 s after the request, came within the
-    // spacing: nothing asked again, and the panel stayed black for the 7.4 s until Noah left. Now each
+    // spacing: nothing asked again, and the panel stayed black for the 7.4 s until the maintainer left. Now each
     // sets one re-check when the spacing ends, unless the person chose something since the request.
     func close(_ a: P.AutoDesktop, _ wait: Double) -> Bool { if case .askIn(let w) = a { return abs(w - wait) < 1e-9 }; return false }
     check("autoDesktop (2026-10-28): the list 0.18 s after the device's request, nothing streaming: again in 9.82 s", close(auto(.nothing, 0.18), 9.82))

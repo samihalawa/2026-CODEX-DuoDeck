@@ -14,7 +14,7 @@ import UIKit.UIGestureRecognizerSubclass
 /// The stream screen's coordinate space (`StreamScreen` names it): every target's frame, the dim's
 /// and the card's are in it.
 enum TourSpace {
-    static let name = "sill.screen"
+    static let name = "duodeck.screen"
 }
 
 /// Where each of the tour's targets is on the screen now.
@@ -43,15 +43,15 @@ extension View {
 
 // MARK: - What it remembers
 
-/// `Sill.tourSeen` (the topics passed with Next or Done) and `Sill.tourSkipped`, in the app's own
+/// `DuoDeck.tourSeen` (the topics passed with Next or Done) and `DuoDeck.tourSkipped`, in the app's own
 /// defaults: per device, not per Mac (the privacy manifest's UserDefaults reason covers them); and
-/// `Sill.tourVersion`, the tour's version they are of (an Int; 0.5 and 0.5.1 stored none). A memory
+/// `DuoDeck.tourVersion`, the tour's version they are of (an Int; 0.5 and 0.5.1 stored none). A memory
 /// of an older version, or of none, is cleared once and stored with this version
 /// (TourPolicy.upgraded), so the tour shows once more for everyone who launches it. SwiftUI makes a
 /// TourStore at every StreamScreen init (`@State`'s initial value) and keeps the first, so the
 /// upgrade writes only while what is stored is older, and every later one reads it back as it is.
 ///
-/// DEBUG: the automatic tour runs only with `-SillTourState fresh|landscape|done|skipped|saved`
+/// DEBUG: the automatic tour runs only with `-DuoDeckTourState fresh|landscape|done|skipped|saved`
 /// (otherwise no harness photo and no other feature's live test ever gets a tour over it); `fresh`
 /// is nothing seen, `landscape` the sideways steps seen, `done` all of them, `skipped` Skip tapped,
 /// each for this run only and never written back; `saved` reads and writes the saved keys, as a
@@ -59,9 +59,9 @@ extension View {
 /// upgrades the memory nor writes the version, so it never uses up the once more that a TestFlight
 /// or App Store build gives. The mock harness writes nothing unless `saved` says so.
 final class TourStore {
-    static let seenKey = "Sill.tourSeen"
-    static let skippedKey = "Sill.tourSkipped"
-    static let versionKey = "Sill.tourVersion"
+    static let seenKey = "DuoDeck.tourSeen"
+    static let skippedKey = "DuoDeck.tourSkipped"
+    static let versionKey = "DuoDeck.tourVersion"
 
     private(set) var memory: TourMemory
     /// Whether the automatic tour runs at all (Release: always).
@@ -73,8 +73,8 @@ final class TourStore {
                                skipped: defaults.bool(forKey: Self.skippedKey))
         let savedVersion: Int? = defaults.object(forKey: Self.versionKey) == nil ? nil : defaults.integer(forKey: Self.versionKey)
         #if DEBUG
-        let state = defaults.string(forKey: "SillTourState")
-        let mock = defaults.string(forKey: "SillLayout") != nil && !defaults.bool(forKey: "SillLive")
+        let state = defaults.string(forKey: "DuoDeckTourState")
+        let mock = defaults.string(forKey: "DuoDeckLayout") != nil && !defaults.bool(forKey: "DuoDeckLive")
         automatic = state != nil
         switch state {
         case "fresh": memory = TourMemory(); persists = false
@@ -497,7 +497,7 @@ private struct TourCard: View {
 
     private static let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
     /// The scrolling words' top, for the scroll back at each step.
-    private static let wordsTop = "sill.tour.words"
+    private static let wordsTop = "duodeck.tour.words"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -783,12 +783,12 @@ private struct TailEdge: Shape {
 #if DEBUG
 /// The harness's stand-ins for what the gates may not do (tap, touch, turn on VoiceOver), read once
 /// from the launch arguments (ContentView's contract):
-/// `-SillTour touch|bar|sharing|settings|laptop` starts the tour at that step, as Take the Tour does, at the
-/// first picture (the mock's is at once); `-SillTourPress next@S|skip@S` presses Next (Done on the
-/// last card) S seconds after each card appears, or Skip once; `-SillTourActivityAt S` is a touch S
+/// `-DuoDeckTour touch|bar|sharing|settings|laptop` starts the tour at that step, as Take the Tour does, at the
+/// first picture (the mock's is at once); `-DuoDeckTourPress next@S|skip@S` presses Next (Done on the
+/// last card) S seconds after each card appears, or Skip once; `-DuoDeckTourActivityAt S` is a touch S
 /// seconds after the picture of the app run's first session (so the automatic reconnect's session
-/// after it has none of its own); `-SillTakeTourAt S` opens the Settings panel S seconds after the
-/// picture and presses its Take the Tour a second later; `-SillTourVoiceOver 1` gives the run and
+/// after it has none of its own); `-DuoDeckTakeTourAt S` opens the Settings panel S seconds after the
+/// picture and presses its Take the Tour a second later; `-DuoDeckTourVoiceOver 1` gives the run and
 /// its words as under VoiceOver.
 struct TourDebug {
     enum Press: Equatable { case next(Double), skip(Double) }
@@ -797,22 +797,22 @@ struct TourDebug {
     let activityAt: Double?
     let takeTourAt: Double?
     let voiceOver: Bool
-    /// `-SillTourActivityAt` has made its one stand-in touch.
+    /// `-DuoDeckTourActivityAt` has made its one stand-in touch.
     @MainActor static var touchedOnce = false
 
     static let current: TourDebug = {
         let d = UserDefaults.standard
         func seconds(_ key: String) -> Double? { d.object(forKey: key) == nil ? nil : d.double(forKey: key) }
         var press: Press?
-        if let raw = d.string(forKey: "SillTourPress") {
+        if let raw = d.string(forKey: "DuoDeckTourPress") {
             let parts = raw.split(separator: "@")
             if parts.count == 2, let s = Double(parts[1]) {
                 press = parts[0] == "skip" ? .skip(s) : parts[0] == "next" ? .next(s) : nil
             }
         }
-        return TourDebug(start: d.string(forKey: "SillTour").flatMap(TourTopic.init(rawValue:)), press: press,
-                         activityAt: seconds("SillTourActivityAt"), takeTourAt: seconds("SillTakeTourAt"),
-                         voiceOver: d.bool(forKey: "SillTourVoiceOver"))
+        return TourDebug(start: d.string(forKey: "DuoDeckTour").flatMap(TourTopic.init(rawValue:)), press: press,
+                         activityAt: seconds("DuoDeckTourActivityAt"), takeTourAt: seconds("DuoDeckTakeTourAt"),
+                         voiceOver: d.bool(forKey: "DuoDeckTourVoiceOver"))
     }()
 }
 #endif

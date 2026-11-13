@@ -46,7 +46,7 @@ enum KeyframePicture {
         }
     }
 
-    private static let queue = DispatchQueue(label: "sill.preview", qos: .utility)
+    private static let queue = DispatchQueue(label: "duodeck.preview", qos: .utility)
 
     /// Decodes `frame`, one HEVC sample as the Mac sends it (its NAL units each behind a big-endian
     /// length of `parameterSets.nalUnitHeaderLength` bytes), and gives its picture at the tile's size

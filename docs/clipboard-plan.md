@@ -1,9 +1,9 @@
 # Clipboard sharing between the Mac and the device (issue #64): the plan
 
-Branch `clipboard` from main at 985a733, worktree `/Users/noah/Downloads/winstream-clipboard`.
+Branch `clipboard` from main at 985a733, worktree `/Users/sample/Downloads/winstream-clipboard`.
 Issue #64 asks for the clipboard both ways. The triage of 2026-10-13
-(`~/Downloads/sill-handoff/triage/2026-10-13-open-items.md`, Enhancements) recommends it next, text
-first, with two decisions for Noah: whether it is on by default, and a switch on the Mac. The open
+(`~/Downloads/duodeck-handoff/triage/2026-10-13-open-items.md`, Enhancements) recommends it next, text
+first, with two decisions for the maintainer: whether it is on by default, and a switch on the Mac. The open
 pull request #66 (a Mac client) carries a clipboard of its own on kind 32 with the shape `{text,
 image}`; this change takes the same number and shape so that #66 can rebase onto it, and writes its
 own code (#66's host sends password managers' copies and gives the Mac's owner no switch).
@@ -57,7 +57,7 @@ own code (#66's host sends password managers' copies and gives the Mac's owner n
 
 ### Rules (pure: `Sources/StreamProtocol/ClipboardPolicy.swift`, checked by `Tests/checks/clipboard`)
 
-One file for both ends, in StreamProtocol because both compile it (the host as SillHostCore's
+One file for both ends, in StreamProtocol because both compile it (the host as DuoDeckHostCore's
 dependency, the device through the local package).
 
 - **What a device's kind 32 means to the host** (`fromDevice`): `stop: true` stops; text (not
@@ -73,7 +73,7 @@ dependency, the device through the local package).
   Universal Clipboard (`com.apple.is-remote-clipboard`: reading it would fetch it from that device,
   and macOS shows that it is pasting from it, for every copy made there; those devices have it
   already); never what this host wrote itself (its change count, or its own marker
-  `me.saffer.sill.clipboard` naming its launch); only a change with text, not empty, at most 256 KB,
+  `com.agentsai.duodeck.clipboard` naming its launch); only a change with text, not empty, at most 256 KB,
   whose JSON fits. A marker's types are read before any data, so neither a password manager's text
   nor another device's is ever read.
 - **The rate** (`hostReceives`, after the review): what a device's message asks is decided first; a
@@ -95,19 +95,19 @@ dependency, the device through the local package).
 - **A Paste's receipt** (`receiptLength`, `receiptWait`, after the review): "Sent" only once a ping sent
   after the text comes back, its payload 16 random bytes; none within max(4 s, 4 × the worst round trip),
   "Didn’t reach ‹Mac›. Try Paste again." and the copy not dealt with.
-- **The chip's time** (`chipCounts`, after the review): its 20 s run only while it is on screen, Sill is
+- **The chip's time** (`chipCounts`, after the review): its 20 s run only while it is on screen, DuoDeck is
   active and VoiceOver is off.
 - **The chip** (`offersChip`): connected, the Mac says 1 or more, the switch on, the device's clipboard
-  has text (`hasStrings`), and its change count is not the one Sill last handled (sent, wrote from the
-  Mac, or dismissed). When Sill becomes active, or when a session's first list says 1 or more within
-  15 s after Sill became active (`looksAtSessionStart`: an app switch long enough for the Mac to evict
+  has text (`hasStrings`), and its change count is not the one DuoDeck last handled (sent, wrote from the
+  Mac, or dismissed). When DuoDeck becomes active, or when a session's first list says 1 or more within
+  15 s after DuoDeck became active (`looksAtSessionStart`: an app switch long enough for the Mac to evict
   the suspended device brings a reconnect first). Shown for 20 s at most (`chipLifetime`).
 - **The words** (`Copy`): the chip's title, subtitle and spoken label, the confirmation, the too-long
   line, the Settings group's switch, row and footnotes, and the host's two log lines.
 
-### Host (`Sources/SillHost/HostClipboard.swift`, main actor)
+### Host (`Sources/DuoDeckHost/HostClipboard.swift`, main actor)
 
-- **Setting.** `HostConfig.shareClipboard`, on in `standard`. Sill.app: Settings › General, "Share
+- **Setting.** `HostConfig.shareClipboard`, on in `standard`. DuoDeck.app: Settings › General, "Share
   clipboard with devices", saved as `shareClipboard` like the other settings (`HostSettings`), with a
   one-line footnote. The CLI: on, as the app; `--no-clipboard` turns it off for the run. The Mac's
   alone, like Remote Access: absent from `StreamSettings`, `HostSettingsChange`,
@@ -135,35 +135,35 @@ dependency, the device through the local package).
 - **macOS's paste privacy** (after the review). The look reads NSPasteboard.general only while
   `MacClipboard.access()` says macOS allows every read (`accessBehavior` `.alwaysAllow`, or a macOS
   before 15.4); otherwise it reads nothing, not even the change count, and when reads are allowed again
-  the count is taken as seen. One line when macOS's answer changes ("Clipboard: macOS asks before Sill
+  the count is taken as seen. One line when macOS's answer changes ("Clipboard: macOS asks before DuoDeck
   reads the clipboard, so what is copied on this Mac stays here. …"). A device's text is still written
   (the count from `prepareForNewContents`). Settings › General (`ClipboardSection`): under the switch,
   while macOS asks or denies, the reason, what to do and "Allow in System Settings…", which opens
   Privacy & Security › Paste from Other Apps (`Privacy_Pasteboard`); while macOS has not asked about
-  Sill yet, Sill is not listed there (NSPasteboard.h), so the button first makes one read on that click
+  DuoDeck yet, DuoDeck is not listed there (NSPasteboard.h), so the button first makes one read on that click
   (`MacClipboard.askOnce`, off the main thread, the text dropped) for macOS to ask. `PermissionsModel`
   reads the state with the permissions.
 - **Test hosts.** A synthetic host never reads or writes this Mac's clipboard, as it never reads the
-  real pointer: it uses a pasteboard of its own, `me.saffer.sill.test.<pid>`, or the one
-  `SILL_TEST_PASTEBOARD=<name>` names (TEST ONLY), said once at its first subscription.
-  `SILL_TEST_CLIPBOARD_LOG=1` (TEST ONLY) prints each decision with the text's size, never the text.
-  `SILL_TEST_CLIPBOARD_ACCESS` (TEST ONLY) gives its pasteboard macOS's answer: a word, or a file
+  real pointer: it uses a pasteboard of its own, `com.agentsai.duodeck.test.<pid>`, or the one
+  `DUODECK_TEST_PASTEBOARD=<name>` names (TEST ONLY), said once at its first subscription.
+  `DUODECK_TEST_CLIPBOARD_LOG=1` (TEST ONLY) prints each decision with the text's size, never the text.
+  `DUODECK_TEST_CLIPBOARD_ACCESS` (TEST ONLY) gives its pasteboard macOS's answer: a word, or a file
   holding one, read at each look.
 
 ### Device
 
 - **Settings panel, This iPad group** (first, before the gestures): "Share Clipboard"
-  (`Sill.shareClipboard`, on by default, stored on the device), shown only while the Mac says 1 or
+  (`DuoDeck.shareClipboard`, on by default, stored on the device), shown only while the Mac says 1 or
   more; under it, while on, the row "Paste on ‹Mac›" with the system Paste button; a footnote.
 - **Mac to device.** A kind 32's text is written to `UIPasteboard.general` with `.localOnly` (Universal
   Clipboard does not carry it back to the Mac) and a 10-minute expiration; its change count becomes
   the handled one, so the chip never offers the Mac's own text back.
-- **Device to Mac.** Sill never reads the pasteboard by itself. The chip "Paste on ‹Mac›" (subtitle:
+- **Device to Mac.** DuoDeck never reads the pasteboard by itself. The chip "Paste on ‹Mac›" (subtitle:
   then press ⌘V there) with the system Paste button and a dismiss button appears near the bar: under
   the bar at the stream panel's top trailing corner sideways (its bottom corner while the link's line
   shows at the top), at the picture's bottom trailing corner, just above the window bar or row 1, held
   upright. It hides while the Settings panel, the Apps list, the pairing overlay, the tour, a
-  thumbnail's lights or the Aa ruler is open; its 20 s run only while it shows with Sill active, and
+  thumbnail's lights or the Aa ruler is open; its 20 s run only while it shows with DuoDeck active, and
   not at all under VoiceOver; VoiceOver is told when it first shows ("Paste on ‹Mac› is available,
   near the bar.").
   A tap on Paste sends the text as kind 32, then a ping with a random 16-byte payload through the same
@@ -174,15 +174,15 @@ dependency, the device through the local package).
   ("Too long to send…"). The same Paste is in the Settings group whenever it shows.
 - **Subscription.** An empty kind 32 at the session's first window list that says 1 or more (and on a
   move's new connection), with the switch on; `{"stop": true}` when the switch goes off.
-- `-SillClipboardChip 1` and `-SillClipboardNote sent|long|notsent` (DEBUG) put the chip and the note
+- `-DuoDeckClipboardChip 1` and `-DuoDeckClipboardNote sent|long|notsent` (DEBUG) put the chip and the note
   on the harness's mock; the mock Mac says `clipboard` 1 in every settings case but `legacy`.
-  `-SillSettingsScript '<t> paste TEXT'` sends TEXT as the Paste control hands it over, and
-  `-SillSettingsCloseAt <s>` closes the panel `-SillSettings 1` opened (live, DEBUG).
+  `-DuoDeckSettingsScript '<t> paste TEXT'` sends TEXT as the Paste control hands it over, and
+  `-DuoDeckSettingsCloseAt <s>` closes the panel `-DuoDeckSettings 1` opened (live, DEBUG).
 
 ## Open questions, with the default taken
 
 1. **On by default?** On, on the Mac and on the device (the task). Both have a switch, and the
-   privacy policy says what travels. The review's note, for Noah: with both on, a device that updates
+   privacy policy says what travels. The review's note, for the maintainer: with both on, a device that updates
    subscribes at connect, so every Mac copy made while it is connected (an app's own included, such
    as a terminal that copies on select) replaces what was on the device's clipboard (a photo, say),
    and that text expires 10 minutes later, leaving the device's clipboard empty, for people who never
@@ -194,28 +194,28 @@ dependency, the device through the local package).
    the Mac's copies would still travel to a device that only drops them.
 4. **Which markers.** The two the task names, plus the three older ones clipboard managers skip.
 5. **⌘V.** Not sent for the person: the text goes to the Mac's clipboard and they paste where they
-   want (a paste sent with it could land in the wrong window). Changed on 2026-10-29 at Noah's word:
+   want (a paste sent with it could land in the wrong window). Changed on 2026-10-29 at the maintainer's word:
    with Paste on ‹Mac› Right Away on (the default), the receipt also presses ⌘V ("Paste right away",
    below).
-6. **Universal Clipboard.** Both of Sill's writes are local (`.currentHostOnly`, `.localOnly`), so neither
+6. **Universal Clipboard.** Both of DuoDeck's writes are local (`.currentHostOnly`, `.localOnly`), so neither
    bounces. What reaches the Mac through Universal Clipboard is not sent on (found while building:
    reading it would fetch it from the other device for every copy made there). A Mac copy that also
    reaches the iPad through Universal Clipboard can bring the chip once (the device cannot read its
-   own clipboard to compare without asking): known, for Noah.
+   own clipboard to compare without asking): known, for the maintainer.
 7. **Text over 256 KB.** A Mac copy stays on the Mac, silently (one TEST ONLY line); the device says
    "too long" when Paste is tapped.
 8. **The chip's lifetime.** 20 s, the dismiss button or a tap; each counts as handled for that change
-   count, which is kept across launches (`Sill.clipboardHandled`), so a relaunch does not offer old
+   count, which is kept across launches (`DuoDeck.clipboardHandled`), so a relaunch does not offer old
    text again.
-9. **Split View and windows beside Sill.** Copying in an app beside Sill does not make Sill become
-   active, so the chip waits for Sill's next activation; the Settings group's Paste works any time.
+9. **Split View and windows beside DuoDeck.** Copying in an app beside DuoDeck does not make DuoDeck become
+   active, so the chip waits for DuoDeck's next activation; the Settings group's Paste works any time.
 10. **Who can subscribe.** Any device the doors admit: the devices that can already see the Mac's
-    screen and type on it. With Require pairing off that is anyone on the network with Sill; the
+    screen and type on it. With Require pairing off that is anyone on the network with DuoDeck; the
     privacy page already says so for the screen.
 11. **Rich text, images, files.** Text only (generation 1). Rich text copies send their plain text.
 12. **macOS's paste privacy** (after the review). The default: read only while macOS allows every read,
     never in the background while it asks (its alert at every copy) or denies; Settings › General says
-    why and opens Paste from Other Apps, asking once first while macOS has not asked about Sill. The
+    why and opens Paste from Other Apps, asking once first while macOS has not asked about DuoDeck. The
     device is not told (no wire change): its footnote still says the Mac's copies are ready while the
     Mac keeps them. A later field in the window list could say so.
 13. **The receipt** (after the review). A ping after the text, no wire change and no answer from the
@@ -232,9 +232,9 @@ dependency, the device through the local package).
 16. **Paste right away on a Mac whose keyboard layout moves V** (the review of #242, 2026-10-29; "Paste
     right away", Known). The default: nothing on the device, which cannot tell the Mac's layout; the
     support page says to turn Paste on ‹Mac› Right Away off there. Later, either a paste the device
-    sends only to a Sill for Mac that says it takes one, which presses its own layout's ⌘V (an input
+    sends only to a DuoDeck Host that says it takes one, which presses its own layout's ⌘V (an input
     an older Mac never sees), or Edit › Paste pressed through the Mac's menus (kinds 25 and 27), which
-    knows no layout but needs an Edit menu in the app in front. Noah's call.
+    knows no layout but needs an Edit menu in the app in front. the maintainer's call.
 
 ## Test plan
 
@@ -247,14 +247,14 @@ dependency, the device through the local package).
   a generic device (`CODE_SIGNING_ALLOWED=NO`): only the known warnings.
 - **H2** The CLI against origin/main, both from `git archive`, `--synthetic`, idle 35 s and a client
   picking the Desktop, masked and sorted: identical; a client that never subscribes adds no line.
-- **H3** Live on loopback (`SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1`,
-  `SILL_TEST_PASTEBOARD`, a scratch probe writing and reading that pasteboard): a subscriber gets a
+- **H3** Live on loopback (`DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1`,
+  `DUODECK_TEST_PASTEBOARD`, a scratch probe writing and reading that pasteboard): a subscriber gets a
   copy; a concealed one and a transient one are not sent; `--copy` sets the host's pasteboard (read
   back) and is not echoed; two clients each get the other's copy; `--no-clipboard`: no `clipboard` in
   the list, a subscription and a copy ignored; `stop`; the rate cap; oversize text.
 - **S1** A private simulator against the same host: photos of the This iPad group (on, off, with the
   note) and of the chip in each layout; the device's switch; the Mac's text arriving (`simctl pbpaste`);
-  the chip after a copy in the simulator (`simctl pbcopy`, then Sill leaving and coming back); Paste on
+  the chip after a copy in the simulator (`simctl pbcopy`, then DuoDeck leaving and coming back); Paste on
   the Mac through the chip by a real tap, the host's pasteboard read back; VoiceOver's labels.
 
 ## Results
@@ -293,7 +293,7 @@ What differs from the plan above, each found while building or testing:
   one after the other differed by one 30 s heartbeat, which timing gives either); a client picking
   the Desktop for 15 s that never subscribes: every line identical in order but the `[1s]` stats lines,
   whose counters vary between runs of either build, and no line about the clipboard.
-- **H3** live on loopback (`SILL_TEST_PASTEBOARD`, a probe writing and reading that pasteboard with
+- **H3** live on loopback (`DUODECK_TEST_PASTEBOARD`, a probe writing and reading that pasteboard with
   `NSPasteboard(name:)`), against the final build (and the slow-copy probe above): a subscriber gets a Mac copy, and not what was on the
   clipboard before it subscribed; a ConcealedType, TransientType, AutoGeneratedType, 1Password and old
   transient copy, an image, 300 KB, empty text and a Universal Clipboard copy are none sent
@@ -305,19 +305,19 @@ What differs from the plan above, each found while building or testing:
   `clip.recv` 4 and `clip.sent` 5 in all, as sent. `--no-clipboard`: no `clipboard` in the list, a
   subscription and a copy ignored, the pasteboard unchanged, no line. The bare app (a renamed copy,
   so its defaults domain was its own, deleted after; `-requirePairing NO`, a TLS client with `--pin=none`):
-  `-SillSetAfter '5 shareClipboard=0; 9 shareClipboard=1'` gave "Settings: share clipboard on → off"
+  `-DuoDeckSetAfter '5 shareClipboard=0; 9 shareClipboard=1'` gave "Settings: share clipboard on → off"
   and "off → on", the list without and with `clipboard`, the copy made while off never looked at, a
   new subscription and a copy after, and `shareClipboard` saved.
 - **S1** a private iPad Pro 13-inch simulator (iOS 27.0; 27.1 has no iPad), deleted after. Run again
   against the final host: the Mac's text on the device, the chip, Paste through XCUITest's tap. Harness photos
   of the chip sideways, upright, on the cover both ways, in the book and laptop poses, beside the link's
-  line, at accessibility XL, in the phone's arrangement (`-SillIdiom phone`), the notes, and the
+  line, at accessibility XL, in the phone's arrangement (`-DuoDeckIdiom phone`), the notes, and the
   Settings group on, off, with the note, legacy and at accessibility XL; seven screens that should not
   change (sideways, upright, the cover both ways, the drawer, the Settings panel's top, the legacy
-  group) pixel for pixel main's build. Live against the synthetic host (`-SillConnect`,
-  `-SillNoAutoDesktop 1`, nothing streamed): "Clipboard: Sill clipboard iPad (iPad17,4 simulator)
+  group) pixel for pixel main's build. Live against the synthetic host (`-DuoDeckConnect`,
+  `-DuoDeckNoAutoDesktop 1`, nothing streamed): "Clipboard: DuoDeck clipboard iPad (iPad17,4 simulator)
   shares the clipboard."; a Mac copy read back on the device (`simctl pbpaste`: "Mac copy for the iPad
-  ✓"); a copy on the device (`simctl pbcopy`), Sill sent home and back by XCUITest (a scratch UI test
+  ✓"); a copy on the device (`simctl pbcopy`), DuoDeck sent home and back by XCUITest (a scratch UI test
   project): "the chip"; XCUITest's real tap on the chip's Paste (UIPasteControl) set the host's
   pasteboard to the 41-byte text with the marker, and the note "Sent to …"; Dismiss, then home and
   back: no chip for that copy; the device's switch off from the panel by XCUITest: "stopped sharing",
@@ -326,9 +326,9 @@ What differs from the plan above, each found while building or testing:
   the text you copied on this iPad to ‹Mac›’s clipboard. Then press Command-V there."), the
   system's button "Paste", "Dismiss", the switch "Share Clipboard". Two findings there, fixed: the
   harness's mock offered the chip from the simulator's own clipboard (now only by
-  `-SillClipboardChip 1`), and the chip's words lacked the static text trait. `simctl pbcopy` reads
-  stdin as Mac Roman without a UTF-8 locale (a ✓ became "‚úì" before Sill saw it): the tool's, not
-  Sill's.
+  `-DuoDeckClipboardChip 1`), and the chip's words lacked the static text trait. `simctl pbcopy` reads
+  stdin as Mac Roman without a UTF-8 locale (a ✓ became "‚úì" before DuoDeck saw it): the tool's, not
+  DuoDeck's.
 - This Mac's own clipboard was never read or written: every test used named pasteboards, the
   simulator's pasteboard (no Simulator.app running, so nothing synced), and a read of
   `NSPasteboard.general.changeCount` alone before and after (317 throughout).
@@ -348,7 +348,7 @@ against the code first, and all eight were taken, one commit per theme:
    fourth, one ignored line), and a stop right after them is taken. Check: the sequence, the rate's
    edges and model 1b (5,000 quick sessions through `hostReceives`: never subscribed at the host while
    the device's switch is off); five mutants, the review's ordering among them.
-2. **macOS's paste privacy (should-fix; 210ba4b).** Sill.app read NSPasteboard.general at every copy
+2. **macOS's paste privacy (should-fix; 210ba4b).** DuoDeck.app read NSPasteboard.general at every copy
    and never looked at `accessBehavior`; NSPasteboard.h (the macOS 27 SDK) says the general pasteboard
    asks at each programmatic read by default once that is on (`.default`, then `.ask`), lists an app
    in Privacy & Security › Paste from Other Apps only after its first alert, and returns nothing while
@@ -356,10 +356,10 @@ against the code first, and all eight were taken, one commit per theme:
    15.4 there is no such setting), reads nothing otherwise, and takes the count as seen when reads come
    back (`accessStep`); one line when the answer changes (`accessLine`). Settings › General's
    `ClipboardSection`: an orange line, what to do, and "Allow in System Settings…", which opens
-   `Privacy_Pasteboard` and, while macOS has not asked about Sill, first makes one read on that click
+   `Privacy_Pasteboard` and, while macOS has not asked about DuoDeck, first makes one read on that click
    so that macOS asks and lists it. On this Mac (macOS 27.0.1) apps read `.alwaysAllow` (the review read
    2 from an ad hoc app), so nothing changes today. Live on loopback with TEST ONLY
-   `SILL_TEST_CLIPBOARD_ACCESS` read from a file: denied, then asks, then allowed, then not asked, each
+   `DUODECK_TEST_CLIPBOARD_ACCESS` read from a file: denied, then asks, then allowed, then not asked, each
    with its line; the copies made while denied and while asked never went, the one made after reads came
    back went at 9.03 s, and a device's text was written while not asked. Previews of the section in
    each state (`pane-clipboard-*`). Check: the mapping, the steps, the lines, the words, and model 2
@@ -369,29 +369,29 @@ against the code first, and all eight were taken, one commit per theme:
    (`"accepts":2`, say). #66's host sends an image to every subscriber; it follows this as it rebases.
 4. **"Sent" before the Mac had it (768f207).** A Paste said "Sent to ‹Mac›’s clipboard" and counted the
    copy as dealt with as it handed kind 32 over, while the connection could be dead without its end read
-   (Sill back from another app after the Mac evicted it, a network change, a Mac asleep). Now a ping
+   (DuoDeck back from another app after the Mac evicted it, a network change, a Mac asleep). Now a ping
    with 16 random bytes follows the text through the same door; its pong is the receipt ("Sent…", the
    haptic, the copy dealt with); none in max(4 s, 4 × the worst round trip) gives "Didn’t reach ‹Mac›.
    Try Paste again." and the chip again; a late receipt still counts. No wire change. Live on the
-   simulator: a Paste (`-SillSettingsScript '3 paste …'`) to the test host gave "its receipt awaited for
+   simulator: a Paste (`-DuoDeckSettingsScript '3 paste …'`) to the test host gave "its receipt awaited for
    4.0 s", then "the Mac has read it", and the host's pasteboard held the 32 bytes with the launch's
-   marker; through `sillrelay.py --blackhole-after 3`, a Paste at 3 s gave "no receipt in time: did not
+   marker; through `duodeckrelay.py --blackhole-after 3`, a Paste at 3 s gave "no receipt in time: did not
    reach the Mac" and the chip again, and the host got nothing. Check: the length (never a ping's 8) and
    the wait; three mutants.
 5. **The chip unannounced, and running out unseen (2eb0fb2, a371cb6).** Its 20 s ran under the Settings
    panel, the Apps list, the tour (on a fresh install the tour covers the first session's chip a second
    in), a thumbnail's lights or the Aa ruler, and for someone using VoiceOver, and then counted the copy
-   as dealt with. Now `chipCounts`: only while it shows, Sill active and VoiceOver off; VoiceOver is
+   as dealt with. Now `chipCounts`: only while it shows, DuoDeck active and VoiceOver off; VoiceOver is
    told when it first shows ("Paste on ‹Mac› is available, near the bar."). Live on the simulator: the
    chip offered, the Settings panel over it 1.5 s in ("waits, 18.3 s left"), the panel closed at 12 s
-   ("runs, 18.3 s left"), then "time is up"; Sill sent to Settings.app 6 s in ("waits, 14.6 s left") and
-   back at 14 s ("runs, 14.6 s left"), then "time is up"; with `-SillVoiceOver 1` it stayed 30 s. Check:
+   ("runs, 18.3 s left"), then "time is up"; DuoDeck sent to Settings.app 6 s in ("waits, 14.6 s left") and
+   back at 14 s ("runs, 14.6 s left"), then "time is up"; with `-DuoDeckVoiceOver 1` it stayed 30 s. Check:
    the rule's eight cases; three mutants. A session that ends with the chip showing now forgets that it
    showed (a371cb6).
-6. **On by default replaces the device's clipboard (documented).** Noah's call: open question 1 says
+6. **On by default replaces the device's clipboard (documented).** the maintainer's call: open question 1 says
    what it does to people who never use the feature, and Untested has the steps.
 7. **Copy (d5b22a7).** Settings › General's footnote now says only copies a password manager marks as
-   concealed stay, and that a device's text comes with Paste; support.html and privacy.html say "Sill
+   concealed stay, and that a device's text comes with Paste; support.html and privacy.html say "DuoDeck
    never reads your iPhone or iPad’s (device’s) clipboard by itself". A mutant puts the old words back.
 8. **The site's words before the release (f8355aa).** Kept with this pull request, as #79's and #75's
    are, inside `<!-- Clipboard: … -->` blocks (support.html's section, privacy.html's three items), and
@@ -414,20 +414,20 @@ Verified after the fixes (the code at a371cb6):
 - Harness photos on a private iPad Pro 13-inch (iOS 27.0, deleted after): the chip sideways and upright,
   a Paste's note, the Settings group and the stream: byte for byte the reviewed build's (7e6468a); the
   new note, "Didn’t reach Mac mini. Try Paste again.", sideways and upright.
-- Sill.app's previews from the final bare binary against the reviewed build's: 130 files byte for byte
+- DuoDeck.app's previews from the final bare binary against the reviewed build's: 130 files byte for byte
   but the General pane (its footnote), and 10 new (the clipboard section in each of macOS's answers, and
-  with the switch off). Copies are in `~/Downloads/sill-handoff/clipboard/photos/review/`.
+  with the switch off). Copies are in `~/Downloads/duodeck-handoff/clipboard/photos/review/`.
 - Not rerun: the XCUITest tap on the system Paste control (the receipt was driven through
   `sendClipboard`, the code the control's tap reaches), the bare app's switch, the phone's arrangement
   and the Duo's poses (no layout changed). macOS's alert itself: nothing here reads the real clipboard.
 
 ## Paste right away (2026-10-29)
 
-Noah, trying pull request #241's build (a password manager's copies go too) on his iPad and Mac on
+the maintainer, trying pull request #241's build (a password manager's copies go too) on his iPad and Mac on
 2026-10-29: "#241 seems to work but still doesn't automatically Cmd+V is that coming later?"; the day
 before he had asked what the chip gave over pasting on the Mac right away. Open question 5 had taken
 "⌘V not sent for the person"; his comments are requirements, so Paste now pastes. Branch
-`clipboard-autopaste` from main at 35a9c47 (worktree `/Users/noah/Downloads/wt-autopaste`), pull
+`clipboard-autopaste` from main at 35a9c47 (worktree `/Users/sample/Downloads/wt-autopaste`), pull
 request #242. No wire change (⌘V is kind 8's keys, which every Mac takes). Device only until the
 review, which changed one thing on the Mac: it writes a device's text before it takes the next message
 (finding 6, "The review", below).
@@ -439,7 +439,7 @@ review, which changed one thing on the Mac: it writes a device's text before it 
   which the Mac brings forward for a key as for any input, or on the Desktop in the app in front.
 - The switch: Settings › This iPad (This iPhone), right under Share Clipboard and shown with the Paste on
   ‹Mac› row (while Share Clipboard is on and the Mac shares its clipboard): "Paste on ‹Mac› Right Away",
-  `Sill.pasteRightAway`, on unless turned off, never sent to the Mac. Off, Paste is what it was: the
+  `DuoDeck.pasteRightAway`, on unless turned off, never sent to the Mac. Off, Paste is what it was: the
   text on the Mac's clipboard, "Press ⌘V there".
 - ⌘V goes as the Spotlight key's ⌘Space goes (`KeyChord.paste`: ⌘'s own key down, V down and up with
   command, ⌘ up), through `sendFromKeyRow`, so nothing stays held on the Mac (on this Mac's
@@ -455,7 +455,7 @@ review, which changed one thing on the Mac: it writes a device's text before it 
   Greek and Hebrew put ⌘V there (each layout's own data read with UCKeyTranslate on this Mac, nothing
   posted: the scratch probe in the review). Nothing on the device can tell the Mac's layout, and this
   change makes no wire change: on such a Mac, Paste on ‹Mac› Right Away goes off (support.html says
-  so). A later Sill for Mac could press its own layout's ⌘V for a paste the device sends only to a Mac
+  so). A later DuoDeck Host could press its own layout's ⌘V for a paste the device sends only to a Mac
   that says it takes one (open question 16).
 
 ### The rule (`ClipboardPolicy.pastesOnReceipt`, pure)
@@ -487,7 +487,7 @@ until the review: cut short on iPhones at xLarge text); its VoiceOver label
 hint "Pastes the text you copied on this iPad where ‹Mac›’s cursor is."; the note "Pasted on ‹Mac›.";
 the group's footnote "Text you copy on ‹Mac› is ready to paste on this iPad. To paste on ‹Mac›, copy
 text here and tap Paste: it goes where ‹Mac›’s cursor is. With Paste on ‹Mac› Right Away off, Paste
-only puts it on ‹Mac›’s clipboard." With it off (`-Sill.pasteRightAway 0`), every word as before
+only puts it on ‹Mac›’s clipboard." With it off (`-DuoDeck.pasteRightAway 0`), every word as before
 ("Then press ⌘V there."); the announcement when the chip shows is the same either way.
 
 ### The race: the Mac's write against ⌘V
@@ -496,10 +496,10 @@ HostClipboard writes a device's text to the pasteboard on a queue of its own (`B
 actor has taken the message, while StreamServer echoes the ping that brings the receipt from the network
 queue as it reads it. So the receipt can come back before the write is done, and a ⌘V right behind it
 can reach the pasteboard first. Measured on a loopback synthetic host built from this branch (its host
-is main's: nothing under `Sources/SillHost` or `Sources/SillHostCLI` changed), with `SILL_TEST_LOOPBACK=1
-SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_NO_SCREEN=1
-SILL_TEST_PASTEBOARD=me.saffer.sill.test.autopaste SILL_TEST_CLIPBOARD_LOG=1 SILL_TEST_INPUT_LOG=1` and
-`SILL_TEST_POINTER_PATH` (without a scripted pointer a synthetic Desktop has nowhere for input to land).
+is main's: nothing under `Sources/DuoDeckHost` or `Sources/DuoDeckHostCLI` changed), with `DUODECK_TEST_LOOPBACK=1
+DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_NO_SCREEN=1
+DUODECK_TEST_PASTEBOARD=com.agentsai.duodeck.test.autopaste DUODECK_TEST_CLIPBOARD_LOG=1 DUODECK_TEST_INPUT_LOG=1` and
+`DUODECK_TEST_POINTER_PATH` (without a scripted pointer a synthetic Desktop has nowhere for input to land).
 Neither test log gives the times needed (the input log prints no time, and the clipboard log's "set on
 the pasteboard" comes as the write is queued, not done), so a scratch script read the host's
 line-buffered stdout through a pipe and stamped each line with the monotonic clock as it came, and a
@@ -511,7 +511,7 @@ about 0.25 ms (a poll and a read), so a ⌘V measured as more than 0.25 ms early
 - A scratch client sending ⌘V the moment the pong came (the device at its fastest), 100 pastes 0.3 s
   apart: V's down before the text read back in **99 of 100** (95 by more than 0.25 ms; median 0.45 ms
   early, at most 1.12 ms).
-- The app on a private iPad simulator with `-SillPasteDelay 0`, 25 pastes by `-SillSettingsScript` 0.6 s
+- The app on a private iPad simulator with `-DuoDeckPasteDelay 0`, 25 pastes by `-DuoDeckSettingsScript` 0.6 s
   apart: **21 of 25** (20 by more than 0.25 ms; median 0.58 ms early, at most 14.2 ms). The text read back 0.8 to 16.0 ms after
   the host's line for it (median 1.8), V's down came 0.0 to 23.6 ms after that line (median 0.7): the
   host's main actor took the text and the keys back to back at times.
@@ -544,12 +544,12 @@ the 50 ms stays for a Mac built before that, and as room for the app in front to
   are main's); the iOS app Debug and Release for the generic simulator and Debug for a generic device
   (`CODE_SIGNING_ALLOWED=NO`, arm64): BUILD SUCCEEDED, only the known StreamClient capture warning
   (StreamClient.swift:4113, main's code); the Release binary holds the new words and not the harness's
-  `SillPasteDelay`.
+  `DuoDeckPasteDelay`.
 - Live on a private iPad Pro 13-inch simulator (iOS 27.0, deleted after) against a loopback synthetic
-  host (the variables above), the app launched with `-SillConnect 127.0.0.1:PORT -SillServiceType
-  _silltest._tcp -SillSettingsScript '3 paste …'`:
+  host (the variables above), the app launched with `-DuoDeckConnect 127.0.0.1:PORT -DuoDeckServiceType
+  _duodecktest._tcp -DuoDeckSettingsScript '3 paste …'`:
   - The switch on (the default), `3 paste Hello from the iPad`: the host printed, in this order, "Test
-    clipboard: 19 bytes from Sill autopaste (iPad17,4 simulator) set on the pasteboard, sent to 0 other
+    clipboard: 19 bytes from DuoDeck autopaste (iPad17,4 simulator) set on the pasteboard, sent to 0 other
     devices.", then 68 ms later "Test input: key 55 flags changed (command)", "Test input: key 9 down
     (command)", "Test input: key 9 up (command)", "Test input: key 55 flags changed (none)" and "Test
     input: key 55 up: the table read again in 0.25 s for command" (⌘'s own key on the Mac is a
@@ -557,28 +557,28 @@ the 50 ms stays for a Mac built before that, and as room for the app in front to
     to the Mac (change 5), its receipt awaited for 4.0 s", "clipboard: the Mac has read it (its
     receipt)", "clipboard: ⌘V in 0.050 s", "clipboard: ⌘V sent to the Mac", "clipboard: the note:
     Pasted on ‹Mac›." (the synthetic host gives this Mac's name).
-  - `-Sill.pasteRightAway 0`, `3 paste Hello again, switch off`: the host's "… 23 bytes … set on the
+  - `-DuoDeck.pasteRightAway 0`, `3 paste Hello again, switch off`: the host's "… 23 bytes … set on the
     pasteboard …" and no "Test input" line; the app "clipboard: no ⌘V: Paste on the Mac Right Away is
     off" and "clipboard: the note: Sent to ‹Mac›’s clipboard. Press ⌘V there."
-  - Through `Scripts/sillrelay.py --blackhole-after 3`, `3.5 paste Lost on the way`: the host got neither
+  - Through `Scripts/duodeckrelay.py --blackhole-after 3`, `3.5 paste Lost on the way`: the host got neither
     the text nor a key; the app "clipboard: no receipt in time: did not reach the Mac" and "clipboard:
     the note: Didn’t reach ‹Mac›. Try Paste again.", no ⌘V (then "connection silent for 6 s: lost").
   - The race's runs above (25 pastes each, with and without the delay): every Paste's ⌘V went, in order,
     one chord each.
   - Not run: a real tap on the system's Paste control (XCUITest, as before the review of #78): the script
     calls `sendClipboard`, which the control's tap reaches, and everything after it is this change's.
-- Photos (harness, no personal data) in `~/Downloads/sill-handoff/device-tests/2026-10-29/autopaste/`
+- Photos (harness, no personal data) in `~/Downloads/duodeck-handoff/device-tests/2026-10-29/autopaste/`
   (INDEX.md): the chip with the switch on ("It goes where the cursor is.") and off ("Then press ⌘V
   there."), the notes "Pasted on Mac mini." and, without ⌘V, "Sent to Mac mini’s clipboard. Press ⌘V
   there.", and Settings › This iPad with the switch on and off, each at 1000x710 and 500x710 (an iPad
   window that narrow keeps the compact halves), on the same private simulator with "A sentence copied
   on the iPad" on its own pasteboard (`simctl pbcopy`; no Simulator.app running, so nothing synced).
 
-### Untested, for Noah
+### Untested, for the maintainer
 
-On the iPad (and the iPhone) with this branch's build, against Sill.app from main (nothing on the Mac
-changed; any Sill for Mac with the clipboard, #78 on):
-1. Copy a sentence in Notes on the iPad, come back to Sill streaming TextEdit with the cursor in a
+On the iPad (and the iPhone) with this branch's build, against DuoDeck.app from main (nothing on the Mac
+changed; any DuoDeck Host with the clipboard, #78 on):
+1. Copy a sentence in Notes on the iPad, come back to DuoDeck streaming TextEdit with the cursor in a
    document: the chip says "Where the cursor is."; tap Paste: the sentence appears in TextEdit
    at the cursor, the chip's place says "Pasted on ‹Mac›.", and nothing stays held on the Mac (a click
    after it is a plain click, no ⌘-click).
@@ -596,7 +596,7 @@ changed; any Sill for Mac with the clipboard, #78 on):
 8. Paste in the Settings panel's row while a window streams: the text lands in that window under the
    panel (the Mac brings that window's app forward for the keys if it is not in front, as for any
    input).
-9. From the review: tap Paste on the chip as soon as it shows after Sill comes back (a session starting
+9. From the review: tap Paste on the chip as soon as it shows after DuoDeck comes back (a session starting
    then, the Mac busy with its first picture), and right after picking another window: the text you
    copied lands, never what the Mac's clipboard held before.
 10. From the review, if a Mac with the Dvorak keyboard layout is at hand (System Settings › Keyboard ›
@@ -622,26 +622,26 @@ above, the app's console and the host's input and clipboard logs, each host's st
   receipt in time ("Didn’t reach…", no key) and a late one (today's note, no key); the words with the
   switch on and off, and VoiceOver's.
 - The PR's three runs again (the head's Debug build): the write, then ⌘'s key 66 ms later and V's, with
-  "⌘V in 0.050 s", "⌘V sent to the Mac", "Pasted on ‹Mac›."; with `-Sill.pasteRightAway 0` the write and
-  no key, "Sent to ‹Mac›’s clipboard. Press ⌘V there."; through `sillrelay.py --blackhole-after 3`
+  "⌘V in 0.050 s", "⌘V sent to the Mac", "Pasted on ‹Mac›."; with `-DuoDeck.pasteRightAway 0` the write and
+  no key, "Sent to ‹Mac›’s clipboard. Press ⌘V there."; through `duodeckrelay.py --blackhole-after 3`
   neither the text nor a key, "Didn’t reach ‹Mac›. Try Paste again." and "connection silent for 6 s".
 - New cases: the session ended 0.2 s after a Paste behind a relay adding 1 s (the Mac wrote the text, no
-  key, no note); the session ended while ⌘V waited (`-SillPasteDelay 2`, Disconnect a second after the
+  key, no note); the session ended while ⌘V waited (`-DuoDeckPasteDelay 2`, Disconnect a second after the
   receipt: "⌘V in 2.000 s", no "⌘V sent", no key); two Pastes 20 ms apart (both texts written, one
   receipt, the second's, one ⌘V, pasting the second text: a later Paste supersedes the receipt the
   earlier one waits for, as before this change; a third Paste alone, its own ⌘V); a Mac without the
   clipboard (`--no-clipboard`: no subscription, the script's paste sends nothing); nothing streaming
-  (`-SillNoAutoDesktop 1`: "no ⌘V: nothing streams", no key); the tour (`-SillTourState fresh`: "no ⌘V:
+  (`-DuoDeckNoAutoDesktop 1`: "no ⌘V: nothing streams", no key); the tour (`-DuoDeckTourState fresh`: "no ⌘V:
   the tour shows", no key).
 - The race again (the app, 25 Pastes 0.6 s apart, a scratch watcher polling the host's own pasteboard,
-  as above): with `-SillPasteDelay 0` V's down before the text read back in 15 of 25 (7 by more than
+  as above): with `-DuoDeckPasteDelay 0` V's down before the text read back in 15 of 25 (7 by more than
   0.25 ms, at most 7.1 ms); with the 50 ms, 0 of 25 (V 50.2 to 76.0 ms after the read; on the review's
   final build 47.4 to 70.3).
 - **Finding 1: a receipt for a text the Mac dropped (2d9428a).** HostClipboard drops a device's text while
   the Mac's Share clipboard with devices is off, but StreamServer echoes the ping after it all the same
   (open question 13), so a Mac whose switch went off while a Paste was on its way sent a receipt for a
   text it never wrote, and the device pressed ⌘V on whatever the Mac's clipboard held. Reproduced with a
-  scratch SillHost (never committed) that turns the switch off on SIGUSR1 as the Mac's switch does
+  scratch DuoDeckHost (never committed) that turns the switch off on SIGUSR1 as the Mac's switch does
   (`setTarget`), a relay adding 1 s each way and the signal sent as the app's console said "sent": no
   write (the test pasteboard kept "OLD TEXT the Mac held before the Paste"), and the four keys, "Pasted
   on ‹Mac›.". The list without `clipboard` the Mac sends as its switch goes off comes before that receipt
@@ -651,7 +651,7 @@ above, the app's console and the host's input and clipboard logs, each host's st
   against the PR's rule it fails (683 wrong in 5,000 runs).
 - **Finding 3: the chip's subtitle cut short on iPhones (1ddadb9).** "It goes where the cursor is." is a
   quarter wider than "Then press ⌘V there." (164 against 130 pt in the system font at 13 pt), and the
-  chip is one line: in the harness (`-SillLayout 375x667 -SillIdiom phone -SillClipboardChip 1`) "It goes
+  chip is one line: in the harness (`-DuoDeckLayout 375x667 -DuoDeckIdiom phone -DuoDeckClipboardChip 1`) "It goes
   where the cur…" at xLarge text, where today's words fit whole, and "It goes where the curso…" at 393 pt
   (the iPhone 15 Pro's width). "Where the cursor is." (122 pt) fits wherever today's words do: whole at
   375 pt at xLarge and at 393 pt at xxLarge; at 375 pt at xxLarge, the chip's largest size, both cut
@@ -664,7 +664,7 @@ above, the app's console and the host's input and clipboard logs, each host's st
   Board's queue after it. A scratch probe timing the main queue every 5 ms (never committed) found it held
   150.5 ms and 70.1 ms at a host's first stream start (two runs; two settings changes' restarts and a
   pick after it, under 20 ms each), and the app's first two live runs had a paste's keys split by 137
-  and 20 ms three seconds into a session, so other work holds it too (Sill.app's own stalls not
+  and 20 ms three seconds into a session, so other work holds it too (DuoDeck.app's own stalls not
   measured). Reproduced with a scratch host that holds the main actor 150 ms as each text arrives and
   prints when each write ends, and a device stand-in (Python, loopback) sending KeyChord.paste's four
   keys 50 ms after each receipt: V's key within half a millisecond of the write's end and before it in 4
@@ -673,7 +673,7 @@ above, the app's console and the host's input and clipboard logs, each host's st
   with the same busy main actor 0 of 25 before it (0.05 to 10.5 ms after); free, 0 of 25 (49.5 to 68.1
   ms). The cost is the write (about a millisecond) and a look the Board is in the middle of; the queue
   never waits for the main actor. A Mac copy still reaches a subscriber and a device's own text still is
-  not sent back (`sillclient.py --clipboard --copy=hello@1 --expect=clipboard=…` against the branch's
+  not sent back (`duodeckclient.py --clipboard --copy=hello@1 --expect=clipboard=…` against the branch's
   host, a Mac copy made on its pasteboard at 3.5 s: "EXPECT ok").
 - Observed, not a defect: in two runs the host printed ⌘'s key 137 ms and 20 ms before V's, three seconds
   into a session (the main actor busy between them): ⌘ held a moment longer, the same paste, nothing
@@ -694,33 +694,33 @@ tour, the longer subtitle); `key-strokes` 359 (its files unchanged by the review
 **Lens 3, the docs and the harness.** Reproduced: `swift build -c release` from a `git archive` of the
 head (46.7 s, only the CaptureProbe warning); the iOS app Debug and Release for the generic simulator and
 Debug for a generic device from it (`CODE_SIGNING_ALLOWED=NO`, arm64; only StreamClient.swift:4113's
-warning; the Release binary holds "It goes where the cursor is." and no `SillPasteDelay`, the Debug ones
+warning; the Release binary holds "It goes where the cursor is." and no `DuoDeckPasteDelay`, the Debug ones
 both); the live runs and the race above; the twelve photos with the INDEX's arguments: eleven byte for
 byte, chip-on-1000x710.png within one step of 255 on 164 pixels of anti-aliasing. The App Store words'
 counts (231, 222, 289, 2,176 and 1,885 characters) are right. **Finding 5: the 500x710 Settings photos
 never showed the Paste row or the footnote (734825d).** INDEX.md said they did; at 500x710 the rows end
-under the second switch, and no `-SillSettingsScroll` target reached them: `clipboard` now starts the
+under the second switch, and no `-DuoDeckSettingsScroll` target reached them: `clipboard` now starts the
 rows at the Paste row, and `review/settings-*-500x710-paste.png` show it and the footnote wrapped whole.
 Docs: CLAUDE.md's Untested list for this change had seven of the eight steps (the panel's row), and step 8
 said nothing on the Mac changes focus (a key brings the streamed window's app forward when it is not in
 front); both corrected, with steps 9 and 10 from the review. The pull request's description still has the
 first subtitle, "Device only" and the first counts: this review edits no pull request description.
 
-Photos in `~/Downloads/sill-handoff/device-tests/2026-10-29/autopaste/review/` (INDEX.md): the chip with
+Photos in `~/Downloads/duodeck-handoff/device-tests/2026-10-29/autopaste/review/` (INDEX.md): the chip with
 the new subtitle at 1000x710 and 500x710, the Paste row and footnote at 500x710, and the chip on iPhone
 widths before and after.
 
 Not verified here: a real tap on the system's Paste control (as before); anything on a device; a Dvorak
 Mac's ⌘K live (nothing may be posted to this Mac; the layouts' data only); how soon the app in front
 reads the pasteboard after the keys (the race is measured against the write's end and a watcher's first
-read, not against TextEdit's read); Sill.app's own main-actor stalls (the synthetic host's were measured).
+read, not against TextEdit's read); DuoDeck.app's own main-actor stalls (the synthetic host's were measured).
 
 ### Progress
 
 - 2026-10-29: the rule and words (f345eb6), the device (46b8a47), the panel (c641e9a), the harness
   (63241e4), the note on the DEBUG console (4a8deed), the checks (7b877f6), then these docs.
   Decided: on by default, ⌘V only on a receipt in time while something streams, 50 ms after it.
-  Verified: the race and the delay above, the checks, the builds, the live runs. Left: Noah's steps
+  Verified: the race and the delay above, the checks, the builds, the live runs. Left: the maintainer's steps
   above, on his devices.
 - 2026-10-29, after a pause for usage: the branch read again against the brief, nothing missing. At
   89f2c21 (the last change a comment's rewrap in ClipboardPolicy.swift) the checks again, `clipboard`
@@ -730,50 +730,50 @@ read, not against TextEdit's read); Sill.app's own main-actor stalls (the synthe
 - 2026-10-29, the review ("The review" above): six findings, each reproduced, then fixed in a commit of
   its own: the Mac's last word in the rule (2d9428a), the tour's hold in the rule (d435e8c), the chip's
   "Where the cursor is." (1ddadb9), a Mac whose layout moves V documented (3dc8596), the harness's
-  `-SillSettingsScroll clipboard` (734825d), the Mac's synchronous write of a device's text (1d8cf03),
+  `-DuoDeckSettingsScroll clipboard` (734825d), the Mac's synchronous write of a device's text (1d8cf03),
   then these docs. Verified on the code at 1d8cf03: the checks and mutants above; the iOS app Debug and
   Release for the generic simulator and Debug for a generic device, only StreamClient.swift:4113's
   warning; `swift build -c release`; the live runs on the review's build (the switch on and off,
   nothing streaming, the tour, the Mac's switch going off mid-Paste, the race at 50 ms 0 of 25). The
   private simulator and every scratch host are gone. Pushed (9bfd1ed..694d600); CI's Build and check
-  passed on 694d600 (run 40854972942, 15 min 19 s). Left: Noah's steps 1 to 10, open question 16, and
+  passed on 694d600 (run 40854972942, 15 min 19 s). Left: the maintainer's steps 1 to 10, open question 16, and
   the pull request's description, which predates the review.
 
-## Untested, for Noah
+## Untested, for the maintainer
 
-On the iPad mini and the iPhone 15 Pro with this branch's builds and this Sill.app:
+On the iPad mini and the iPhone 15 Pro with this branch's builds and this DuoDeck.app:
 1. At home: copy a sentence in TextEdit; it pastes in Notes on the iPad. Copy in Notes, switch back to
-   Sill: the chip "Paste on ‹Mac›" (above the window bar upright, under the bar sideways); tap
-   Paste, then ⌘V in TextEdit. Sill.log has "Clipboard: iPad (…) shares the clipboard." and no line
+   DuoDeck: the chip "Paste on ‹Mac›" (above the window bar upright, under the bar sideways); tap
+   Paste, then ⌘V in TextEdit. DuoDeck.log has "Clipboard: iPad (…) shares the clipboard." and no line
    per copy.
 2. Through Tailscale, away: the same.
 3. A password copied in 1Password, and one in Apple's Passwords app, never reaches the iPad (and
-   nothing in Sill.log); if the Passwords app's copy arrives, it does not mark it concealed: say so.
+   nothing in DuoDeck.log); if the Passwords app's copy arrives, it does not mark it concealed: say so.
 4. Universal Clipboard (the same Apple Account, Handoff on): copy on the Mac: the iPad has it, and the
-   chip may come once offering it back (known); copy on the iPhone: Sill does not pass it on.
+   chip may come once offering it back (known); copy on the iPhone: DuoDeck does not pass it on.
 5. Settings › General's switch while the iPad streams: the This iPad group loses its rows, copies stop;
    on again, they come back.
 6. VoiceOver on the iPad: when the chip shows, "Paste on ‹Mac› is available, near the bar."; the chip's
    words, Paste with its hint, Dismiss; it stays until Paste or Dismiss; "Sent to ‹Mac›’s clipboard"
    spoken once the Mac has it.
-7. Split View or a window beside Sill: a copy there brings no chip until Sill becomes active again
+7. Split View or a window beside DuoDeck: a copy there brings no chip until DuoDeck becomes active again
    (known); the Settings group's Paste works any time.
 8. On the iPhone: the chip above row 1, the success haptic once the Mac has the text.
-9. macOS's paste alert (the review's finding 2), with this Sill.app: `defaults write me.saffer.sill.mac
-   EnablePasteboardPrivacyDeveloperPreview -bool yes`, Quit Sill from its menu and open it again, connect
-   the iPad. Settings › General shows "macOS asks before Sill reads the clipboard, so what you copy here
-   stays on this Mac." under the switch; copy in TextEdit: no alert, nothing arrives, and Sill.log has
+9. macOS's paste alert (the review's finding 2), with this DuoDeck.app: `defaults write com.agentsai.duodeck.host
+   EnablePasteboardPrivacyDeveloperPreview -bool yes`, Quit DuoDeck from its menu and open it again, connect
+   the iPad. Settings › General shows "macOS asks before DuoDeck reads the clipboard, so what you copy here
+   stays on this Mac." under the switch; copy in TextEdit: no alert, nothing arrives, and DuoDeck.log has
    the line once. Click Allow in System Settings…: macOS's alert (note its words and buttons), then
-   Privacy & Security › Paste from Other Apps with Sill listed; set Allow: the orange line goes (within a
-   second while Settings shows), a copy in TextEdit arrives on the iPad, and Sill.log says "macOS lets Sill
-   read the clipboard again". Set Deny: "macOS doesn’t let Sill read the clipboard…", copies stay, and a
-   Paste from the iPad still sets the Mac's clipboard. Then `defaults delete me.saffer.sill.mac
-   EnablePasteboardPrivacyDeveloperPreview` and open Sill again.
-10. The receipt (finding 4): copy in Notes, stay away from Sill about 10 s (the Mac lets the suspended
+   Privacy & Security › Paste from Other Apps with DuoDeck listed; set Allow: the orange line goes (within a
+   second while Settings shows), a copy in TextEdit arrives on the iPad, and DuoDeck.log says "macOS lets DuoDeck
+   read the clipboard again". Set Deny: "macOS doesn’t let DuoDeck read the clipboard…", copies stay, and a
+   Paste from the iPad still sets the Mac's clipboard. Then `defaults delete com.agentsai.duodeck.host
+   EnablePasteboardPrivacyDeveloperPreview` and open DuoDeck again.
+10. The receipt (finding 4): copy in Notes, stay away from DuoDeck about 10 s (the Mac lets the suspended
     iPad go after 4 s), come back and tap Paste on the chip at once: either "Sent to ‹Mac›’s clipboard"
     and ⌘V on the Mac pastes it, or "Didn’t reach ‹Mac›. Try Paste again." and the chip comes back once
     the session is up again; never "Sent" while ⌘V pastes something else.
-11. On by default (finding 6, open question 1): copy a photo on the iPad, then with Sill connected copy
+11. On by default (finding 6, open question 1): copy a photo on the iPad, then with DuoDeck connected copy
     text on the Mac: the photo is gone from the iPad's clipboard; 10 minutes later the iPad's clipboard
     is empty. Say whether either should change.
 
@@ -799,7 +799,7 @@ On the iPad mini and the iPhone 15 Pro with this branch's builds and this Sill.a
 
 ### A password manager's copies go too (2026-10-29)
 
-Noah, with the clipboard on his iPad mini: "Copy paste works, including password apps. I think its fine to
+the maintainer, with the clipboard on his iPad mini: "Copy paste works, including password apps. I think its fine to
 copy password apps. Remove the code that tries to make password copies never arrive." So the host no longer
 skips an item marked concealed or transient (nspasteboard.org's two types, `AutoGeneratedType`, the older
 transient type, 1Password's own): `markerTypes` and `HostSkip.marked` are gone from `ClipboardPolicy`, the

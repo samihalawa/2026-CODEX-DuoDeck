@@ -1,9 +1,9 @@
-"""LockPolicy mutants (Sources/SillHost/LockPolicy.swift, and StreamProtocol's LockedMac): each must compile
+"""LockPolicy mutants (Sources/DuoDeckHost/LockPolicy.swift, and StreamProtocol's LockedMac): each must compile
 and make lock-policy/main.swift fail. usage: mutants.py ROOT"""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import module
-F = "Sources/SillHost/LockPolicy.swift"
+F = "Sources/DuoDeckHost/LockPolicy.swift"
 S = "Sources/StreamProtocol/Switcher.swift"
 M = [
     # The readings.
@@ -187,8 +187,8 @@ M = [
     # The TEST ONLY hooks.
     ("the file: 2 is the screen", F, '        case "2": return .offConsole', '        case "2": return .screenLocked'),
     ("the file: white space not trimmed", F, "        switch contents?.trimmingCharacters(in: .whitespacesAndNewlines) {", "        switch contents {"),
-    ("the file: any text locks", F, "        default: return nil\n        }\n    }\n\n    /// SILL_TEST_LOCK_NOTIFY",
-     "        default: return contents == nil ? nil : .screenLocked\n        }\n    }\n\n    /// SILL_TEST_LOCK_NOTIFY"),
+    ("the file: any text locks", F, "        default: return nil\n        }\n    }\n\n    /// DUODECK_TEST_LOCK_NOTIFY",
+     "        default: return contents == nil ? nil : .screenLocked\n        }\n    }\n\n    /// DUODECK_TEST_LOCK_NOTIFY"),
     ("the notify name: any prefix", F, "guard let raw, raw.hasPrefix(testNotifyPrefix), raw.count > testNotifyPrefix.count, raw.count <= 128 else { return nil }",
      "guard let raw, raw.count > testNotifyPrefix.count, raw.count <= 128 else { return nil }"),
     ("the notes: a bad part kept", F, "            guard words.count == 2, let at = Double(words[0]), at >= 0, at.isFinite, let name = noteName(String(words[1])) else { return nil }",

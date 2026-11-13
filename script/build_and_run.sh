@@ -6,8 +6,8 @@ case "$mode" in run|--verify|verify|--debug|debug|--logs|logs|--telemetry|teleme
 name=DuoDeckHost
 app="$PWD/dist/DuoDeck Host.app"
 stage="$PWD/dist/.DuoDeck Host.partial.app"
-swift build -c release --product SillMenuBar --arch arm64 --arch x86_64 -j 2
-binary="$(swift build -c release --product SillMenuBar --arch arm64 --arch x86_64 --show-bin-path)/SillMenuBar"
+swift build -c release --product DuoDeckMenuBar --arch arm64 --arch x86_64 -j 2
+binary="$(swift build -c release --product DuoDeckMenuBar --arch arm64 --arch x86_64 --show-bin-path)/DuoDeckMenuBar"
 test -x "$binary"
 rm -rf "$stage"
 mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources"

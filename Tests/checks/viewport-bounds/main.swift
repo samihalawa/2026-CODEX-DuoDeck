@@ -45,7 +45,7 @@ func lineTraps(_ v: Viewport) -> Bool {
 
 check(B.sides == 1...16384 && B.scales == 0.25...4, "each side 1 to 16384 points, a text scale 0.25 to 4")
 
-// The devices' own viewports (Sill.log's panels, 2026-09 and 10): every one taken.
+// The devices' own viewports (DuoDeck.log's panels, 2026-09 and 10): every one taken.
 for (w, h, s, what) in [(1117.0, 642.0, nil as Double?, "the iPad mini's landscape panel, Aa never touched"),
                         (1117, 610, 1, "the iPad mini at Aa 1x"), (1376, 1032, 0.5, "an iPad Pro 13-inch at the slider's smallest step"),
                         (377, 235, 1.5, "an iPhone 15 Pro upright at the slider's largest"), (386, 241, 0.75, "an 18 Pro's 16:10 pane"),
@@ -224,7 +224,7 @@ check(wholeWrong == 0, "whole prints what Int() printed wherever Int() did not t
 
 // The host adds each stats report's `audioLate` to the count its next stats line prints (StreamServer).
 // The device's own number: until 2026-10-29 a plain `+`, which traps past Int.max, so two reports of
-// Int.max within the line's 1.5 s ended Sill and every device's session (found in the review of
+// Int.max within the line's 1.5 s ended DuoDeck and every device's session (found in the review of
 // finding 4; live, a loopback host died at the third report, exit 133).
 typealias S = ClientStats
 check(S.lateSince(0, adding: 3) == 3 && S.lateSince(3, adding: 4) == 7, "late counts add up: 3, then 7")

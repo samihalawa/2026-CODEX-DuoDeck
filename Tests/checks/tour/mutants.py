@@ -44,8 +44,8 @@ MUTANTS = [
     ("a card wider than the book pose's page", "let page = DuoPosture.pageWidth(screenWidth: screen.width, margin: margin, fold: fold, for: targets) ?? .infinity", "let page = CGFloat.infinity"),
     ("a card as wide as the wider page whatever its targets", "fold: fold, for: targets) ?? .infinity", "fold: fold, for: nil) ?? .infinity"),
     ("the Duo told to hold it upright", 'let turn = keysOnItsSide ? "Turn your \\(device) on its side" : "Hold your \\(device) upright"', 'let turn = "Hold your \\(device) upright"'),
-    ("the Duo's laptop card says upright", 'let subtitle = keysOnItsSide ? "On its side, Sill adds keys and a trackpad." : "Upright, Sill adds keys and a trackpad."',
-     'let subtitle = "Upright, Sill adds keys and a trackpad."'),
+    ("the Duo's laptop card says upright", 'let subtitle = keysOnItsSide ? "On its side, DuoDeck adds keys and a trackpad." : "Upright, DuoDeck adds keys and a trackpad."',
+     'let subtitle = "Upright, DuoDeck adds keys and a trackpad."'),
     ("an iPhone told to turn it on its side", 'let turn = keysOnItsSide ? "Turn your \\(device) on its side" : "Hold your \\(device) upright"', 'let turn = "Turn your \\(device) on its side"'),
     ("a tail across the crease", "let noFold = fold.map { !(rect.maxY <= $0 && $0 <= t.minY) } ?? true", "let noFold = true"),
     ("a portrait tail at any distance", "let reaches = t.minY >= rect.maxY && t.minY - rect.maxY <= tailReach", "let reaches = t.minY >= rect.maxY"),
@@ -157,7 +157,7 @@ MUTANTS = [
     ("the Menus row unmarked", 'you’re using on \\(mac).")], new: true))', 'you’re using on \\(mac).")]))'),
     ("the hardware keyboard's bar row unmarked", 'strong("Keyboard"), plain(" then brings up the keyboard bar.")], new: true))', 'strong("Keyboard"), plain(" then brings up the keyboard bar.")]))'),
 ]
-# Larger Picture only while a window streams (Noah, 2026-10-15): the rule is PhonePortraitLayout's
+# Larger Picture only while a window streams (the maintainer, 2026-10-15): the rule is PhonePortraitLayout's
 # (compiled into this check), and the tour's targets, words and places follow it. Each of these
 # changes PhonePortraitLayout.swift instead.
 LAYOUT = os.path.join(WT, "iOSClient/PhonePortraitLayout.swift")

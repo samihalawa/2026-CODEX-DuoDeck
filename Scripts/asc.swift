@@ -33,8 +33,8 @@
 //   distribution ("access to all builds") gets every processed build by itself and is left alone.
 // - The public beta group is the external group with the public link on (or the one named with
 //   --public-beta-group). It gets the build only with --public-beta, which is refused unless the
-//   environment also says SILL_NIGHTLY_PUBLIC_BETA=true: the nightly workflow passes both only while
-//   the repository variable of that name is true (Noah, 2026-10-29: "hold off on giving the testflight
+//   environment also says DUODECK_NIGHTLY_PUBLIC_BETA=true: the nightly workflow passes both only while
+//   the repository variable of that name is true (the maintainer, 2026-10-29: "hold off on giving the testflight
 //   build to public beta until I try it out in Insiders first tomorrow"). Without both, no external
 //   group is ever touched and nothing goes to Beta App Review.
 // - Beta App Review: only right after the build went to that external group, and only when TestFlight
@@ -50,7 +50,7 @@
 //
 // Exit status: 0 done; 1 App Store Connect refused a request, the build failed processing, or the wait
 // ran out; 2 a usage error (a missing or malformed option, a key file that isn't a key, --public-beta
-// without SILL_NIGHTLY_PUBLIC_BETA=true).
+// without DUODECK_NIGHTLY_PUBLIC_BETA=true).
 import CryptoKit
 import Foundation
 
@@ -202,8 +202,8 @@ func validate(_ options: Options) -> URL {
     }
     if options.publicBeta {
         guard options.command == "distribute" else { usageError("--public-beta goes with distribute") }
-        guard environment["SILL_NIGHTLY_PUBLIC_BETA"] == "true" else {
-            usageError("--public-beta is refused unless the environment also says SILL_NIGHTLY_PUBLIC_BETA=true (the nightly workflow sets it only while the repository variable SILL_NIGHTLY_PUBLIC_BETA is true). Nothing was sent.")
+        guard environment["DUODECK_NIGHTLY_PUBLIC_BETA"] == "true" else {
+            usageError("--public-beta is refused unless the environment also says DUODECK_NIGHTLY_PUBLIC_BETA=true (the nightly workflow sets it only while the repository variable DUODECK_NIGHTLY_PUBLIC_BETA is true). Nothing was sent.")
         }
     } else if options.publicBetaGroup != nil {
         usageError("--public-beta-group goes with --public-beta")
@@ -597,7 +597,7 @@ func setWhatsNew(_ client: Client, build: Build, text: String) {
 
 /// Adds the build to one group. Asked again for a build already there, App Store Connect changes nothing.
 func add(_ client: Client, build: Build, to group: Group, publicBetaAllowed: Bool) {
-    // The rule in one place: no external group without --public-beta and SILL_NIGHTLY_PUBLIC_BETA=true.
+    // The rule in one place: no external group without --public-beta and DUODECK_NIGHTLY_PUBLIC_BETA=true.
     precondition(group.isInternal || publicBetaAllowed, "an external group without the public beta's permission")
     let address = client.url("/v1/betaGroups/\(group.id)/relationships/builds")
     let answer = client.send("POST", address, json: ["data": [["type": "builds", "id": build.id]]])
@@ -702,11 +702,11 @@ case "distribute":
     if let publicBeta {
         add(client, build: build, to: publicBeta, publicBetaAllowed: true)
         given.append(publicBeta.name)
-        say("Public beta group '\(publicBeta.name)' (\(publicBeta.publicLinkEnabled ? "public link" : "external")): given build \(options.build) of \(options.version) (SILL_NIGHTLY_PUBLIC_BETA is true)")
+        say("Public beta group '\(publicBeta.name)' (\(publicBeta.publicLinkEnabled ? "public link" : "external")): given build \(options.build) of \(options.version) (DUODECK_NIGHTLY_PUBLIC_BETA is true)")
         submitForReview(client, build: build, options: options)
     } else {
         let withLink = externalGroups.filter(\.publicLinkEnabled).map { "'\($0.name)'" }.joined(separator: ", ")
-        say("Public beta: not given\(withLink.isEmpty ? "" : " to \(withLink)"): the repository variable SILL_NIGHTLY_PUBLIC_BETA is not true. No external group was touched and nothing went to Beta App Review.")
+        say("Public beta: not given\(withLink.isEmpty ? "" : " to \(withLink)"): the repository variable DUODECK_NIGHTLY_PUBLIC_BETA is not true. No external group was touched and nothing went to Beta App Review.")
     }
     say("Assigned build \(options.build) of \(options.version) to: \(given.joined(separator: ", ").ifEmpty("no group"))\(automatic.isEmpty ? "" : "; by automatic distribution: \(automatic.joined(separator: ", "))").")
 

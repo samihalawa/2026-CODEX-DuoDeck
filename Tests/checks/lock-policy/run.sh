@@ -1,5 +1,5 @@
 #!/bin/bash
-# LockPolicy (Sources/SillHost/LockPolicy.swift; docs/locked-mac-plan.md): a locked Mac. The three readings
+# LockPolicy (Sources/DuoDeckHost/LockPolicy.swift; docs/locked-mac-plan.md): a locked Mac. The three readings
 # and every combination of the witnesses (unknown counts as locked); what each notification sets; the settle
 # before an unlock (the flap of a return to the console; random witness sequences); when SessionLock reads;
 # what each reading allows; what the server's gate withholds by kind and picture; each request at each

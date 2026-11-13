@@ -9,7 +9,7 @@
 - iOS: com.agentsai.duodeck; Agents AI Ltd. team U549N38BV6.
 - App Store Connect app: 6832548998. Record creation is verified; check current build/review state in the provider before any subsequent action.
 
-Never publish to the upstream Sill repository, reuse its team entitlements or treat its App Store listing as DuoDeck's.
+Publish only to the DuoDeck repository, team and App Store listing.
 
 ## Source and verification
 
@@ -30,13 +30,13 @@ The canonical command is script/release_mac.sh. The compatibility Scripts/releas
 - To continue an existing submission, use `--resume-notary` with its ID and `--expected-dmg-sha` with the pristine uploaded checksum. Add `--source-commit` from the original build record when publishing. Resume stages that exact DMG, derives the app from it, waits at most three hours, and verifies Apple's accepted log checksum. The release tag and notes come from the recorded artifact source even if main has advanced.
 - The release command freezes the pushed main commit and release notes, retains verified artifacts under `.build/releases/`, and refuses to overwrite an existing release. Inspect native state before handling any ambiguous response.
 - Publish the DMG, ZIP and checksums to the intended DuoDeck release only. Confirm the download URL resolves and its bytes match.
-- Inspect any existing local installation identity before replacing DuoDeck Host, then launch and confirm its actual process and UI. Do not replace Sill or another product.
+- Inspect any existing local installation identity before replacing DuoDeck Host, then launch and confirm its actual process and UI. Do not replace another product.
 
 A notarized privileged Mac host is not a Mac App Store client. A future Mac App Store client must use its own supported sandboxed architecture and exclude private capture/virtual-display host APIs.
 
 ## iOS distribution
 
-The canonical Xcode project is apps/ios/Sill.xcodeproj and its scheme remains Sill. The installed product is DuoDeck.
+The canonical Xcode project is apps/ios/DuoDeck.xcodeproj, scheme DuoDeck.
 
 - Build and install a signed development app on the intended paired device. Read its installed bundle/version and launch result.
 - Scripts/release-ios.sh validates the own bundle com.agentsai.duodeck, team U549N38BV6 and Packaging/ExportOptions-duodeck.plist.

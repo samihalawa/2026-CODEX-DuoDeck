@@ -56,8 +56,8 @@ extension StreamClient {
                             onVirtualDisplay: settings.host?.stream?.onVirtualDisplay)
     }
 
-    /// Whether Aa can be used now: only while a window streams (`TextScale.selectable`; Noah,
-    /// 2026-10-29). Every bar's Aa asks here, and the harness's `-SillScaleOpen`.
+    /// Whether Aa can be used now: only while a window streams (`TextScale.selectable`; the maintainer,
+    /// 2026-10-29). Every bar's Aa asks here, and the harness's `-DuoDeckScaleOpen`.
     var textScaleSelectable: Bool { TextScale.selectable(streaming: active) }
 
     /// The session ended (`tearDown`): its last viewport and a pointer re-send still waiting go with
@@ -89,9 +89,9 @@ extension StreamClient {
     /// reasons for a 60 fps stream apart with it.
     static func screenMaximumFPS() -> Int {
         #if DEBUG
-        // `-SillScreenFPS 120`: the simulator's 60 Hz screen stands in for a ProMotion one, so the
+        // `-DuoDeckScreenFPS 120`: the simulator's 60 Hz screen stands in for a ProMotion one, so the
         // 60 fps request away from home and its footnote can be checked there (S8).
-        let forced = UserDefaults.standard.integer(forKey: "SillScreenFPS")
+        let forced = UserDefaults.standard.integer(forKey: "DuoDeckScreenFPS")
         if forced > 0 { return forced }
         #endif
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }

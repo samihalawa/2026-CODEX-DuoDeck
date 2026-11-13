@@ -1,6 +1,6 @@
 #!/bin/bash
 # ThumbnailHold (iOSClient/ThumbnailHold.swift) on its own: how long a window's thumbnail is held before
-# its lights show and it can be dragged (issue #113; Noah, 2026-10-29: 0.2 to 3 s in tenths, 0.5 s unless
+# its lights show and it can be dragged (issue #113; the maintainer, 2026-10-29: 0.2 to 3 s in tenths, 0.5 s unless
 # changed): the constants, every length on the grid of tenths, the ends, halfway values, the stepper's
 # + and −, a stored value (numbers, strings, junk, UserDefaults' registration and the launch argument
 # in a child run), every word, the title's three lines (the narrowest it may be beside the stepper, by

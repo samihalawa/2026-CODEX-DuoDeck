@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>me.saffer.sill.restoreprobe</string>
+	<string>com.agentsai.duodeck.restoreprobe</string>
 	<key>CFBundleName</key>
-	<string>Sill Restore Probe</string>
+	<string>DuoDeck Restore Probe</string>
 	<key>CFBundleExecutable</key>
 	<string>owner</string>
 	<key>CFBundlePackageType</key>

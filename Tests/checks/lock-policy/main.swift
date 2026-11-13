@@ -1,4 +1,4 @@
-// LockPolicy (Sources/SillHost/LockPolicy.swift; docs/locked-mac-plan.md), pure, compiled with
+// LockPolicy (Sources/DuoDeckHost/LockPolicy.swift; docs/locked-mac-plan.md), pure, compiled with
 // StreamProtocol's sources as one module (the real files: module.txt): the three readings and how the
 // witnesses make one (unknown counts as locked), what each notification sets, the effective reading's
 // settle (an unlock only after 2 s of every witness saying so and a session read made since), when
@@ -45,14 +45,14 @@ for a in readings { for b in readings {
 // MARK: - The witnesses' readers
 
 let me: UInt32 = 501
-check(P.console(name: "noah", uid: me, ownUID: me, readable: true) == .thisUser, "the console's user is this one: this user")
+check(P.console(name: "sample", uid: me, ownUID: me, readable: true) == .thisUser, "the console's user is this one: this user")
 check(P.console(name: "loginwindow", uid: 0, ownUID: me, readable: true) == .otherUser,
       "loginwindow on the console (a fast user switch, uid 0): another user")
 check(P.console(name: "loginwindow", uid: me, ownUID: me, readable: true) == .otherUser, "loginwindow is never this user, whatever its uid")
 check(P.console(name: "alex", uid: 502, ownUID: me, readable: true) == .otherUser, "another user's session: another user")
 check(P.console(name: nil, uid: 0, ownUID: me, readable: true) == .nobody && P.console(name: "", uid: me, ownUID: me, readable: true) == .nobody,
       "no console user: nobody")
-check(P.console(name: "noah", uid: me, ownUID: me, readable: false) == .unreadable, "the dynamic store not asked: unreadable")
+check(P.console(name: "sample", uid: me, ownUID: me, readable: false) == .unreadable, "the dynamic store not asked: unreadable")
 
 check(P.screen(registered: 0, got: 0, state: 0) == .unlocked, "notify state 0: the screen unlocked")
 check(P.screen(registered: 0, got: 0, state: 1) == .locked && P.screen(registered: 0, got: 0, state: 7) == .locked, "notify state not 0: locked")
@@ -327,7 +327,7 @@ let open = P.allowed(.unlocked), screen = P.allowed(.screenLocked), off = P.allo
 check(open == P.Allowed(display: true, windows: true, appsAndIcons: true, launches: true, sound: true, clipboard: true, pointer: true,
                          gestures: true, virtualDisplay: true, input: .everyone, wakeOnConnect: true, wakeOnActivity: true),
       "unlocked: everything")
-check(P.lockScreenStreams, "a locked screen's display streams: the device sees the lock screen itself (Noah, 2026-10-31)")
+check(P.lockScreenStreams, "a locked screen's display streams: the device sees the lock screen itself (the maintainer, 2026-10-31)")
 check(screen == P.Allowed(display: true, windows: false, appsAndIcons: false, launches: false, sound: false, clipboard: false, pointer: false,
                            gestures: false, virtualDisplay: false, input: .paired, wakeOnConnect: true, wakeOnActivity: true),
       "screen locked: nothing of the Mac, a paired device's input alone, which may wake the display")
@@ -413,7 +413,7 @@ for arrived in readings { for now in readings {
 
 let windows = [WindowInfo(id: 11, title: "Budget.numbers", appName: "Numbers", bundleID: "com.apple.iWork.Numbers", width: 1200, height: 800),
                WindowInfo(id: 12, title: "Inbox", appName: "Mail", bundleID: "com.apple.mail", width: 1000, height: 700)]
-var full = WindowList(macName: "Noah’s MacBook Pro", windows: windows, active: .window(11), launchID: "L1", hostVersion: "0.6.0",
+var full = WindowList(macName: "the maintainer’s MacBook Pro", windows: windows, active: .window(11), launchID: "L1", hostVersion: "0.6.0",
                       protocol: 1, gestures: 1, clipboard: 1)
 full.keyRepeat = 1
 let unlockedList = P.list(full, reading: .unlocked)
@@ -434,7 +434,7 @@ for rd in [Reading.screenLocked, .offConsole] {
 }
 let before = #"{"macName":"Mac mini","windows":[],"active":{"desktop":{}},"launchID":"L","hostVersion":"0.5.1","protocol":1,"gestures":1,"clipboard":1}"#
 check(Wire.decode(WindowList.self, from: Data(before.utf8)).map { $0.locked == nil && $0.offConsole == nil && $0.clipboard == 1 } == true,
-      "an older host's list (Sill for Mac 0.5.1's keys) decodes, locked and offConsole nil")
+      "an older host's list (DuoDeck Host 0.5.1's keys) decodes, locked and offConsole nil")
 struct OlderReader: Decodable { var macName: String; var windows: [WindowInfo]; var active: StreamSource; var clipboard: Int?; var keyRepeat: Int? }
 check(Wire.decode(OlderReader.self, from: Wire.encode(P.list(full, reading: .offConsole))).map { $0.windows.isEmpty && $0.clipboard == nil } == true,
       "an older device reads a locked list (it skips both keys) and sees no windows")
@@ -520,13 +520,13 @@ check(P.fileReading("1") == .screenLocked && P.fileReading("1\n") == .screenLock
 check(P.fileReading("2") == .offConsole && P.fileReading("2\n") == .offConsole, "the file: 2 is off console")
 check(P.fileReading("0") == nil && P.fileReading("") == nil && P.fileReading(nil) == nil && P.fileReading("yes") == nil
       && P.fileReading("11") == nil && P.fileReading("3") == nil && P.fileReading("12") == nil, "the file: anything else says nothing")
-check(P.testNotifyName("me.saffer.sill.test.lock.1") == "me.saffer.sill.test.lock.1", "a test notify name under the prefix")
-check(P.testNotifyName("com.apple.sessionagent.screenIsLocked") == nil && P.testNotifyName("me.saffer.sill.test.") == nil
-      && P.testNotifyName(nil) == nil && P.testNotifyName("me.saffer.sill.test." + String(repeating: "x", count: 120)) == nil,
+check(P.testNotifyName("com.agentsai.duodeck.test.lock.1") == "com.agentsai.duodeck.test.lock.1", "a test notify name under the prefix")
+check(P.testNotifyName("com.apple.sessionagent.screenIsLocked") == nil && P.testNotifyName("com.agentsai.duodeck.test.") == nil
+      && P.testNotifyName(nil) == nil && P.testNotifyName("com.agentsai.duodeck.test." + String(repeating: "x", count: 120)) == nil,
       "never a system name, an empty one or a long one")
 let notes = P.testNotes("3 screenIsLocked; 8.5 com.apple.screenIsUnlocked;10 sessionDidResignActive")
 check(notes?.count == 3 && notes?[0].at == 3 && notes?[0].name == "com.apple.screenIsLocked" && notes?[1].at == 8.5
-      && notes?[2].name == "NSWorkspaceSessionDidResignActiveNotification", "SILL_TEST_LOCK_NOTE: times and names")
+      && notes?[2].name == "NSWorkspaceSessionDidResignActiveNotification", "DUODECK_TEST_LOCK_NOTE: times and names")
 check(P.testNotes("3") == nil && P.testNotes("x screenIsLocked") == nil && P.testNotes("3 screenIsDim") == nil && P.testNotes("-1 screenIsLocked") == nil
       && P.testNotes("") == nil && P.testNotes(nil) == nil, "a part that does not parse: none")
 
@@ -574,9 +574,9 @@ check(LockedMac.why(WindowList(macName: "M", windows: [], active: .desktop)) == 
 check(LockedMac.why(locked1) == .screenLocked && LockedMac.why(locked2) == .otherUser, "`locked`: the screen; with `offConsole`: another user")
 var odd = WindowList(macName: "M", windows: [], active: .desktop); odd.offConsole = true
 check(LockedMac.why(odd) == nil, "`offConsole` without `locked`: not locked")
-check(LockedMac.line(mac: "Noah’s MacBook Pro", why: .screenLocked) == "Noah’s MacBook Pro is locked. Unlock it to see its windows.", "the line, locked")
-check(LockedMac.line(mac: "Noah’s MacBook Pro", why: .otherUser) == "Another user started controlling this Mac. Log in to your account to reactivate screen sharing with DuoDeck.",
-      "the line, another user: the cover's two sentences, Noah's words, no Mac's name")
+check(LockedMac.line(mac: "the maintainer’s MacBook Pro", why: .screenLocked) == "the maintainer’s MacBook Pro is locked. Unlock it to see its windows.", "the line, locked")
+check(LockedMac.line(mac: "the maintainer’s MacBook Pro", why: .otherUser) == "Another user started controlling this Mac. Log in to your account to reactivate screen sharing with DuoDeck.",
+      "the line, another user: the cover's two sentences, the maintainer's words, no Mac's name")
 check(LockedMac.line(mac: "", why: .screenLocked) == "The Mac is locked. Unlock it to see its windows.", "the line without the Mac's name")
 check(LockedMac.title(mac: "Mac mini", shade: .locked(.screenLocked)) == "Mac mini is locked"
       && LockedMac.title(mac: "Mac mini", shade: .locked(.otherUser)) == "Another user started controlling this Mac."
@@ -587,7 +587,7 @@ check(LockedMac.detail(shade: .locked(.screenLocked), paired: true) == "To unloc
       "the cover's line at a locked screen: the password only for a paired session")
 check(LockedMac.detail(shade: .locked(.otherUser), paired: true) == "Log in to your account to reactivate screen sharing with DuoDeck."
       && LockedMac.detail(shade: .locked(.otherUser), paired: false) == "Log in to your account to reactivate screen sharing with DuoDeck."
-      && LockedMac.detail(shade: .unlocking, paired: true) == nil, "the cover's line for another user (Noah's words), paired or not; none while unlocking")
+      && LockedMac.detail(shade: .unlocking, paired: true) == nil, "the cover's line for another user (the maintainer's words), paired or not; none while unlocking")
 check(LockedMac.shade(nil, list: nil) == nil && LockedMac.shade(nil, list: .screenLocked) == nil
       && LockedMac.shade(nil, list: .otherUser) == .locked(.otherUser) && LockedMac.shade(.locked(.otherUser), list: .otherUser) == .locked(.otherUser)
       && LockedMac.shade(.locked(.otherUser), list: .screenLocked) == .unlocking && LockedMac.shade(.unlocking, list: .screenLocked) == .unlocking,

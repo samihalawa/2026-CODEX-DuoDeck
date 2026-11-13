@@ -22,7 +22,7 @@ The two dedicated store simulators were reused:
 - DuoDeck Store iPhone 6.3: iPhone 17 Pro, iOS 27.0; F7317CDD-90DC-4B9A-AAD4-057E6D1F0A6F.
 - DuoDeck Store iPad 13: iPad Pro 13-inch (M5), iOS 27.0; C0033497-0517-44CE-98DF-0393C03859E4.
 
-The compiled app at `.build/ios-native-ui/Build/Products/Debug-iphonesimulator/Sill.app` was installed on each. Its Info.plist was checked as version 1.1.0, build 2026111001 (compiled at `.build/ios-icon-check/Build/Products/Debug-iphonesimulator/Sill.app` for this capture). The simulator build succeeded; evidence is in `.build/orchestration/ios-native-v2-final-build.log`.
+The compiled app at `.build/ios-native-ui/Build/Products/Debug-iphonesimulator/DuoDeck.app` was installed on each. Its Info.plist was checked as version 1.1.0, build 2026111001 (compiled at `.build/ios-icon-check/Build/Products/Debug-iphonesimulator/DuoDeck.app` for this capture). The simulator build succeeded; evidence is in `.build/orchestration/ios-native-v2-final-build.log`.
 
 Both used a normal `XCUIApplication(bundleIdentifier: "com.agentsai.duodeck")` launch with no app arguments. XCTest navigated the actual app through Macs → Add Mac → Cancel → Set up your Mac. Images were captured as native XCTest screenshots and copied byte-for-byte from the result attachments. The isolated test runner lives only under the ignored `.build/orchestration/ios-native-v2-ui` directory; the shipped Xcode project has no added UI-test target.
 

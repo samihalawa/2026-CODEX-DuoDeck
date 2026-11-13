@@ -82,7 +82,7 @@ check(TourPolicy.owed(P, voiceOver: false, skipped) == [] && TourPolicy.owed(L, 
 check(TourPolicy.owed(L, voiceOver: false, TourMemory(seen: [.touch])) == [.bar, .sharing, .settings], "a session that ended after touch")
 check(TourPolicy.owed(P, voiceOver: true, fresh) == [.bar, .sharing, .settings, .laptop], "VoiceOver: touch not owed here")
 check(TourPolicy.owed(L, voiceOver: false, TourMemory(seen: [.bar, .sharing, .settings])) == [.touch], "touch stays owed after a VoiceOver tour")
-// Version 1's memory as it is (without the upgrade, as a Debug build without -SillTourState reads it):
+// Version 1's memory as it is (without the upgrade, as a Debug build without -DuoDeckTourState reads it):
 // only the new card owed. The upgrade clears it (below), so the whole tour shows once more.
 check(TourPolicy.owed(P, voiceOver: false, v1Done) == [.sharing] && TourPolicy.owed(L, voiceOver: false, v1Sideways) == [.sharing],
       "a version-1 memory as it is: the new card alone")
@@ -117,7 +117,7 @@ func decide(_ m: TourMoment, _ layout: TourLayout = L, _ memory: TourMemory = fr
     TourPolicy.automatic(m, layout, memory)
 }
 check(TourPolicy.beat == 1.0, "the beat is a second")
-check(decide(moment(now: 20, enabled: false)) == .pass(.nothingOwed), "Debug without -SillTourState: never")
+check(decide(moment(now: 20, enabled: false)) == .pass(.nothingOwed), "Debug without -DuoDeckTourState: never")
 check(decide(moment(now: 20, offered: true)) == .pass(.nothingOwed), "one decision per session and layout")
 check(decide(moment(now: 20, picture: nil)) == .wait(until: nil), "no picture yet: wait for it")
 check(decide(moment(now: 10)) == .wait(until: 11), "at the picture: wait a beat")
@@ -237,10 +237,10 @@ check(TourPolicy.nextSession(after: middle, reconnected: true) == decidedHere, "
 
 let replayL = TourPolicy.replay(L, voiceOver: false)!
 check(replayL == TourRun(steps: sidewaysSteps, at: .touch, replay: true), "Take the Tour sideways")
-check(TourPolicy.replay(P, voiceOver: false, from: .settings) == TourRun(steps: all, at: .settings, replay: true), "-SillTour settings upright")
+check(TourPolicy.replay(P, voiceOver: false, from: .settings) == TourRun(steps: all, at: .settings, replay: true), "-DuoDeckTour settings upright")
 check(TourPolicy.replay(P, voiceOver: false, from: .sharing) == TourRun(steps: all, at: .sharing, replay: true)
       && TourPolicy.replay(L, voiceOver: true, from: .sharing) == TourRun(steps: [.bar, .sharing, .settings], at: .sharing, replay: true),
-      "-SillTour sharing, upright and under VoiceOver sideways")
+      "-DuoDeckTour sharing, upright and under VoiceOver sideways")
 check(TourPolicy.replay(L, voiceOver: false, from: .laptop)?.at == .touch, "a step the layout lacks starts at the first")
 check(TourPolicy.replay(L, voiceOver: true, from: .touch)?.at == .bar, "under VoiceOver touch is not there")
 check(TourPolicy.replay(P, voiceOver: true)?.steps == [.bar, .sharing, .settings, .laptop], "Take the Tour under VoiceOver")
@@ -291,7 +291,7 @@ check(TourPolicy.carry(run(all, at: .laptop, passed: [.touch, .bar, .sharing, .s
 check(TourPolicy.carry(run([.laptop], at: .laptop), to: L, voiceOver: false, memory: fresh) == nil,
       "the turn's laptop card turned back: ends, nothing owed there counts after it")
 check(TourPolicy.carry(run(all, at: .laptop, replay: true), to: L, voiceOver: false, memory: fresh) == nil,
-      "-SillTour laptop turned sideways: nothing after laptop, it ends (not back to touch)")
+      "-DuoDeckTour laptop turned sideways: nothing after laptop, it ends (not back to touch)")
 check(TourPolicy.carry(run([.settings, .laptop], at: .settings), to: L, voiceOver: false, memory: TourMemory(seen: [.touch, .bar, .sharing]))
       == run([.settings], at: .settings), "an owed run sideways keeps only what is owed there")
 check(TourPolicy.carry(run([.sharing, .settings, .laptop], at: .sharing), to: L, voiceOver: false, memory: TourMemory(seen: [.touch, .bar]))
@@ -1310,7 +1310,7 @@ for layout in [L, P, F] {
         }
     }
 }
-// MARK: - Larger Picture only while a window streams (Noah, 2026-10-15)
+// MARK: - Larger Picture only while a window streams (the maintainer, 2026-10-15)
 //
 // "When in Desktop mode, there is negative space on the bottom": the Desktop, which Aa never resizes,
 // and nothing streaming keep the standard arrangement with the switch on. The tour sees what
@@ -1370,7 +1370,7 @@ for (name, w, h) in uprightPhones {
 }
 check(PhonePortraitLayout.Streaming.allCases.allSatisfy { same(streamScreen(382, 678, switchOn: true, streaming: $0, hinge: true), phoneModel(382, 678)) },
       "the iPhone Duo's cover (a hinge): the standard tour whatever streams, the switch on or off")
-// Noah's 15 Pro with the Desktop: the branch's bar card stood in the black under the Desktop's
+// the maintainer's 15 Pro with the Desktop: the branch's bar card stood in the black under the Desktop's
 // 377×244 with its tail at row 1; now it is the standard arrangement's, its tail on the thumbnails.
 do {
     let branch = largerModel(393, 793, keyboard: 301, video: macBook), now = streamScreen(393, 793, switchOn: true, streaming: .desktop)

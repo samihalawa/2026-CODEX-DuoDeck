@@ -1,4 +1,4 @@
-// DisplayWake (Sources/SillHost/DisplayWake.swift) with the wire's message kinds and input events
+// DisplayWake (Sources/DuoDeckHost/DisplayWake.swift) with the wire's message kinds and input events
 // (Sources/StreamProtocol/StreamMessage.swift and Input.swift): when the host declares user activity
 // on the Mac for a device (issue #134, PR #151), what a key press on the Mac does, so a sleeping
 // display wakes for a person at the device and sleeps again by the Mac's own setting once nobody
@@ -16,7 +16,7 @@
 // exactly where a real one declares; the lines; what DisplayActivity says after its second look
 // (Report: a wake only when the display read asleep before and on after, once for one wake, any other
 // declaration's line at most once a minute, a woke line counting as that minute's, a refusal once,
-// again after a success); the TEST ONLY user type (SILL_TEST_USER_ACTIVE); then 20,000 random
+// again after a success); the TEST ONLY user type (DUODECK_TEST_USER_ACTIVE); then 20,000 random
 // sessions against the rule's invariants and 20,000 against Report's:
 //   I1 every connect declares (a test host: counts);
 //   I2 two declarations by anything but a connect are never under 5 s apart, unless the clock went back;
@@ -81,13 +81,13 @@ eq(W.interval, 5, "the interval: 5 s")
 eq(W.recentre, 2, "a bare move is the device's own for 2 s after a stream change")
 eq(W.secondLook, 0.5, "the second look at the display: 0.5 s after the declaration")
 eq(W.declaredLineInterval, 60, "a declaration's line at most once a minute")
-eq(W.assertionName, "Sill: a device is using this Mac", "the assertion's name in pmset -g assertions")
+eq(W.assertionName, "DuoDeck: a device is using this Mac", "the assertion's name in pmset -g assertions")
 check(W.assertionName.utf8.count <= 128, "the assertion's name within IOPMLib.h's 128 characters (\(W.assertionName.utf8.count))")
 eq(W.declaredKey, "disp.wake", "the stats key for a declaration")
 eq(W.dryKey, "disp.wakeDry", "the stats key for a test host's count")
 eq(W.success, 0, "kIOReturnSuccess is 0")
 check(W.declaredKey != W.dryKey, "the two keys differ")
-eq(W.userActiveVariable, "SILL_TEST_USER_ACTIVE", "the TEST ONLY variable's name")
+eq(W.userActiveVariable, "DUODECK_TEST_USER_ACTIVE", "the TEST ONLY variable's name")
 
 // MARK: - Whose each message is: every kind there is
 
@@ -260,7 +260,7 @@ eq(W.why(.gesture), "made a trackpad gesture", "why: a gesture")
 check(Set(W.Activity.allCases.map(W.why)).count == W.Activity.allCases.count, "each activity's words its own")
 eq(W.wokeLine(device: "iPad (iPad14,1)", activity: .connect), "Woke the display for iPad (iPad14,1), which connected.",
    "the woke line for a connect")
-eq(W.wokeLine(device: "Noah’s iPhone", activity: .input), "Woke the display for Noah’s iPhone, which sent input.",
+eq(W.wokeLine(device: "the maintainer’s iPhone", activity: .input), "Woke the display for the maintainer’s iPhone, which sent input.",
    "the woke line for input")
 eq(W.wokeLine(device: "127.0.0.1:52011", activity: .gesture), "Woke the display for 127.0.0.1:52011, which made a trackpad gesture.",
    "the woke line naming an address")
@@ -358,18 +358,18 @@ func userActive(_ value: String?, testHost: Bool = false) -> (remote: Bool, line
 }
 check(userActive(nil) == (false, nil), "unset: local, no line")
 check(userActive("") == (false, nil), "empty: as unset")
-check(userActive("remote") == (true, "TEST: user activity is declared as remote (kIOPMUserActiveRemote), not local (SILL_TEST_USER_ACTIVE=remote)."),
-      "remote on a real host (Sill.app too): remote, and a TEST line")
-check(userActive("local") == (false, "TEST: user activity is declared as local (kIOPMUserActiveLocal), as without SILL_TEST_USER_ACTIVE."),
+check(userActive("remote") == (true, "TEST: user activity is declared as remote (kIOPMUserActiveRemote), not local (DUODECK_TEST_USER_ACTIVE=remote)."),
+      "remote on a real host (DuoDeck.app too): remote, and a TEST line")
+check(userActive("local") == (false, "TEST: user activity is declared as local (kIOPMUserActiveLocal), as without DUODECK_TEST_USER_ACTIVE."),
       "local: local, and a TEST line")
 do {
     let odd = userActive("Remote\nWoke the display for nobody.")
     check(!odd.remote, "another value: local")
-    check(odd.line == "SILL_TEST_USER_ACTIVE ignored: it takes local or remote; user activity is declared as local.",
+    check(odd.line == "DUODECK_TEST_USER_ACTIVE ignored: it takes local or remote; user activity is declared as local.",
           "another value: ignored with one line that does not echo it")
-    check(userActive("remote", testHost: true) == (false, "SILL_TEST_USER_ACTIVE ignored: a test host declares no user activity (it counts disp.wakeDry)."),
+    check(userActive("remote", testHost: true) == (false, "DUODECK_TEST_USER_ACTIVE ignored: a test host declares no user activity (it counts disp.wakeDry)."),
           "remote on a test host: ignored, with one line")
-    check(W.userActive(environment: ["SILL_TEST_USERACTIVE": "remote"], testHost: false) == (false, nil), "another variable: nothing")
+    check(W.userActive(environment: ["DUODECK_TEST_USERACTIVE": "remote"], testHost: false) == (false, nil), "another variable: nothing")
 }
 
 // MARK: - 20,000 random sessions: the rule

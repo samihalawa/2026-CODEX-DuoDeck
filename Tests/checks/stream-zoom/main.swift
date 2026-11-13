@@ -1,4 +1,4 @@
-// StreamZoom (iOSClient/StreamZoom.swift) on its own: the picture's pinch zoom (issue #65; Noah's
+// StreamZoom (iOSClient/StreamZoom.swift) on its own: the picture's pinch zoom (issue #65; the maintainer's
 // decisions of 2026-10-19 and 2026-10-20) and who a stroke on the picture belongs to.
 //   - The zoom: 1× to 5× (never more, never less), a step of a pinch keeping the point of the picture
 //     under the fingers' last midpoint under their midpoint now, the zoomed picture always covering its

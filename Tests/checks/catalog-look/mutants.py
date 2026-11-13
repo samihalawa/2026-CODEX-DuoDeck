@@ -1,4 +1,4 @@
-"""Mutants of CatalogLook.swift (Sources/SillHost): each changes it in one place, is compiled with the check
+"""Mutants of CatalogLook.swift (Sources/DuoDeckHost): each changes it in one place, is compiled with the check
 (main.swift) and must make it fail. A mutant that does not compile is not counted as caught.
 usage: mutants.py"""
 import os, subprocess, sys
@@ -6,7 +6,7 @@ SP = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(SP, "..", "..", ".."))   # the repository
 OUT = os.path.join(ROOT, ".build", "checks", "catalog-look")
 os.makedirs(OUT, exist_ok=True)
-SRC = os.path.join(ROOT, "Sources/SillHost/CatalogLook.swift")
+SRC = os.path.join(ROOT, "Sources/DuoDeckHost/CatalogLook.swift")
 orig = open(SRC).read()
 GONE = "            if !displaysNow.contains(display) { return .displayGone(display) }\n"
 NONE = "            guard let display else { return .noDisplay }\n"

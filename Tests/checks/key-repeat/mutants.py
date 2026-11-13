@@ -1,9 +1,9 @@
-"""Mutants of KeyRepeat.swift (Sources/SillHost): each changes it in one place, is compiled with the
+"""Mutants of KeyRepeat.swift (Sources/DuoDeckHost): each changes it in one place, is compiled with the
 check by build.sh and must make the check fail.
 usage: mutants.py WORKTREE"""
 import os, subprocess, sys, tempfile
 WT = sys.argv[1]; HERE = os.path.dirname(os.path.abspath(__file__))
-R = "Sources/SillHost/KeyRepeat.swift"
+R = "Sources/DuoDeckHost/KeyRepeat.swift"
 MUTANTS = [
     # The Mac's settings
     ("Off repeats (no ceiling on the delay)", R, "guard delay > 0, interval > 0, delay < off, interval < off", "guard delay > 0, interval > 0, interval < off"),

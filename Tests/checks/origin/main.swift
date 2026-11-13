@@ -1,11 +1,11 @@
-// H3 (OriginPolicy): Sources/SillHost/OriginPolicy.swift and InterfaceSnapshot.swift on their own.
-//   swiftc -O Sources/SillHost/OriginPolicy.swift Sources/SillHost/InterfaceSnapshot.swift Tests/checks/origin/main.swift -o .build/checks/origin/check
+// H3 (OriginPolicy): Sources/DuoDeckHost/OriginPolicy.swift and InterfaceSnapshot.swift on their own.
+//   swiftc -O Sources/DuoDeckHost/OriginPolicy.swift Sources/DuoDeckHost/InterfaceSnapshot.swift Tests/checks/origin/main.swift -o .build/checks/origin/check
 import Foundation
 var fails = 0, passes = 0
 func check(_ name: String, _ ok: Bool) { if ok { passes += 1; print("ok   \(name)") } else { fails += 1; print("FAIL \(name)") } }
 typealias P = OriginPolicy
 func b(_ s: String) -> [UInt8] { IPBytes.parse(s)! }
-// A Mac shaped like Noah's: en0 on 192.168.1.20/24 with a ULA and a global /64, en14 link-local,
+// A Mac shaped like the maintainer's: en0 on 192.168.1.20/24 with a ULA and a global /64, en14 link-local,
 // awdl0 and llw0, utun0–3 link-local only, Tailscale on utun4, a WireGuard wg0, lo0.
 var ifs = P.Interfaces()
 for (n, k) in [("en0", P.InterfaceKind.lan), ("en14", .lan), ("awdl0", .peerToPeer), ("llw0", .peerToPeer), ("utun0", .tunnel),

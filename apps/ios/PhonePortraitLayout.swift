@@ -1,6 +1,6 @@
 import CoreGraphics
 
-/// Where everything goes on a phone held upright (Noah, 2026-09-27; docs/iphone-portrait-plan.md):
+/// Where everything goes on a phone held upright (the maintainer, 2026-09-27; docs/iphone-portrait-plan.md):
 /// the picture in a fixed 16:10 pane at the top, then row 1 (Apps, Aa, Keyboard, Desktop,
 /// Settings, widened to the row), row 2 (the window thumbnails), row 3 (esc, tab, ctrl, opt, cmd,
 /// shift), and the trackpad in everything left. Every rectangle is a function of the stream
@@ -41,7 +41,7 @@ struct PhonePortraitLayout: Equatable {
     /// Row 1 sits in a band 12 pt taller than its buttons, the buttons centred, as the compact window
     /// bar holds its 50 pt buttons in 62: 6 pt above and below them. So 24 pt from the picture to the
     /// buttons (8 + 10 + 6) and 16 from the buttons to the strip (6 + 10), whose thumbnails sit 6 pt
-    /// into it: 22 from the buttons to the thumbnails, the mockup Noah approved.
+    /// into it: 22 from the buttons to the thumbnails, the mockup the maintainer approved.
     static let band: CGFloat = 6
     /// The rows' and the trackpad's inset from the screen's sides.
     static let side: CGFloat = 14
@@ -49,7 +49,7 @@ struct PhonePortraitLayout: Equatable {
     static let bottom: CGFloat = 16
     /// Between rows, and from row 3 to the trackpad.
     static let rowGap: CGFloat = 10
-    /// Between buttons in row 1 and between caps in row 3: the same whitespace in both (Noah).
+    /// Between buttons in row 1 and between caps in row 3: the same whitespace in both (the maintainer).
     static let gap: CGFloat = 8
     static let buttonHeight: CGFloat = 50
     /// The strip: 50 pt thumbnails with 6 pt above and below for the app badge and the halo.
@@ -76,7 +76,7 @@ struct PhonePortraitLayout: Equatable {
 
     /// Larger Picture: the key row's bottom at least this far above the software keyboard's top.
     static let keyboardClearance: CGFloat = 10
-    /// The software keyboard as Sill's input view shows it on an iPhone held upright (autocorrection
+    /// The software keyboard as DuoDeck's input view shows it on an iPhone held upright (autocorrection
     /// is off, so it has no suggestions bar), measured on the iOS 27 simulators
     /// (docs/larger-picture-plan.md, Results): 233 pt on an iPhone with a Home button (the SE); with
     /// Face ID, by the stream screen's width, 320 from 414 pt (the 11 and 11 Pro Max, the Plus and
@@ -303,7 +303,7 @@ struct PhonePortraitLayout: Equatable {
     /// Larger Picture in effect: the switch on while a window streams, the one rule for everything the
     /// switch decides (the arrangement, its viewport, the tour's targets and words), which
     /// `keyboard(for:largerPicture:foldable:)` then places. The Desktop keeps the standard arrangement
-    /// (Noah, 2026-10-15, on his iPhone 15 Pro: "when in Desktop mode, there is negative space on the
+    /// (the maintainer, 2026-10-15, on his iPhone 15 Pro: "when in Desktop mode, there is negative space on the
     /// bottom, seemingly because of the Mac aspect ratio"): Aa never resizes the Desktop, so the room's
     /// extra height could only ever be black under it. So does nothing streaming, so the Desktop a
     /// device asks for then (as it connects, and once a window has closed) arrives into the

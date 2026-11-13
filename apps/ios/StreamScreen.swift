@@ -78,7 +78,7 @@ struct DuoDeckMark: View {
 /// The same sizes catch the phones: every iPhone held upright (375–440 pt wide, 320 with Display
 /// Zoom) is `.outerPortrait` and on its side `.outerLandscape`, and so is an iPad window narrower
 /// than 600 pt held upright (Slide Over, a narrow Split View). On an iPhone `.outerPortrait` draws
-/// the phone's arrangement (Noah, 2026-09-27: the picture in a fixed 16:10 pane on top, then the
+/// the phone's arrangement (the maintainer, 2026-09-27: the picture in a fixed 16:10 pane on top, then the
 /// Keyboard button's row, the thumbnails, six keys and the trackpad; `PhonePortraitLayout`), the
 /// Duo's outer display included: it has a phone's shape and the same keyboard over its key row. An
 /// iPad keeps the compact halves in such a window, as before: the approval covered iPhones and left
@@ -105,11 +105,11 @@ enum DuoLayout {
 
     /// Whether `.outerPortrait` draws the phone's arrangement: on an iPhone, yes; on an iPad (a
     /// window narrower than 600 pt held upright), no: the compact halves, as before. DEBUG:
-    /// `-SillIdiom pad` (or `phone`) draws the other device's, so the harness can photograph an
+    /// `-DuoDeckIdiom pad` (or `phone`) draws the other device's, so the harness can photograph an
     /// iPad window's on an iPhone simulator (ContentView's contract).
     static var phoneArrangement: Bool {
         #if DEBUG
-        switch UserDefaults.standard.string(forKey: "SillIdiom") {
+        switch UserDefaults.standard.string(forKey: "DuoDeckIdiom") {
         case "pad"?: return false
         case "phone"?: return true
         default: break
@@ -156,7 +156,7 @@ struct StreamScreen: View {
     /// hold lets go meanwhile (`keyboardTakers`).
     @State private var menusOpen = false
     /// Pair This iPad… (the panel's Away from home group): the pairing overlay covers the stream.
-    /// Up here, like the panel, so a rotation keeps it. An outside sill://pair link shows the same
+    /// Up here, like the panel, so a rotation keeps it. An outside duodeck://pair link shows the same
     /// overlay with its confirmation.
     @State private var pairingOverlay = false
     /// The DEBUG harness's stand-in for the camera (the simulator has none); nil on a device.
@@ -213,7 +213,7 @@ struct StreamScreen: View {
     #if DEBUG
     /// The console says once when a decision starts to wait.
     @State private var tourWaitLogged: Double? = nil
-    /// `-SillTourPress skip@S` skips once.
+    /// `-DuoDeckTourPress skip@S` skips once.
     @State private var tourSkipPressed = false
     #endif
 
@@ -230,7 +230,7 @@ struct StreamScreen: View {
         _textScale = State(initialValue: textScale)
         _settingsOpen = State(initialValue: settingsOpen)
         // The panel open over the keyboard, as in a session: it took the keyboard down, and closing
-        // it puts it back (`-SillSettings 1 -SillKeyboard 1`).
+        // it puts it back (`-DuoDeckSettings 1 -DuoDeckKeyboard 1`).
         _keyboardBeforeSettings = State(initialValue: settingsOpen && keyboardShown)
         // And it holds the Larger Picture it opened with, as `setSettings` does.
         _largerPictureHeld = State(initialValue: settingsOpen
@@ -560,12 +560,12 @@ struct StreamScreen: View {
     }
 
     /// The harness's arguments that act once the stream screen shows (ContentView's contract), once
-    /// per launch. `-SillKeyboard 1` brings the software keyboard up for real in a live session (the
-    /// mock only lights the button, from its init); `-SillKeyboardToggle <s>[,<s>…]` toggles it at
+    /// per launch. `-DuoDeckKeyboard 1` brings the software keyboard up for real in a live session (the
+    /// mock only lights the button, from its init); `-DuoDeckKeyboardToggle <s>[,<s>…]` toggles it at
     /// those seconds as the Keyboard button does, a stand-in for a tap. In a live session (the
-    /// normal app with `-SillConnect`, or `-SillLive 1`) `-SillDrawer 1`, `-SillSettings 1` and
-    /// `-SillScaleOpen 1` (with `-SillScale`) open theirs 1.5 s in, once the Desktop has started
-    /// (`-SillSettingsCloseAt <s>` closes the panel again s seconds in):
+    /// normal app with `-DuoDeckConnect`, or `-DuoDeckLive 1`) `-DuoDeckDrawer 1`, `-DuoDeckSettings 1` and
+    /// `-DuoDeckScaleOpen 1` (with `-DuoDeckScale`) open theirs 1.5 s in, once the Desktop has started
+    /// (`-DuoDeckSettingsCloseAt <s>` closes the panel again s seconds in):
     /// its start closes a drawer opened before it, and the normal app has no harness to pass them
     /// in at the start.
     private func runLaunchArguments() {
@@ -576,13 +576,13 @@ struct StreamScreen: View {
         func after(_ seconds: Double, _ step: @escaping () -> Void) {
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: step)
         }
-        if defaults.bool(forKey: "SillKeyboard"), live {
+        if defaults.bool(forKey: "DuoDeckKeyboard"), live {
             after(0.5) {
-                print("keyboard: -SillKeyboard 1, the input view takes first responder")
+                print("keyboard: -DuoDeckKeyboard 1, the input view takes first responder")
                 overlay.setKeyboard(shown: true)
             }
         }
-        let times = (defaults.string(forKey: "SillKeyboardToggle") ?? "")
+        let times = (defaults.string(forKey: "DuoDeckKeyboardToggle") ?? "")
             .split(whereSeparator: { $0 == "," || $0 == " " }).compactMap { Double($0) }.filter { $0 >= 0 }
         for time in times {
             after(time) {
@@ -592,10 +592,10 @@ struct StreamScreen: View {
                 overlay.toggleKeyboard()
             }
         }
-        // `-SillTurnAt <s>[,<s>…]`: at each second the scene is asked for the other orientation (upright
+        // `-DuoDeckTurnAt <s>[,<s>…]`: at each second the scene is asked for the other orientation (upright
         // or sideways, from the screen's shape then), a turn mid-session with no hand on the simulator
         // (an iPhone's; iPadOS's windowing refuses it, and says so).
-        let turns = (defaults.string(forKey: "SillTurnAt") ?? "")
+        let turns = (defaults.string(forKey: "DuoDeckTurnAt") ?? "")
             .split(whereSeparator: { $0 == "," || $0 == " " }).compactMap { Double($0) }.filter { $0 >= 0 }
         for time in turns {
             after(time) {
@@ -609,13 +609,13 @@ struct StreamScreen: View {
                 }
             }
         }
-        // `-SillAXDump <s>`: s seconds in, the screen's accessibility elements in the order the
+        // `-DuoDeckAXDump <s>`: s seconds in, the screen's accessibility elements in the order the
         // accessibility tree hands them out (VoiceOver's order, without VoiceOver), labels and frames.
-        let dump = defaults.double(forKey: "SillAXDump")
+        let dump = defaults.double(forKey: "DuoDeckAXDump")
         if dump > 0 { after(dump) { Self.accessibilityDump() } }
-        // `-SillLargerPictureToggle <s>[,<s>…]`: Larger Picture switched at those seconds, as the
-        // Settings panel's switch does (saved; without `-Sill.largerPicture`, which would hold it).
-        let toggles = (defaults.string(forKey: "SillLargerPictureToggle") ?? "")
+        // `-DuoDeckLargerPictureToggle <s>[,<s>…]`: Larger Picture switched at those seconds, as the
+        // Settings panel's switch does (saved; without `-DuoDeck.largerPicture`, which would hold it).
+        let toggles = (defaults.string(forKey: "DuoDeckLargerPictureToggle") ?? "")
             .split(whereSeparator: { $0 == "," || $0 == " " }).compactMap { Double($0) }.filter { $0 >= 0 }
         for time in toggles {
             after(time) {
@@ -624,26 +624,26 @@ struct StreamScreen: View {
                       + (largerPictureHeld != nil ? "; the Settings panel is open, so it applies when the panel closes" : ""))
             }
         }
-        // `-SillZoom 'S@X,Y[; T S@X,Y …]'`: the picture's zoom for photos (StreamZoom): at T seconds (1
+        // `-DuoDeckZoom 'S@X,Y[; T S@X,Y …]'`: the picture's zoom for photos (StreamZoom): at T seconds (1
         // without one), one pinch step of factor S about that fraction of the picture's pane (its middle
         // without one), then the lift's settle, as two fingers would leave it: `2.5@0.3,0.4`, then
         // `3 0.1` for a pinch all the way out. In the mock too.
-        for (time, factor, point) in Self.zoomSteps(defaults.string(forKey: "SillZoom") ?? "") {
+        for (time, factor, point) in Self.zoomSteps(defaults.string(forKey: "DuoDeckZoom") ?? "") {
             after(time) {
                 var z = zoom.zoom
                 let size = z.pane
-                guard size.width > 0, size.height > 0 else { print("harness: -SillZoom: no picture pane yet"); return }
+                guard size.width > 0, size.height > 0 else { print("harness: -DuoDeckZoom: no picture pane yet"); return }
                 let at = CGPoint(x: point.x * size.width, y: point.y * size.height)
                 z.pinch(factor: factor, from: at, to: at, in: size)
                 z.settle()
                 zoom.set(z)
-                print("harness: -SillZoom \(factor)@\(point.x),\(point.y): " + Self.zoomLine(z))
+                print("harness: -DuoDeckZoom \(factor)@\(point.x),\(point.y): " + Self.zoomLine(z))
             }
         }
-        // `-SillHitTest 'S x,y[; x,y …]'`: at S seconds, what UIKit's hit test finds at each point of the
+        // `-DuoDeckHitTest 'S x,y[; x,y …]'`: at S seconds, what UIKit's hit test finds at each point of the
         // window (its points), for the zoom's gate: a zoomed picture never under the bar's or the keys'
         // touches (StreamZoom; HEVCDisplayView takes none).
-        let probe = (defaults.string(forKey: "SillHitTest") ?? "").split(separator: ";").map { $0.split(separator: " ").map(String.init) }
+        let probe = (defaults.string(forKey: "DuoDeckHitTest") ?? "").split(separator: ";").map { $0.split(separator: " ").map(String.init) }
         if let first = probe.first, first.count == 2, let time = Double(first[0]) {
             let points = ([first[1]] + probe.dropFirst().compactMap { $0.first }).compactMap { item -> CGPoint? in
                 let xy = item.split(separator: ",").compactMap { Double($0) }
@@ -660,19 +660,19 @@ struct StreamScreen: View {
         }
         guard live else { return }
         client.runSoundArguments()
-        if defaults.bool(forKey: "SillDrawer") {
+        if defaults.bool(forKey: "DuoDeckDrawer") {
             after(1.5) { print("harness: the drawer opened"); withAnimation(.easeOut(duration: 0.18)) { drawerOpen = true } }
         }
-        if defaults.bool(forKey: "SillSettings") {
+        if defaults.bool(forKey: "DuoDeckSettings") {
             after(1.5) { print("harness: the Settings panel opened"); setSettings(true) }
-            // `-SillSettingsCloseAt <s>`: closed again s seconds in, as Done does (the clipboard's chip
+            // `-DuoDeckSettingsCloseAt <s>`: closed again s seconds in, as Done does (the clipboard's chip
             // waiting under it, then showing: docs/clipboard-plan.md).
-            let closeAt = defaults.double(forKey: "SillSettingsCloseAt")
+            let closeAt = defaults.double(forKey: "DuoDeckSettingsCloseAt")
             if closeAt > 1.5 { after(closeAt) { print("harness: the Settings panel closed"); setSettings(false) } }
         }
-        if defaults.bool(forKey: "SillScaleOpen") {
+        if defaults.bool(forKey: "DuoDeckScaleOpen") {
             after(1.5) {
-                let scale = defaults.double(forKey: "SillScale")
+                let scale = defaults.double(forKey: "DuoDeckScale")
                 if scale > 0 { textScale = TextScale.scale(at: scale) }     // 0.25 is Off's place: no scale
                 // Aa sizes a window: over the Desktop, or nothing, its ruler does not open (TextScale.selectable).
                 guard client.textScaleSelectable else {
@@ -683,17 +683,17 @@ struct StreamScreen: View {
                 scaleOpen = true
             }
         }
-        // `-SillScaleScript '<s> <scale|off>[; …]'`: Aa's value set s seconds in, as the ruler's release
+        // `-DuoDeckScaleScript '<s> <scale|off>[; …]'`: Aa's value set s seconds in, as the ruler's release
         // sets it, whatever streams (a synthetic host streams only the Desktop, over which Aa is dimmed):
         // the viewport it sends (the console's `viewport: …` line), and the host's `win.fitOff` for a
         // scale then Off (issue #179). A test hook: the bars never send a scale while Aa is dimmed.
-        for step in (defaults.string(forKey: "SillScaleScript") ?? "").split(separator: ";") {
+        for step in (defaults.string(forKey: "DuoDeckScaleScript") ?? "").split(separator: ";") {
             let parts = step.split(separator: " ")
             let time = parts.count == 2 ? Double(parts[0]) : nil
             let off = parts.count == 2 && parts[1].lowercased() == "off"
             let scale = parts.count == 2 ? Double(parts[1]).map { TextScale.snap($0, offered: false) } : nil
             guard let time, time >= 0, off || scale != nil else {
-                print("harness: -SillScaleScript: “\(step.trimmingCharacters(in: .whitespaces))” is not “<s> <scale|off>”; skipped")
+                print("harness: -DuoDeckScaleScript: “\(step.trimmingCharacters(in: .whitespaces))” is not “<s> <scale|off>”; skipped")
                 continue
             }
             after(time) {
@@ -704,7 +704,7 @@ struct StreamScreen: View {
     }
     private static var launchArgumentsRan = false
 
-    /// `-SillZoom`'s steps: (seconds, factor, the fraction of the pane); none for what does not read.
+    /// `-DuoDeckZoom`'s steps: (seconds, factor, the fraction of the pane); none for what does not read.
     static func zoomSteps(_ text: String) -> [(Double, CGFloat, CGPoint)] {
         text.split(separator: ";").compactMap { item in
             let words = item.split(separator: " ", omittingEmptySubsequences: true)
@@ -724,7 +724,7 @@ struct StreamScreen: View {
                points(z.pane.width), points(z.pane.height))
     }
 
-    /// `-SillAXDump`: walks the key window as an assistive technology does (an element, else its
+    /// `-DuoDeckAXDump`: walks the key window as an assistive technology does (an element, else its
     /// `accessibilityElements`, else its element count, else its subviews) and prints one line per
     /// element: "ax: 1 Apps (14,454 76×50)".
     private static func accessibilityDump() {
@@ -1171,7 +1171,7 @@ struct StreamScreen: View {
         }
     }
 
-    /// DEBUG `-SillTourPress`: presses a card's Next (or Skip, once) a while after it appears.
+    /// DEBUG `-DuoDeckTourPress`: presses a card's Next (or Skip, once) a while after it appears.
     private func tourPressLater(_ run: TourRun) {
         #if DEBUG
         guard let press = TourDebug.current.press else { return }
@@ -1210,7 +1210,7 @@ struct StreamScreen: View {
                    textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
                    settingsOpen: settingsOpen,
                    // Apps, Menus, Aa, Keyboard, Desktop, Settings, and the strip. The Mac's sound has no
-                   // button: Send Audio and Mute are the Settings panel's switches (Noah, 2026-10-27).
+                   // button: Send Audio and Mute are the Settings panel's switches (the maintainer, 2026-10-27).
                    menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 6, buttonWidth: bar.buttonWidth,
                                                 gap: bar.gap, thumbWidth: bar.thumbWidth),
                    toggleKeyboard: { overlay.toggleKeyboard() },
@@ -1444,7 +1444,7 @@ struct LockedMacShade: View {
 /// The landscape top bar's numbers. The inner display gets the Main board's roomy bar; the outer
 /// display gets the Laptop board's compact one, which is 8 pt shorter and tighter all round — on a
 /// 500 pt tall screen the bar is a sixth of everything there is, so every point it gives back is a
-/// point of Mac. Every bar carries the Aa control (Noah, 2026-09-22: both orientations); it takes
+/// point of Mac. Every bar carries the Aa control (the maintainer, 2026-09-22: both orientations); it takes
 /// one button's width and unfolds over its neighbours only while touched.
 struct BarMetrics {
     let height: CGFloat
@@ -1691,7 +1691,7 @@ struct BarButton<Content: View>: View {
 /// detent, Off, one step below 0.5× (`TextScale`; issue #179). Off is not offered while the virtual
 /// display is on, where a nil scale is 1× (`offered`). Only a window is sized by it: while anything
 /// else streams it is dimmed, its ruler never opens and VoiceOver hears why (`available`,
-/// `TextScale.selectable`; Noah, 2026-10-29).
+/// `TextScale.selectable`; the maintainer, 2026-10-29).
 struct TextScaleControl: View {
     @Binding var scale: Double?
     @Binding var open: Bool
@@ -1758,7 +1758,7 @@ struct TextScaleControl: View {
                 .allowsHitTesting(false)
         }
         .zIndex(open ? 1 : 0)
-        // A ruler asked open while Aa cannot be used (the harness's `-SillScaleOpen` over the Desktop)
+        // A ruler asked open while Aa cannot be used (the harness's `-DuoDeckScaleOpen` over the Desktop)
         // folds at once; one open when the window stops streaming (closed on the Mac, the Desktop
         // picked from another device) folds without applying (`onChange(of: available)`, and `onEnded`
         // applies nothing while Aa cannot be used).
@@ -1896,9 +1896,9 @@ struct WindowStrip: View {
     /// icon offers its menu. Keep holding and move: the submenu goes, the thumbnail lifts and drags
     /// into a new slot. The arrangement is the device's own, persisted per Mac. A tap selects.
     ///
-    /// `Sill.thumbnailHold`, read for its changes (the panel's stepper writes it, and this redraws the
+    /// `DuoDeck.thumbnailHold`, read for its changes (the panel's stepper writes it, and this redraws the
     /// strip, whose thumbnails take the new length at once); the length itself through
-    /// `ThumbnailHold.seconds(stored:)`, since `-Sill.thumbnailHold 0.3` is a string in UserDefaults.
+    /// `ThumbnailHold.seconds(stored:)`, since `-DuoDeck.thumbnailHold 0.3` is a string in UserDefaults.
     @AppStorage(ThumbnailHold.key) private var storedHold = ThumbnailHold.standard
     private var hold: TimeInterval {
         _ = storedHold
@@ -1977,10 +1977,10 @@ struct WindowStrip: View {
         }
         .onDisappear { lifted = nil; liftOffset = 0 }
         #if DEBUG
-        // Harness: `-SillWindowMenu 1` opens the first window's submenu at launch.
+        // Harness: `-DuoDeckWindowMenu 1` opens the first window's submenu at launch.
         .onAppear {
             Self.logHold(hold)
-            if UserDefaults.standard.bool(forKey: "SillWindowMenu"), let first = client.orderedWindows.first { menuFor = first.id }
+            if UserDefaults.standard.bool(forKey: "DuoDeckWindowMenu"), let first = client.orderedWindows.first { menuFor = first.id }
         }
         .onChange(of: hold) { _, now in Self.logHold(now) }
         #endif
@@ -2402,11 +2402,11 @@ struct AppDrawer: View {
     }
 
     #if DEBUG
-    /// `-SillDrawerSearch <text>` (ContentView's contract): the drawer, once open, searches for that
+    /// `-DuoDeckDrawerSearch <text>` (ContentView's contract): the drawer, once open, searches for that
     /// text with the keyboard up for its field, as a tap and typing would, so a photo shows what the
     /// keyboard leaves in view of the results.
     private func searchFromLaunchArguments() {
-        guard let query = UserDefaults.standard.string(forKey: "SillDrawerSearch") else { return }
+        guard let query = UserDefaults.standard.string(forKey: "DuoDeckDrawerSearch") else { return }
         search = query
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             searchFocused = true
@@ -2503,7 +2503,7 @@ struct DrawerRow<Leading: View>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if let trailing {
                     // Whole, on one line, whatever the title's length: the title truncates instead
-                    // ("Not paired", "Update Sill" and "3 windows" hold a space).
+                    // ("Not paired", "Update DuoDeck" and "3 windows" hold a space).
                     Text(trailing)
                         .font(.system(size: 13))
                         .foregroundStyle(Palette.muted)

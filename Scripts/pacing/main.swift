@@ -41,10 +41,10 @@ import StreamProtocol
 //   the same sizes (a window picked, a rotation: the quality kept, so the links keep their
 //   judgement), so its first keyframe goes out while that keyframe may still be crossing the link.
 //   It prints "Restart: …".
-// --log: the host's lines with Sill.log's timestamps (HostLog), which summarize.py reads.
+// --log: the host's lines with DuoDeck.log's timestamps (HostLog), which summarize.py reads.
 // --audio: Send Audio on (docs/audio-plan.md H6): while a device plays the sound (device.py --audio), the
-//   test tone goes through the real AudioPipeline and StreamServer's send path, as SillHost --synthetic
-//   --audio sends it. Only in a build with the sound's files (build.sh defines SILL_AUDIO); another
+//   test tone goes through the real AudioPipeline and StreamServer's send path, as DuoDeckHost --synthetic
+//   --audio sends it. Only in a build with the sound's files (build.sh defines DUODECK_AUDIO); another
 //   build refuses the flag.
 
 setvbuf(stdout, nil, _IOLBF, 0)
@@ -128,7 +128,7 @@ server.onClientLinkChanged = { _, v in
 }
 #endif
 server.onClientCountChanged = { n in Stats.shared.activeClients = n }
-#if SILL_AUDIO
+#if DUODECK_AUDIO
 // The sound, as the coordinator follows it: the test tone while Send Audio is on and a device plays it.
 let audio = AudioPipeline()
 audio.onFormat = { data, epoch in server.broadcastAudio(format: data, epoch: epoch) }
@@ -141,7 +141,7 @@ server.onAudioListenersChanged = { n in
     }
 }
 #else
-if withAudio { print("--audio needs a build with the sound (Scripts/pacing/build.sh defines SILL_AUDIO)."); exit(2) }
+if withAudio { print("--audio needs a build with the sound (Scripts/pacing/build.sh defines DUODECK_AUDIO)."); exit(2) }
 #endif
 server.onClientConnected = { connection, route, _ in
     // The coordinator hops to the main actor first; so does this.

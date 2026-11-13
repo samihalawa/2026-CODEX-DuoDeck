@@ -123,7 +123,7 @@ MUTANTS = {
                                                                      "        if let last = lastAttempt, failures > 0 { due = max(due, since + upWait(failures: failures)) }"),
     # moveHomeTrust (the merge with pairing at home): pinned TLS to the saved key only
     "H7 the move home takes whatever a dial would": ("tap: false, newKey: newKey) == .pinned\n        else { return nil }",
-                                                     "tap: false, newKey: newKey) != .updateSill\n        else { return nil }"),
+                                                     "tap: false, newKey: newKey) != .updateDuoDeck\n        else { return nil }"),
     "H8 the move home dials a plain door": ("        guard homeDial(door: door, saved: true, revoked: revoked, homeTLS: true,",
                                             "        guard door == .plain || homeDial(door: door, saved: true, revoked: revoked, homeTLS: true,"),
     "H9 a Mac that removed this device moved home": ("homeDial(door: door, saved: true, revoked: revoked, homeTLS: true, debug: false, tap: false",
@@ -227,8 +227,8 @@ MUTANTS = {
     "S4 tls: an open session counted as plain": ("        var tls: Bool { self != .plain }", "        var tls: Bool { if case .saved = self { return true }; return false }"),
     "S4 sessionTrust: an open door dialed plain": ("        case .anyKey: return .open(seen: nil)", "        case .anyKey: return .plain"),
     "S4 sessionTrust: a saved Mac without a readable pin dialed with any key": ("        case .pinned: return savedPin.map { .saved(pin: $0) }", "        case .pinned: return savedPin.map { .saved(pin: $0) } ?? .open(seen: nil)"),
-    "S4 sessionTrust: the ask starts a session": ("        case .ask, .updateSill, .waitForTap: return nil", "        case .ask: return .open(seen: nil)\n        case .updateSill, .waitForTap: return nil"),
-    "S4 sessionTrust: a Mac too old dialed plain": ("        case .ask, .updateSill, .waitForTap: return nil", "        case .updateSill: return .plain\n        case .ask, .waitForTap: return nil"),
+    "S4 sessionTrust: the ask starts a session": ("        case .ask, .updateDuoDeck, .waitForTap: return nil", "        case .ask: return .open(seen: nil)\n        case .updateDuoDeck, .waitForTap: return nil"),
+    "S4 sessionTrust: a Mac too old dialed plain": ("        case .ask, .updateDuoDeck, .waitForTap: return nil", "        case .updateDuoDeck: return .plain\n        case .ask, .waitForTap: return nil"),
     "S4 readyWith: a later connection's key replaces the first": ("        if case .open(nil) = trust, let fingerprint { return .open(seen: fingerprint) }", "        if case .open = trust, let fingerprint { return .open(seen: fingerprint) }"),
     "S4 readyWith: an open session never keeps its key": ("        if case .open(nil) = trust, let fingerprint { return .open(seen: fingerprint) }\n", ""),
     "S4 homeEnd: a plain door's goodbye read as removed": ("        guard let trust, trust.tls else { return .other }", "        guard let trust else { return .other }"),
@@ -255,7 +255,7 @@ MUTANTS = {
     "S4 linkRows: the asked row not left out": ("        return rows.filter { $0.door != .plain && !(askedKey != nil && $0.id == askedRow) }.map(\\.id)", "        return rows.filter { $0.door != .plain }.map(\\.id)"),
     "S4 copy: over the cable dropped": ("            cable ? \"Pairing with \\(mac) over the cable\\u{2026}\" : \"Pairing with \\(mac)\\u{2026}\"", "            \"Pairing with \\(mac)\\u{2026}\""),
     "S4 copy: removed says the old remote words": ("        static func removed(mac: String, device: String) -> String { \"\\(mac) removed this \\(device). Tap it to pair again.\" }", "        static func removed(mac: String, device: String) -> String { \"\\(mac) removed this \\(device). To use it again, pair it again.\" }"),
-    "S4 copy: openOnMac names no menu": ("\"\\(mac) didn\\u{2019}t show a code. On the Mac, choose Pair iPhone or iPad\\u{2026} in the Sill menu, then tap \\(mac) again.\"", "\"\\(mac) didn\\u{2019}t show a code.\""),
+    "S4 copy: openOnMac names no menu": ("\"\\(mac) didn\\u{2019}t show a code. On the Mac, choose Pair iPhone or iPad\\u{2026} in the DuoDeck menu, then tap \\(mac) again.\"", "\"\\(mac) didn\\u{2019}t show a code.\""),
     # The reconnect of an unsaved Mac on an open door pinned to the key its lost session saw (home.swift: the
     # security scan's finding 3, 2026-10-29), with the model of the glue.
     "O1 reconnectTrust: any key again (as before the fix)": ("        if dial == .anyKey, let seen { return .open(seen: seen) }\n", ""),

@@ -48,7 +48,7 @@ enum DiscoveryPolicy {
     /// a record about 1 s past its goodbye packet (RFC 6762 §10.1), so the row outlives the
     /// connection, which closes at once (a stand-in for DuoDeck.app's Quit, browsed on the Mac itself:
     /// the row went 1.05–1.22 s after the connection ended, 11 of 11). After this long such a row
-    /// counts as usual: a Sill relaunched within that second renews the record, so its row never
+    /// counts as usual: a DuoDeck relaunched within that second renews the record, so its row never
     /// leaves, and a goodbye packet can be lost.
     static let quitWait = 3.0
     /// A session over AWDL moves to the network once the network has listed the same Mac this long
@@ -158,7 +158,7 @@ enum DiscoveryPolicy {
         }
     }
 
-    /// A row's method, from the interfaces its own browser saw its Mac on (Noah, 2026-09-24). A
+    /// A row's method, from the interfaces its own browser saw its Mac on (the maintainer, 2026-09-24). A
     /// Direct row is Direct: seen over peer-to-peer Wi-Fi alone, the one kind connected with it. A
     /// network row takes the best of the network browser's interfaces: Wired for a wired Ethernet
     /// one (an Ethernet adapter, and the USB cable to the Mac, whose ends iPadOS names anpi0 and en2
@@ -170,7 +170,7 @@ enum DiscoveryPolicy {
     /// row (`rows`), so a network row is never Direct, whatever the nearby browser sees (its tap
     /// connects without peer-to-peer), and the nearby browser only ever makes Direct rows. The
     /// word names the kind of link, never the Wi-Fi network: reading the network's name (SSID)
-    /// needs the Access Wi-Fi Information entitlement and Location access, and Sill asks for
+    /// needs the Access Wi-Fi Information entitlement and Location access, and DuoDeck asks for
     /// neither.
     static func method(direct: Bool, interfaces: [Interface]) -> Method? {
         if direct { return .direct }
@@ -182,11 +182,11 @@ enum DiscoveryPolicy {
 
     /// A wired dial (`dialInterface`) not ready within this long is cancelled, and the row dialled
     /// unconstrained instead, once; one that cannot go on (it fails, or waits) gives way at once.
-    /// Over the cable one was ready in 8–134 ms (Noah's iPad, 2026-09-25).
+    /// Over the cable one was ready in 8–134 ms (the maintainer's iPad, 2026-09-25).
     static let wiredWait = 2.5
 
     /// The interface a row's Mac is dialled on, by a tap, an automatic reconnect or a session's move
-    /// to the network (Noah, 2026-09-25: a row that says Wired connects over the cable): the first
+    /// to the network (the maintainer, 2026-09-25: a row that says Wired connects over the cable): the first
     /// wired Ethernet interface its browser saw it on, so exactly when `method` says Wired, else nil,
     /// and the row is dialled as listed, the system picking the link. Unconstrained, with the cable
     /// and Wi-Fi both up, the same tap went either way (the Mac saw the iPad on %en0 at 7 ms, or on
@@ -209,7 +209,7 @@ enum DiscoveryPolicy {
     }
 
     /// How the session's own connection reaches the Mac: the word the Settings panel's readout
-    /// ends in (Noah, 2026-09-24), where a row's `method` says where the browser saw the Mac. A
+    /// ends in (the maintainer, 2026-09-24), where a row's `method` says where the browser saw the Mac. A
     /// session can run over another link than its row's word (a Wired row's dial is pinned to the
     /// cable, `dialInterface`, but the unconstrained dial it can give way to may take Wi-Fi, and a
     /// session made before the cable came is on Wi-Fi until it moves, `pathPlan`), so this reads
@@ -235,7 +235,7 @@ enum DiscoveryPolicy {
     /// is satisfied and names the Mac by its IP address. A connection to a Bonjour row also gets
     /// updates that describe the service's resolution instead: they name the service, not an
     /// address, and list the interfaces it resolves on, each twice, "en0 (wifi), en0 (wifi)" (the
-    /// device's default route) after the connection is ready (Noah's iPad, 2026-09-25). That day,
+    /// device's default route) after the connection is ready (the maintainer's iPad, 2026-09-25). That day,
     /// on the cable with Wi-Fi on, the first reading said Wired (the Mac's address on en2) and such
     /// updates then made it Wi-Fi, while the connection stayed on en2 for its whole life (the Mac
     /// saw it on en14 at 1–3 ms throughout). An update naming nothing is ignored the same way.
@@ -308,8 +308,8 @@ enum DiscoveryPolicy {
     /// After a goodbye `quit` (`quitAt`, the moment the session ended), a row listed since then or
     /// before (`networkSince`, `directSince`) is the Mac's old registration, which outlives the
     /// goodbye by about a second: it is not taken until `quitWait` has passed, so the words "‹Mac›
-    /// quit Sill…" stay instead of a dial to a Mac that is going. A row listed again since the quit
-    /// (Sill is back) is taken by the rules above.
+    /// quit DuoDeck…" stay instead of a dial to a Mac that is going. A row listed again since the quit
+    /// (DuoDeck is back) is taken by the rules above.
     static func reconnectRow<Row>(network: Row?, networkSince: Double? = nil, direct: Row?, directSince: Double?, networkLeftAt: Double?,
                                   quitAt: Double? = nil, now: Double) -> (take: Row?, recheckAt: Double?) {
         if let quitAt, now < quitAt + quitWait {
@@ -369,7 +369,7 @@ enum DiscoveryPolicy {
         /// The moves home started to each row while it stays listed.
         var tries: [String: Int] = [:]
         /// The rows found not to be this session's Mac: another key at the pin (-9808), another launch
-        /// of Sill, a kind 18 not the Mac's or older than the session's, a goodbye. Never dialed again
+        /// of DuoDeck, a kind 18 not the Mac's or older than the session's, a goodbye. Never dialed again
         /// while listed.
         var refused: Set<String> = []
 
@@ -422,10 +422,10 @@ enum DiscoveryPolicy {
     }
 
     /// How the move home dials the saved Mac's network row (since pairing at home,
-    /// docs/home-pairing-plan.md §7.2): TLS `sill/1` pinned to the saved Mac's key, the key the
+    /// docs/home-pairing-plan.md §7.2): TLS `duodeck/1` pinned to the saved Mac's key, the key the
     /// session through the remote door is pinned to, and the trust a tap's dial of that row takes
     /// (`homeDial`'s `.pinned`). Nil, and no move, for a row a tap would not dial pinned: a plain
-    /// door (an older Sill, the CLI without --pairing: never a plain dial, which a Release build never
+    /// door (an older DuoDeck, the CLI without --pairing: never a plain dial, which a Release build never
     /// makes and a session over TLS never steps down to, DEBUG or not), a Mac that removed this device
     /// (`revoked`), or one to pair with again (`newKey`); or no pin. The session then stays remote.
     static func moveHomeTrust(door: HomeDoor, revoked: Bool, newKey: Bool, savedPin: Data?) -> HomeTrust? {
@@ -447,7 +447,7 @@ enum DiscoveryPolicy {
     // MARK: Following the best path
 
     // An established connection keeps the interface it was made on for life: TCP does not move.
-    // Noah's tests on 2026-09-25: a session made over Wi-Fi stayed there after he plugged the cable
+    // the maintainer's tests on 2026-09-25: a session made over Wi-Fi stayed there after he plugged the cable
     // in, until he disconnected and connected again, and one over the cable, unplugged, hung a
     // while, fell to the connect screen and came back over Wi-Fi. A live session now follows the
     // best path its Mac is reachable on, the cable over Wi-Fi over Direct (`Method.rank`), with the
@@ -567,7 +567,7 @@ enum DiscoveryPolicy {
         var lastUp: Double?
         var lastDown: Double?
         /// The listing of the cable (its `wiredSince`) a move up found to reach another Mac, or
-        /// another launch of Sill: not tried again while it lasts, as `moveToNetwork`'s
+        /// another launch of DuoDeck: not tried again while it lasts, as `moveToNetwork`'s
         /// `refusedListing`. A new listing (the cable out and in again) is tried afresh.
         var refusedCable: Double? = nil
         /// Moves up to the listing of the cable now listed that did not complete, in a row (`upWait`).
@@ -625,7 +625,7 @@ enum DiscoveryPolicy {
         return i.pathHinted || i.now - i.lastPong >= pongSilence
     }
 
-    /// What a live session does about its path now (Noah, 2026-09-25): move up to the cable, down to
+    /// What a live session does about its path now (the maintainer, 2026-09-25): move up to the cable, down to
     /// Wi-Fi, reconnect at once, or stay. Up, from Wi-Fi only, once the cable has been listed for
     /// `cableSettle` (counted again from a move off it) and not within `upWait` of the last move up
     /// (`pathHysteresis`, longer after moves up that did not complete), never to a listing found to
@@ -879,7 +879,7 @@ enum DiscoveryPolicy {
     /// A Bonjour result's TXT record as its row reads it (§7.3): the recognition tag (`r`, nil for
     /// none) and the home door (`p`). StreamClient.record(of:) reads it from the result's metadata,
     /// and a result whose metadata is not `.bonjour`, or whose record holds no entry, carries none
-    /// (nil). A Sill with an identity always advertises `r` (HostIdentity.txtRecord), so its own
+    /// (nil). A DuoDeck with an identity always advertises `r` (HostIdentity.txtRecord), so its own
     /// record is never empty; a plain door without one (an older DuoDeck.app, the CLI) registers none.
     struct RowRecord: Hashable {
         var tag: String?
@@ -902,10 +902,10 @@ enum DiscoveryPolicy {
     /// (`RowRecordKey`: this browser, this name and domain) carried while its browser has listed it
     /// without a break, forgotten once it leaves the browser's results (`previous`: the records
     /// after the last look; `listed`: each result shown now, with its key and its own record).
-    /// Noah's iPad, 2026-10-27, on the connect screen with the USB cable in: the Mac was listed on
+    /// the maintainer's iPad, 2026-10-27, on the connect screen with the USB cable in: the Mac was listed on
     /// anpi0, en2 and en0 with its record (p=1); with the cable pulled the same result came back on
     /// en2 and en0, then on en0 alone, with no record at all, so its row was taken by its name
-    /// alone and read as a plain door, "Update Sill" by the no-downgrade rule (`rowWord`), and a
+    /// alone and read as a plain door, "Update DuoDeck" by the no-downgrade rule (`rowWord`), and a
     /// tap dialed nothing, and it stayed so. A record that comes replaces the kept one, whatever it
     /// says: it is the Mac's own word (a new tag, Require pairing turned off, `p` gone). A browser
     /// made again is a break: its own results are read with what it delivers itself, which a fresh
@@ -914,13 +914,13 @@ enum DiscoveryPolicy {
     /// (`browserResults`), keep theirs only while they are shown. The replaced browser reported
     /// nothing once it was suspended (iOS may have made its connection defunct without a word), so
     /// a Mac whose registration went meanwhile, its name taken by another service with no record
-    /// (an older Sill, the CLI), would otherwise have been read as that Mac by its old tag (the
+    /// (an older DuoDeck, the CLI), would otherwise have been read as that Mac by its old tag (the
     /// review of #232). So a row never gains a door that no record gave it: what is kept is a
     /// record this very browser delivered for that result, and a tap dials as that record says
     /// (`homeDial`: pinned to the saved Mac's key over TLS, never plain). A Mac that really went
-    /// back to a plain door reads "Update Sill" again once its name is listed afresh: the browser's
-    /// removal of the name (about a second after its Sill's goodbye) is the break, with no timer,
-    /// and another Sill's registration comes after it. While one browser keeps listing a result
+    /// back to a plain door reads "Update DuoDeck" again once its name is listed afresh: the browser's
+    /// removal of the name (about a second after its DuoDeck's goodbye) is the break, with no timer,
+    /// and another DuoDeck's registration comes after it. While one browser keeps listing a result
     /// without a break, though, a removal it never reported (a lost goodbye, a removal and a
     /// registration in one report) leaves whatever service now answers under that name read with
     /// the old record: as the Mac its tag names, whose Remote row is then hidden and whose
@@ -952,8 +952,8 @@ enum DiscoveryPolicy {
     /// The tag and whether there is one come from the record the row is read with (`rowRecords`):
     /// its result's own, else the last one that result carried while its browser listed it.
     ///
-    /// A row whose tag names no saved Mac is not one, by its name or otherwise (Noah, 2026-09-27:
-    /// Sill for Mac 0.4.0 made the Mac a new key and a new recognition key, its row read the saved
+    /// A row whose tag names no saved Mac is not one, by its name or otherwise (the maintainer, 2026-09-27:
+    /// DuoDeck Host 0.4.0 made the Mac a new key and a new recognition key, its row read the saved
     /// Mac's "Wi‑Fi", and a tap dialed the old key for ever). It is a Mac this device has not
     /// paired with (a Mac set up again, whose tag no saved record resolves), and a tap asks
     /// (`rowDoor`).
@@ -1005,9 +1005,9 @@ enum DiscoveryPolicy {
         /// The same over the USB cable: a tap asks, and the Mac pairs this device by itself. Its
         /// word is "Wired".
         case pairsOverCable
-        /// No `p`: the Mac's Sill is from before pairing at home, and this build (a Release one, or
+        /// No `p`: the Mac's DuoDeck is from before pairing at home, and this build (a Release one, or
         /// one that has seen that Mac over TLS) dials no plain door. Nothing is dialed.
-        case updateSill
+        case updateDuoDeck
 
         /// The word at the end of the row.
         var word: String? {
@@ -1015,7 +1015,7 @@ enum DiscoveryPolicy {
             case .method(let m): return m?.word
             case .notPaired, .openDoor: return "Not paired"
             case .pairsOverCable: return Method.wired.word
-            case .updateSill: return "Update DuoDeck"
+            case .updateDuoDeck: return "Update DuoDeck"
             }
         }
 
@@ -1033,7 +1033,7 @@ enum DiscoveryPolicy {
             case .notPaired: return "Pairs with a code \(name) shows, then connects."
             case .openDoor: return "Connects without pairing: \(name) lets any device in."
             case .pairsOverCable: return "Pairs over the USB cable, then connects."
-            case .updateSill: return "\(name)\u{2019}s DuoDeck is too old for this \(device)."
+            case .updateDuoDeck: return "\(name)\u{2019}s DuoDeck is too old for this \(device)."
             }
         }
     }
@@ -1050,7 +1050,7 @@ enum DiscoveryPolicy {
         switch door {
         case .plain:
             // No downgrade: once a Mac was seen over TLS, a row of it without `p` is not dialed.
-            return debug && !homeTLS ? .method(method) : .updateSill
+            return debug && !homeTLS ? .method(method) : .updateDuoDeck
         case .pairingRequired, .open:
             if saved && !revoked && !newKey { return .method(method) }
             if !saved && door == .open { return .openDoor }
@@ -1060,18 +1060,18 @@ enum DiscoveryPolicy {
 
     /// What a connection to a Mac at home is (§7.4).
     enum HomeDial: Equatable {
-        /// `sill/1`, pinned to the saved Mac's key; connected at its first window list.
+        /// `duodeck/1`, pinned to the saved Mac's key; connected at its first window list.
         case pinned
-        /// `sill/1` taking any Mac key: an unsaved Mac on an open door (`p=0`). Nothing is saved.
+        /// `duodeck/1` taking any Mac key: an unsaved Mac on an open door (`p=0`). Nothing is saved.
         case anyKey
-        /// The ask (`sill-pair/1`, kind 19 "ask"): pinned to the saved key for a saved Mac that
+        /// The ask (`duodeck-pair/1`, kind 19 "ask"): pinned to the saved key for a saved Mac that
         /// removed this device (only its trust in this device changed, so no look-alike can answer
         /// and a typed code goes only to the real Mac), else taking any key and remembering it.
         case ask(pinned: Bool)
         /// Plain TCP, as before pairing at home: a DEBUG build, a Mac never seen over TLS.
         case plain
-        /// Nothing dialed: the Mac's Sill is too old for this build (`updateSillStatus`).
-        case updateSill
+        /// Nothing dialed: the Mac's DuoDeck is too old for this build (`updateDuoDeckStatus`).
+        case updateDuoDeck
         /// Nothing dialed: an automatic reconnect never asks; an ask is a tap's.
         case waitForTap
     }
@@ -1084,7 +1084,7 @@ enum DiscoveryPolicy {
                          newKey: Bool = false) -> HomeDial {
         switch door {
         case .plain:
-            return debug && !homeTLS ? .plain : .updateSill
+            return debug && !homeTLS ? .plain : .updateDuoDeck
         case .pairingRequired, .open:
             if saved && newKey { return tap ? .ask(pinned: false) : .waitForTap }
             if saved { return revoked ? (tap ? .ask(pinned: true) : .waitForTap) : .pinned }
@@ -1095,7 +1095,7 @@ enum DiscoveryPolicy {
 
     /// How the automatic reconnect ends at a row that waits for a tap (§7.6): it never asks, so an
     /// unsaved Mac whose door requires pairing (Require pairing turned on while this device was away
-    /// or its end came without a goodbye, or a Mac whose Sill now pairs at home) and a saved one that
+    /// or its end came without a goodbye, or a Mac whose DuoDeck now pairs at home) and a saved one that
     /// removed this device would otherwise wait for a tap for ever under "…reconnects when it's
     /// back" (the security review, 2026-09-27). The reconnect ends there with the words the goodbye
     /// would have brought.
@@ -1115,8 +1115,8 @@ enum DiscoveryPolicy {
         return saved ? (newKey ? .newKey : .removed) : .pairingRequired
     }
 
-    /// The status line after a tap that dialed nothing because the Mac's Sill is too old.
-    static func updateSillStatus(mac: String) -> String {
+    /// The status line after a tap that dialed nothing because the Mac's DuoDeck is too old.
+    static func updateDuoDeckStatus(mac: String) -> String {
         "\(mac) runs an older DuoDeck. Update DuoDeck on the Mac to connect."
     }
 
@@ -1209,7 +1209,7 @@ enum DiscoveryPolicy {
     enum HomeTrust: Equatable {
         /// A plain door (`homeDial`'s `.plain`: a DEBUG build, a Mac never seen with `p`): no TLS.
         case plain
-        /// A saved Mac: every connection `sill/1`, pinned to its key.
+        /// A saved Mac: every connection `duodeck/1`, pinned to its key.
         case saved(pin: Data)
         /// An unsaved Mac on an open door (`p=0`): the session's first connection takes any key,
         /// and every later one pins the key that one saw (`seen`), its automatic reconnect's too
@@ -1250,7 +1250,7 @@ enum DiscoveryPolicy {
         case .pinned: return savedPin.map { .saved(pin: $0) }
         case .anyKey: return .open(seen: nil)
         case .plain: return .plain
-        case .ask, .updateSill, .waitForTap: return nil
+        case .ask, .updateDuoDeck, .waitForTap: return nil
         }
     }
 
@@ -1280,7 +1280,7 @@ enum DiscoveryPolicy {
     /// never saw a key (a tap's dial that ended before its handshake) takes `earlier`, the key this
     /// device's last session under that Bonjour name saw (StreamClient's `openKeys`): a tap clears the
     /// reconnect and dials any key, so one tap that did not connect, as the reconnect's own words
-    /// invite while the Mac is away ("…Sill keeps trying, or tap it to try now."), left a reconnect
+    /// invite while the Mac is away ("…DuoDeck keeps trying, or tap it to try now."), left a reconnect
     /// that took any key under that name (the review of #255, 2026-10-29). Nil for any other: a saved
     /// Mac's (its reconnect pinned to its saved key), a plain door's, a remote session's (no home
     /// trust), and an open one that never saw a key under a name no session of this device saw one.
@@ -1354,7 +1354,7 @@ enum DiscoveryPolicy {
     }
 
     /// What a pinned dial of a saved Mac does once this device's pin refused the key that answered
-    /// (-9808, the session's or the pinned ask's; Noah, 2026-09-27): the next row its tag names
+    /// (-9808, the session's or the pinned ask's; the maintainer, 2026-09-27): the next row its tag names
     /// (`nextPinnedRow`) first; with none left, the Mac is paired again (`newKey`: SavedMac.newKey
     /// set, "‹Mac› has a new key since this ‹iPad› paired. Tap it to pair again.", no automatic
     /// reconnect, and a tap asks with any key, the Mac proving itself with its code), except that
@@ -1420,7 +1420,7 @@ enum DiscoveryPolicy {
     /// What the home card says for a proof the Mac refused (kind 20's `reason`, §7.7). The words
     /// follow what the Mac does next (AskLimits, PairingWindow.closedReason): a window the Mac's
     /// user cancelled, or one five wrong codes stopped, keeps this device quiet for 10 minutes, so a
-    /// tap alone would get no new code, and those words send the person to the Sill menu on the Mac
+    /// tap alone would get no new code, and those words send the person to the DuoDeck menu on the Mac
     /// first ("stopped"; "closed", which is also a code another device used, where the menu's way
     /// works as well). A window that ran out quiets nobody, so "tap it for a new one" holds
     /// ("expired"). Anything else ("busy" a second time, or a reason this build does not know that
@@ -1509,7 +1509,7 @@ enum DiscoveryPolicy {
         enum PairedReach: Equatable {
             /// This session came through the remote door: "Connected through Tailscale."
             case connected
-            /// "Away from home, Sill reaches Mac mini through Tailscale (…)."
+            /// "Away from home, DuoDeck reaches Mac mini through Tailscale (…)."
             case reaches
             /// Remote Access is off on the Mac: how to turn it on (a Mac paired at home).
             case turnOnRemoteAccess
@@ -1594,7 +1594,7 @@ enum DiscoveryPolicy {
         static func proofFailed(mac: String) -> String {
             "Pairing didn\u{2019}t finish: \(mac) couldn\u{2019}t show it knows the code. Tap it to try again."
         }
-        /// Nothing answered the ask or a proof at the row (it went, or Sill quit meanwhile).
+        /// Nothing answered the ask or a proof at the row (it went, or DuoDeck quit meanwhile).
         static func noAnswer(mac: String) -> String { "\(mac) didn\u{2019}t answer. Check that DuoDeck is open on it, then tap it again." }
     }
 }

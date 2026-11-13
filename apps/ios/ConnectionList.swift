@@ -11,8 +11,8 @@ enum ConnectionList {
         var toggled: Style { self == .list ? .tiles : .list }
     }
 
-    static let styleKey = "Sill.connectionStyle"
-    static let groupsKey = "Sill.macGroups"
+    static let styleKey = "DuoDeck.connectionStyle"
+    static let groupsKey = "DuoDeck.macGroups"
     static let presetGroups = ["Home", "Work", "Personal"]
     /// The section of the Macs with no group, once any Mac has one. Never a group's own name: a group
     /// called Other would be a second section of that title.
@@ -20,8 +20,8 @@ enum ConnectionList {
     static let maxGroupLength = 32
     static let twoColumnMinWidth: CGFloat = 340
 
-    /// The arrangement of an install whose person never chose one: tiles (Noah, 2026-10-27: "make tiles
-    /// not list the default behavior of the app"; until then the list, Noah on issue #116). A choice
+    /// The arrangement of an install whose person never chose one: tiles (the maintainer, 2026-10-27: "make tiles
+    /// not list the default behavior of the app"; until then the list, the maintainer on issue #116). A choice
     /// made with the switch beside the title or a saved Mac's menu is stored under `styleKey` and always
     /// wins (`storedStyle`), so only an install that never toggled changed with the default.
     static let defaultStyle: Style = .tiles
@@ -36,7 +36,7 @@ enum ConnectionList {
     /// on, the default (`defaultStyle`): a Mac's screen is kept on the device unless the person chose
     /// the list, and a session that ends while the list shows leaves the kept picture as it was (the list
     /// hides the pictures and keeps their files: `previewPlan`). Only from the session's window in front:
-    /// the other of two Sill windows, or one in the background, is not where the person was looking.
+    /// the other of two DuoDeck windows, or one in the background, is not where the person was looking.
     /// Only for a saved Mac: only its tile shows a picture.
     static func takesPreview(style: Style, sceneActive: Bool, saved: Bool) -> Bool {
         style == .tiles && sceneActive && saved
@@ -46,14 +46,14 @@ enum ConnectionList {
     /// it is listed under. The Mac its tag names (a network or Direct row) or its record (a Remote row),
     /// else, for a row with no tag, the saved Mac it is taken for by its Bonjour name, as a tap dials it
     /// (DiscoveryPolicy.rowMac, FoundMac.savedByName; a tag that names no saved Mac never stands for one).
-    /// So every row of one Mac, Wired, Wi-Fi, Direct and Remote, shows that Mac's one picture (Noah,
+    /// So every row of one Mac, Wired, Wi-Fi, Direct and Remote, shows that Mac's one picture (the maintainer,
     /// 2026-10-27: "all tiles show the same device, so should show the same preview"); another Mac's rows
     /// show its own, and a row of no saved Mac the placeholder.
     static func tileMac(macID: String?, savedByName: String?) -> String? {
         macID ?? savedByName
     }
 
-    /// What a launch or a change of style (the switch beside the title, a saved Mac's menu, another Sill
+    /// What a launch or a change of style (the switch beside the title, a saved Mac's menu, another DuoDeck
     /// window) does to the tiles' pictures: the files that go and the Macs whose kept picture shows
     /// (`previewPlan`).
     struct PreviewPlan: Equatable {
@@ -63,7 +63,7 @@ enum ConnectionList {
         let show: [String]
     }
 
-    /// A style never deletes a picture (Noah, 2026-10-27: switched to the list and back, the thumbnail
+    /// A style never deletes a picture (the maintainer, 2026-10-27: switched to the list and back, the thumbnail
     /// comes back). With tiles every saved Mac with a file shows its picture; with the list none shows,
     /// and every file stays for when tiles come back. Either way the files of Macs no longer saved go
     /// (`stalePreviewFiles`); Remove Preview Picture and Forget delete a Mac's own. `files`: the names in
@@ -130,7 +130,7 @@ enum ConnectionList {
         style == .tiles && saved
     }
 
-    // MARK: A fresh keyframe when Sill ends the session
+    // MARK: A fresh keyframe when DuoDeck ends the session
 
     /// What Disconnect does before the session ends and its picture is taken (`freshPicture`).
     enum FreshPicture: Equatable {
@@ -140,8 +140,8 @@ enum ConnectionList {
         /// picture is the last thing on screen: the one kept can be from long before (the encoder
         /// makes one at a new source and every 4 × fps frames it encodes, so none while a window
         /// stays still, and the changes since then, another window brought forward on the Mac, are
-        /// in later frames only). Every Mac is asked, as the picture's recovery asks (Noah,
-        /// 2026-10-27): one from main on answers within a frame; one from before kind 44 (Sill for
+        /// in later frames only). Every Mac is asked, as the picture's recovery asks (the maintainer,
+        /// 2026-10-27): one from main on answers within a frame; one from before kind 44 (DuoDeck for
         /// Mac 0.5.1) skips it, and its picture is the keyframe kept, after the wait.
         case ask
         /// A keyframe asked for by the picture's recovery is due (KeyframeRecovery): wait for it,

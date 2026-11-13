@@ -11,7 +11,7 @@ typealias D = DoorPolicy
 typealias T = DoorPolicy.Trust
 let origins: [OriginPolicy.Origin] = [.loopback, .direct, .vpn, .lan, .internet]
 let session = RemoteTLS.sessionALPN, pairing = RemoteTLS.pairingALPN
-check("the ALPNs are sill/1 and sill-pair/1", session == "sill/1" && pairing == "sill-pair/1")
+check("the ALPNs are duodeck/1 and duodeck-pair/1", session == "duodeck/1" && pairing == "duodeck-pair/1")
 
 // MARK: Before start (the origin gate)
 
@@ -44,7 +44,7 @@ for o in origins {
 
 // MARK: The verify block
 
-let alpns: [String?] = [session, pairing, nil, "h2", "sill/2", "SILL/1", ""]
+let alpns: [String?] = [session, pairing, nil, "h2", "duodeck/2", "DUODECK/1", ""]
 func allTrusts() -> [T] {
     var out: [T] = []
     for bits in 0..<128 {
@@ -55,8 +55,8 @@ func allTrusts() -> [T] {
 }
 func trustOracle(_ door: D.Door, _ alpn: String?, _ t: T) -> Bool {
     guard t.hasKey else { return false }
-    if alpn == "sill/1" { return door == .home ? (t.paired || !t.requirePairing) : t.paired }
-    if alpn == "sill-pair/1" { return door == .home ? true : t.remotePairingOpen }
+    if alpn == "duodeck/1" { return door == .home ? (t.paired || !t.requirePairing) : t.paired }
+    if alpn == "duodeck-pair/1" { return door == .home ? true : t.remotePairingOpen }
     return false
 }
 var vb = 0, vbOK = 0
@@ -65,19 +65,19 @@ for door in [D.Door.home, .remote] { for a in alpns { for t in allTrusts() {
     if D.trusts(door, alpn: a, t) == trustOracle(door, a, t) { vbOK += 1 } else { print("  verify \(door) \(a ?? "nil") \(t)") }
 } } }
 check("verify block: \(vbOK) of \(vb) combinations (2 doors × 7 ALPNs × 128 trusts) match §4.2's table", vb == vbOK)
-check("verify, home sill/1: a paired key", D.trusts(.home, alpn: session, T(paired: true)))
-check("verify, home sill/1: an unpaired key with Require pairing on is refused", !D.trusts(.home, alpn: session, T(paired: false, requirePairing: true)))
-check("verify, home sill/1: any key while Require pairing is off", D.trusts(.home, alpn: session, T(paired: false, requirePairing: false)))
-check("verify, home sill/1: never a peer without a P-256 key, even with Require pairing off",
+check("verify, home duodeck/1: a paired key", D.trusts(.home, alpn: session, T(paired: true)))
+check("verify, home duodeck/1: an unpaired key with Require pairing on is refused", !D.trusts(.home, alpn: session, T(paired: false, requirePairing: true)))
+check("verify, home duodeck/1: any key while Require pairing is off", D.trusts(.home, alpn: session, T(paired: false, requirePairing: false)))
+check("verify, home duodeck/1: never a peer without a P-256 key, even with Require pairing off",
       !D.trusts(.home, alpn: session, T(hasKey: false, paired: false, requirePairing: false)))
-check("verify, home sill-pair/1: always, with no window open (an ask needs none)", D.trusts(.home, alpn: pairing, T(pairingOpen: false)))
-check("verify, remote sill/1: Require pairing off lets no unpaired key in",
+check("verify, home duodeck-pair/1: always, with no window open (an ask needs none)", D.trusts(.home, alpn: pairing, T(pairingOpen: false)))
+check("verify, remote duodeck/1: Require pairing off lets no unpaired key in",
       !D.trusts(.remote, alpn: session, T(paired: false, requirePairing: false, remoteAccess: true)))
-check("verify, remote sill/1: a paired key (Remote Access is judged at .ready)", D.trusts(.remote, alpn: session, T(paired: true, remoteAccess: false)))
-check("verify, remote sill-pair/1: a window only the home door takes (a device opened it) is refused",
+check("verify, remote duodeck/1: a paired key (Remote Access is judged at .ready)", D.trusts(.remote, alpn: session, T(paired: true, remoteAccess: false)))
+check("verify, remote duodeck-pair/1: a window only the home door takes (a device opened it) is refused",
       !D.trusts(.remote, alpn: pairing, T(pairingOpen: true, remotePairingOpen: false)))
-check("verify, remote sill-pair/1: a window the Mac's user opened", D.trusts(.remote, alpn: pairing, T(pairingOpen: true, remotePairingOpen: true)))
-check("verify: another ALPN, none, or a later generation never", [nil, "h2", "sill/2", "SILL/1", ""].allSatisfy { a in
+check("verify, remote duodeck-pair/1: a window the Mac's user opened", D.trusts(.remote, alpn: pairing, T(pairingOpen: true, remotePairingOpen: true)))
+check("verify: another ALPN, none, or a later generation never", [nil, "h2", "duodeck/2", "DUODECK/1", ""].allSatisfy { a in
     [D.Door.home, .remote].allSatisfy { !D.trusts($0, alpn: a, T(paired: true, requirePairing: false, remoteAccess: true, pairingOpen: true, remotePairingOpen: true)) } })
 
 // MARK: At .ready
@@ -85,14 +85,14 @@ check("verify: another ALPN, none, or a later generation never", [nil, "h2", "si
 func readyOracle(_ door: D.Door, _ alpn: String?, _ t: T, _ n: Int) -> D.AtReady {
     guard t.hasKey else { return .refuse("unpaired") }
     switch (door, alpn) {
-    case (.home, "sill/1"?): return (t.paired || !t.requirePairing) ? .session : .refuse("unpaired")
-    case (.home, "sill-pair/1"?): return .pairing
-    case (.remote, "sill/1"?):
+    case (.home, "duodeck/1"?): return (t.paired || !t.requirePairing) ? .session : .refuse("unpaired")
+    case (.home, "duodeck-pair/1"?): return .pairing
+    case (.remote, "duodeck/1"?):
         if !t.paired { return .refuse("unpaired") }
         if !t.remoteAccess { return .goodbye("remoteOff") }
         if n >= 8 { return .goodbye("busy") }
         return .session
-    case (.remote, "sill-pair/1"?): return t.remotePairingOpen ? .pairing : .refuse("unpaired")
+    case (.remote, "duodeck-pair/1"?): return t.remotePairingOpen ? .pairing : .refuse("unpaired")
     default: return .refuse("unpaired")
     }
 }
@@ -102,21 +102,21 @@ for door in [D.Door.home, .remote] { for a in alpns { for t in allTrusts() { for
     if D.atReady(door, alpn: a, t, remoteSessions: n) == readyOracle(door, a, t, n) { rdOK += 1 } else { print("  ready \(door) \(a ?? "nil") \(t) \(n)") }
 } } } }
 check("at .ready: \(rdOK) of \(rd) combinations (× 0, 7, 8, 9 remote sessions) match §4.2's table", rd == rdOK)
-check("at .ready, home sill/1: the session needs no Remote Access and has no session limit",
+check("at .ready, home duodeck/1: the session needs no Remote Access and has no session limit",
       D.atReady(.home, alpn: session, T(paired: true, remoteAccess: false), remoteSessions: 100) == .session)
-check("at .ready, home sill/1: checked again: a key the list lost since the handshake is refused",
+check("at .ready, home duodeck/1: checked again: a key the list lost since the handshake is refused",
       D.atReady(.home, alpn: session, T(paired: false, requirePairing: true), remoteSessions: 0) == .refuse("unpaired"))
-check("at .ready, home sill/1: Require pairing turned on since the handshake refuses an unpaired key",
+check("at .ready, home duodeck/1: Require pairing turned on since the handshake refuses an unpaired key",
       D.atReady(.home, alpn: session, T(paired: false, requirePairing: true), remoteSessions: 0) == .refuse("unpaired")
       && D.atReady(.home, alpn: session, T(paired: false, requirePairing: false), remoteSessions: 0) == .session)
-check("at .ready, home sill-pair/1: read, with or without a window", D.atReady(.home, alpn: pairing, T(), remoteSessions: 0) == .pairing
+check("at .ready, home duodeck-pair/1: read, with or without a window", D.atReady(.home, alpn: pairing, T(), remoteSessions: 0) == .pairing
       && D.atReady(.home, alpn: pairing, T(pairingOpen: true), remoteSessions: 0) == .pairing)
-check("at .ready, remote sill/1, as before: Remote Access off → goodbye remoteOff (before busy)",
+check("at .ready, remote duodeck/1, as before: Remote Access off → goodbye remoteOff (before busy)",
       D.atReady(.remote, alpn: session, T(paired: true, remoteAccess: false), remoteSessions: 8) == .goodbye(Goodbye.remoteOff))
-check("at .ready, remote sill/1: the 9th session → goodbye busy; the 8th is served",
+check("at .ready, remote duodeck/1: the 9th session → goodbye busy; the 8th is served",
       D.atReady(.remote, alpn: session, T(paired: true, remoteAccess: true), remoteSessions: 8) == .goodbye(Goodbye.busy)
       && D.atReady(.remote, alpn: session, T(paired: true, remoteAccess: true), remoteSessions: 7) == .session)
-check("at .ready, remote sill-pair/1: only while the remote door takes proofs",
+check("at .ready, remote duodeck-pair/1: only while the remote door takes proofs",
       D.atReady(.remote, alpn: pairing, T(pairingOpen: true, remotePairingOpen: false), remoteSessions: 0) == .refuse("unpaired")
       && D.atReady(.remote, alpn: pairing, T(pairingOpen: true, remotePairingOpen: true), remoteSessions: 0) == .pairing)
 check("at .ready: no key → refused, whatever the door and ALPN", [D.Door.home, .remote].allSatisfy { d in alpns.allSatisfy { a in
@@ -258,29 +258,29 @@ let statuses: [Int32] = [-9808, -9863, -9810, -9836, -9858, -9816, -9825, -9829,
 for s in statuses {
     let h = D.handshakeRefusal(.home, status: s), r = D.handshakeRefusal(.remote, status: s)
     let doorRefusal = [-9808, -9863, -9810, -9836, -9858].contains(s)
-    let hExp: D.HandshakeRefusal? = s == -9836 ? .olderSill : (doorRefusal ? .refused("unpaired") : nil)
+    let hExp: D.HandshakeRefusal? = s == -9836 ? .olderDuoDeck : (doorRefusal ? .refused("unpaired") : nil)
     let rExp: D.HandshakeRefusal? = doorRefusal ? .refused("unpaired") : nil
     check("handshake \(s): home \(h.map { "\($0)" } ?? "not counted"), remote \(r.map { "\($0)" } ?? "not counted")", h == hExp && r == rExp)
 }
-check("handshake: an older Sill's plain bytes (-9836) at home count toward no backoff; an HTTP request (-9858) does",
-      D.handshakeRefusal(.home, status: -9836) == .olderSill && D.handshakeRefusal(.home, status: -9858) == .refused("unpaired"))
+check("handshake: an older DuoDeck's plain bytes (-9836) at home count toward no backoff; an HTTP request (-9858) does",
+      D.handshakeRefusal(.home, status: -9836) == .olderDuoDeck && D.handshakeRefusal(.home, status: -9858) == .refused("unpaired"))
 check("handshake: the remote door keeps -9836 as unpaired, toward the backoff (unchanged)", D.handshakeRefusal(.remote, status: -9836) == .refused("unpaired"))
 
-// The menu's "An iPhone or iPad Needs Sill Updated" (the security review, 2026-09-27): a TLS 1.2
-// client fails with -9836 too, but tries once; an older Sill tries again and again (a tap, then its
+// The menu's "An iPhone or iPad Needs DuoDeck Updated" (the security review, 2026-09-27): a TLS 1.2
+// client fails with -9836 too, but tries once; an older DuoDeck tries again and again (a tap, then its
 // reconnect every 2 to 10 s). The item waits for a source's third plain try within a minute.
-check("older Sill: 3 tries in 60 s", D.olderSillTries == 3 && D.olderSillSpan == 60)
+check("older DuoDeck: 3 tries in 60 s", D.olderDuoDeckTries == 3 && D.olderDuoDeckSpan == 60)
 var tries: [Double] = []
 var shown: [Bool] = []
-for t in [100.0, 102, 106] { let r = D.olderSillTry(tries, now: t); tries = r.tries; shown.append(r.shown) }
-check("older Sill: one try (a TLS 1.2 scanner) shows nothing, nor a second; the third within a minute does", shown == [false, false, true])
-check("older Sill: every later try shows it too, while three are within the minute", D.olderSillTry(tries, now: 116).shown && D.olderSillTry(tries, now: 150).shown)
-check("older Sill: tries a minute apart never add up", D.olderSillTry(D.olderSillTry(D.olderSillTry([], now: 0).tries, now: 60).tries, now: 120) == ([120], false))
-check("older Sill: a try exactly 60 s old no longer counts", D.olderSillTry([0, 30], now: 60) == ([30, 60], false)
-      && D.olderSillTry([0.1, 30], now: 60) == ([0.1, 30, 60], true))
-check("older Sill: an older Sill's reconnect (2, 4, 8, 10 s apart) shows it at its third try",
+for t in [100.0, 102, 106] { let r = D.olderDuoDeckTry(tries, now: t); tries = r.tries; shown.append(r.shown) }
+check("older DuoDeck: one try (a TLS 1.2 scanner) shows nothing, nor a second; the third within a minute does", shown == [false, false, true])
+check("older DuoDeck: every later try shows it too, while three are within the minute", D.olderDuoDeckTry(tries, now: 116).shown && D.olderDuoDeckTry(tries, now: 150).shown)
+check("older DuoDeck: tries a minute apart never add up", D.olderDuoDeckTry(D.olderDuoDeckTry(D.olderDuoDeckTry([], now: 0).tries, now: 60).tries, now: 120) == ([120], false))
+check("older DuoDeck: a try exactly 60 s old no longer counts", D.olderDuoDeckTry([0, 30], now: 60) == ([30, 60], false)
+      && D.olderDuoDeckTry([0.1, 30], now: 60) == ([0.1, 30, 60], true))
+check("older DuoDeck: an older DuoDeck's reconnect (2, 4, 8, 10 s apart) shows it at its third try",
       { var t: [Double] = []; var at = 0.0; var n = 0
-        for gap in [0.0, 2, 4, 8, 10] { at += gap; n += 1; let r = D.olderSillTry(t, now: at); t = r.tries; if r.shown { return n == 3 } }
+        for gap in [0.0, 2, 4, 8, 10] { at += gap; n += 1; let r = D.olderDuoDeckTry(t, now: at); t = r.tries; if r.shown { return n == 3 } }
         return false }())
 
 // MARK: The ask rule
@@ -575,7 +575,7 @@ check("group: the most one address not yet known adds before it is backed off (4
       near(cutAt, 9.99) && gMostBacked == ["2601:600:1:2::7"] && near(gMostTrim.failures("2601:600:1:2::/64", now: 40), D.groupShare)
       && !gMostTrim.backedOff(src("2601:600:1:2::8"), now: 40))
 // The review of 2026-10-29, its second pass: an address's own backoff (5 in 60 s) does not bound what
-// it adds over the /64's 300 s. Paced under it, one address alone backed its /64 off: an older Sill's
+// it adds over the /64's 300 s. Paced under it, one address alone backed its /64 off: an older DuoDeck's
 // plain try every 2 s on its link-local address (a tenth each, 3 a minute) backed off its whole link,
 // fe80::/64%en0, at 238 s, and a device not yet known there was refused; one refusal every 16 s (4 a
 // minute), at 176 s. Now an address counts for `groupShare` (6) at most: it takes two.
@@ -583,7 +583,7 @@ check("group: an address counts for 6 at most toward its /64, half the 12", D.gr
 var gOlder = Places()
 var gOlderBacked: [String] = []
 for n in 0..<300 { let t = Double(n) * 2; if case .taken = gOlder.arrive(n, src("fe80::30", "en0"), now: t) { gOlderBacked += gOlder.leave(n, .ended, now: t + 0.01) } }
-check("group: an older Sill's plain try every 2 s on its link-local address for 10 minutes backs off neither it nor its link (counted for \(String(format: "%.1f", gOlder.failures("fe80::/64%en0", now: 599))))",
+check("group: an older DuoDeck's plain try every 2 s on its link-local address for 10 minutes backs off neither it nor its link (counted for \(String(format: "%.1f", gOlder.failures("fe80::/64%en0", now: 599))))",
       gOlderBacked.isEmpty && near(gOlder.failures("fe80::/64%en0", now: 599), 6) && !gOlder.backedOff(src("fe80::99", "en0"), now: 599))
 func refusedEvery16(_ addresses: [String]) -> (backed: [String], at: Double?) {
     var p = Places(), backed: [String] = [], at: Double?
@@ -991,7 +991,7 @@ let losers = legit((0..<100).map { (Double($0) * 6, 1.0, Places.End.ended) })
 check("legit: a dial's loser every 6 s for 10 minutes from an address that never wins (held 1 s each): never backed off",
       !losers.backedOff(v4("10.0.0.30"), now: 600) && losers.failures("10.0.0.30", now: 599) < 2)
 let older = legit((0..<300).map { (Double($0) * 2, 0.01, Places.End.ended) })
-check("legit: an older Sill's plain try every 2 s for 10 minutes: never backed off", !older.backedOff(v4("10.0.0.30"), now: 600))
+check("legit: an older DuoDeck's plain try every 2 s for 10 minutes: never backed off", !older.backedOff(v4("10.0.0.30"), now: 600))
 let older6 = legit((0..<300).map { (Double($0) * 2, 0.01, Places.End.ended) }, source: src("2601:600:1:2::30"))
 check("legit: the same from an IPv6 address: never backed off, nor its /64 (the review's second pass: at 238 s before)",
       !older6.backedOff(src("2601:600:1:2::30"), now: 600) && !older6.backedOff(src("2601:600:1:2::31"), now: 600))
@@ -1050,15 +1050,15 @@ check("legit: a known device's taps whose dials stall to the Mac's 10 s, four in
 
 // MARK: Test hooks
 
-check("test host: does not advertise and is not Sill.app's own code (bundled)",
+check("test host: does not advertise and is not DuoDeck.app's own code (bundled)",
       D.isTestHost(advertises: false, bundled: false) && !D.isTestHost(advertises: false, bundled: true)
       && !D.isTestHost(advertises: true, bundled: false) && !D.isTestHost(advertises: true, bundled: true))
-let hook = ["SILL_TEST_ASK_FROM_THIS_MAC": "1"]
-check("SILL_TEST_ASK_FROM_THIS_MAC=1: honoured on a test host", D.testAsksAsDevice(testHost: true, environment: hook))
-check("SILL_TEST_ASK_FROM_THIS_MAC=1: ignored by a host that is not a test host (the bundle, an advertising host)",
+let hook = ["DUODECK_TEST_ASK_FROM_THIS_MAC": "1"]
+check("DUODECK_TEST_ASK_FROM_THIS_MAC=1: honoured on a test host", D.testAsksAsDevice(testHost: true, environment: hook))
+check("DUODECK_TEST_ASK_FROM_THIS_MAC=1: ignored by a host that is not a test host (the bundle, an advertising host)",
       !D.testAsksAsDevice(testHost: D.isTestHost(advertises: false, bundled: true), environment: hook)
       && !D.testAsksAsDevice(testHost: D.isTestHost(advertises: true, bundled: false), environment: hook))
-check("SILL_TEST_ASK_FROM_THIS_MAC: only \"1\"", ["0", "", "yes", "true", " 1", "1 "].allSatisfy { !D.testAsksAsDevice(testHost: true, environment: ["SILL_TEST_ASK_FROM_THIS_MAC": $0]) }
+check("DUODECK_TEST_ASK_FROM_THIS_MAC: only \"1\"", ["0", "", "yes", "true", " 1", "1 "].allSatisfy { !D.testAsksAsDevice(testHost: true, environment: ["DUODECK_TEST_ASK_FROM_THIS_MAC": $0]) }
       && !D.testAsksAsDevice(testHost: true, environment: [:]))
 
 // The whole of step 4 as the host will compose it: fromThisMac = isFromThisMac && !testAsksAsDevice.
@@ -1067,7 +1067,7 @@ func composed(_ source: String, testHost: Bool, env: [String: String]) -> (D.Ask
     let a = ask(me: me)
     return (a, D.menuRequest(a, fromThisMac: me))
 }
-check("composed: an ask from this Mac's own fe80 on Sill.app → openOnMac, no menu", composed("fe80::47b:5945:e0aa:d0ac", testHost: false, env: hook) == (.openOnMac("this Mac"), nil))
+check("composed: an ask from this Mac's own fe80 on DuoDeck.app → openOnMac, no menu", composed("fe80::47b:5945:e0aa:d0ac", testHost: false, env: hook) == (.openOnMac("this Mac"), nil))
 check("composed: the same from 127.0.0.1 on a test host with the hook → a window and the menu", composed("127.0.0.1", testHost: true, env: hook) == (.shown(opened: true), "showing"))
 check("composed: the same on a test host without the hook → openOnMac, no menu", composed("127.0.0.1", testHost: true, env: [:]) == (.openOnMac("this Mac"), nil))
 check("composed: another device → a window and the menu", composed("fe80::18fe:abff:febb:459f", testHost: false, env: [:]) == (.shown(opened: true), "showing"))

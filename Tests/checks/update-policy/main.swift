@@ -1,16 +1,16 @@
 import Foundation
 // H3 (UpdatePolicy): every row of the plan's §6.4, the offer, the schedule, the feeds and pages
-// Sill accepts, and every text. Compiled with Sources/StreamProtocol and
-// Sources/SillMenuBar/UpdatePolicy.swift (its `import StreamProtocol` dropped).
+// DuoDeck accepts, and every text. Compiled with Sources/StreamProtocol and
+// Sources/DuoDeckMenuBar/UpdatePolicy.swift (its `import StreamProtocol` dropped).
 var failures = 0, checks = 0
 func check(_ ok: Bool, _ what: @autoclosure () -> String, line: Int = #line) {
     checks += 1
     if !ok { failures += 1; print("FAIL (line \(line)): \(what())") }
 }
 typealias P = UpdatePolicy
-let v03 = SillVersion("0.3.0")!, v04 = SillVersion("0.4")!
+let v03 = DuoDeckVersion("0.3.0")!, v04 = DuoDeckVersion("0.4")!
 let now = Date(timeIntervalSince1970: 1_790_265_600)
-let page = "https://github.com/Saffsanity/sill/releases/tag/v0.4.0"
+let page = "https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v0.4.0"
 func body(_ tag: Any? = "v0.4.0", html: Any? = page, draft: Any? = false, prerelease: Any? = false) -> Data {
     var d: [String: Any] = ["name": "x", "assets": []]
     if let tag { d["tag_name"] = tag }
@@ -24,7 +24,7 @@ func status(_ s: Int, reset: Date? = nil) -> P.Answer { .http(status: s, body: D
 let empty = P.Stored()
 let storedRelease = P.Stored(lastCheck: now.addingTimeInterval(-86_400), etag: "W/\"e0\"", latestTag: "v0.4.0", latestURL: page)
 let offer04 = P.Offer(version: v04, tag: "v0.4.0", url: URL(string: page)!)
-func interpret(_ a: P.Answer, _ s: P.Stored = empty, running: SillVersion = v03, test: Bool = false) -> (P.Outcome, P.Stored) {
+func interpret(_ a: P.Answer, _ s: P.Stored = empty, running: DuoDeckVersion = v03, test: Bool = false) -> (P.Outcome, P.Stored) {
     P.interpret(a, stored: s, running: running, now: now, anyReleaseURL: test)
 }
 
@@ -33,11 +33,11 @@ var (o, s) = interpret(ok(body()))
 check(o == .newer(offer04), "200 newer: \(o)")
 check(s == P.Stored(lastCheck: now, etag: "W/\"e1\"", latestTag: "v0.4.0", latestURL: page), "200 newer stores all four: \(s)")
 // 200, published, not newer (same, older, and the running version written with its build).
-(o, s) = interpret(ok(body("v0.3.0", html: "https://github.com/Saffsanity/sill/releases/tag/v0.3.0")))
+(o, s) = interpret(ok(body("v0.3.0", html: "https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/v0.3.0")))
 check(o == .upToDate(tag: "v0.3.0") && s.latestTag == "v0.3.0" && s.lastCheck == now, "200 same: \(o)")
 check(interpret(ok(body("0.2.9")), running: v03).0 == .upToDate(tag: "0.2.9"), "an older release")
-check(interpret(ok(body("v0.3.0")), running: SillVersion("0.3.0 (85)")!).0 == .upToDate(tag: "v0.3.0"), "0.3.0 (85) against v0.3.0")
-check(interpret(ok(body("v0.10.0", html: page)), running: SillVersion("0.9.5")!).0 != .upToDate(tag: "v0.10.0"), "0.10 is newer than 0.9.5")
+check(interpret(ok(body("v0.3.0")), running: DuoDeckVersion("0.3.0 (85)")!).0 == .upToDate(tag: "v0.3.0"), "0.3.0 (85) against v0.3.0")
+check(interpret(ok(body("v0.10.0", html: page)), running: DuoDeckVersion("0.9.5")!).0 != .upToDate(tag: "v0.10.0"), "0.10 is newer than 0.9.5")
 check(interpret(ok(body("0.4")), running: v03).0 == .newer(P.Offer(version: v04, tag: "0.4", url: URL(string: page)!)), "a tag without v")
 // A 200 without an ETag clears the stored one.
 (o, s) = interpret(ok(body(), etag: nil), storedRelease)
@@ -65,7 +65,7 @@ check(interpret(status(500), storedRelease).1.latestTag == "v0.4.0", "a 5xx keep
 let notReleases: [(Data, String)] = [
     (body(nil), "no tag_name"), (body(4), "no tag_name"), (body("nightly"), "the tag “nightly” is not a version"),
     (body(draft: true), "a draft"), (body(prerelease: true), "a prerelease"),
-    (body(html: "https://evil.example/sill"), "html_url is not on github.com"), (body(html: "http://github.com/x"), "html_url is not on github.com"),
+    (body(html: "https://evil.example/duodeck"), "html_url is not on github.com"), (body(html: "http://github.com/x"), "html_url is not on github.com"),
     (body(html: nil), "html_url is not on github.com"), (body(html: "https://github.com.evil.example/x"), "html_url is not on github.com"),
     (Data("[1,2]".utf8), "not a JSON object"), (Data("<html>".utf8), "not a JSON object"), (Data(), "not a JSON object"),
 ]
@@ -97,10 +97,10 @@ check(P.Outcome.noRelease.answered && P.Outcome.limited(status: 403, reset: nil)
 // The offer: the stored release, newer than what runs, on github.com.
 check(P.offer(stored: storedRelease, running: v03) == offer04, "offered")
 check(P.offer(stored: storedRelease, running: v04) == nil, "gone once 0.4 runs (updated)")
-check(P.offer(stored: storedRelease, running: SillVersion("0.5")!) == nil, "a build ahead of the release")
-check(P.offer(stored: storedRelease, running: SillVersion("0.2")!) == offer04, "back after a downgrade")
+check(P.offer(stored: storedRelease, running: DuoDeckVersion("0.5")!) == nil, "a build ahead of the release")
+check(P.offer(stored: storedRelease, running: DuoDeckVersion("0.2")!) == offer04, "back after a downgrade")
 check(P.offer(stored: storedRelease, running: nil) == nil, "no running version, no offer")
-var forged = storedRelease; forged.latestURL = "https://evil.example/sill"
+var forged = storedRelease; forged.latestURL = "https://evil.example/duodeck"
 check(P.offer(stored: forged, running: v03) == nil, "a stored page not on github.com is never offered")
 check(P.offer(stored: P.Stored(latestTag: "nightly", latestURL: page), running: v03) == nil, "a stored tag that is not a version")
 
@@ -124,7 +124,7 @@ check(inRange, "the next check is 24 h to 24 h 30 min after the last")
 
 // Feeds and pages.
 for (u, want) in [("http://127.0.0.1:8080/latest", true), ("https://127.0.0.1/x", true), ("http://[::1]:9/latest", true), ("http://localhost:1/", true),
-                  ("http://LOCALHOST:1/", true), ("http://127.0.0.2/", false), ("https://api.github.com/repos/Saffsanity/sill/releases/latest", false),
+                  ("http://LOCALHOST:1/", true), ("http://127.0.0.2/", false), ("https://api.github.com/repos/samihalawa/2026-CODEX-DuoDeck/releases/latest", false),
                   ("ftp://127.0.0.1/x", false), ("http://localhost.evil.example/", false), ("http://127.0.0.1.nip.io/", false),
                   ("file:///tmp/feed.json", false), ("http://192.168.1.2/", false)] {
     check(P.isLocalFeed(URL(string: u)!) == want, "isLocalFeed(\(u)) == \(want)")

@@ -1,8 +1,8 @@
 import Foundation
 
-// H3 of docs/audio-plan.md (the packetizer): Sources/SillHost/AudioPacketizer.swift compiled on its own
+// H3 of docs/audio-plan.md (the packetizer): Sources/DuoDeckHost/AudioPacketizer.swift compiled on its own
 // with this file:
-//   swiftc -O Sources/SillHost/AudioPacketizer.swift Tests/checks/audio-packetizer/main.swift -o check
+//   swiftc -O Sources/DuoDeckHost/AudioPacketizer.swift Tests/checks/audio-packetizer/main.swift -o check
 // The packet size from the first chunk; the stamps against the anchors (±1 µs); the continuity
 // tolerance at a quarter chunk ± 0.1 ms, later and earlier; a whole chunk missing; a format change;
 // a segment ended with nothing flushed and nothing filled; each block out with the chunk that

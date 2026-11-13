@@ -25,7 +25,7 @@ func homePolicy() {
         case .pinned: return pin.map { T.saved(pin: $0) }
         case .anyKey: return .open(seen: nil)
         case .plain: return .plain
-        case .ask, .updateSill, .waitForTap: return nil
+        case .ask, .updateDuoDeck, .waitForTap: return nil
         }
     }
     var st = 0, stOK = 0, tlsNeverPlain2 = true, releaseNeverPlain2 = true, asksNoSession = true
@@ -277,7 +277,7 @@ func homePolicy() {
         if head.ends == .connected(nil) { headGavePlain += 1 }
         if head.ends == .connected(k2), s.contains(.tapFails) { headGaveBAfterTap += 1 }
         // The first look that is dialed or ends it decides: A's key connects, B's open door ends it with
-        // otherKey after one dial, B's required door ends it with no dial; a plain door (Update Sill in
+        // otherKey after one dial, B's required door ends it with no dial; a plain door (Update DuoDeck in
         // Release, a plain dial a DEBUG build's tap makes) is looked past in both, and so is the person's tap
         // whose dial saw no key: the reconnect made again after it pins A's key still (the review of #255).
         let first = s.first { $0 != .bPlain && $0 != .tapFails }

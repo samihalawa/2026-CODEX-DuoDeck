@@ -4,13 +4,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import module
 F = "iOSClient/DiscoveryPolicy.swift"
 S = "iOSClient/SavedMacs.swift"
-W = "Sources/SillHost/PairingWindow.swift"
+W = "Sources/DuoDeckHost/PairingWindow.swift"
 M = [
     ("the card's closed words say a tap is enough (as before the review)", F,
-     "            \"That code no longer works. On the Mac, choose Pair iPhone or iPad\\u{2026} in the Sill menu, then tap \\(mac) again.\"",
+     "            \"That code no longer works. On the Mac, choose Pair iPhone or iPad\\u{2026} in the DuoDeck menu, then tap \\(mac) again.\"",
      "            \"That code no longer works. Tap \\(mac) for a new one.\""),
     ("the card's stopped words say a tap is enough (as before the review)", F,
-     "            \"\\(mac) stopped pairing after too many wrong codes. On the Mac, choose Pair iPhone or iPad\\u{2026} in the Sill menu, then tap \\(mac) again.\"",
+     "            \"\\(mac) stopped pairing after too many wrong codes. On the Mac, choose Pair iPhone or iPad\\u{2026} in the DuoDeck menu, then tap \\(mac) again.\"",
      "            \"\\(mac) stopped pairing after too many wrong codes. Tap \\(mac) for a new code.\""),
     ("an expired window quiets again", W, "case .cancelled, .stopped: return true\n        case .used, .expired, .withdrawn, .none: return false",
      "case .cancelled, .stopped, .expired: return true\n        case .used, .withdrawn, .none: return false"),
@@ -21,12 +21,12 @@ M = [
     ("askAnswer: shown misspelt", F, "        case \"shown\"?: return .shown", "        case \"show\"?: return .shown"),
     ("askAnswer: busy misspelt", F, "        case \"busy\"?: return .busy(", "        case \"Busy\"?: return .busy("),
     ("rowWord: a revoked Mac dialed pinned", F, "            if saved && !revoked && !newKey { return .method(method) }", "            if saved && !newKey { return .method(method) }"),
-    ("homeDial: a homeTLS Mac dialed plain in DEBUG", F, "            return debug && !homeTLS ? .plain : .updateSill", "            return debug ? .plain : .updateSill"),
+    ("homeDial: a homeTLS Mac dialed plain in DEBUG", F, "            return debug && !homeTLS ? .plain : .updateDuoDeck", "            return debug ? .plain : .updateDuoDeck"),
     ("adding forgets homeTLS", S, "        if list.contains(where: { $0.macID == mac.macID && $0.homeTLS == true }) { mac.homeTLS = true }\n", ""),
     ("seenOverTLS marks nothing", S, "            next.homeTLS = true\n            return next\n        }\n    }\n\n    /// `revoked`",
      "            return next\n        }\n    }\n\n    /// `revoked`"),
     ("revoking marks nothing", S, "            next.revoked = true\n", ""),
-    # A Mac set up again with a new key (Noah, 2026-09-27).
+    # A Mac set up again with a new key (the maintainer, 2026-09-27).
     ("markingNewKey marks nothing", S, "            next.newKey = true\n", ""),
     ("markingNewKey marks again", S, "$0.macID == id && $0.newKey != true", "$0.macID == id"),
     ("replacingNewKey drops an unmarked Mac", S, "$0.macID == old && $0.newKey == true", "$0.macID == old"),

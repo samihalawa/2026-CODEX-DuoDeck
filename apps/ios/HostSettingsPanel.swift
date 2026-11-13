@@ -15,7 +15,7 @@ struct HostSettingsPanel: View {
     /// Take the Tour: the stream screen puts the panel away and shows the tour of its layout.
     var takeTour: () -> Void = {}
 
-    /// Two seconds on this connection and still no state: the Mac runs a Sill without settings.
+    /// Two seconds on this connection and still no state: the Mac runs a DuoDeck without settings.
     @State private var olderMac = false
     /// Bumped when Low Power Mode toggles, so the frame rate note is read again.
     @State private var powerState = 0
@@ -37,7 +37,7 @@ struct HostSettingsPanel: View {
     @AppStorage(StreamClient.clipboardKey) private var clipboardOn = true
     /// This device's hold before a thumbnail's lights (issue #113, ThumbnailHold): 0.5 s unless changed,
     /// read by every bar's thumbnails at once, never sent. Read for its changes; the length through
-    /// `ThumbnailHold.seconds(stored:)`, which takes `-Sill.thumbnailHold 0.3`'s string too.
+    /// `ThumbnailHold.seconds(stored:)`, which takes `-DuoDeck.thumbnailHold 0.3`'s string too.
     @AppStorage(ThumbnailHold.key) private var storedThumbnailHold = ThumbnailHold.standard
     private var thumbnailHold: Double {
         _ = storedThumbnailHold
@@ -57,11 +57,11 @@ struct HostSettingsPanel: View {
     private static let reverseScrollRowID = "reverseScroll"
     private static let thumbnailHoldRowID = "thumbnailHold"
     private static let clipboardRowsID = "clipboardPaste"
-    /// `UIAccessibility.isVoiceOverRunning`; DEBUG `-SillVoiceOver 1` says it is, for the harness's
+    /// `UIAccessibility.isVoiceOverRunning`; DEBUG `-DuoDeckVoiceOver 1` says it is, for the harness's
     /// photos of the group's VoiceOver footnote.
     static var voiceOverRunning: Bool {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "SillVoiceOver") { return true }
+        if UserDefaults.standard.bool(forKey: "DuoDeckVoiceOver") { return true }
         #endif
         return UIAccessibility.isVoiceOverRunning
     }
@@ -274,14 +274,14 @@ struct HostSettingsPanel: View {
                 .accessibilityHint(TourPolicy.takeTourHint(device: device))
             }
             Section {
-                Link("Get DuoDeck for Mac", destination: SillLinks.download)
-                Link("Support", destination: SillLinks.support)
-                Link("Privacy policy", destination: SillLinks.privacy)
+                Link("Get DuoDeck Host", destination: DuoDeckLinks.download)
+                Link("Support", destination: DuoDeckLinks.support)
+                Link("Privacy policy", destination: DuoDeckLinks.privacy)
             }
             Section("Open source") {
-                Text("DuoDeck includes the Sill streaming and remote-input engine, originally developed by Saffsanity under Apache License 2.0.")
+                Text("DuoDeck includes the DuoDeck streaming and remote-input engine, originally developed by samihalawa under Apache License 2.0.")
                     .font(.footnote).foregroundStyle(.secondary)
-                Link("Sill source and attribution", destination: URL(string: "https://github.com/Saffsanity/sill")!)
+                Link("DuoDeck source and attribution", destination: URL(string: "https://github.com/samihalawa/2026-CODEX-DuoDeck")!)
                 Link("DuoDeck license", destination: URL(string: "https://github.com/samihalawa/2026-CODEX-DuoDeck/blob/main/LICENSE")!)
             }
         }
@@ -587,7 +587,7 @@ struct HostSettingsPanel: View {
     private var gesturesFooter: String {
         guard gesturesOn else { return "Three-finger strokes do nothing while this is off." }
         guard macTakesGestures else { return "Update DuoDeck Host on \(mac) to use these." }
-        // VoiceOver keeps three-finger swipes and taps for itself, and no touch of them reaches Sill.
+        // VoiceOver keeps three-finger swipes and taps for itself, and no touch of them reaches DuoDeck.
         var text = voiceOver ? "VoiceOver keeps three-finger gestures for itself, so the rows above do them on \(mac) instead."
             : "Three fingers on the trackpad or over the stream."
         text += " While a window streams, a gesture shows the Desktop first, and the opposite gesture closes what one opened. \(mac) does these with its own keyboard shortcuts: one turned off in its Keyboard settings does nothing."

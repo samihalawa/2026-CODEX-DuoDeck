@@ -1,7 +1,7 @@
 import Foundation
 
 /// Which way a scroll on the device moves the Mac's content: Reverse Scrolling (issue #143), the
-/// device's own switch (the Settings panel's This iPad or This iPhone group, `Sill.reverseScroll`),
+/// device's own switch (the Settings panel's This iPad or This iPhone group, `DuoDeck.reverseScroll`),
 /// off unless turned on and never sent to the Mac.
 ///
 /// `InputEvent.scroll` carries the natural direction: the content follows the fingers (positive dy

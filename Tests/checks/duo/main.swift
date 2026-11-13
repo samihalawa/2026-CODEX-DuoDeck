@@ -57,7 +57,7 @@ check(FoldInfo.known(bookFold).verticalBand == bookFold && FoldInfo.known(bookFo
 check(FoldInfo.known(laptopFold).horizontalBand == laptopFold && FoldInfo.known(laptopFold).verticalBand == nil, "the laptop pose's is horizontal")
 check(FoldInfo.inferred.band == nil && FoldInfo.known(nil).band == nil && FoldInfo.known(bookFold).band == bookFold, "band")
 check(FoldInfo.known(rect(0, 0, 40, 40)).horizontalBand != nil && FoldInfo.known(rect(0, 0, 40, 40)).verticalBand == nil, "a square counts as across")
-// The stream screen hides the status bar on the inner display in every pose (Noah's pick,
+// The stream screen hides the status bar on the inner display in every pose (the maintainer's pick,
 // 2026-10-09: option 1 of three): upright it would take 82 pt off the picture above the fold,
 // sideways an 84 pt strip off the picture's width. It stays on the cover and off the Duo.
 check(DuoPosture.hidesStatusBar(.laptop) && DuoPosture.hidesStatusBar(.flatPortrait), "hidden upright on the inner display")
@@ -331,11 +331,11 @@ for x in stride(from: CGFloat(115), through: 836, by: 7) {
 // MARK: - The harness's stand-in
 
 check(DuoPosture.hinge(argument: "closed") == .closed && DuoPosture.hinge(argument: "half") == .partiallyOpen
-      && DuoPosture.hinge(argument: "flat") == .fullyOpen && DuoPosture.hinge(argument: "HALF") == .partiallyOpen, "-SillHinge")
-check(DuoPosture.hinge(argument: nil) == nil && DuoPosture.hinge(argument: "open") == nil && DuoPosture.hinge(argument: "") == nil, "-SillHinge: nothing else")
+      && DuoPosture.hinge(argument: "flat") == .fullyOpen && DuoPosture.hinge(argument: "HALF") == .partiallyOpen, "-DuoDeckHinge")
+check(DuoPosture.hinge(argument: nil) == nil && DuoPosture.hinge(argument: "open") == nil && DuoPosture.hinge(argument: "") == nil, "-DuoDeckHinge: nothing else")
 check(DuoPosture.standInFold(book) == bookFold && DuoPosture.standInFold(upright) == laptopFold, "the stand-in is the device's fold")
 check(DuoPosture.standInFold(size(1000, 710)) == rect(480, 0, 40, 710) && DuoPosture.standInFold(size(710, 1000)) == rect(0, 480, 710, 40), "at any size")
-check(DuoPosture.displaySpace == "sill.display", "the fake display's space")
+check(DuoPosture.displaySpace == "duodeck.display", "the fake display's space")
 func insets(_ s: CGSize, hidden: Bool = false) -> [CGFloat]? {
     DuoPosture.displayInsets(s, statusBarHidden: hidden).map { [$0.top, $0.leading, $0.bottom, $0.trailing] }
 }

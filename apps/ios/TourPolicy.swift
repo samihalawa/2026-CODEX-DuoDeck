@@ -13,7 +13,7 @@ import CoreGraphics
 /// picture first, then the bar from left to right, then what is behind its last button (the
 /// clipboard and the Mac's sound, `sharing`, then Settings itself), then down the laptop half.
 /// `sharing` came with tour version 2 (0.6: `TourPolicy.version`), saved as "sharing" in
-/// `Sill.tourSeen`; a build from before it ignores the name.
+/// `DuoDeck.tourSeen`; a build from before it ignores the name.
 enum TourTopic: String, CaseIterable, Comparable {
     case touch, bar, sharing, settings, laptop
 
@@ -45,8 +45,8 @@ enum TourTarget: String, CaseIterable, Hashable {
     case stream, apps, strip, menus, textSize, keyboard, settings, keys, trackpad
 }
 
-/// What this device remembers (UserDefaults `Sill.tourSeen`, `Sill.tourSkipped`): the steps passed
-/// with Next or Done, and whether Skip was ever tapped. Beside them `Sill.tourVersion`, the tour's
+/// What this device remembers (UserDefaults `DuoDeck.tourSeen`, `DuoDeck.tourSkipped`): the steps passed
+/// with Next or Done, and whether Skip was ever tapped. Beside them `DuoDeck.tourVersion`, the tour's
 /// version they are of: a memory of an older one is cleared once (`TourPolicy.upgraded`).
 struct TourMemory: Equatable {
     var seen: Set<TourTopic> = []
@@ -87,7 +87,7 @@ struct TourMoment: Equatable {
     /// This session has had its decision in this layout.
     var offered: Bool
     var voiceOver: Bool
-    /// Release: always; Debug: only with `-SillTourState`.
+    /// Release: always; Debug: only with `-DuoDeckTourState`.
     var enabled: Bool
 }
 
@@ -179,7 +179,7 @@ struct TourRow: Equatable {
 
 /// What some of the words depend on, on this Mac and this device as they are now (StreamScreen
 /// builds it at each render): a row about something this Mac or this device lacks is left out or
-/// worded for that, never said wrong. An older Mac (Sill for Mac 0.5.1) has no clipboard and no
+/// worded for that, never said wrong. An older Mac (DuoDeck Host 0.5.1) has no clipboard and no
 /// sound, and its Virtual Display is off unless turned on there.
 struct TourFeatures: Equatable {
     /// The Menus button is on screen (its target reported: the Mac sent menus, and the bar holds it).
@@ -315,7 +315,7 @@ enum TourPolicy {
     // MARK: Sessions
 
     /// A new session's start. The automatic reconnect's session (a Wi-Fi drop, the Mac waking, an
-    /// eviction after a trip to another app, Sill.app relaunched) goes on with the last session's
+    /// eviction after a trip to another app, DuoDeck.app relaunched) goes on with the last session's
     /// decisions, so someone who started at once is not walked through the tour when the picture
     /// comes back; unless the last one ended before its picture's decision, or in the middle of a
     /// run, which then comes back with a beat of its own. A session the person starts (a row's
@@ -568,7 +568,7 @@ enum TourPolicy {
     /// is about Apps where the thumbnails were. `features`: what this Mac and this device have now;
     /// a row about what they lack is left out or worded for that.
     ///
-    /// Tour version 2 (0.6; Noah, 2026-10-31: "Mark the new features with 'New:' and make the tutorial
+    /// Tour version 2 (0.6; the maintainer, 2026-10-31: "Mark the new features with 'New:' and make the tutorial
     /// run for anyone who launches this version for the first time. You don't need to explain the Aa
     /// stuff, maybe add an explanation with Virtual Desktop's explanation"): the rows about what is new
     /// since the tour was written start with "New:" (`newPrefix`): what 0.6 adds, and what came after the
@@ -620,7 +620,7 @@ enum TourPolicy {
             if features.menus {
                 rows.append(row("filemenu.and.selection", [strong("Menus"), plain(" has the menu bar of the app you’re using on \(mac).")], new: true))
             }
-            // Virtual Display, on by default in Sill for Mac since PR #236 (HostConfig.app), with Aa in it:
+            // Virtual Display, on by default in DuoDeck Host since PR #236 (HostConfig.app), with Aa in it:
             // the only row that names Aa. Aa sizes a window, never the Desktop (dimmed over it:
             // TextScale.selectable), and on the virtual display a window is the panel ÷ Aa's scale.
             // On, it says so; off, where the switch is. Both forms are New: the tour never told of it.

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """TEST ONLY (docs/locked-mac-plan.md): a locked Mac on a test host, measured. Each run starts one
 synthetic CLI host on loopback (the software encoder, no router, no screen: never this Mac's screen,
-encoder or clipboard), drives its lock through the TEST ONLY hooks (SILL_TEST_LOCKED_FILE, the screen's
-notify name of the test's own, SILL_TEST_LOCK_NOTE's delivered notifications; never a real lock, never a
-notification another app hears), runs test clients that save what they receive (sillclient.py --dump),
+encoder or clipboard), drives its lock through the TEST ONLY hooks (DUODECK_TEST_LOCKED_FILE, the screen's
+notify name of the test's own, DUODECK_TEST_LOCK_NOTE's delivered notifications; never a real lock, never a
+notification another app hears), runs test clients that save what they receive (duodeckclient.py --dump),
 decodes the keyframes (Scripts/lock-check/frames, the software decoder), and prints one verdict per rule:
 the frames stop at the lock, the placeholder is black, the list says why, nothing else of the Mac goes out,
 requests are refused, input follows the reading, the unlock waits for its settle, the flap never unlocks.
@@ -11,22 +11,22 @@ Each host lives under 60 s and is killed at the end.
 
     Scripts/lock-check/live.py OUT [poll|start|notify|paired|all]
 
-Needs .build/release/SillHost and .build/lock-check/frames (Scripts/lock-check/build.sh). Exits 1 when a
+Needs .build/release/DuoDeckHost and .build/lock-check/frames (Scripts/lock-check/build.sh). Exits 1 when a
 verdict fails."""
 import ctypes, json, os, re, signal, subprocess, sys, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-HOST = os.path.join(ROOT, ".build/release/SillHost")
-CLIENT = os.path.join(ROOT, "Scripts/sillclient.py")
+HOST = os.path.join(ROOT, ".build/release/DuoDeckHost")
+CLIENT = os.path.join(ROOT, "Scripts/duodeckclient.py")
 FRAMES = os.path.join(ROOT, ".build/lock-check/frames")
-# SILL_TEST_LOCK_IGNORE_MAC: the hosts go by the test's hooks alone, so the check runs while this Mac's own screen is locked.
-BASE_ENV = {"SILL_TEST_LOOPBACK": "1", "SILL_TEST_SOFTWARE_ENCODER": "1", "SILL_TEST_NO_ROUTER": "1", "SILL_TEST_NO_SCREEN": "1",
-            "SILL_TEST_LOCK_IGNORE_MAC": "1"}
+# DUODECK_TEST_LOCK_IGNORE_MAC: the hosts go by the test's hooks alone, so the check runs while this Mac's own screen is locked.
+BASE_ENV = {"DUODECK_TEST_LOOPBACK": "1", "DUODECK_TEST_SOFTWARE_ENCODER": "1", "DUODECK_TEST_NO_ROUTER": "1", "DUODECK_TEST_NO_SCREEN": "1",
+            "DUODECK_TEST_LOCK_IGNORE_MAC": "1"}
 
 verdicts = []
 # The rule's switch: a locked screen streams its display (the lock screen) or the placeholder.
-STREAMS = "static let lockScreenStreams = true" in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Sources", "SillHost", "LockPolicy.swift")).read()
+STREAMS = "static let lockScreenStreams = true" in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Sources", "DuoDeckHost", "LockPolicy.swift")).read()
 
 def verdict(ok, what):
     verdicts.append((ok, what))
@@ -83,7 +83,7 @@ class Host:
 
 
 def client(host, out, label, seconds, args, start):
-    """A sillclient run `start` seconds after the host's start, in a thread; its output saved."""
+    """A duodeckclient run `start` seconds after the host's start, in a thread; its output saved."""
     def run():
         host.at(start)
         r = subprocess.run([sys.executable, "-I", CLIENT, host.port, str(seconds), *args], capture_output=True, text=True,
@@ -139,19 +139,19 @@ def write(path, text):
 
 def run_poll(out):
     """The poll's path at the CLI's plain door: screen locked, off console, back, the unlock's settle, the flap."""
-    print("== poll: SILL_TEST_LOCKED_FILE, the plain door, two clients", flush=True)
+    print("== poll: DUODECK_TEST_LOCKED_FILE, the plain door, two clients", flush=True)
     lock = os.path.join(out, "poll.lock"); write(lock, "0")
     path = os.path.join(out, "poll.pointer")
     write(path, "".join(f"{i * 0.1:.1f} {200 + (i * 7) % 900} {150 + (i * 5) % 600}\n" for i in range(600)))
-    env = {"SILL_TEST_LOCKED_FILE": lock, "SILL_TEST_LOCK_LOG": "1", "SILL_TEST_PATTERN": "noise", "SILL_TEST_INPUT_LOG": "1",
-           "SILL_TEST_POINTER_PATH": path, "SILL_TEST_PASTEBOARD": f"me.saffer.sill.test.lockcheck.{os.getpid()}", "SILL_TEST_CLIPBOARD_LOG": "1"}
+    env = {"DUODECK_TEST_LOCKED_FILE": lock, "DUODECK_TEST_LOCK_LOG": "1", "DUODECK_TEST_PATTERN": "noise", "DUODECK_TEST_INPUT_LOG": "1",
+           "DUODECK_TEST_POINTER_PATH": path, "DUODECK_TEST_PASTEBOARD": f"com.agentsai.duodeck.test.lockcheck.{os.getpid()}", "DUODECK_TEST_CLIPBOARD_LOG": "1"}
     h = Host(out, "poll", env, args=["--audio"])
     # Times are the client's, which starts 1 s after the host. The test pattern at Standard (1512×948), whose
     # noise square makes every frame of it large; the placeholder's are tiny.
     c1 = client(h, out, "poll-c1", 52, ["desktop", "--stats", "--clipboard", "--audio", "--pointer", f"--dump={out}/poll-c1",
              "--set=captureScale=1@0.3",
              # screen locked (host 5 to 15 s): every kind the lock refuses; off console (15 to 25 s): input again
-             "--pick=window:1@8", '--raw7={"bundleID":"me.saffer.sill.test.lockcheck"}@8.5', "--gesture=swipeUp@9", "--copy=while-locked@9.5",
+             "--pick=window:1@8", '--raw7={"bundleID":"com.agentsai.duodeck.test.lockcheck"}@8.5', "--gesture=swipeUp@9", "--copy=while-locked@9.5",
              "--tap=0.5,0.5@10", "--key=4@10.5", "--tap=0.5,0.5@15", "--key=5@15.5",
              # after the last unlock (host about 45 to 46.6 s)
              "--copy=after-the-unlock@46.2", "--tap=0.4,0.4@46.5", "--gesture=swipeDown@46.8"], start=1.0)
@@ -269,9 +269,9 @@ def run_poll(out):
 
 def run_start(out):
     """A host that starts on a Mac already locked: its reading at its first look, the settle at its unlock."""
-    print("== start: a host started on a locked Mac (SILL_TEST_LOCKED_FILE holding 1 from the start)", flush=True)
+    print("== start: a host started on a locked Mac (DUODECK_TEST_LOCKED_FILE holding 1 from the start)", flush=True)
     lock = os.path.join(out, "start.lock"); write(lock, "1")
-    h = Host(out, "start", {"SILL_TEST_LOCKED_FILE": lock, "SILL_TEST_LOCK_LOG": "1", "SILL_TEST_PATTERN": "noise"})
+    h = Host(out, "start", {"DUODECK_TEST_LOCKED_FILE": lock, "DUODECK_TEST_LOCK_LOG": "1", "DUODECK_TEST_PATTERN": "noise"})
     c1 = client(h, out, "start-c1", 11, ["desktop", "--stats", f"--dump={out}/start-c1", "--set=captureScale=1@0.3"], start=1.0)
     h.at(6.0); write(lock, "0")
     c1.join()
@@ -292,14 +292,14 @@ def run_start(out):
 
 def run_notify(out):
     """The immediate paths: the screen's notify state (a name of the test's own) and a delivered notification."""
-    print("== notify: SILL_TEST_LOCK_NOTIFY and SILL_TEST_LOCK_NOTE", flush=True)
+    print("== notify: DUODECK_TEST_LOCK_NOTIFY and DUODECK_TEST_LOCK_NOTE", flush=True)
     lib = ctypes.CDLL("/usr/lib/libSystem.B.dylib")
-    name = f"me.saffer.sill.test.lockcheck.{os.getpid()}".encode()
+    name = f"com.agentsai.duodeck.test.lockcheck.{os.getpid()}".encode()
     token = ctypes.c_int(0)
     assert lib.notify_register_check(name, ctypes.byref(token)) == 0
     lib.notify_set_state(token, ctypes.c_uint64(0))
-    env = {"SILL_TEST_LOCK_NOTIFY": name.decode(), "SILL_TEST_LOCK_NOTE": "14 sessionDidResignActive; 22 sessionDidBecomeActive",
-           "SILL_TEST_LOCK_LOG": "1", "SILL_TEST_PATTERN": "noise"}
+    env = {"DUODECK_TEST_LOCK_NOTIFY": name.decode(), "DUODECK_TEST_LOCK_NOTE": "14 sessionDidResignActive; 22 sessionDidBecomeActive",
+           "DUODECK_TEST_LOCK_LOG": "1", "DUODECK_TEST_PATTERN": "noise"}
     h = Host(out, "notify", env)
     c1 = client(h, out, "notify-c1", 28, ["desktop", "--stats", f"--dump={out}/notify-c1", "--set=captureScale=1@0.3"], start=1.0)
     h.at(5.0); lib.notify_set_state(token, ctypes.c_uint64(1)); lib.notify_post(name); posted_lock = time.time() - h.start
@@ -338,12 +338,12 @@ def run_paired(out):
     path = os.path.join(out, "paired.pointer")
     write(path, "".join(f"{i * 0.1:.1f} {300 + (i * 3) % 500} {200 + (i * 2) % 400}\n" for i in range(600)))
     remote = os.path.join(out, "paired.remote"); os.makedirs(remote, exist_ok=True); os.chmod(remote, 0o700)
-    env = {"SILL_TEST_LOCKED_FILE": lock, "SILL_TEST_REMOTE_DIR": remote, "SILL_TEST_REQUIRE_PAIRING": "0", "SILL_TEST_INPUT_LOG": "1",
-           "SILL_TEST_POINTER_PATH": path}
+    env = {"DUODECK_TEST_LOCKED_FILE": lock, "DUODECK_TEST_REMOTE_DIR": remote, "DUODECK_TEST_REQUIRE_PAIRING": "0", "DUODECK_TEST_INPUT_LOG": "1",
+           "DUODECK_TEST_POINTER_PATH": path}
     h = Host(out, "paired", env, args=["--pairing"])
     h.at(1.0)
-    _, line = h.first(r"sill://pair")
-    link = re.search(r"(sill://pair\S+)", line or "")
+    _, line = h.first(r"duodeck://pair")
+    link = re.search(r"(duodeck://pair\S+)", line or "")
     if not link: h.stop(); verdict(False, "the host printed no pairing link"); return
     idp, idu = os.path.join(out, "paired.idP"), os.path.join(out, "paired.idU")
     pair = subprocess.run([sys.executable, "-I", CLIENT, h.port, "2", "none", f"--pair-url={link.group(1)}", f"--identity={idp}"],

@@ -7,10 +7,10 @@ import UIKit
 
 extension StreamClient {
     /// Where this device's mute is kept: local, per device, remembered across launches.
-    static let soundMutedKey = "Sill.soundMuted"
+    static let soundMutedKey = "DuoDeck.soundMuted"
 
-    /// The Mac has sound: its settings on this connection carry Send Audio, on or off (Sill for Mac with
-    /// sound, and SillHost), so the Settings panel's Mute switch shows (Noah, 2026-10-27: Send Audio and
+    /// The Mac has sound: its settings on this connection carry Send Audio, on or off (DuoDeck Host with
+    /// sound, and DuoDeckHost), so the Settings panel's Mute switch shows (the maintainer, 2026-10-27: Send Audio and
     /// Mute as the panel's switches). Nil from a Mac without sound, and no settings yet, read as no.
     /// Across a move's hand-over, what the last connection said until the new one says
     /// (`soundAcrossMove`), so the switch never blinks out.
@@ -56,14 +56,14 @@ extension StreamClient {
     }
 
     #if DEBUG
-    /// `-SillSoundToggle <s>[,<s>…]`: at each of these seconds after the stream screen shows, the panel's
-    /// Mute switch is flipped as a tap would flip it (the harness cannot tap); `-SillSoundSwitchAt <s>`
+    /// `-DuoDeckSoundToggle <s>[,<s>…]`: at each of these seconds after the stream screen shows, the panel's
+    /// Mute switch is flipped as a tap would flip it (the harness cannot tap); `-DuoDeckSoundSwitchAt <s>`
     /// turns it on, then off a second later. Once per launch.
     func runSoundArguments() {
         guard !Self.soundArgumentsRan else { return }
         Self.soundArgumentsRan = true
         let defaults = UserDefaults.standard
-        let times = (defaults.string(forKey: "SillSoundToggle") ?? "")
+        let times = (defaults.string(forKey: "DuoDeckSoundToggle") ?? "")
             .split(whereSeparator: { $0 == "," || $0 == " " }).compactMap { Double($0) }.filter { $0 >= 0 }
         for t in times {
             DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
@@ -72,7 +72,7 @@ extension StreamClient {
                 self.setSoundMuted(!self.soundMuted)
             }
         }
-        let at = defaults.double(forKey: "SillSoundSwitchAt")
+        let at = defaults.double(forKey: "DuoDeckSoundSwitchAt")
         if at > 0 {
             for (dt, mute) in [(0.0, true), (1.0, false)] {
                 DispatchQueue.main.asyncAfter(deadline: .now() + at + dt) { [weak self] in

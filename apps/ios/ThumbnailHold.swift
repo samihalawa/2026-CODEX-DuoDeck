@@ -3,8 +3,8 @@ import Foundation
 /// How long a window's thumbnail is touched and held before its lights (close, minimize, full screen)
 /// show, and before it can be dragged to another place in the bar (issue #113). A setting of this
 /// device's own, the Settings panel's This iPad (or iPhone) group: "Hold to Show Window Controls", a
-/// stepper from 0.2 to 2 s in tenths of a second, 0.5 s unless changed (Noah, 2026-10-29; it was a
-/// fixed 1.5 s, three times iOS's own long press). Stored as `Sill.thumbnailHold`, a Double in
+/// stepper from 0.2 to 2 s in tenths of a second, 0.5 s unless changed (the maintainer, 2026-10-29; it was a
+/// fixed 1.5 s, three times iOS's own long press). Stored as `DuoDeck.thumbnailHold`, a Double in
 /// seconds, never sent to the Mac.
 ///
 /// WindowStrip reads it for every thumbnail of every bar (sideways, an iPad's portrait window bar, a
@@ -15,10 +15,10 @@ import Foundation
 ///
 /// Pure: Foundation only, checked in Tests/checks/thumbnail-hold.
 enum ThumbnailHold {
-    /// The UserDefaults key (`@AppStorage` in WindowStrip and the Settings panel). `-Sill.thumbnailHold
+    /// The UserDefaults key (`@AppStorage` in WindowStrip and the Settings panel). `-DuoDeck.thumbnailHold
     /// 0.3` holds it at 0.3 s for one run (the argument domain is read first, so the stepper's changes
     /// are saved for the next run but this one keeps 0.3).
-    static let key = "Sill.thumbnailHold"
+    static let key = "DuoDeck.thumbnailHold"
     /// The shortest and the longest hold, in tenths of a second: the stepper steps a tenth at a time,
     /// in whole tenths, so no sum of steps drifts off the grid.
     static let tenthsRange: ClosedRange<Int> = 2...20
@@ -54,7 +54,7 @@ enum ThumbnailHold {
     static func seconds(_ value: Double) -> Double { seconds(tenths: tenths(value)) }
 
     /// What a stored value means, whatever UserDefaults hands back: a number (a Double, an Int or a
-    /// Bool, each an NSNumber there), or a string as a launch argument gives it (`-Sill.thumbnailHold
+    /// Bool, each an NSNumber there), or a string as a launch argument gives it (`-DuoDeck.thumbnailHold
     /// 0.3`). Nothing stored, or nothing that reads as a number, is the standard half second.
     static func seconds(stored: Any?) -> Double {
         switch stored {

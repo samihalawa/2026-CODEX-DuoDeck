@@ -1,7 +1,7 @@
 import Foundation
 
 // A device's key held down repeats on the Mac as the Mac's own keyboard repeats a key (#162):
-// KeyRepeat (Sources/SillHost/KeyRepeat.swift), put through a model of InputInjector's glue with the
+// KeyRepeat (Sources/DuoDeckHost/KeyRepeat.swift), put through a model of InputInjector's glue with the
 // real KeyStrokes: each keyboard event posted is told to the repeat (`posted`), and the repeat is
 // stepped at the times it names (`step`), as InputInjector's task does, with each device's messages (a
 // device pings every 0.25 s) and where input lands. The scenarios give the exact events and times; the
@@ -9,8 +9,8 @@ import Foundation
 // down on the Mac, after the delay, its device heard, its input landing, with the flags in force) and
 // live (with nothing in the way, a repeat at every interval after the delay).
 //
-// Compiled with Sources/StreamProtocol, Sources/SillHost/KeyRepeat.swift and KeyStrokes.swift as one
-// module (-package-name sill), as build.sh does.
+// Compiled with Sources/StreamProtocol, Sources/DuoDeckHost/KeyRepeat.swift and KeyStrokes.swift as one
+// module (-package-name duodeck), as build.sh does.
 
 var failures = 0, checks = 0
 func check(_ ok: Bool, _ what: @autoclosure () -> String, line: Int = #line) {

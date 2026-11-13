@@ -22,7 +22,7 @@ public enum ClipboardPolicy {
     public static let deviceExpiry = 600.0
     /// How long the chip stays at most.
     public static let chipLifetime = 20.0
-    /// A session whose first list comes this soon after Sill became active still gets that look: an
+    /// A session whose first list comes this soon after DuoDeck became active still gets that look: an
     /// app switch long enough for the Mac to evict the suspended device brings a reconnect first.
     public static let activationWindow = 15.0
     /// How long "Sent to…" or "Too long…" stays.
@@ -49,7 +49,7 @@ public enum ClipboardPolicy {
     // MARK: The host
 
     /// A password manager's copy (marked `org.nspasteboard.ConcealedType`, or transient) goes to the
-    /// devices like any other copy since 2026-10-29 (Noah, having pasted one: "I think its fine to
+    /// devices like any other copy since 2026-10-29 (the maintainer, having pasted one: "I think its fine to
     /// copy password apps"); the builds before skipped the marked items unread.
     /// What came to the Mac from another of the person's devices through Universal Clipboard. Not
     /// sent: reading it would fetch it from that device (macOS shows that it is pasting from it) for
@@ -57,7 +57,7 @@ public enum ClipboardPolicy {
     public static let remoteClipboardType = "com.apple.is-remote-clipboard"
     /// On every item the host writes from a device's text, its value the host's launch ID
     /// (`WindowList.launchID`): this launch's own write is never sent back out.
-    public static let ownType = "me.saffer.sill.clipboard"
+    public static let ownType = "com.agentsai.duodeck.clipboard"
 
     public enum HostSkip: String, Equatable, Sendable {
         /// From another of the person's devices through Universal Clipboard (`remoteClipboardType`).
@@ -175,19 +175,19 @@ public enum ClipboardPolicy {
 
     // MARK: The host: macOS's paste privacy
 
-    /// What macOS lets Sill do with the Mac's clipboard: NSPasteboard's `accessBehavior` (macOS 15.4
+    /// What macOS lets DuoDeck do with the Mac's clipboard: NSPasteboard's `accessBehavior` (macOS 15.4
     /// and later; AppKit's NSPasteboard.h). macOS can ask before each read an app makes on its own, as
     /// iOS does, and lists the apps it has asked about in System Settings › Privacy & Security ›
-    /// Paste from Other Apps, where each can be set to ask, allow or deny. Sill reads the clipboard at
+    /// Paste from Other Apps, where each can be set to ask, allow or deny. DuoDeck reads the clipboard at
     /// each copy while a device shares it, with no one at the Mac asking it to, so it reads only
     /// while macOS allows every read (`hostLooks`; found in review: the access was never checked).
     public enum MacAccess: String, Equatable, Sendable {
         /// Every read allowed: `.alwaysAllow`, or a macOS before 15.4, which never asks.
         case allowed
-        /// macOS would ask before each read, and has not asked about Sill yet (`.default`): Sill is
+        /// macOS would ask before each read, and has not asked about DuoDeck yet (`.default`): DuoDeck is
         /// not listed in System Settings until it has.
         case notAsked
-        /// macOS asks before each read (`.ask`); Sill is listed in System Settings.
+        /// macOS asks before each read (`.ask`); DuoDeck is listed in System Settings.
         case asks
         /// macOS refuses every read (`.alwaysDeny`).
         case denied
@@ -283,8 +283,8 @@ public enum ClipboardPolicy {
 
     /// The chip, "Paste on ‹Mac›": while connected to a Mac that takes the clipboard with the switch
     /// on, when the device's clipboard has text (`hasStrings`, which never asks to paste) and its
-    /// change count is not the one Sill last handled (`handled`: sent, written from the Mac, or the
-    /// chip dismissed or timed out for it). Asked when Sill becomes active, and at a session's start
+    /// change count is not the one DuoDeck last handled (`handled`: sent, written from the Mac, or the
+    /// chip dismissed or timed out for it). Asked when DuoDeck becomes active, and at a session's start
     /// soon after (`looksAtSessionStart`).
     public static func offersChip(connected: Bool, hostClipboard: Int?, switchOn: Bool, hasStrings: Bool,
                                   changeCount: Int, handled: Int?) -> Bool {
@@ -292,7 +292,7 @@ public enum ClipboardPolicy {
     }
 
     /// Whether the chip's `chipLifetime` runs now: only while the chip is on screen (nothing open over
-    /// the stream, no note in its place), Sill is active, and VoiceOver is off. Hidden, it waits; with
+    /// the stream, no note in its place), DuoDeck is active, and VoiceOver is off. Hidden, it waits; with
     /// VoiceOver on it stays until Paste or Dismiss. Found in review: it ran out unseen under the tour
     /// or the Settings panel, and in 20 s for someone finding it with VoiceOver, and each time the copy
     /// counted as dealt with.
@@ -300,7 +300,7 @@ public enum ClipboardPolicy {
         onScreen && active && !voiceOver
     }
 
-    /// A session's first list that says the Mac takes the clipboard, at `now`: whether Sill's
+    /// A session's first list that says the Mac takes the clipboard, at `now`: whether DuoDeck's
     /// activation (`activatedAt`, nil for none yet) owes it the chip's look.
     public static func looksAtSessionStart(activatedAt: Double?, now: Double) -> Bool {
         guard let activatedAt else { return false }
@@ -336,7 +336,7 @@ public enum ClipboardPolicy {
     /// the worst recent round trip, and at least 4 s, as a settings pick waits.
     public static func receiptWait(worstRttMs: Int?) -> Double { max(4, 4 * Double(worstRttMs ?? 0) / 1000) }
 
-    /// Paste right away (2026-10-29; Noah, with the clipboard on his iPad: "still doesn't automatically
+    /// Paste right away (2026-10-29; the maintainer, with the clipboard on his iPad: "still doesn't automatically
     /// Cmd+V"): with this device's switch on (Paste on ‹Mac› Right Away, on unless turned off), a
     /// Paste's receipt also presses ⌘V on the Mac, ⌘'s own key around V (the device's KeyChord.paste),
     /// so the text lands where the Mac's cursor is: in the streamed window's app, which the Mac brings
@@ -445,7 +445,7 @@ public enum ClipboardPolicy {
                : "Nothing you copy goes between this \(device) and \(mac) while this is off."
         }
 
-        // Sill for Mac's Settings › General, under Share clipboard with devices.
+        // DuoDeck Host's Settings › General, under Share clipboard with devices.
         /// Its footnote ("theirs here" read as if a device's copies came by themselves, so it names Paste;
         /// a password manager's copies go like any other since 2026-10-29, so it no longer excepts them).
         public static let macFootnote = "Text you copy here can be pasted on a connected iPhone or iPad, and text sent from one with Paste becomes this Mac’s."
@@ -453,16 +453,16 @@ public enum ClipboardPolicy {
         public static func macAccessWarning(_ access: MacAccess) -> String? {
             switch access {
             case .allowed: return nil
-            case .notAsked, .asks: return "macOS asks before Sill reads the clipboard, so what you copy here stays on this Mac."
-            case .denied: return "macOS doesn’t let Sill read the clipboard, so what you copy here stays on this Mac."
+            case .notAsked, .asks: return "macOS asks before DuoDeck reads the clipboard, so what you copy here stays on this Mac."
+            case .denied: return "macOS doesn’t let DuoDeck read the clipboard, so what you copy here stays on this Mac."
             }
         }
         /// …what to do about it, beside `macAccessButton`.
         public static func macAccessHint(_ access: MacAccess) -> String? {
             switch access {
             case .allowed: return nil
-            case .notAsked: return "Click Allow in System Settings: macOS asks about Sill once, then Privacy & Security opens, where you set Sill to Allow under Paste from Other Apps. Text a device sends with Paste still arrives."
-            case .asks, .denied: return "Set Sill to Allow under Paste from Other Apps in Privacy & Security. Text a device sends with Paste still arrives."
+            case .notAsked: return "Click Allow in System Settings: macOS asks about DuoDeck once, then Privacy & Security opens, where you set DuoDeck to Allow under Paste from Other Apps. Text a device sends with Paste still arrives."
+            case .asks, .denied: return "Set DuoDeck to Allow under Paste from Other Apps in Privacy & Security. Text a device sends with Paste still arrives."
             }
         }
         public static let macAccessButton = "Allow in System Settings…"
@@ -470,11 +470,11 @@ public enum ClipboardPolicy {
         public static func macAccessLine(_ access: MacAccess) -> String {
             switch access {
             case .allowed:
-                return "Clipboard: macOS lets Sill read the clipboard again; what is copied on this Mac from now on goes to devices."
+                return "Clipboard: macOS lets DuoDeck read the clipboard again; what is copied on this Mac from now on goes to devices."
             case .notAsked, .asks:
-                return "Clipboard: macOS asks before Sill reads the clipboard, so what is copied on this Mac stays here. To send it, allow Sill under Paste from Other Apps in System Settings › Privacy & Security (Sill’s Settings › General has the way there)."
+                return "Clipboard: macOS asks before DuoDeck reads the clipboard, so what is copied on this Mac stays here. To send it, allow DuoDeck under Paste from Other Apps in System Settings › Privacy & Security (DuoDeck’s Settings › General has the way there)."
             case .denied:
-                return "Clipboard: macOS does not let Sill read the clipboard, so what is copied on this Mac stays here. To send it, allow Sill under Paste from Other Apps in System Settings › Privacy & Security."
+                return "Clipboard: macOS does not let DuoDeck read the clipboard, so what is copied on this Mac stays here. To send it, allow DuoDeck under Paste from Other Apps in System Settings › Privacy & Security."
             }
         }
 

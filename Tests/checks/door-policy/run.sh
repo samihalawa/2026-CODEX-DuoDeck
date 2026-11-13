@@ -1,5 +1,5 @@
 #!/bin/bash
-# DoorPolicy (Sources/SillHost), who each door admits: both doors, each origin, each ALPN, Require
+# DoorPolicy (Sources/DuoDeckHost), who each door admits: both doors, each origin, each ALPN, Require
 # pairing on and off, paired or not, a window or not; the ask rule's six steps in order; what the
 # device gate's hold is judged by again (afterGate); which hosts take the test hooks
 # (docs/home-pairing-plan.md §4.2); the places waiting for admission (Places: what waiting costs, the

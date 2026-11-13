@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security problem privately
-    url: https://github.com/Saffsanity/sill/security/policy
+    url: https://github.com/samihalawa/2026-CODEX-DuoDeck/security/policy
     about: Never in a public issue. SECURITY.md says how.
-  - name: Help setting Sill up
-    url: https://getsill.app/support
+  - name: Help setting DuoDeck up
+    url: https://duodeck.megawebs.com/support
     about: Quick fixes for the common problems, and the support address.
   - name: How to contribute, and the tip jar
-    url: https://getsill.app/contribute
-    about: Sponsoring Sill, the people who have, and what makes a pull request easy to merge.
+    url: https://duodeck.megawebs.com/contribute
+    about: Sponsoring DuoDeck, the people who have, and what makes a pull request easy to merge.

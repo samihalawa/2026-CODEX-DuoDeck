@@ -56,7 +56,7 @@ The current source contains the iOS client, Mac host and website. Android, Windo
 | Tests | Engine and UI-policy checks |
 | docs/PRODUCT_BRIEF.md | Product direction and execution prompt |
 
-Sources and iOSClient are compatibility symlinks. Internal Sill symbols and the wire service name remain where compatibility requires them; there is one implementation per platform.
+Sources and iOSClient are compatibility symlinks. there is one implementation per platform.
 
 ## Run the website
 
@@ -75,7 +75,7 @@ The site listens on port 3000 by default. Its interactive preview demonstrates t
 ./script/build_and_run.sh --package
 ```
 
-The script builds the universal app bundle, compiles the shared PNG into Mac icon resources, selects an available signing identity, verifies the signature and packages the host. Distribution uses an Agents AI Ltd. Developer ID certificate and Apple notarization. Upstream restricted entitlements are not reused.
+The script builds the universal app bundle, compiles the shared PNG into Mac icon resources, selects an available signing identity, verifies the signature and packages the host. Distribution uses an Agents AI Ltd. Developer ID certificate and Apple notarization.
 
 ```sh
 ./script/release_mac.sh
@@ -86,7 +86,7 @@ Provide DUODECK_NOTARY_KEY, DUODECK_NOTARY_KEY_ID and DUODECK_NOTARY_ISSUER thro
 
 ## Build the iOS client
 
-Open apps/ios/Sill.xcodeproj, select the Sill scheme and the DuoDeck signing team, then build. The internal scheme and product name preserve the upstream project wiring; the installed app is DuoDeck, bundle com.agentsai.duodeck.
+Open apps/ios/DuoDeck.xcodeproj, select the DuoDeck scheme and signing team, then build. The installed app is DuoDeck, bundle com.agentsai.duodeck.
 
 ```sh
 npm run build:ios
@@ -106,6 +106,6 @@ The native checks cover protocol, pairing, gestures, input, layout, settings and
 
 ## License and attribution
 
-DuoDeck is an independent project derived from the Apache 2.0 licensed [Sill](https://github.com/Saffsanity/sill) engine. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Original Sill software copyright 2026 Noah Saffer. DuoDeck changes copyright 2026 Agents AI Ltd. Neither the Sill authors nor Apple endorse DuoDeck.
+DuoDeck is licensed under Apache 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Apple does not endorse DuoDeck.
 
-Historical upstream design notes remain under docs for engineering context. Current operational directions are this README, AGENTS.md, docs/PRODUCT_BRIEF.md and the DuoDeck release checklist.
+Earlier design notes remain under docs for engineering context. Current operational directions are this README, AGENTS.md, docs/PRODUCT_BRIEF.md and the DuoDeck release checklist.

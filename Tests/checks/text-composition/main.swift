@@ -378,17 +378,17 @@ do {   // dictation sending each hypothesis of one utterance again, whole, throu
 do {   // a Tab typed as text: a form goes on to its next field
     var c = C()
     var mac = ""
-    type(c.insert("Noah"), into: &c, mac: &mac)
+    type(c.insert("Adam"), into: &c, mac: &mac)
     let taken = c.generation
     let forgot = type(c.insert("\t"), into: &c, mac: &mac)
     check("a Tab typed as text goes, what was typed kept, what came before it final",
-          !forgot && mac == "Noah\t" && c.sent == "Noah\t" && c.generation == taken && c.fence == 5)
-    let out = c.replace(NSRange(location: 0, length: 4), with: "Noah S", taken: taken)
-    check("…so a correction of what came before it sends no backspaces into the next field", out == [] && mac == "Noah\t")
-    type(c.insert("Saffer"), into: &c, mac: &mac)
-    let next = c.replace(NSRange(location: 5, length: 6), with: "Saffer.", taken: taken)
+          !forgot && mac == "Adam\t" && c.sent == "Adam\t" && c.generation == taken && c.fence == 5)
+    let out = c.replace(NSRange(location: 0, length: 4), with: "Adam S", taken: taken)
+    check("…so a correction of what came before it sends no backspaces into the next field", out == [] && mac == "Adam\t")
+    type(c.insert("Miller"), into: &c, mac: &mac)
+    let next = c.replace(NSRange(location: 5, length: 6), with: "Miller.", taken: taken)
     type(next, into: &c, mac: &mac)
-    check("…and what is typed in the next field is corrected there", next == [.text(".")] && mac == "Noah\tSaffer." && c.sent == mac)
+    check("…and what is typed in the next field is corrected there", next == [.text(".")] && mac == "Adam\tMiller." && c.sent == mac)
 }
 
 do {   // a second Return, and two in one text: the fence moves to just after the last

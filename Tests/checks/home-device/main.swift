@@ -14,7 +14,7 @@ let methods: [P.Method?] = [nil, .wired, .wifi, .direct]
 // MARK: §7.3, every combination against the table
 
 func wordOracle(_ door: P.HomeDoor, saved: Bool, revoked: Bool, homeTLS: Bool, debug: Bool, method: P.Method?, cable: Bool) -> W {
-    if door == .plain { return debug && !homeTLS ? .method(method) : .updateSill }        // the last two rows
+    if door == .plain { return debug && !homeTLS ? .method(method) : .updateDuoDeck }        // the last two rows
     if saved && !revoked { return .method(method) }                                      // a saved Mac on a TLS door
     if !saved && door == .open { return .openDoor }                                      // unsaved, p=0: Not paired (the review)
     return method == .wired && cable ? .pairsOverCable : .notPaired                      // unsaved or revoked, p=1 (or revoked, p=0)
@@ -60,17 +60,17 @@ for m in methods { for c in [false, true] { for tls in [false, true] {
 check("§7.3: an unsaved open door's row never reads like a paired Mac's, in its word or its VoiceOver label", neverLikePaired)
 check("§7.3: no p, DEBUG, not homeTLS: its method (a plain door, as today)", word(.plain, debug: true, .wired) == .method(.wired)
       && word(.plain, saved: true, debug: true, .wifi) == .method(.wifi) && word(.plain, debug: true, nil).word == nil)
-check("§7.3: no p, Release: Update DuoDeck, saved or not", word(.plain, .wifi) == .updateSill && word(.plain, saved: true, .wifi) == .updateSill
+check("§7.3: no p, Release: Update DuoDeck, saved or not", word(.plain, .wifi) == .updateDuoDeck && word(.plain, saved: true, .wifi) == .updateDuoDeck
       && word(.plain, .wifi).word == "Update DuoDeck")
-check("§7.3: no p and homeTLS: Update DuoDeck, in DEBUG too (no downgrade)", word(.plain, saved: true, homeTLS: true, debug: true, .wifi) == .updateSill
-      && word(.plain, saved: true, revoked: true, homeTLS: true, debug: true, .wired, cable: true) == .updateSill)
+check("§7.3: no p and homeTLS: Update DuoDeck, in DEBUG too (no downgrade)", word(.plain, saved: true, homeTLS: true, debug: true, .wifi) == .updateDuoDeck
+      && word(.plain, saved: true, revoked: true, homeTLS: true, debug: true, .wired, cable: true) == .updateDuoDeck)
 check("§7.3: every homeTLS combination without p reads Update DuoDeck", (0..<16).allSatisfy { bits in
     methods.allSatisfy { m in P.rowWord(door: .plain, saved: bits & 1 != 0, revoked: bits & 2 != 0, homeTLS: true, debug: bits & 4 != 0,
-                                        method: m, cable: bits & 8 != 0) == .updateSill } })
+                                        method: m, cable: bits & 8 != 0) == .updateDuoDeck } })
 
 // Words, labels and hints (VoiceOver, S7).
 check("words: Not paired, Wired, Update DuoDeck, and the method's own (Wi-Fi with a non-breaking hyphen)",
-      W.notPaired.word == "Not paired" && W.pairsOverCable.word == "Wired" && W.updateSill.word == "Update DuoDeck"
+      W.notPaired.word == "Not paired" && W.pairsOverCable.word == "Wired" && W.updateDuoDeck.word == "Update DuoDeck"
       && W.method(.wifi).word == "Wi\u{2011}Fi" && W.method(.direct).word == "Direct" && W.method(nil).word == nil)
 check("label: \"Mac mini, not paired\"", W.notPaired.label(name: mini) == "Mac mini, not paired")
 check("an open door's row: \"Not paired\", \"Mac mini, not paired\", hint \"Connects without pairing: Mac mini lets any device in.\"",
@@ -80,24 +80,24 @@ check("an open door's row: \"Not paired\", \"Mac mini, not paired\", hint \"Conn
 check("label: \"Mac mini, Wired\" over the cable", W.pairsOverCable.label(name: mini) == "Mac mini, Wired")
 check("label: as today for a method (\"Mac mini, Wi‑Fi\"), and the name alone without one",
       W.method(.wifi).label(name: mini) == "Mac mini, Wi\u{2011}Fi" && W.method(nil).label(name: mini) == "Mac mini")
-check("label: \"Mac mini, Update DuoDeck\"", W.updateSill.label(name: mini) == "Mac mini, Update DuoDeck")
+check("label: \"Mac mini, Update DuoDeck\"", W.updateDuoDeck.label(name: mini) == "Mac mini, Update DuoDeck")
 check("hint: Not paired: \"Pairs with a code Mac mini shows, then connects.\"",
       W.notPaired.hint(name: mini, device: "iPad", direct: false) == "Pairs with a code Mac mini shows, then connects.")
 check("hint: over the cable: \"Pairs over the USB cable, then connects.\"",
       W.pairsOverCable.hint(name: mini, device: "iPad", direct: false) == "Pairs over the USB cable, then connects.")
 check("hint: Update DuoDeck: \"Mac mini’s DuoDeck is too old for this iPad.\" (a typographic apostrophe; the device's kind)",
-      W.updateSill.hint(name: mini, device: "iPad", direct: false) == "Mac mini\u{2019}s DuoDeck is too old for this iPad."
-      && W.updateSill.hint(name: mini, device: "iPhone", direct: false) == "Mac mini\u{2019}s DuoDeck is too old for this iPhone.")
+      W.updateDuoDeck.hint(name: mini, device: "iPad", direct: false) == "Mac mini\u{2019}s DuoDeck is too old for this iPad."
+      && W.updateDuoDeck.hint(name: mini, device: "iPhone", direct: false) == "Mac mini\u{2019}s DuoDeck is too old for this iPhone.")
 check("hint: a method row keeps today's (Direct: \"Connects without a shared Wi‑Fi network\", else none)",
       W.method(.direct).hint(name: mini, device: "iPad", direct: true) == "Connects without a shared Wi\u{2011}Fi network"
       && W.method(.wifi).hint(name: mini, device: "iPad", direct: false) == "")
 check("status: \"Mac mini runs an older DuoDeck. Update DuoDeck on the Mac to connect.\"",
-      P.updateSillStatus(mac: mini) == "Mac mini runs an older DuoDeck. Update DuoDeck on the Mac to connect.")
+      P.updateDuoDeckStatus(mac: mini) == "Mac mini runs an older DuoDeck. Update DuoDeck on the Mac to connect.")
 
 // MARK: §7.4, every combination against the table
 
 func dialOracle(_ door: P.HomeDoor, saved: Bool, revoked: Bool, homeTLS: Bool, debug: Bool, tap: Bool) -> H {
-    if door == .plain { return debug && !homeTLS ? .plain : .updateSill }
+    if door == .plain { return debug && !homeTLS ? .plain : .updateDuoDeck }
     if saved && !revoked { return .pinned }
     if saved && revoked { return tap ? .ask(pinned: true) : .waitForTap }
     if door == .open { return .anyKey }
@@ -114,13 +114,13 @@ check("homeDial: \(hdOK) of \(hd) combinations match §7.4", hd == hdOK)
 func dial(_ d: P.HomeDoor, saved: Bool = false, revoked: Bool = false, homeTLS: Bool = false, debug: Bool = false, tap: Bool = true) -> H {
     P.homeDial(door: d, saved: saved, revoked: revoked, homeTLS: homeTLS, debug: debug, tap: tap)
 }
-check("§7.4: saved, not revoked, TLS door: sill/1 pinned (p=1 and p=0)", dial(.pairingRequired, saved: true) == .pinned && dial(.open, saved: true) == .pinned)
+check("§7.4: saved, not revoked, TLS door: duodeck/1 pinned (p=1 and p=0)", dial(.pairingRequired, saved: true) == .pinned && dial(.open, saved: true) == .pinned)
 check("§7.4: saved and revoked: the ask, pinned to the saved key (p=1 and p=0)", dial(.pairingRequired, saved: true, revoked: true) == .ask(pinned: true)
       && dial(.open, saved: true, revoked: true) == .ask(pinned: true))
 check("§7.4: unsaved with p=1: the ask, any key", dial(.pairingRequired) == .ask(pinned: false))
-check("§7.4: unsaved, p=0: sill/1 with any Mac key", dial(.open) == .anyKey)
+check("§7.4: unsaved, p=0: duodeck/1 with any Mac key", dial(.open) == .anyKey)
 check("§7.4: no p, DEBUG, not homeTLS: plain, as today", dial(.plain, debug: true) == .plain && dial(.plain, saved: true, debug: true) == .plain)
-check("§7.4: no p otherwise: nothing dialed (Release; homeTLS in DEBUG)", dial(.plain) == .updateSill && dial(.plain, saved: true, homeTLS: true, debug: true) == .updateSill)
+check("§7.4: no p otherwise: nothing dialed (Release; homeTLS in DEBUG)", dial(.plain) == .updateDuoDeck && dial(.plain, saved: true, homeTLS: true, debug: true) == .updateDuoDeck)
 check("§7.4: the automatic reconnect follows the table but never asks",
       dial(.pairingRequired, tap: false) == .waitForTap && dial(.pairingRequired, saved: true, revoked: true, tap: false) == .waitForTap
       && dial(.pairingRequired, saved: true, tap: false) == .pinned && dial(.open, tap: false) == .anyKey && dial(.plain, debug: true, tap: false) == .plain)
@@ -150,7 +150,7 @@ for d in doors { for bits in 0..<32 { for m in methods {
     switch w {
     case .notPaired, .pairsOverCable: ok = asks
     case .openDoor: ok = t == .anyKey
-    case .updateSill: ok = t == .updateSill
+    case .updateDuoDeck: ok = t == .updateDuoDeck
     case .method: ok = t == .pinned || t == .plain
     }
     agree += ok ? 1 : 0
@@ -181,7 +181,7 @@ check("a look-alike on an open door (p=0): pinned to the saved key, not any key"
       && lookAlike(.open, homeTLS: false, debug: true) == .pinned)
 check("a look-alike on a door that requires pairing: pinned (the reconnect's rule)", lookAlike(.pairingRequired, homeTLS: true, debug: false) == .pinned)
 check("a look-alike with no p, the saved Mac seen over TLS: nothing dialed (Update DuoDeck), in DEBUG too",
-      lookAlike(.plain, homeTLS: true, debug: true) == .updateSill && lookAlike(.plain, homeTLS: true, debug: false) == .updateSill)
+      lookAlike(.plain, homeTLS: true, debug: true) == .updateDuoDeck && lookAlike(.plain, homeTLS: true, debug: false) == .updateDuoDeck)
 check("a look-alike's row reads as the saved Mac's does (a tap is the saved Mac's dial), and its word is not an open door's",
       P.rowWord(door: .open, saved: true, revoked: false, homeTLS: true, debug: false, method: .wifi, cable: false) == .method(.wifi))
 
@@ -265,7 +265,7 @@ func trustOracle(_ d: H, _ pin: Data?) -> T? {
     case .pinned: return pin.map { T.saved(pin: $0) }
     case .anyKey: return .open(seen: nil)
     case .plain: return .plain
-    case .ask, .updateSill, .waitForTap: return nil
+    case .ask, .updateDuoDeck, .waitForTap: return nil
     }
 }
 var st = 0, stOK = 0, tlsNeverPlain2 = true, releaseNeverPlain2 = true, asksNoSession = true
@@ -404,7 +404,7 @@ check("copy: the home card's errors", C.stopped(mac: mini) == "Mac mini stopped 
 
 // A refused proof at home (the security review, 2026-09-27): kind 20's reason → the card's words.
 // After a stop, and after a code closed (the Mac's Cancel, or used by another device), the Mac keeps
-// this device quiet, so a tap alone gets no new code: the words send the person to the Sill menu
+// this device quiet, so a tap alone gets no new code: the words send the person to the DuoDeck menu
 // first. After an expiry a tap gets one (AskLimits: an expired window quiets nobody).
 typealias R = DiscoveryPolicy.HomeRefusal
 check("refusal: code → a wrong code, with the tries left (never below 0)", P.homeRefusal(reason: "code", triesLeft: 4) == .wrongCode(triesLeft: 4)
@@ -421,7 +421,7 @@ func refusalWords(_ r: R) -> String {
     case .closed: return C.closed(mac: mini)
     }
 }
-check("refusal: stopped and closed send the person to the Sill menu before a tap",
+check("refusal: stopped and closed send the person to the DuoDeck menu before a tap",
       [R.stopped, .closed].allSatisfy { refusalWords($0).contains("choose Pair iPhone or iPad\u{2026} in the DuoDeck menu, then tap Mac mini again") })
 check("refusal: expired, and only expired, says a tap alone gets a new code",
       refusalWords(.expired).hasSuffix("Tap Mac mini for a new one.") && ![R.stopped, .closed].contains { refusalWords($0).contains("for a new") })
@@ -434,7 +434,7 @@ typealias Away = DiscoveryPolicy.AwayFromHome
 func away(saved: Bool = false, remote: Bool = false, remoteAccess: Bool = false, tls: Bool = false) -> Away {
     P.awayFromHome(saved: saved, remoteSession: remote, remoteAccess: remoteAccess, tlsAtHome: tls)
 }
-check("away: a saved Mac at home over TLS, Remote Access on: Paired, and how Sill reaches it from afar",
+check("away: a saved Mac at home over TLS, Remote Access on: Paired, and how DuoDeck reaches it from afar",
       away(saved: true, remoteAccess: true, tls: true) == .paired(.reaches))
 check("away: a saved Mac at home over TLS, Remote Access off: Paired, and how to turn Remote Access on",
       away(saved: true, remoteAccess: false, tls: true) == .paired(.turnOnRemoteAccess))
@@ -509,7 +509,7 @@ for d in doors { for bits in 0..<16 {
     if (end != nil) != (dial == .waitForTap) { endsExactlyWhenWaiting = false }
     if let end, end != (b(0) ? .removed : .pairingRequired) { endsExactlyWhenWaiting = false }
     // A row the reconnect dials, or one too old (Update DuoDeck, which it keeps looking past), never ends it.
-    if P.sessionTrust(dial, savedPin: Data([1])) != nil || dial == .updateSill, end != nil { endsExactlyWhenWaiting = false }
+    if P.sessionTrust(dial, savedPin: Data([1])) != nil || dial == .updateDuoDeck, end != nil { endsExactlyWhenWaiting = false }
 } }
 check("reconnectEnd: over all \(endsAll) reconnects, it ends exactly at a row that waits for a tap, with the words of why", endsExactlyWhenWaiting)
 check("reconnectEnd's words: the goodbye's own", C.pairingRequired(mac: mini, device: "iPad") == "Mac mini now asks devices to pair. Tap it to pair this iPad."
@@ -576,13 +576,13 @@ check("walk: that session's moves (to the cable, to Wi-Fi) were pinned to A alre
 let plainRow = { (debug: Bool, tap: Bool) in P.homeDial(door: .plain, saved: false, revoked: false, homeTLS: false, debug: debug, tap: tap) }
 check("walk (DEBUG): a plain door under A's name is not dialed by the reconnect after A's session, nor in Release",
       plainRow(true, false) == .plain && P.reconnectTrust(plainRow(true, false), savedPin: nil, seen: P.reconnectKey(lost: openSession)) == nil
-      && plainRow(false, false) == .updateSill && P.reconnectTrust(plainRow(false, false), savedPin: nil, seen: P.reconnectKey(lost: openSession)) == nil)
+      && plainRow(false, false) == .updateDuoDeck && P.reconnectTrust(plainRow(false, false), savedPin: nil, seen: P.reconnectKey(lost: openSession)) == nil)
 check("walk (DEBUG): the reconnect after a plain session still dials a plain door, and a tap dials one, as before",
       P.reconnectTrust(plainRow(true, false), savedPin: nil, seen: P.reconnectKey(lost: .plain)) == .plain
       && P.sessionTrust(plainRow(true, true), savedPin: nil) == .plain)
 check("walk: that plain door looked past, the reconnect goes on (it does not wait for a tap)", P.reconnectEnd(plainRow(true, false), saved: false) == nil)
 // The review of #255 (2026-10-29): a tap clears the reconnect and dials any key, so one tap whose dial ended
-// before its handshake (as "…Sill keeps trying, or tap it to try now." invites while the Mac is away) left a
+// before its handshake (as "…DuoDeck keeps trying, or tap it to try now." invites while the Mac is away) left a
 // reconnect that took any key under the lost Mac's name. It takes the key the last session under that name saw.
 check("reconnectKey: a session that never saw a key takes the earlier one under its name (the review of #255)",
       P.reconnectKey(lost: .open(seen: nil), earlier: kA) == kA)
@@ -629,43 +629,43 @@ for t in [P.HomeTrust.plain, .saved(pin: kM), .saved(pin: kX), .open(seen: nil),
 }
 check("removed revokes at home exactly when the session is pinned to the saved Mac's key, over every trust", revokesAsPinned)
 
-// MARK: A Mac set up again with a new key (Noah, 2026-09-27: Sill for Mac 0.4.0 made the Mac a new
+// MARK: A Mac set up again with a new key (the maintainer, 2026-09-27: DuoDeck Host 0.4.0 made the Mac a new
 // key and recognition key; its row read the saved Mac's "Wi-Fi" by its name and a tap dialed the old
 // key for ever)
 
-let names: [(macID: String, bonjourName: String?)] = [("OLD", "Noah’s MacBook Pro")]
-let noah = "Noah’s MacBook Pro"
+let names: [(macID: String, bonjourName: String?)] = [("OLD", "the maintainer’s MacBook Pro")]
+let sample = "the maintainer’s MacBook Pro"
 check("rowMac: a row whose tag names no saved Mac is none, under a saved Mac's name too",
-      P.rowMac(tagged: nil, carriesTag: true, name: noah, saved: names) == nil)
+      P.rowMac(tagged: nil, carriesTag: true, name: sample, saved: names) == nil)
 check("rowMac: a tagless row under that name is still the saved Mac, by name alone; a tag naming it is it",
-      P.rowMac(tagged: nil, carriesTag: false, name: noah, saved: names)! == ("OLD", false)
+      P.rowMac(tagged: nil, carriesTag: false, name: sample, saved: names)! == ("OLD", false)
       && P.rowMac(tagged: "OLD", carriesTag: true, name: "Other", saved: names)! == ("OLD", true))
-check("otherTagUnderSavedName: a tag naming no saved Mac, under a saved Mac's name", P.otherTagUnderSavedName(tagged: nil, carriesTag: true, name: noah, saved: names))
+check("otherTagUnderSavedName: a tag naming no saved Mac, under a saved Mac's name", P.otherTagUnderSavedName(tagged: nil, carriesTag: true, name: sample, saved: names))
 check("otherTagUnderSavedName: not for a tagless row, a saved Mac's tag, or another name",
-      !P.otherTagUnderSavedName(tagged: nil, carriesTag: false, name: noah, saved: names)
-      && !P.otherTagUnderSavedName(tagged: "OLD", carriesTag: true, name: noah, saved: names)
+      !P.otherTagUnderSavedName(tagged: nil, carriesTag: false, name: sample, saved: names)
+      && !P.otherTagUnderSavedName(tagged: "OLD", carriesTag: true, name: sample, saved: names)
       && !P.otherTagUnderSavedName(tagged: nil, carriesTag: true, name: "Office", saved: names))
 check("rowDoor: such a row on an open door asks (never any key); p=1 and plain as they are; other rows as they are",
       P.rowDoor(.open, otherTagUnderSavedName: true) == .pairingRequired && P.rowDoor(.pairingRequired, otherTagUnderSavedName: true) == .pairingRequired
       && P.rowDoor(.plain, otherTagUnderSavedName: true) == .plain && doors.allSatisfy { P.rowDoor($0, otherTagUnderSavedName: false) == $0 })
 // The re-keyed Mac's row, as recomputeMacs and homeDecision take it: not saved, its door by rowDoor.
 for (d, label) in [(P.HomeDoor.pairingRequired, "p=1"), (.open, "p=0")] {
-    let door = P.rowDoor(d, otherTagUnderSavedName: P.otherTagUnderSavedName(tagged: nil, carriesTag: true, name: noah, saved: names))
-    let saved = P.rowMac(tagged: nil, carriesTag: true, name: noah, saved: names) != nil
+    let door = P.rowDoor(d, otherTagUnderSavedName: P.otherTagUnderSavedName(tagged: nil, carriesTag: true, name: sample, saved: names))
+    let saved = P.rowMac(tagged: nil, carriesTag: true, name: sample, saved: names) != nil
     check("a re-keyed Mac's row (\(label)): Not paired, a tap asks with any key, the reconnect waits for a tap",
           P.rowWord(door: door, saved: saved, revoked: false, homeTLS: false, debug: false, method: .wifi, cable: false) == .notPaired
           && P.homeDial(door: door, saved: saved, revoked: false, homeTLS: false, debug: false, tap: true) == .ask(pinned: false)
           && P.homeDial(door: door, saved: saved, revoked: false, homeTLS: false, debug: true, tap: false) == .waitForTap)
 }
-check("reconnectMatches: by the row's tag when both have one", P.reconnectMatches(savedID: "OLD", bonjourName: noah, rowMacID: "OLD", rowName: "x", rowCarriesTag: true)
-      && !P.reconnectMatches(savedID: "OLD", bonjourName: noah, rowMacID: "NEW", rowName: noah, rowCarriesTag: true))
+check("reconnectMatches: by the row's tag when both have one", P.reconnectMatches(savedID: "OLD", bonjourName: sample, rowMacID: "OLD", rowName: "x", rowCarriesTag: true)
+      && !P.reconnectMatches(savedID: "OLD", bonjourName: sample, rowMacID: "NEW", rowName: sample, rowCarriesTag: true))
 check("reconnectMatches: a saved Mac by name only from a tagless row, never one whose tag names no saved Mac",
-      P.reconnectMatches(savedID: "OLD", bonjourName: noah, rowMacID: nil, rowName: noah, rowCarriesTag: false)
-      && !P.reconnectMatches(savedID: "OLD", bonjourName: noah, rowMacID: nil, rowName: noah, rowCarriesTag: true))
+      P.reconnectMatches(savedID: "OLD", bonjourName: sample, rowMacID: nil, rowName: sample, rowCarriesTag: false)
+      && !P.reconnectMatches(savedID: "OLD", bonjourName: sample, rowMacID: nil, rowName: sample, rowCarriesTag: true))
 check("reconnectMatches: an unsaved Mac's reconnect by name, tag or none (as before)",
-      P.reconnectMatches(savedID: nil, bonjourName: noah, rowMacID: nil, rowName: noah, rowCarriesTag: true)
-      && P.reconnectMatches(savedID: nil, bonjourName: noah, rowMacID: nil, rowName: noah, rowCarriesTag: false)
-      && !P.reconnectMatches(savedID: nil, bonjourName: noah, rowMacID: nil, rowName: "Office", rowCarriesTag: false))
+      P.reconnectMatches(savedID: nil, bonjourName: sample, rowMacID: nil, rowName: sample, rowCarriesTag: true)
+      && P.reconnectMatches(savedID: nil, bonjourName: sample, rowMacID: nil, rowName: sample, rowCarriesTag: false)
+      && !P.reconnectMatches(savedID: nil, bonjourName: sample, rowMacID: nil, rowName: "Office", rowCarriesTag: false))
 // The pin refused (-9808) with no other row: paired again.
 let rowsOfOld: [(id: String, macID: String?)] = [("network:A", "OLD"), ("network:B", "OLD"), ("network:C", nil)]
 check("afterPinRefused: the other rows its tag names first", P.afterPinRefused(macID: "OLD", tried: ["network:A"], rows: rowsOfOld, tagNamed: true, tapped: true) == .nextRow("network:B"))
@@ -683,13 +683,13 @@ check("a Mac marked newKey: a tap asks with any key (its old key cannot answer),
           P.homeDial(door: $0, saved: true, revoked: rev, homeTLS: true, debug: false, tap: true, newKey: true) == .ask(pinned: false)
           && P.homeDial(door: $0, saved: true, revoked: rev, homeTLS: true, debug: true, tap: false, newKey: true) == .waitForTap } })
 check("a Mac marked newKey without p, seen over TLS: nothing dialed (Update DuoDeck)",
-      P.homeDial(door: .plain, saved: true, revoked: false, homeTLS: true, debug: true, tap: true, newKey: true) == .updateSill)
+      P.homeDial(door: .plain, saved: true, revoked: false, homeTLS: true, debug: true, tap: true, newKey: true) == .updateDuoDeck)
 check("reconnectEnd: a Mac marked newKey ends the reconnect with its words",
       P.reconnectEnd(P.homeDial(door: .pairingRequired, saved: true, revoked: false, homeTLS: true, debug: false, tap: false, newKey: true), saved: true, newKey: true) == .newKey
-      && C.newKey(mac: noah, device: "iPad") == "Noah’s MacBook Pro has a new key since this iPad paired. Tap it to pair again.")
+      && C.newKey(mac: sample, device: "iPad") == "the maintainer’s MacBook Pro has a new key since this iPad paired. Tap it to pair again.")
 check("a dial not the reconnect's ends after 10 s, the reconnect's own 5 s left as it is", P.tapDialDeadline == 10)
 
-// MARK: A row keeps its TXT record while its result stays listed (Noah's iPad, 2026-10-27: with the USB
+// MARK: A row keeps its TXT record while its result stays listed (the maintainer's iPad, 2026-10-27: with the USB
 // cable pulled, iPadOS listed the Mac on en2 and en0, then on en0 alone, with no TXT record at all, so
 // its row was taken by its name alone and read "Update DuoDeck"); a browser made again starts afresh (the
 // review of #232); each result of a name keeps its own (two domains)
@@ -791,15 +791,15 @@ check("rowRecords: a saved Mac seen over TLS is never dialed plain, whatever its
 
 // The console's three listings as recomputeMacs reads them: the Mac's record with the cable in (anpi0,
 // en2 and en0), then en2 and en0, then en0 alone, without one. "TAG" names the saved Mac "M", reached
-// as "Noah’s MacBook Pro" and seen over TLS.
-let savedNoah: [(macID: String, bonjourName: String?)] = [("M", noah)]
-let noahKey = k(noah)
+// as "the maintainer’s MacBook Pro" and seen over TLS.
+let savedSample: [(macID: String, bonjourName: String?)] = [("M", sample)]
+let sampleKey = k(sample)
 func unplugRow(_ record: Rec?, _ interfaces: [I], debug: Bool = false, homeTLS: Bool = true)
     -> (word: W, tap: H, reconnect: H, byName: Bool, macID: String?) {
     let tagged = record?.tag == "TAG" ? "M" : nil                  // SavedMacs.recognize, the saved record's tag
     let carries = !(record?.tag ?? "").isEmpty
-    let named = P.rowMac(tagged: tagged, carriesTag: carries, name: noah, saved: savedNoah)
-    let door = P.rowDoor(record?.door ?? .plain, otherTagUnderSavedName: P.otherTagUnderSavedName(tagged: tagged, carriesTag: carries, name: noah, saved: savedNoah))
+    let named = P.rowMac(tagged: tagged, carriesTag: carries, name: sample, saved: savedSample)
+    let door = P.rowDoor(record?.door ?? .plain, otherTagUnderSavedName: P.otherTagUnderSavedName(tagged: tagged, carriesTag: carries, name: sample, saved: savedSample))
     let method = P.method(direct: false, interfaces: interfaces)
     let cable = P.dialInterface(direct: false, interfaces: interfaces).map { P.carriesOnlyLinkLocal($0, own: iPadOwn) } ?? false
     return (P.rowWord(door: door, saved: named != nil, revoked: false, homeTLS: homeTLS, debug: debug, method: method, cable: cable),
@@ -810,72 +810,72 @@ func unplugRow(_ record: Rec?, _ interfaces: [I], debug: Bool = false, homeTLS: 
 var unplugMemory: [Key: Rec] = [:]
 var unplugRows: [(word: W, tap: H, reconnect: H, byName: Bool, macID: String?)] = []
 for (record, interfaces) in [(r1, [anpi0, en2, en0]), (nil, [en2, en0]), (nil, [en0])] as [(Rec?, [I])] {
-    unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, record)])
-    unplugRows.append(unplugRow(unplugMemory[noahKey], interfaces))
+    unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, record)])
+    unplugRows.append(unplugRow(unplugMemory[sampleKey], interfaces))
 }
 check("the cable pulled: Wired, Wired, then Wi‑Fi, its record kept (p=1, named by its tag, not by its name alone)",
-      unplugRows.map(\.word) == [.method(.wired), .method(.wired), .method(.wifi)] && unplugRows.allSatisfy { !$0.byName } && unplugMemory == [noahKey: r1])
+      unplugRows.map(\.word) == [.method(.wired), .method(.wired), .method(.wifi)] && unplugRows.allSatisfy { !$0.byName } && unplugMemory == [sampleKey: r1])
 check("the cable pulled: a tap and the reconnect dial the saved Mac pinned at every step, never plain",
       unplugRows.allSatisfy { $0.tap == .pinned && $0.reconnect == .pinned })
 check("before the fix (each listing's own record alone): Update DuoDeck by its name alone, nothing dialed, in DEBUG too",
-      unplugRow(nil, [en2, en0]).word == .updateSill && unplugRow(nil, [en2, en0]).byName && unplugRow(nil, [en0]).word == .updateSill
-      && unplugRow(nil, [en0], debug: true).tap == .updateSill && unplugRow(nil, [en0], debug: true).reconnect == .updateSill)
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, r1)])
-check("its record again on en0: Wi‑Fi, pinned", unplugMemory == [noahKey: r1] && unplugRow(unplugMemory[noahKey], [en0]).word == .method(.wifi)
-      && unplugRow(unplugMemory[noahKey], [en0]).tap == .pinned)
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, nil)])
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, nil)])
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, r1)])
-check("the cable back in (anpi0, en2, en0 with its record): Wired, pinned", unplugRow(unplugMemory[noahKey], [anpi0, en2, en0]).word == .method(.wired)
-      && unplugRow(unplugMemory[noahKey], [anpi0, en2, en0]).tap == .pinned)
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, nil)])
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, rOpen)])
+      unplugRow(nil, [en2, en0]).word == .updateDuoDeck && unplugRow(nil, [en2, en0]).byName && unplugRow(nil, [en0]).word == .updateDuoDeck
+      && unplugRow(nil, [en0], debug: true).tap == .updateDuoDeck && unplugRow(nil, [en0], debug: true).reconnect == .updateDuoDeck)
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, r1)])
+check("its record again on en0: Wi‑Fi, pinned", unplugMemory == [sampleKey: r1] && unplugRow(unplugMemory[sampleKey], [en0]).word == .method(.wifi)
+      && unplugRow(unplugMemory[sampleKey], [en0]).tap == .pinned)
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, nil)])
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, nil)])
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, r1)])
+check("the cable back in (anpi0, en2, en0 with its record): Wired, pinned", unplugRow(unplugMemory[sampleKey], [anpi0, en2, en0]).word == .method(.wired)
+      && unplugRow(unplugMemory[sampleKey], [anpi0, en2, en0]).tap == .pinned)
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, nil)])
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, rOpen)])
 check("Require pairing turned off while listed (a record with p=0 after one without): read; the saved Mac says Wi‑Fi, dialed pinned",
-      unplugMemory == [noahKey: rOpen] && unplugRow(unplugMemory[noahKey], [en0]).word == .method(.wifi) && unplugRow(unplugMemory[noahKey], [en0]).tap == .pinned)
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, rPlain)])
-unplugMemory = P.rowRecords(unplugMemory, listed: [(noahKey, nil)])
+      unplugMemory == [sampleKey: rOpen] && unplugRow(unplugMemory[sampleKey], [en0]).word == .method(.wifi) && unplugRow(unplugMemory[sampleKey], [en0]).tap == .pinned)
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, rPlain)])
+unplugMemory = P.rowRecords(unplugMemory, listed: [(sampleKey, nil)])
 check("a record with its tag and no p, the Mac's own word, then none: Update DuoDeck, nothing dialed, in DEBUG too",
-      unplugRow(unplugMemory[noahKey], [en0]).word == .updateSill && unplugRow(unplugMemory[noahKey], [en0], debug: true).tap == .updateSill)
+      unplugRow(unplugMemory[sampleKey], [en0]).word == .updateDuoDeck && unplugRow(unplugMemory[sampleKey], [en0], debug: true).tap == .updateDuoDeck)
 // A Mac that really went back to a plain door: its name leaves the results (the browser's removal, about a
-// second after its Sill's goodbye), then comes back without a record.
-var downgraded = P.rowRecords([:], listed: [(noahKey, r1)])
+// second after its DuoDeck's goodbye), then comes back without a record.
+var downgraded = P.rowRecords([:], listed: [(sampleKey, r1)])
 downgraded = P.rowRecords(downgraded, listed: [])
-downgraded = P.rowRecords(downgraded, listed: [(noahKey, nil)])
+downgraded = P.rowRecords(downgraded, listed: [(sampleKey, nil)])
 check("a Mac gone back to a plain door, listed afresh without a record: Update DuoDeck, nothing dialed, in DEBUG too",
-      downgraded[noahKey] == nil && unplugRow(downgraded[noahKey], [en0]).word == .updateSill && unplugRow(downgraded[noahKey], [en0], debug: true).tap == .updateSill
-      && unplugRow(downgraded[noahKey], [en0], debug: true).reconnect == .updateSill)
+      downgraded[sampleKey] == nil && unplugRow(downgraded[sampleKey], [en0]).word == .updateDuoDeck && unplugRow(downgraded[sampleKey], [en0], debug: true).tap == .updateDuoDeck
+      && unplugRow(downgraded[sampleKey], [en0], debug: true).reconnect == .updateDuoDeck)
 check("…and in DEBUG, a Mac never seen over TLS: its method, dialed plain, as before",
-      unplugRow(downgraded[noahKey], [en0], debug: true, homeTLS: false).word == .method(.wifi)
-      && unplugRow(downgraded[noahKey], [en0], debug: true, homeTLS: false).tap == .plain)
-var away = P.rowRecords([:], listed: [(noahKey, r1), (k("Office"), nil)])
+      unplugRow(downgraded[sampleKey], [en0], debug: true, homeTLS: false).word == .method(.wifi)
+      && unplugRow(downgraded[sampleKey], [en0], debug: true, homeTLS: false).tap == .plain)
+var away = P.rowRecords([:], listed: [(sampleKey, r1), (k("Office"), nil)])
 away = P.rowRecords(away, listed: [(k("Office"), nil)])
-away = P.rowRecords(away, listed: [(k("Office"), nil), (noahKey, nil)])
+away = P.rowRecords(away, listed: [(k("Office"), nil), (sampleKey, nil)])
 check("a name gone and back without a record, another name listed throughout: none for it, as a plain door (Update DuoDeck)",
-      away[noahKey] == nil && unplugRow(away[noahKey], [en0]).word == .updateSill)
-// The review of #232: Sill in the background (or its browser failed), M's registration gone meanwhile and
-// its name taken by another service with no record (an older Sill, the CLI); on the return the browser is
+      away[sampleKey] == nil && unplugRow(away[sampleKey], [en0]).word == .updateDuoDeck)
+// The review of #232: DuoDeck in the background (or its browser failed), M's registration gone meanwhile and
+// its name taken by another service with no record (an older DuoDeck, the CLI); on the return the browser is
 // made again and lists that name with no record. The old browser's result, shown beside the new one's
 // while it settles, still has M's record; the new browser's result is read with nothing of it.
-var rebuilt = P.rowRecords([:], listed: [(noahKey, r1)])            // the old browser, before the background
-rebuilt = P.rowRecords(rebuilt, listed: [(noahKey, r1)])            // made again: its last results kept, shown
-rebuilt = P.rowRecords(rebuilt, listed: [(k(noah, 2), nil)])        // the new browser lists the name, no record
-let stranger = unplugRow(rebuilt[k(noah, 2)], [en0])
+var rebuilt = P.rowRecords([:], listed: [(sampleKey, r1)])            // the old browser, before the background
+rebuilt = P.rowRecords(rebuilt, listed: [(sampleKey, r1)])            // made again: its last results kept, shown
+rebuilt = P.rowRecords(rebuilt, listed: [(k(sample, 2), nil)])        // the new browser lists the name, no record
+let stranger = unplugRow(rebuilt[k(sample, 2)], [en0])
 check("a browser made again, the name's new result without a record: read with none, by its name alone: Update DuoDeck, nothing dialed",
-      rebuilt.isEmpty && stranger.word == .updateSill && stranger.byName && stranger.tap == .updateSill && stranger.reconnect == .updateSill
+      rebuilt.isEmpty && stranger.word == .updateDuoDeck && stranger.byName && stranger.tap == .updateDuoDeck && stranger.reconnect == .updateDuoDeck
       && stranger.macID == nil)
 check("…so M's Remote row stays (no row names M), and a refused pinned dial of that row is only skipped by the reconnect, never newKey",
-      P.remoteRows(saved: [(macID: "M", name: noah)], listedIDs: Set([stranger.macID].compactMap { $0 }), now: 10, searchingSince: 0,
+      P.remoteRows(saved: [(macID: "M", name: sample)], listedIDs: Set([stranger.macID].compactMap { $0 }), now: 10, searchingSince: 0,
                    localNetworkDenied: false).map(\.macID) == ["M"]
-      && P.afterPinRefused(macID: "M", tried: ["network:\(noah)"], rows: [("network:\(noah)", stranger.macID)], tagNamed: !stranger.byName,
+      && P.afterPinRefused(macID: "M", tried: ["network:\(sample)"], rows: [("network:\(sample)", stranger.macID)], tagNamed: !stranger.byName,
                            tapped: false) == .skipRow)
 // One key for both browsers (the rule as #232 first had it): the old browser's record read for the new result.
-var oneKey = P.rowRecords([:], listed: [(noahKey, r1)])
-oneKey = P.rowRecords(oneKey, listed: [(noahKey, nil)])
-let readAsM = unplugRow(oneKey[noahKey], [en0])
+var oneKey = P.rowRecords([:], listed: [(sampleKey, r1)])
+oneKey = P.rowRecords(oneKey, listed: [(sampleKey, nil)])
+let readAsM = unplugRow(oneKey[sampleKey], [en0])
 check("…where one key for both browsers read it as M by its old tag: dialed pinned, M's Remote row hidden, a refusal marking M newKey",
       readAsM.macID == "M" && readAsM.reconnect == .pinned && !readAsM.byName
-      && P.remoteRows(saved: [(macID: "M", name: noah)], listedIDs: ["M"], now: 10, searchingSince: 0, localNetworkDenied: false).isEmpty
-      && P.afterPinRefused(macID: "M", tried: ["network:\(noah)"], rows: [("network:\(noah)", "M")], tagNamed: true, tapped: false) == .newKey)
+      && P.remoteRows(saved: [(macID: "M", name: sample)], listedIDs: ["M"], now: 10, searchingSince: 0, localNetworkDenied: false).isEmpty
+      && P.afterPinRefused(macID: "M", tried: ["network:\(sample)"], rows: [("network:\(sample)", "M")], tagNamed: true, tapped: false) == .newKey)
 
 print(fails == 0 ? "ALL PASS (\(passes))" : "\(fails) FAIL, \(passes) pass")
 if fails > 0 { exit(1) }

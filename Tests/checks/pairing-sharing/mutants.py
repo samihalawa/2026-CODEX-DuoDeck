@@ -3,7 +3,7 @@ window's sharing type for each answer, the Log's lines), is compiled with the ch
 must make it fail. usage: mutants.py WORKTREE"""
 import os, subprocess, sys, tempfile
 WT = sys.argv[1]; HERE = os.path.dirname(os.path.abspath(__file__))
-F = os.path.join(WT, "Sources/SillMenuBar/PairingWindowSharing.swift")
+F = os.path.join(WT, "Sources/DuoDeckMenuBar/PairingWindowSharing.swift")
 RULE = "        switchOn ? .shown : .hidden\n"
 ON = "on ? \"Pairing window: shown to screen sharing"
 HIDDEN = "        case .hidden: .none\n"

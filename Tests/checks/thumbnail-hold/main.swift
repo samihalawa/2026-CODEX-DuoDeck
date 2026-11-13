@@ -1,5 +1,5 @@
 // ThumbnailHold (iOSClient/ThumbnailHold.swift) on its own: how long a window's thumbnail is held before
-// its lights show and it can be dragged (issue #113; Noah's decision of 2026-10-29: a stepper from 0.2 to
+// its lights show and it can be dragged (issue #113; the maintainer's decision of 2026-10-29: a stepper from 0.2 to
 // 2 s in tenths of a second, 0.5 s unless changed, never sent to the Mac).
 //   - The constants: the key, the range, the step, the standard half second (shorter than the 1.5 s of
 //     before), the range in tenths and in seconds agreeing.
@@ -10,7 +10,7 @@
 //     its decimal.
 //   - A stored value: a number (Double, Int, Bool), a string as a launch argument gives it, junk;
 //     UserDefaults' registration (in memory only), and the launch argument itself in a child run of this
-//     binary (`-Sill.thumbnailHold 0.3`, a string in the argument domain).
+//     binary (`-DuoDeck.thumbnailHold 0.3`, a string in the argument domain).
 //   - The words: the row's title, the VoiceOver label and value ("Hold to show window controls, 0.5
 //     seconds"), the value shown ("0.5 s", always a tenth's digit), the footnote, the console's line;
 //     the title's three lines, the narrowest it may be beside the stepper (its words in order, whole,
@@ -36,7 +36,7 @@ func check(_ name: String, _ ok: Bool) { if ok { passes += 1; print("ok   \(name
 
 // MARK: - The constants
 
-check("the key is Sill.thumbnailHold", H.key == "Sill.thumbnailHold")
+check("the key is DuoDeck.thumbnailHold", H.key == "DuoDeck.thumbnailHold")
 check("0.2 to 2 s", H.range.lowerBound == 0.2 && H.range.upperBound == 2.0)
 check("in tenths, 2 to 30", H.tenthsRange.lowerBound == 2 && H.tenthsRange.upperBound == 20)
 check("the two ranges agree", Double(H.tenthsRange.lowerBound) / 10 == H.range.lowerBound && Double(H.tenthsRange.upperBound) / 10 == H.range.upperBound)
@@ -108,7 +108,7 @@ check("a registered default reads back through UserDefaults: 1.2 → 1.2", H.sec
 UserDefaults.standard.register(defaults: [H.key: "2.0"])
 check("a registered string too: \"2.0\" → 2", H.seconds(stored: UserDefaults.standard.object(forKey: H.key)) == 2.0)
 
-/// This binary again with `-Sill.thumbnailHold VALUE`, as the app is launched with it: what UserDefaults
+/// This binary again with `-DuoDeck.thumbnailHold VALUE`, as the app is launched with it: what UserDefaults
 /// hands back ("String|0.3|0.3"), or nil if the child did not run.
 func child(_ value: String) -> String? {
     let p = Process()
@@ -122,10 +122,10 @@ func child(_ value: String) -> String? {
         .trimmingCharacters(in: .whitespacesAndNewlines)
 }
 let child03 = child("0.3"), child7 = child("7"), childJunk = child("abc")
-check("the launch argument -Sill.thumbnailHold 0.3: a string in the argument domain, read as 0.3 (\(child03 ?? "no child"))",
+check("the launch argument -DuoDeck.thumbnailHold 0.3: a string in the argument domain, read as 0.3 (\(child03 ?? "no child"))",
       child03.map { $0.hasSuffix("|0.3|0.3") && $0.contains("String") } ?? false)
-check("-Sill.thumbnailHold 7: its ceiling, 2 (\(child7 ?? "no child"))", child7.map { $0.hasSuffix("|7|2.0") } ?? false)
-check("-Sill.thumbnailHold abc: the standard (\(childJunk ?? "no child"))", childJunk.map { $0.hasSuffix("|abc|0.5") } ?? false)
+check("-DuoDeck.thumbnailHold 7: its ceiling, 2 (\(child7 ?? "no child"))", child7.map { $0.hasSuffix("|7|2.0") } ?? false)
+check("-DuoDeck.thumbnailHold abc: the standard (\(childJunk ?? "no child"))", childJunk.map { $0.hasSuffix("|abc|0.5") } ?? false)
 
 // MARK: - The words
 

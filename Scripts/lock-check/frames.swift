@@ -1,8 +1,8 @@
-// TEST ONLY (docs/locked-mac-plan.md): decodes the keyframes `sillclient.py --dump=DIR` saved, each with
+// TEST ONLY (docs/locked-mac-plan.md): decodes the keyframes `duodeckclient.py --dump=DIR` saved, each with
 // the parameter sets it came after, on VideoToolbox's software HEVC decoder (never the Mac's media engine),
 // and prints each one's size and its luma: the mean, the largest value, and the share of pixels above 16.
 // A locked Mac's placeholder is black (mean and max near 0, nothing above 16); the synthetic test pattern
-// is grey with a bright bar (mean near 96), and with SILL_TEST_PATTERN=noise a square of noise besides.
+// is grey with a bright bar (mean near 96), and with DUODECK_TEST_PATTERN=noise a square of noise besides.
 // Compiled with Sources/StreamProtocol (its ParameterSets) by build.sh.
 //   frames DIR      one line per keyframe in DIR/index.tsv, in arrival order
 import Foundation
@@ -11,7 +11,7 @@ import CoreVideo
 import VideoToolbox
 
 guard CommandLine.arguments.count == 2 else {
-    print("usage: frames DIR (a sillclient.py --dump directory)")
+    print("usage: frames DIR (a duodeckclient.py --dump directory)")
     exit(2)
 }
 let dir = CommandLine.arguments[1]

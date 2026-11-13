@@ -98,19 +98,19 @@ check("goodbyes: remoteOff and busy", R.classify(.goodbye("remoteOff"), candidat
 check("names: not found; a .ts.net name that does not resolve is the VPN off",
       R.classify(.dns(-65554), candidate: nameC, usedTunnel: nil) == .nameNotFound && R.classify(.dns(-65538), candidate: tsName, usedTunnel: nil) == .vpnOff)
 check("Local Network on a LAN address", R.classify(.dns(-65570), candidate: lanC, usedTunnel: false) == .localNetwork)
-check("not Sill", R.classify(.tls(-9836), candidate: netC, usedTunnel: nil) == .notSill && R.classify(.notSill, candidate: netC, usedTunnel: nil) == .notSill
-      && R.classify(.tls(-9810), candidate: vpnC, usedTunnel: true) == .notSill)
+check("not DuoDeck", R.classify(.tls(-9836), candidate: netC, usedTunnel: nil) == .notDuoDeck && R.classify(.notDuoDeck, candidate: netC, usedTunnel: nil) == .notDuoDeck
+      && R.classify(.tls(-9810), candidate: vpnC, usedTunnel: true) == .notDuoDeck)
 check("silence: didn't answer; on a VPN address with no tunnel in the path, the VPN is off here",
       R.classify(.timeout, candidate: netC, usedTunnel: false) == .noAnswer && R.classify(.posix(ETIMEDOUT), candidate: vpnC, usedTunnel: false) == .vpnOff
       && R.classify(.posix(ENETUNREACH), candidate: vpnC, usedTunnel: true) == .noAnswer && R.classify(.posix(EHOSTUNREACH), candidate: vpnC, usedTunnel: nil) == .noAnswer
       && R.classify(.noWindowList, candidate: netC, usedTunnel: nil) == .noAnswer)
-check("priority", R.worst([.noAnswer, .wrongMac, .refused]) == .wrongMac && R.worst([.notSill, .refused]) == .refused
-      && R.worst([.nameNotFound, .vpnOff]) == .vpnOff && R.worst([.noAnswer, .notSill]) == .notSill && R.worst([.revoked, .refused]) == .revoked
+check("priority", R.worst([.noAnswer, .wrongMac, .refused]) == .wrongMac && R.worst([.notDuoDeck, .refused]) == .refused
+      && R.worst([.nameNotFound, .vpnOff]) == .vpnOff && R.worst([.noAnswer, .notDuoDeck]) == .notDuoDeck && R.worst([.revoked, .refused]) == .revoked
       && R.worst([.noAnswer]) == .noAnswer && R.worst([]) == nil && R.worst([.localNetwork, .noAnswer]) == .localNetwork)
 check("the plan's order is kept", R.priority.firstIndex(of: .wrongMac)! < R.priority.firstIndex(of: .revoked)!
       && R.priority.firstIndex(of: .revoked)! < R.priority.firstIndex(of: .refused)! && R.priority.firstIndex(of: .refused)! < R.priority.firstIndex(of: .vpnOff)!
-      && R.priority.firstIndex(of: .vpnOff)! < R.priority.firstIndex(of: .nameNotFound)! && R.priority.firstIndex(of: .nameNotFound)! < R.priority.firstIndex(of: .notSill)!
-      && R.priority.firstIndex(of: .notSill)! < R.priority.firstIndex(of: .noAnswer)!)
+      && R.priority.firstIndex(of: .vpnOff)! < R.priority.firstIndex(of: .nameNotFound)! && R.priority.firstIndex(of: .nameNotFound)! < R.priority.firstIndex(of: .notDuoDeck)!
+      && R.priority.firstIndex(of: .notDuoDeck)! < R.priority.firstIndex(of: .noAnswer)!)
 
 // MARK: Saved Macs
 func key(_ seed: UInt8) -> Data { Data(repeating: seed, count: 32) }
@@ -212,11 +212,11 @@ let parsed = try! AddressParser.parse("100.101.102.103:7460").get()
 check("a linked address gets its kind and Tailscale's name", R.address(for: parsed) == MacAddress(host: "100.101.102.103", port: 7460, kind: "vpn", via: "Tailscale"))
 
 // MARK: A Mac set up again: the old record superseded (2026-09-28)
-// Noah's devices: "Noah's MacBook Pro" (the old key, last reached at 500) and "(2)" (the new key,
+// the maintainer's devices: "the maintainer's MacBook Pro" (the old key, last reached at 500) and "(2)" (the new key,
 // paired at 900). A dial of the old one that completes with the new key at an address naming one
 // machine retires it; the name alone, a private address, or a record reached since never do.
-let oldRec = savedMac(20, name: "Noah’s MacBook Pro", paired: 100, last: 500)
-var newRec = savedMac(21, name: "Noah’s MacBook Pro", paired: 900); newRec.typedAddresses = nil
+let oldRec = savedMac(20, name: "the maintainer’s MacBook Pro", paired: 100, last: 500)
+var newRec = savedMac(21, name: "the maintainer’s MacBook Pro", paired: 900); newRec.typedAddresses = nil
 let office = savedMac(22, name: "Studio", paired: 950)
 let dup = [oldRec, newRec, office]
 func cand(_ host: String, _ kind: String) -> R.Candidate { R.Candidate(host: host, port: 7455, kind: kind, via: "") }

@@ -137,7 +137,7 @@ for spec in sys.argv[2:]:
             late = [p for p in dd["per"] if p[0] > 1 and p[6] is not None and p[6] > 40]
             gate(dd["epochs"] == "1, 2" and dd["formats"] == 2 and dd["orphans"] == 0,
                  f"{name} {suffix}: epochs [{dd['epochs']}], {dd['formats']} formats, each before its first packet ({dd['orphans']} orphans)")
-            # Each tone pauses at 3 s and 6 s after it starts (SILL_TEST_AUDIO_PAUSE reaches both), so from the
+            # Each tone pauses at 3 s and 6 s after it starts (DUODECK_TEST_AUDIO_PAUSE reaches both), so from the
             # first: its start, two pauses, the second tone's start and its two pauses. The second device
             # connects a second late and misses the first start.
             gate(dd["starts"] >= 5 and dd["gaps"] == 0, f"{name} {suffix}: {dd['starts']} segment starts, {dd['gaps']} seq gaps")

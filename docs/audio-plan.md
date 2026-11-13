@@ -30,12 +30,12 @@ since 8b0d418 has gained the Mac's pointer (#31, kind 26), the Mac's menus (#36,
 against the three open pull requests that touch the same code: #37 (pairing at home: TLS at the
 home door, one `Door` behind both listeners), #38 (three-finger gestures, kind 28) and #39 (away from
 home: kind 16's `away` and `link`, the move home). Every branch and worktree was read again for
-message kinds and project-file IDs. Nothing was built or run. Noah moved the sound into scope the
+message kinds and project-file IDs. Nothing was built or run. the maintainer moved the sound into scope the
 same day (Q13). The plan below is written as refreshed; the last section, "Refresh (2026-09-27)",
 says what changed and why.
 
-**Noah's request (2026-09-25, as relayed to this session):** "Another idea for the future is to
-have Sill send audio back with the video." On 2026-09-26 he put it on the list to work on. On
+**the maintainer's request (2026-09-25, as relayed to this session):** "Another idea for the future is to
+have DuoDeck send audio back with the video." On 2026-09-26 he put it on the list to work on. On
 2026-09-27, first in the list of what he wants worked on now: "Audio: the plan is done and parked as
 a v2 feature by your earlier decision."
 
@@ -47,11 +47,11 @@ a v2 feature by your earlier decision."
 - **At no cost to the picture.** No frame waits for sound, nothing restarts for it, no new
   permission, and the CLI prints nothing new unless asked.
 - **Now, not after v1.** BRIEF.md keeps audio out of v1 ("Out: … audio"), and this plan was written
-  for after it. Noah's word on 2026-09-27 brings it forward (Q13): it is built now, and step 8
+  for after it. the maintainer's word on 2026-09-27 brings it forward (Q13): it is built now, and step 8
   records the decision in BRIEF.md and CLAUDE.md. Send Audio stayed off by default (Q1) until
-  2026-10-27, when Noah set it on in Sill.app (PR #236; the CLI's `--audio` still opts in).
+  2026-10-27, when the maintainer set it on in DuoDeck.app (PR #236; the CLI's `--audio` still opts in).
 
-**A beta (2026-10-20).** Noah, about PR #94: "Check the sound branch and see if it is polished, if
+**A beta (2026-10-20).** the maintainer, about PR #94: "Check the sound branch and see if it is polished, if
 so then merge as beta support." So Send Audio ships as a beta, off by default: the Mac's status
 menu says "Send Audio (Beta)", Settings › Streaming "Send audio (beta)" with a footnote that starts
 "Beta.", the CLI's `--audio` line "(beta)", and the device's Send Audio row a "Beta" tag ("Send
@@ -61,19 +61,19 @@ open questions by default, each one place to change (the last section, "The beta
 changes and their checks): Q8, Send Audio is the Mac's alone, as Share Clipboard is; Q10, no
 seventh button in Larger Picture's row 1; Q4 and Q5 as below (it plays with the silent switch on,
 and devices start unmuted); Q16 and H12, codec quality Medium at +3.9 to +4.4 points of a core in
-the harness (+4.0 on 2026-10-20), accepted while it was off by default (on in Sill.app since
-2026-10-27, so P13 now measures the default). **What ends the beta:** P1–P16 pass on Noah's
-devices (§11); H12 is met or Noah accepts the cost, with P13 (Sill.app's CPU in Activity Monitor,
+the harness (+4.0 on 2026-10-20), accepted while it was off by default (on in DuoDeck.app since
+2026-10-27, so P13 now measures the default). **What ends the beta:** P1–P16 pass on the maintainer's
+devices (§11); H12 is met or the maintainer accepts the cost, with P13 (DuoDeck.app's CPU in Activity Monitor,
 sound on and off) measured; P5 is answered (Virtual Display and a minimized app: whether
 ScreenCaptureKit still hears an app whose window moved off the main display); and P6 (the sync,
-filmed) is measured. Then the labels come off; Send Audio's default was Noah's call (Q1), taken on 2026-10-27, before
-these criteria were met: on in Sill.app.
+filmed) is measured. Then the labels come off; Send Audio's default was the maintainer's call (Q1), taken on 2026-10-27, before
+these criteria were met: on in DuoDeck.app.
 
-**Two switches in the device's Settings panel (2026-10-27).** Noah: "I've decided the audio setting
+**Two switches in the device's Settings panel (2026-10-27).** the maintainer: "I've decided the audio setting
 should not be in the main button tray but instead in settings. Sound should be a toggle in the
 settings menu." Q8 and Q10 as the beta took them are revised: a device's Settings panel sets Send
 Audio for every device again (Q8's default: the host accepts a device's `sendAudio` from either door
-and Sill.app saves it as a menu click), and no bar has a Sound button (Q10): the device's own mute
+and DuoDeck.app saves it as a menu click), and no bar has a Sound button (Q10): the device's own mute
 is the **Mute** switch right under Send Audio (off by default). The last section, "Two switches in the device's
 Settings panel", has the changes and their checks; the sections above keep the design as it was,
 each marked where it changed.
@@ -88,7 +88,7 @@ each marked where it changed.
 |---|---|---|
 | A window (regular mode) | Every sound of that window's app: all its windows and tabs | `SCContentFilter(display: main, including: [app], exceptingWindows: [])` |
 | A window on the virtual display | The same | The same (sound does not depend on the display) |
-| The Desktop | Every app's sound but Sill's: the whole Mac | `SCContentFilter(display: main, excludingApplications: [Sill], exceptingWindows: [])`, as the Desktop's picture (StreamCoordinator.swift:1065-1074; the CLI, with no Sill app to leave out, excludes nothing) |
+| The Desktop | Every app's sound but DuoDeck's: the whole Mac | `SCContentFilter(display: main, excludingApplications: [DuoDeck], exceptingWindows: [])`, as the Desktop's picture (StreamCoordinator.swift:1065-1074; the CLI, with no DuoDeck app to leave out, excludes nothing) |
 | The test pattern (`--synthetic`) | A test tone | none: `SyntheticAudio` (§4.2) |
 
 - **Sound is per app, always.** In WWDC22 session 10155 Apple says ScreenCaptureKit filters audio
@@ -114,14 +114,14 @@ each marked where it changed.
 | Send Audio on or off | A restart of the picture (a running SCStream is never reconfigured) | The sound's stream starts or stops; the picture never notices | The same |
 | A failure of the sound | Can end the picture's stream | Ends only the sound | Ends only the sound |
 | Extra cost | none | One more SCStream, whose 2×2, 1 fps picture is thrown away | An aggregate device and an IOProc |
-| Permission | Screen Recording (Sill has it) | Screen Recording (Sill has it) | A second one, "System Audio Recording Only" (`NSAudioCaptureUsageDescription`), and macOS 14.2 (`AudioHardwareCreateProcessTap`, AudioHardwareTapping.h) |
+| Permission | Screen Recording (DuoDeck has it) | Screen Recording (DuoDeck has it) | A second one, "System Audio Recording Only" (`NSAudioCaptureUsageDescription`), and macOS 14.2 (`AudioHardwareCreateProcessTap`, AudioHardwareTapping.h) |
 | Can keep the Mac quiet while the device plays | No | No | Yes (`CATapMutedWhenTapped`, CATapDescription.h) |
 
   Rotation and Aa are everyday gestures, and music under a window that restarts must not drop
   out. The tap's one gift, a quiet Mac, costs a new permission: later (§14).
-- **Sill's own sound never goes out.** `excludesCurrentProcessAudio = true` on the audio stream
-  (Sill plays none today; a future alert would otherwise loop back), and the Desktop's filter
-  excludes Sill's app as the picture's does.
+- **DuoDeck's own sound never goes out.** `excludesCurrentProcessAudio = true` on the audio stream
+  (DuoDeck plays none today; a future alert would otherwise loop back), and the Desktop's filter
+  excludes DuoDeck's app as the picture's does.
 - **The format.** `sampleRate = 48_000` and `channelCount = 2`, ScreenCaptureKit's defaults, set
   explicitly (it takes only 8, 16, 24 and 48 kHz and 1 or 2 channels; anything else silently
   becomes 48 kHz stereo: SCStreamConfiguration's documentation). Each buffer is a `CMSampleBuffer`
@@ -161,7 +161,7 @@ network, no buffer.
 - **The iOS side.** The iOS 27.0 simulator runtime has the same encoders and decoders (`aace`,
   `aacl` and `opus` among them) and gave the same packets, delays, latencies and bitrates.
 - **CPU.** Upper bounds on an M-series core: the probe copies Swift arrays around every call.
-- **Not checked here:** Opus on macOS 14 or iOS 17, Sill's floors; this Mac has no such runtime.
+- **Not checked here:** Opus on macOS 14 or iOS 17, DuoDeck's floors; this Mac has no such runtime.
   `kAudioFormatOpus` is documented from macOS 10.13 and iOS 11, but that is the constant, not an
   encoder at 10 ms that follows a bitrate: Apple's own forum example of AVAudioConverter encoding
   Opus (an Apple engineer, developer forums thread 763362) uses 960-frame (20 ms) packets.
@@ -282,7 +282,7 @@ the device's own delays.
   keyframe the link is still taking, that keyframe and up to 512 KB more: at 4 Mbps 0.5 s, and
   1–4 s behind a keyframe (a 300 KB one and a full hold is 1.6 s). The sound waits as long as the
   picture does. They stay together, and the device's buffer follows the picture (§7.2, rule 4). A
-  send queue with priorities (§14) would let sound pass frames Sill has not yet handed over, never
+  send queue with priorities (§14) would let sound pass frames DuoDeck has not yet handed over, never
   a keyframe already on its way; only a connection of its own could.
 - **Never a delay for frames.** Audio is encoded on its own queue and handed to the network queue
   as one small message (about 190 bytes) the moment it exists. A frame never waits for sound, and
@@ -291,19 +291,19 @@ the device's own delays.
 ### Controls
 
 - **Send Audio: a host setting, off by default in the first release with sound; on by default in
-  Sill.app since 2026-10-27 (Noah, PR #236), the CLI's `--audio` opting in.**
+  DuoDeck.app since 2026-10-27 (the maintainer, PR #236), the CLI's `--audio` opting in.**
   - The Mac keeps playing its own sound (ScreenCaptureKit does not silence the source). A device
     beside the Mac, the common case, would double every sound 60–155 ms late until someone mutes
     one of them.
   - The CLI's output stays byte for byte without `--audio`.
-  - The pattern the virtual display and Direct Wireless set: off until Noah has tried it, then his
+  - The pattern the virtual display and Direct Wireless set: off until the maintainer has tried it, then his
     call (Q1).
   - The Mac's sound leaving the Mac is something the Mac's settings should show.
-  - A device can turn it on from its Settings panel, like the other stream settings, and Sill.app
+  - A device can turn it on from its Settings panel, like the other stream settings, and DuoDeck.app
     saves it (Q8). **Since the beta (2026-10-20), the Mac's alone** (Q8's alternative, taken as
-    the beta's default): only Sill.app's menu and Settings, and the CLI's `--audio`, set it; the
+    the beta's default): only DuoDeck.app's menu and Settings, and the CLI's `--audio`, set it; the
     Mac refuses a device's change of it, on or off, from either door, naming it in the log, and
-    the device's panel shows the Mac's value, read-only (§4.1, §7.7). **Since 2026-10-27 (Noah),
+    the device's panel shows the Mac's value, read-only (§4.1, §7.7). **Since 2026-10-27 (the maintainer),
     a device's again**: its Settings panel's Send Audio switch, saved on the Mac like Quality, for
     every device (the last section).
 - **Sound: a button in the device's bars,** only while the Mac sends sound: in every bar that holds
@@ -315,7 +315,7 @@ the device's own delays.
   0.1 s, while the device's audio engine starts). The device remembers it. **Since the beta
   (2026-10-20):** no Sound button in Larger Picture's row 1, which stays main's (Apps, Menus while
   the Mac sent its menus, Aa, Keyboard, Desktop, Settings); there, as in a Slide Over, the panel's
-  switch is the only Sound control (Q10, as the beta took it; §7.6). **Since 2026-10-27 (Noah): no
+  switch is the only Sound control (Q10, as the beta took it; §7.6). **Since 2026-10-27 (the maintainer): no
   Sound button in any bar.** The device's own control is the **Mute** switch right under Send Audio in the
   Settings panel (on mutes; off by default), for every Mac with sound, Send Audio on or off (the last section).
 
@@ -344,7 +344,7 @@ the device's own delays.
 2. **The host.** An audio-only ScreenCaptureKit stream that follows the streamed app (or a test
    tone), an AAC-ELD encoder on its own queue, and a send path that never counts against the
    picture. Send Audio (off by default), the CLI's `--audio`, and log lines only when it is on.
-3. **Sill.app.** Send Audio in the status menu and in Settings › Streaming, the Permissions pane's
+3. **DuoDeck.app.** Send Audio in the status menu and in Settings › Streaming, the Permissions pane's
    words, and "sound" on the card's source row while a device gets it.
 4. **The device.** A pure playout model (the floor, the jitter buffer, the picture guard, drift by
    single frames), an AAC-ELD decoder, AVAudioEngine playback through an `AVAudioPlayerNode`, the
@@ -358,20 +358,20 @@ the device's own delays.
 ### 2. The design on one page
 
 ```
- ┌──────────────────────────── Mac (Sill.app / SillHost) ─────────────────────────────────┐
+ ┌──────────────────────────── Mac (DuoDeck.app / DuoDeckHost) ─────────────────────────────────┐
  │ main actor  StreamCoordinator.select(…) ─▶ picture pipeline (unchanged)                │
  │             `active`'s didSet (with the pointer's and the menus') ─▶ AudioPipeline     │
  │             .follow(app | desktop | test | none); the same app, running → nothing      │
- │ sill.audio  AudioCapture (SCStream, sound only; its 2×2, 1 fps picture thrown away)    │
+ │ duodeck.audio  AudioCapture (SCStream, sound only; its 2×2, 1 fps picture thrown away)    │
  │             or SyntheticAudio (--synthetic) ─▶ PCM + host time                         │
  │             AudioPacketizer: 480/512-frame blocks, stamps, gaps → segments (pure)      │
  │             AudioEncoder: AAC-ELD, 128 kbps (AudioToolbox) ─▶ packet, wall-clock stamp │
- │ sill.net    StreamServer.broadcastAudio: devices whose hello plays "aac-eld";          │
+ │ duodeck.net    StreamServer.broadcastAudio: devices whose hello plays "aac-eld";          │
  │             the format first; not in `inflight`; in `pendingBytes` away; a cap ────────┼─▶ kind 43
  └────────────────────────────────────────────────────────────────────────────────────────┘
  ┌──────────────────────────────── device ────────────────────────────────────────────────┐
  │ network q.  MessageReader; kind 43 parsed, frames: both stamped on arrival, handed on  │
- │ sill.audio  AudioPlayout (pure): floor, need, picture's lag, dedupe → late? place?     │
+ │ duodeck.audio  AudioPlayout (pure): floor, need, picture's lag, dedupe → late? place?     │
  │             a frame more or less? a jump?                                              │
  │             AudioDecoder (AAC-ELD → float) ─▶ fades, ±1 frame ─▶ AVAudioPlayerNode     │
  │             AVAudioEngine: player → main mixer → output; session .playback, mixes      │
@@ -385,7 +385,7 @@ the device's own delays.
 
 ```swift
     // The Mac's sound (Audio.swift), after the menus' 24, 25 and 27, the pointer's 26 and the trackpad gesture's 28,
-    // and after 29–42, which PR #66 (Sill Viewer, with #72 and #73) and #78 (the clipboard's 32) take. Older readers
+    // and after 29–42, which PR #66 (DuoDeck Viewer, with #72 and #73) and #78 (the clipboard's 32) take. Older readers
     // map it to `.unknown` and skip it.
     case audio = 43          // host → device: AudioMessage — the sound of what streams: a format (JSON AudioFormat),
                              // then packets (binary AudioPackets). Only to a device whose hello lists the codec
@@ -401,7 +401,7 @@ the device's own delays.
   them at 4 KB and 16 KB.
 - **Nothing else changes** in kinds 0–42. The sound takes the next free number, and this section
   follows it (H0, Q12). On 2026-09-27 24 to 27 were on main (PRs #31 and #36), 28 was PR #38's
-  `gesture`, and no branch held 29 or above, so the sound took 29. By 2026-10-14 PR #66 (Sill
+  `gesture`, and no branch held 29 or above, so the sound took 29. By 2026-10-14 PR #66 (DuoDeck
   Viewer; #72 and #73 build on it) held 29 to 42 and #78 (the clipboard) 32, so the sound moved to
   43 (the last section, "Kind 43").
 - **The checks that name the free kinds.** On main `protocol` and `menus` say 29 reads as unknown,
@@ -503,10 +503,10 @@ public enum AudioMessage: Hashable, Sendable {
 | Device | Host | Result |
 |---|---|---|
 | Older (any build since b67f87d) | This host, Send Audio on | Its hello has no `audio`, so it is sent no kind 43 (it would skip one). It ignores `sendAudio` and `audioNote` in kind 16. Nothing changes for it |
-| This device | Older host (Sill for Mac 0.3.1, the public release; any CLI before this) | No kind 43; `sendAudio` nil: no row, no Sound button or switch. Since 2026-10-27: the Send Audio row off and disabled, its footnote "Beta. Update Sill on ‹Mac› to hear its sound on this ‹device›.", no Mute |
+| This device | Older host (DuoDeck Host 0.3.1, the public release; any CLI before this) | No kind 43; `sendAudio` nil: no row, no Sound button or switch. Since 2026-10-27: the Send Audio row off and disabled, its footnote "Beta. Update DuoDeck on ‹Mac› to hear its sound on this ‹device›.", no Mute |
 | This device | This host, Send Audio off | The row shows off; no button; no kind 43 |
 | This device | This host, Send Audio on | This plan |
-| The base's `sillclient.py` | This host | No hello, or one without `audio`: no kind 43. Kind 16 carries two more keys |
+| The base's `duodeckclient.py` | This host | No hello, or one without `audio`: no kind 43. Kind 16 carries two more keys |
 | A test client whose hello lists `audio` but that does not decode | This host | Gets kind 43 and may skip it |
 
 #### 3.6 Rules for later changes
@@ -521,13 +521,13 @@ public enum AudioMessage: Hashable, Sendable {
   `audioNote` join it: kept as they are, and a later host still sends kind 43 only to a device
   whose hello lists the codec.
 
-### 4. Host (`SillHostCore`, folder `Sources/SillHost`), file by file
+### 4. Host (`DuoDeckHostCore`, folder `Sources/DuoDeckHost`), file by file
 
 **Base.** main at 643af6b. Remote pacing (#34) is in: §4.6 builds on its `pendingBytes`, H6 on its
-harness (`Scripts/pacing`: the fake encoder, bottleneck.py, its cases; `Scripts/sillrelay.py` for
+harness (`Scripts/pacing`: the fake encoder, bottleneck.py, its cases; `Scripts/duodeckrelay.py` for
 the remote door's slow link), and the device reads kind 43 through its MessageReader. Since the critique (150f781) main has also gained the Mac's pointer
-(#31: kind 26, sent from StreamServer's tick; `PointerTestHooks`, whose `SILL_TEST_SOFTWARE_ENCODER`
-and `SILL_TEST_LOOPBACK` every test host now runs with), the menus (#36: kinds 24, 25 and 27,
+(#31: kind 26, sent from StreamServer's tick; `PointerTestHooks`, whose `DUODECK_TEST_SOFTWARE_ENCODER`
+and `DUODECK_TEST_LOOPBACK` every test host now runs with), the menus (#36: kinds 24, 25 and 27,
 `MenuMirror`, which follows the source from `active`'s didSet as the sound will), the iPhone's
 portrait layout (#30) and the tour (#35). Open and touching this plan's files, each merged into
 this branch as it lands (§12): #37 (pairing at home: StreamServer's doors behind one `Door`, TLS at
@@ -550,13 +550,13 @@ per-connection `away` and `link`, `LinkJudge` in StreamServer's sweep, a second 
   **Since the beta (2026-10-20), refused instead** (Q8's alternative, taken as the beta's default):
   a device's `sendAudio`, on or off, from either door, is named in the log ("send audio (set on
   this Mac only)") and the rest of its change applies; only the Mac's menu and Settings, and the
-  CLI's `--audio`, set it. The field stays in kinds 16 and 17. **Since 2026-10-27 (Noah), accepted
+  CLI's `--audio`, set it. The field stays in kinds 16 and 17. **Since 2026-10-27 (the maintainer), accepted
   again**, on or off, from either door, as at first: `ok.sendAudio = c.sendAudio`, through
   `applying` or `applyingAway` like any shared field (the last section).
 - **Not in `restartNeeded`** (StreamCoordinator.swift:555-564): the sound has its own stream;
   `adopt` hands it over (§4.7).
-- **Every other place** HostSettings.swift's header lists for a new setting (Sill.app's
-  `HostSettings` and `DebugHooks`, the ledger, the panel, the mock, `sillclient.py`) is in §6 and
+- **Every other place** HostSettings.swift's header lists for a new setting (DuoDeck.app's
+  `HostSettings` and `DebugHooks`, the ledger, the panel, the mock, `duodeckclient.py`) is in §6 and
   §7.
 
 #### 4.2 The sources: `AudioCapture.swift` (new) and `SyntheticAudio.swift` (new)
@@ -565,7 +565,7 @@ Both conform to:
 
 ```swift
 protocol AudioSource: AnyObject {
-    /// On `sill.audio`: PCM as delivered, its format, and the host time (mach absolute, in
+    /// On `duodeck.audio`: PCM as delivered, its format, and the host time (mach absolute, in
     /// seconds) of its first frame.
     var onPCM: ((PCMChunk) -> Void)? { get set }
     /// It ended by itself; why, for the log. Not called by `stop()`.
@@ -581,11 +581,11 @@ protocol AudioSource: AnyObject {
   `excludesCurrentProcessAudio = true`. For the picture ScreenCaptureKit always makes: `width = 2`,
   `height = 2`, `minimumFrameInterval = 1 s`, `queueDepth = 3`, `showsCursor = false`. P2 records
   whether this macOS takes 2×2; 64×64 otherwise.
-- **Outputs.** `.audio` on `sill.audio`, and `.screen` on the same queue, returning at once:
+- **Outputs.** `.audio` on `duodeck.audio`, and `.screen` on the same queue, returning at once:
   without a screen output ScreenCaptureKit logs every frame it drops.
 - **The filter** is made by the coordinator (§4.7) and never changed on a running stream: another
   app is another stream. The app's `SCRunningApplication` comes from the catalog's last look, else
-  from one bounded look at every application, as `resolveOwnApplication` finds Sill's
+  from one bounded look at every application, as `resolveOwnApplication` finds DuoDeck's
   (WindowCatalog.swift:152-157): a window staged on the virtual display can be off the on-screen
   list, and so can a minimized app's.
 - **Each buffer:** its ASBD (`CMSampleBufferGetFormatDescription`), `CMSampleBufferGetNumSamples`,
@@ -602,7 +602,7 @@ protocol AudioSource: AnyObject {
 - **A minute in,** one line on the buffers' time stamps and silence (§4.10), for P2.
 
 **`SyntheticAudio`** (Foundation only; `--synthetic`):
-- A 10 ms `DispatchSourceTimer` on `sill.audio` paces 480-frame chunks of 440 Hz at −30 dBFS,
+- A 10 ms `DispatchSourceTimer` on `duodeck.audio` paces 480-frame chunks of 440 Hz at −30 dBFS,
   stereo float. A chunk's host time is the first chunk's plus the frames made before it ÷ 48 kHz,
   never the timer's firing time: a late timer makes two chunks at once, never a gap, so the tone is
   gapless unless a test pauses it (§4.11).
@@ -610,7 +610,7 @@ protocol AudioSource: AnyObject {
   stamps will carry it (the host time ↔ wall clock mapping taken when the tone starts), so a
   checker needs only the stamps to check them end to end.
 - The chunk goes the same way as ScreenCaptureKit's.
-- TEST ONLY: `SILL_TEST_AUDIO_CHUNK=1024` makes 1024-frame chunks every 21.3 ms, so the 512-frame
+- TEST ONLY: `DUODECK_TEST_AUDIO_CHUNK=1024` makes 1024-frame chunks every 21.3 ms, so the 512-frame
   packets are tested headless too (§4.11).
 
 #### 4.3 `AudioPacketizer.swift` (new; pure: Foundation only; checked with swiftc)
@@ -649,7 +649,7 @@ Turns chunks into blocks of F frames with their host time, and decides the segme
 - **Read back:** `kAudioConverterCurrentOutputStreamDescription` (F),
   `kAudioConverterPrimeInfo.leadingFrames` (P), `kAudioConverterCompressionMagicCookie` (the
   cookie), `kAudioConverterPropertyMaximumOutputPacketSize`.
-- **Use.** `encode(block) -> Data` per block, on `sill.audio`; `reset()` (`AudioConverterReset`) at
+- **Use.** `encode(block) -> Data` per block, on `duodeck.audio`; `reset()` (`AudioConverterReset`) at
   a segment start, which drops what the converter holds and starts the next packets with the same
   priming P (the critique's probe).
 - **A failure to create it:** "Audio encoder: AAC-ELD unavailable: <status>", and no sound this run
@@ -657,7 +657,7 @@ Turns chunks into blocks of F frames with their host time, and decides the segme
 
 #### 4.5 `AudioPipeline.swift` (new)
 
-Owns the source, the packetizer and the encoder on `sill.audio` (serial, `.userInteractive`), the
+Owns the source, the packetizer and the encoder on `duodeck.audio` (serial, `.userInteractive`), the
 epoch counter, and what the coordinator and the server see of them.
 - **`follow(_ key: AudioKey, make: @escaping () async -> AudioSource?)`** (main actor; returns at
   once). The work runs in a Task, and a newer call replaces one not yet begun, as `setTarget`'s
@@ -725,7 +725,7 @@ epoch counter, and what the coordinator and the server see of them.
 
 - **Owns** `let audio: AudioPipeline`, built in `init` with the server and `synthetic`.
 - **Where `follow` is called** (main actor), one function (`audioFollow()`) computing the key: the
-  source's, while Send Audio is on, a device plays "aac-eld" and Sill is not quitting; `.none`
+  source's, while Send Audio is on, a device plays "aac-eld" and DuoDeck is not quitting; `.none`
   otherwise.
   - **In `active`'s didSet** (:143-152), after the pointer's geometry and the menus' target, which
     follow the source there since #31 and #36. `active` is set on every path of `select`: once the
@@ -747,7 +747,7 @@ epoch counter, and what the coordinator and the server see of them.
 - **Beside the menus and the gestures.** The sound adds no device → host kind and no per-connection
   state here (the server keeps each device's codecs and epoch), so `handle(_:from:)`,
   `onClientDisconnected` and `onClientCountChanged` gain nothing: the listener count is the
-  server's (`onAudioListenersChanged`). The menus' reads on `sill.menus` (#36) and the gestures'
+  server's (`onAudioListenersChanged`). The menus' reads on `duodeck.menus` (#36) and the gestures'
   chords held behind an activation (#38) never wait for the sound, nor it for them; a gesture's
   Desktop pick moves the sound to the whole Mac as any pick does.
 
@@ -761,22 +761,22 @@ Mac", "Test Tone"), `devices` (how many get it), `problem: String?`.
 | Queue | Sound's work |
 |---|---|
 | main actor | `follow`'s decisions, `adopt`, status |
-| `sill.audio` | ScreenCaptureKit's sound (and its thrown-away picture), the tone's timer, the packetizer, the encoder (about 70 µs a packet), the stamps |
-| `sill.net` | `broadcastAudio`: a walk over the clients and one `send` each |
-| `sill.capture`, `sill.encode` | nothing: the picture's queues never see sound |
-| `sill.menus`, `sill.pointer` | nothing: the menus' Accessibility reads and the pointer's window re-reads never see sound |
+| `duodeck.audio` | ScreenCaptureKit's sound (and its thrown-away picture), the tone's timer, the packetizer, the encoder (about 70 µs a packet), the stamps |
+| `duodeck.net` | `broadcastAudio`: a walk over the clients and one `send` each |
+| `duodeck.capture`, `duodeck.encode` | nothing: the picture's queues never see sound |
+| `duodeck.menus`, `duodeck.pointer` | nothing: the menus' Accessibility reads and the pointer's window re-reads never see sound |
 
 #### 4.10 Log lines and Stats keys (exact; none unless Send Audio is on, or a device changes it)
 
 | When | Line |
 |---|---|
 | Sound starts for a window | `Audio: capturing Safari's sound (every window of it).` |
-| … for the Desktop | `Audio: capturing the whole Mac's sound (every app but Sill).` |
+| … for the Desktop | `Audio: capturing the whole Mac's sound (every app but DuoDeck).` |
 | … on a synthetic host | `Audio: a test tone (440 Hz at -30 dBFS, a click at each second).` |
 | Its first buffer | `Audio: first buffer 1024 frames, 48000 Hz, 2 channels, 32-bit float, non-interleaved, 9 ms after its time stamp.` |
 | A minute after it | `Audio: first minute: 2812 buffers, time stamps at most 0.3 ms from contiguous, 0 gaps, 1406 silent.` ("silent": every sample zero) |
 | The encoder, each epoch | `Audio encoder: AAC-ELD 48 kHz stereo, 512 frames a packet (10.7 ms), 128 kbps, codec delay 256 frames.` |
-| It stops | `Audio stopped: nothing streams.` · `Audio stopped: no connected device plays sound.` · `Audio stopped: Send Audio is off.` · `Audio stopped: Sill is quitting.` |
+| It stops | `Audio stopped: nothing streams.` · `Audio stopped: no connected device plays sound.` · `Audio stopped: Send Audio is off.` · `Audio stopped: DuoDeck is quitting.` |
 | A start fails | `Audio: could not capture Safari's sound: <error>. The picture is unaffected.` |
 | It ends by itself | `Audio capture ended: <error>. The picture is unaffected.` |
 | A device's stats | the `client …` line gains `, sound 42 ms behind` (and `, 3 late` in a second with late packets) when the report's `audioBehindMs` is 0 or more |
@@ -788,34 +788,34 @@ gap).
 
 #### 4.11 TEST ONLY hooks (honoured only by synthetic hosts, which do not advertise)
 
-`SILL_TEST_AUDIO_CHUNK=1024` (§4.2), and `SILL_TEST_AUDIO_PAUSE=S@T[,S@T…]`: the tone makes
+`DUODECK_TEST_AUDIO_CHUNK=1024` (§4.2), and `DUODECK_TEST_AUDIO_PAUSE=S@T[,S@T…]`: the tone makes
 nothing for S seconds from T seconds after it starts, then goes on from where the clock is (H8).
 Nothing else: the test tone is the test source. Every test host also runs with main's
-`SILL_TEST_LOOPBACK=1` (both doors on 127.0.0.1 alone) and `SILL_TEST_SOFTWARE_ENCODER=1` (never a
+`DUODECK_TEST_LOOPBACK=1` (both doors on 127.0.0.1 alone) and `DUODECK_TEST_SOFTWARE_ENCODER=1` (never a
 hardware encoder session), PointerTestHooks' since #31, honoured by a synthetic host alone; with
 PR #37 the loopback one is among TestHooks' door hooks too, which a test host alone takes
-(`DoorPolicy.isTestHost`) and Sill.app ignores with a line each.
+(`DoorPolicy.isTestHost`) and DuoDeck.app ignores with a line each.
 
-### 5. CLI (`Sources/SillHostCLI/main.swift`)
+### 5. CLI (`Sources/DuoDeckHostCLI/main.swift`)
 
 - **`--audio`:** `config.sendAudio = true`, and after the startup lines (main.swift:114-117) one
   more: `Audio on for this run: devices that play sound get the streamed app's sound, or the whole
   Mac's for the Desktop.`
 - **`--synthetic --audio`:** the test tone (§4.2).
-- **A device's change** lasts until SillHost quits, as every setting does. **Since the beta
+- **A device's change** lasts until DuoDeckHost quits, as every setting does. **Since the beta
   (2026-10-20):** there is none to keep; the host refuses it (Q8, §4.1), so only `--audio` turns
-  it on. **Since 2026-10-27:** a device's change again, kept until SillHost quits.
+  it on. **Since 2026-10-27:** a device's change again, kept until DuoDeckHost quits.
 - **Whichever door** (the plain home door by default; PR #37's `--pairing` puts it behind TLS; the
   remote door with `--remote`): the sound goes to every device whose hello plays it.
 - **Without `--audio`: stdout byte for byte** (H2), idle and streaming, whatever the devices'
   hellos say.
 
-### 6. Sill.app (`Sources/SillMenuBar`)
+### 6. DuoDeck.app (`Sources/DuoDeckMenuBar`)
 
 - **`HostSettings`:** the key `sendAudio`, registered default false, loaded and saved
-  (`save(changedFrom:)`) like the others; `defaults read me.saffer.sill.mac sendAudio`; the launch
+  (`save(changedFrom:)`) like the others; `defaults read com.agentsai.duodeck.host sendAudio`; the launch
   argument `-sendAudio 1` for one run.
-- **`DebugHooks.apply`:** `-SillSetAfter '2 sendAudio=1'`.
+- **`DebugHooks.apply`:** `-DuoDeckSetAfter '2 sendAudio=1'`.
 - **The status menu** (StatusItemController.swift:80-97): after Resolution, the last item of the
   picture's group: **Send Audio**, checked, subtitle **"The Mac keeps playing it too"**, action
   `.setSendAudio(!config.sendAudio)` (it sets the value it showed, as Virtual Display does).
@@ -825,11 +825,11 @@ PR #37 the loopback one is among TestHooks' door hooks too, which a test host al
   the streamed window's app, or every app for the Desktop. The Mac keeps playing it too, and each
   device can mute it with its Sound button. Nothing is recorded."** (Since 2026-10-27, after
   "Beta.": "… The Mac keeps playing it too. A connected iPhone or iPad can also turn this on or off
-  from Sill’s settings there, and mute it for itself alone. Nothing is recorded.") While
-  `snapshot.audio?.problem` is set, under it, the orange label: **"Sill couldn't capture the sound
+  from DuoDeck’s settings there, and mute it for itself alone. Nothing is recorded.") While
+  `snapshot.audio?.problem` is set, under it, the orange label: **"DuoDeck couldn't capture the sound
   of Safari: <reason>. The picture is unaffected."**
 - **Settings › Permissions** (SettingsPanes.swift:318-321): Screen Recording's explanation becomes
-  **"Lets Sill capture the windows you pick on your iPhone or iPad, and their sound when Send Audio
+  **"Lets DuoDeck capture the windows you pick on your iPhone or iPad, and their sound when Send Audio
   is on. Nothing is recorded or saved; frames and sound go straight to your devices."**
 - **The card** (StatusText.swift:179-203): the source row's detail ends in **" · sound"** while
   `snapshot.audio?.devices ?? 0 > 0`. A new preview sample, `sound`, the widest source row with it
@@ -861,17 +861,17 @@ time), and a direct `mach_absolute_time` is covered by its System boot time reas
 | `PhonePortraitLayout.swift` | The phone's row 2 with Sound at its end (`Tests/checks/phone-portrait`; `tour` compiles it too) | CoreGraphics |
 | `HostSettingsPanel.swift`, `HostSettingsLedger.swift`, `MockCatalog.swift`, `ContentView.swift`, `DiagnosticsHUD.swift` | The Send Audio row and the Sound switch, the field, the harness, the HUD | |
 
-**Why a player node and no render block of Sill's own.** The iOS 27 SDK adds
+**Why a player node and no render block of DuoDeck's own.** The iOS 27 SDK adds
 `AVAudioSourceNodeRenderBlockRealtimeSafe` and keeps it from Swift with the message "Swift is not
-supported for use with audio realtime threads" (AVAudioSourceNode.h:48). A render block Sill wrote
+supported for use with audio realtime threads" (AVAudioSourceNode.h:48). A render block DuoDeck wrote
 would be Swift on the real-time thread. With `AVAudioPlayerNode.scheduleBuffer`, every line of
-Sill's runs on ordinary queues, and the real-time code is Apple's.
+DuoDeck's runs on ordinary queues, and the real-time code is Apple's.
 
 #### 7.2 `AudioPlayout` (pure; Foundation only)
 
 - **Clocks.** Device times are seconds of the monotonic clock (`CACurrentMediaTime`, the host clock
   whose ticks AVAudioTime's `hostTime` counts); host stamps are wall-clock seconds.
-- **Queue.** It runs on `sill.audio`. The network queue stamps each frame and each kind 43 with its
+- **Queue.** It runs on `duodeck.audio`. The network queue stamps each frame and each kind 43 with its
   arrival as MessageReader delivers them whole, and hands them over. The few a move's probe read
   on its new connection before the hand-over are handled there, at the hand-over (`finishMove`
   replays them), and stamped then, a few ms late: nearly all duplicate what the old connection
@@ -1001,9 +1001,9 @@ and dropped, jumps.
 - **The graph:** `AVAudioPlayerNode` → `mainMixerNode` → output. The player's format is 48 kHz
   stereo float; the mixer converts to the route's rate.
 - **Buffers:** a pool of `AVAudioPCMBuffer`s of F + 1 frames (a gained frame fits), 32 to start,
-  grown on `sill.audio` when empty: the guard has no bound, and a picture a second late holds 100
+  grown on `duodeck.audio` when empty: the guard has no bound, and a picture a second late holds 100
   buffers in the player. Each comes back to the pool in its `scheduleBuffer` completion, which runs
-  on an AVFAudio queue, not `sill.audio` (the pool takes a lock).
+  on an AVFAudio queue, not `duodeck.audio` (the pool takes a lock).
 - **The session:** `.playback`, mode `.default`, options `[.mixWithOthers]` (Q4). It never stops the
   user's music or podcast, and it plays with the Ring/Silent switch on silent, as a video app does.
   `setPreferredSampleRate(48_000)`, `setPreferredIOBufferDuration(0.005)`, then `ioBufferDuration`
@@ -1027,16 +1027,16 @@ and dropped, jumps.
 - **`mediaServicesWereResetNotification`:** rebuild the engine and the session.
   **`AVAudioEngineConfigurationChange`:** the engine has stopped and uninitialized itself, its
   nodes keep their old formats, and it must not be torn down in the handler (Apple: it can
-  deadlock there). On `sill.audio`: connect the mixer to the output in the output's new format,
+  deadlock there). On `duodeck.audio`: connect the mixer to the output in the output's new format,
   start, read the latencies again and reset.
 - **No `UIBackgroundModes`:** in the background the app is not heard.
-- **DEBUG `-SillSoundSink manual`:** the engine in manual rendering mode
+- **DEBUG `-DuoDeckSoundSink manual`:** the engine in manual rendering mode
   (`enableManualRenderingMode(.offline, format:maximumFrameCount:)`): it never opens an output
   device and the session is never activated, so nothing can reach a speaker, the simulator's (the
-  Mac's) included. A DEBUG timer on `sill.audio` pulls 5 ms at a time (`renderOffline`), the model
+  Mac's) included. A DEBUG timer on `duodeck.audio` pulls 5 ms at a time (`renderOffline`), the model
   takes a stand-in IO buffer of 5 ms and output latency of 10 ms, and the console reports each click
   of the test tone found in what was rendered, against its stamp. Every simulator gate runs with it
-  (§11). **`-SillSoundVolume 0`:** the player node's volume 0 as well, a second guard.
+  (§11). **`-DuoDeckSoundVolume 0`:** the player node's volume 0 as well, a second guard.
 
 #### 7.5 `StreamClient`
 
@@ -1044,7 +1044,7 @@ and dropped, jumps.
   first message of every session connection (a tap's, a reconnect's, a wired dial's, every move's),
   inside TLS with PR #37.
 - **Kind 43** in `handle` (:2632): `AudioMessage.parse`, stamped with its arrival, handed to
-  `sill.audio`. A format for a new epoch gets a new decoder (one for the epoch already playing,
+  `duodeck.audio`. A format for a new epoch gets a new decoder (one for the epoch already playing,
   with the same cookie, as a move's new connection sends, is ignored); packets get the model's
   decision, then decode, fades, a frame more or less, and the schedule. Muted or in the background,
   the model still takes each packet's arrival (its floor and need stay right, so unmuting is quick)
@@ -1058,17 +1058,17 @@ and dropped, jumps.
   hand-over (`finishMove`, :1429-1506; PR #39's move home too) does not: the stream is the same
   epoch, the dedupe drops what both connections carry, and a faster or slower path is a floor
   change (rule 13), one jump at most.
-- **State.** `soundMuted` (published; `UserDefaults` `Sill.soundMuted`, default false), and
+- **State.** `soundMuted` (published; `UserDefaults` `DuoDeck.soundMuted`, default false), and
   `soundAvailable` (the host's `settings.displayed?.sendAudio == true`). Since 2026-10-27
   `macHasSound` (the host's `settings.displayed?.sendAudio != nil`: the Mac has sound, on or off),
   which shows the Settings panel's Mute; `soundAvailable` went with the bars' Sound button.
 
 #### 7.6 The Sound button (every layout) and the Sound switch
 
-**Gone since 2026-10-27** (Noah: "I've decided the audio setting should not be in the main button
+**Gone since 2026-10-27** (the maintainer: "I've decided the audio setting should not be in the main button
 tray but instead in settings."): no bar has the Sound button, and `PhonePortraitLayout`'s `sound`,
 `menusBesideSound` and `stripBesideBoth` went with it (every bar is main's before the sound). The
-switch is **Mute** (on mutes: `soundMuted`, remembered, never sent), right under Send Audio (Noah, 2026-10-27: "right below the Send Audio setting"; first in This iPad until then),
+switch is **Mute** (on mutes: `soundMuted`, remembered, never sent), right under Send Audio (the maintainer, 2026-10-27: "right below the Send Audio setting"; first in This iPad until then),
 for every Mac with sound whether Send Audio is on or off (`macHasSound`: its kind 16 carries
 `sendAudio`), so a device keeps itself silent before any device turns the sound on; VoiceOver's
 label "Mute sound from ‹Mac›"; the footnote "Silences ‹Mac›’s sound on this ‹device› alone; ‹Mac›
@@ -1095,7 +1095,7 @@ thumbnail strip, as the Menus button (#36) takes its own.
   the strip keeps two whole thumbnails from 375 pt (the SE, the 15 Pro, the 18 Pro and Pro Max;
   three on the Duo's outer display) and one and most of the next at 320 pt (an SE with Display
   Zoom).
-- **Why not in row 1.** Noah approved the phone's row 1 as five buttons; a sixth would make each as
+- **Why not in row 1.** the maintainer approved the phone's row 1 as five buttons; a sixth would make each as
   narrow as row 3's key caps. The row's end is where #36 put the Menus button for the same reason.
   Larger Picture (#79) has no row 2 while a window streams, so there Menus goes to row 1 after all
   (main's), and Sound stays out of it: the Settings panel's switch alone (Q10, the beta's default).
@@ -1130,39 +1130,39 @@ thumbnail strip, as the Menus button (#36) takes its own.
   `binding(sendAudio) { HostSettingsChange(sendAudio: $0) }`, with `RowTitle`'s pending mark like
   the others. **Since the beta (2026-10-20):** the Mac's value, read-only (a disabled switch, as
   Direct Wireless's from afar; the Mac refuses a device's change, Q8), its title followed by a
-  small **"Beta"** tag, VoiceOver's label "Send Audio, beta" and its hint "Set in Sill on ‹Mac›."
-  **Since 2026-10-27 (Noah):** a switch again, as at first, through the ledger, its pending mark
+  small **"Beta"** tag, VoiceOver's label "Send Audio, beta" and its hint "Set in DuoDeck on ‹Mac›."
+  **Since 2026-10-27 (the maintainer):** a switch again, as at first, through the ledger, its pending mark
   after the tag (an older Mac that refuses it sends it back: the warning haptic, "‹Mac› kept its
-  setting"); for a Mac without sound (nil) the row shows off and disabled, its hint "Update Sill on
+  setting"); for a Mac without sound (nil) the row shows off and disabled, its hint "Update DuoDeck on
   ‹Mac› to use this.", rather than no row.
 - **Footer, off:** **"‹Mac› plays the sound of what streams on every connected device, and keeps
   playing it too."** **On:** **"Every device hears what streams; ‹Mac› keeps playing it too. Sound
-  mutes it on this ‹device› alone."** Since the beta: off, **"Beta. Turn on Send Audio in Sill on
+  mutes it on this ‹device› alone."** Since the beta: off, **"Beta. Turn on Send Audio in DuoDeck on
   ‹Mac› to hear what streams on every connected device; ‹Mac› keeps playing it too."**; on,
   **"Beta. Every connected device hears what streams; ‹Mac› keeps playing it too. Sound mutes it
-  on this ‹device› alone. Turn Send Audio off in Sill on ‹Mac›."** Since 2026-10-27: on, **"Beta.
+  on this ‹device› alone. Turn Send Audio off in DuoDeck on ‹Mac›."** Since 2026-10-27: on, **"Beta.
   Every connected device hears what streams, and ‹Mac› keeps playing it too. Mute silences it on
   this ‹device› alone; ‹Mac› keeps sending and playing it."**; off, **"Beta. Turn this on to hear what
   streams on every connected device; ‹Mac› keeps playing it too."** with the same Mute sentence;
   either, while this device is muted, ending **"This ‹device› is muted."**; a Mac without sound, **"Beta.
-  Update Sill on ‹Mac› to hear its sound on this ‹device›."**
+  Update DuoDeck on ‹Mac› to hear its sound on this ‹device›."**
 - **`audioNote`:** under the row, as a warning footnote.
 - **The ledger:** `SettingsField.sendAudio`, `only`, `adding`, `fields`, and rule 9
   (HostSettingsLedger.swift:69, :99) for it: never sent to a host that did not report it.
 
 #### 7.8 Harness, DEBUG console and HUD
 
-- **Arguments** (the contract comment in ContentView.swift, and CLAUDE.md): `-SillSound on|muted`
-  (the button and the switch in that state, no sound), `-SillSettingsCase sound|soundnote` (the row
-  on; on with a note), `-SillSoundSink manual` and `-SillSoundVolume 0` (§7.4). With #36's
-  `-SillMacMenu` the mock shows the Menus button too, so a photo has both at the end of the phone's
-  row 2; `-SillIdiom pad` draws an iPad window's compact halves on an iPhone simulator. The mock
-  answers `sendAudio` as it answers the others. No `-SillSound…` argument exists yet (checked
-  2026-09-27). **Since 2026-10-27:** `-SillSound on|muted` sets Mute off or on (no
-  button), `-SillSettingsCase nosound` draws a Mac without sound (the Send Audio row off and
-  disabled, "Update Sill…", no Mute; `default` is now a Mac with sound, Send Audio off),
-  `-SillSettingsScroll mute` scrolls to the Mute switch, `-SillSoundToggle` and
-  `-SillSoundSwitchAt` flip Mute, and `-SillSettingsScript`'s `set sendAudio=1|0` is the device's
+- **Arguments** (the contract comment in ContentView.swift, and CLAUDE.md): `-DuoDeckSound on|muted`
+  (the button and the switch in that state, no sound), `-DuoDeckSettingsCase sound|soundnote` (the row
+  on; on with a note), `-DuoDeckSoundSink manual` and `-DuoDeckSoundVolume 0` (§7.4). With #36's
+  `-DuoDeckMacMenu` the mock shows the Menus button too, so a photo has both at the end of the phone's
+  row 2; `-DuoDeckIdiom pad` draws an iPad window's compact halves on an iPhone simulator. The mock
+  answers `sendAudio` as it answers the others. No `-DuoDeckSound…` argument exists yet (checked
+  2026-09-27). **Since 2026-10-27:** `-DuoDeckSound on|muted` sets Mute off or on (no
+  button), `-DuoDeckSettingsCase nosound` draws a Mac without sound (the Send Audio row off and
+  disabled, "Update DuoDeck…", no Mute; `default` is now a Mac with sound, Send Audio off),
+  `-DuoDeckSettingsScroll mute` scrolls to the Mute switch, `-DuoDeckSoundToggle` and
+  `-DuoDeckSoundSwitchAt` flip Mute, and `-DuoDeckSettingsScript`'s `set sendAudio=1|0` is the device's
   Send Audio switch.
 - **DEBUG console lines:**
   - `audio: format aac-eld 48000 Hz 2 ch, 480 frames (priming 240), epoch 3, Safari`
@@ -1173,7 +1173,7 @@ thumbnail strip, as the Menus button (#36) takes its own.
   - `audio: jump +52 ms (clock step)` · `audio: interrupted` · `audio: resumed` ·
     `audio: route Speaker → AirPods (+187 ms)` · `audio: muted (headphones disconnected)` ·
     `audio: idle, engine off`
-- **The HUD** (`-SillHUD 1`) gains ` · sound 62` while sound plays.
+- **The HUD** (`-DuoDeckHUD 1`) gains ` · sound 62` while sound plays.
 
 ### 8. Cost
 
@@ -1185,8 +1185,8 @@ thumbnail strip, as the Menus button (#36) takes its own.
 | The device's CPU | Decode | 0.07 % of an M-series core (the probe); a few times that on an A15 |
 | | AVAudioEngine | what playing any sound costs |
 | The link | Sound | about 16 KB/s (128 kbps) |
-| | Framing | 25 bytes a packet of Sill's own (the 14-byte header and 11), 2.5 KB/s. On a link with nothing else to carry, a still window's, each packet is also a TCP segment of its own: 52–72 bytes of TCP/IP headers, and a 22-byte TLS record at the remote door (at home too with PR #37, where Sill.app's home door is TLS). About 25 KB/s in all then, some 200 kbps |
-| | Silence | about 3 KB/s of Sill's own, 8–12 KB/s with those headers |
+| | Framing | 25 bytes a packet of DuoDeck's own (the 14-byte header and 11), 2.5 KB/s. On a link with nothing else to carry, a still window's, each packet is also a TCP segment of its own: 52–72 bytes of TCP/IP headers, and a 22-byte TLS record at the remote door (at home too with PR #37, where DuoDeck.app's home door is TLS). About 25 KB/s in all then, some 200 kbps |
+| | Silence | about 3 KB/s of DuoDeck's own, 8–12 KB/s with those headers |
 | | Against the picture | 1–1.5 % of Balanced (15 Mbps), 4–5 % of Low (4 Mbps) |
 | | The device's radio | 100 more small transmissions a second and about 50 acknowledgements back: it never dozes while sound flows, as the ticks already keep it while a source is live; a TLS client's ticks stop meanwhile (§4.6), so over TLS the sound's 100 records a second take the place of the ticks' 33 |
 | Battery | The device's audio hardware while sound plays; the engine stops after 10 s of no packets | |
@@ -1243,31 +1243,31 @@ thumbnail strip, as the Menus button (#36) takes its own.
 
 ### 11. Test gates
 
-**Hard rules for the implementing session** (Noah is at the Mac while it runs):
-- **Never capture Noah's sound, and never make sound on his Mac.** No SCStream with
-  `capturesAudio` against any real app: that is Noah's P-list. The host side is proven with the
-  test tone and the encoder-free harness. The implementing session never starts `Sill.app`, never
-  connects to it, never touches `/Applications/Sill.app` or the `me.saffer.sill.mac` domain, and
+**Hard rules for the implementing session** (the maintainer is at the Mac while it runs):
+- **Never capture the maintainer's sound, and never make sound on his Mac.** No SCStream with
+  `capturesAudio` against any real app: that is the maintainer's P-list. The host side is proven with the
+  test tone and the encoder-free harness. The implementing session never starts `DuoDeck.app`, never
+  connects to it, never touches `/Applications/DuoDeck.app` or the `com.agentsai.duodeck.host` domain, and
   runs no host that is not synthetic.
 - **Synthetic hosts and the harness only,** from `.build/release`, every one with
-  `SILL_TEST_LOOPBACK=1` (127.0.0.1 alone) and `SILL_TEST_SOFTWARE_ENCODER=1`, started from Python
+  `DUODECK_TEST_LOOPBACK=1` (127.0.0.1 alone) and `DUODECK_TEST_SOFTWARE_ENCODER=1`, started from Python
   with `start_new_session=True`, killed by PID, none left running.
 - **The Mac's video encoder.** The sound's gates run in the encoder-free harness (H5–H8), and S2
-  and S3 connect to it too, never to `SillHost`, whose picture goes through an encoder. H2's parity
-  runs use `SillHost --synthetic` on the software encoder, as the pointer's and the menus' did, and
-  only while `Scripts/encoder-check/no-device.sh` finds no device connected to Sill.app (before,
+  and S3 connect to it too, never to `DuoDeckHost`, whose picture goes through an encoder. H2's parity
+  runs use `DuoDeckHost --synthetic` on the software encoder, as the pointer's and the menus' did, and
+  only while `Scripts/encoder-check/no-device.sh` finds no device connected to DuoDeck.app (before,
   during, after). A run that needs the hardware encoder waits for the same.
 - **Device playback makes no sound anywhere.** The simulator plays through the Mac's speakers, so
-  every S gate runs with `-SillSoundSink manual` (the engine renders offline, no output device
-  opened) and `-SillSoundVolume 0` besides; the playout model's checks run on a simulated clock.
-  A simulator of its own named "Sill audio", never a shared one, deleted after; no `simctl io
+  every S gate runs with `-DuoDeckSoundSink manual` (the engine renders offline, no output device
+  opened) and `-DuoDeckSoundVolume 0` besides; the playout model's checks run on a simulated clock.
+  A simulator of its own named "DuoDeck audio", never a shared one, deleted after; no `simctl io
   recordVideo`; no iOS Simulator control `attach`; screenshots only, with `xcrun simctl io <udid>
   screenshot`.
-- **Nothing on Noah's devices:** no install, no `devicectl`; the P-list is his.
+- **Nothing on the maintainer's devices:** no install, no `devicectl`; the P-list is his.
 - **Builds:** at least 25 GB free before one; DerivedData under the session's scratch folder
   (`…/scratchpad/audio/`), never Xcode's default.
-- **App gates** use the bare `SillMenuBar --synthetic`, with the same two hooks; `defaults delete
-  SillMenuBar` afterwards.
+- **App gates** use the bare `DuoDeckMenuBar --synthetic`, with the same two hooks; `defaults delete
+  DuoDeckMenuBar` afterwards.
 
 **Headless (H): no permissions needed.**
 
@@ -1275,16 +1275,16 @@ thumbnail strip, as the Menus button (#36) takes its own.
 |---|---|---|
 | H0 | **Preflight** (no commit). Record the base. The sound's number still free and 24–28 still held as §3.1 says, and which checks and mutants name it: `git grep` over every ref, and every worktree's working tree and docs/, committed or not; the pbxproj block AA01–AA03 free the same way; which of PRs #37, #38 and #39 have landed; the codec probe, and the critique's reset and join probe, again on the build Mac | Recorded; ELD 480 and 512 give §Decision's F, P and end-to-end numbers within 1 ms, the same P after a reset, and a late join's first packet unusable, its fourth exact |
 | H1 | **Builds.** `swift build -c release`; iOS Debug and Release for the simulator and Debug for a generic device | Only the known warnings |
-| H2 | **The CLI byte for byte.** Base and new `SillHost --synthetic`, both with `SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1`: idle 35 s; with `sillclient.py PORT 8 desktop`; with `sillclient.py … --hello=0.6 --audio` (a hello that lists "aac-eld"); all again with `--direct-wireless`; digits masked, sorted | Identical; no `Audio` line and no `aud.` key; no kind 43 in the client's `kinds=` |
-| H3 | **Pure checks, each with its mutants caught.** `audio-packetizer` (Sources/SillHost/AudioPacketizer.swift), at least 30 cases: F from the first chunk (480, 1024, 441 and 960 frames), stamps against the anchors (±1 µs), the continuity tolerance at a quarter chunk ± 0.1 ms, a whole chunk missing, a chunk early, a format change, a segment ended with nothing flushed, `AudioSourceRule`'s table (a running stream kept, an ended one restarted after 10 s and not before); a gap emits nothing, and each block goes out with the chunk that completes it; at least 10 mutants (`>` for `≥` at the tolerance, the priming's sign, a gap that starts no segment, zeros filled into a gap, the tail flushed, an ended stream never restarted, a running one restarted). `audio-playout` (iOSClient/AudioPlayout.swift), at least 40 scenarios on a simulated clock (a steady home link; a 40 ms burst every 4 s; ±100 ppm for an hour; host clock steps of ±1 s; a 2 s stall, then a burst; duplicates; a seq gap; a join mid-segment; a still window; a link away at 80 ± 50 ms; a picture 1 s late; output latencies of 10 ms, 180 ms (AirPods) and 2 s (AirPlay) at home; IO buffers of 5 and 23 ms; a move's hand-over, both connections carrying the same packets and the new one 30 ms faster, its first packets handled late at the hand-over; a move home, away's bounds to home's; mute and unmute) and 5,000 random runs, with the invariants: nothing plays before it arrives; no two packets overlap; the sound never leads the picture as the model sees it; nothing is scheduled less than the IO buffer + 2 ms before its render; with any output latency up to 2 s and any IO buffer, a steady link loses no packet as late after its first 2 s; a packet decoded on a reset decoder in the middle of a segment is never played; a hand-over plays no packet twice and resets nothing, and a duplicate never counts toward the floor or the need; after a disturbance under 40 ms the error falls at 1.9 ms a second or better until under 5 ms; at most one frame added or dropped a packet; at least 18 mutants (max for min in the floor, no dedupe, no guard, the late test's sign, the jump at 400 ms, no step test, no fades, the need not rising at once, and the critique's: the output latency left out of the need, the late test without the IO buffer, a segment's first packet placed without its P, the packet after a seq gap played, a hand-over resetting the dedupe; and the refresh's: a duplicate counted before it is dropped). Wire cases: `compatibility` (AudioFormat and the new fields round trip; `{}` decodes; unknown keys ignored; the old `Hello`, `StreamSettings` and `ClientStats` decode the new JSON) and `protocol` (type 2 serialized and parsed; every malformed payload gives nil and never traps; 1,000 random byte strings). The kind checks (`protocol`, `menus`, `pointer-control`, and `compatibility` once #38 is in): 43 is `audio` (29 until 2026-10-14), and the rest of 29 to 42 (32 is the clipboard's since the merge with main at 5c323e6) and 44 read as unknown; the mutants that renumbered a kind onto 29 (and `pointer-control`'s onto 30) do so onto numbers from 250 to 254, each still caught (§3.1). `phone-portrait`: row 2 with Sound at its end, with and without Menus, at every width from 300 to 599 pt (Sound under Settings; Menus under Desktop beside it, under Settings without it; the strip ending 8 pt before the first; a whole thumbnail left at 320 pt, two from 375), with mutants (Sound under Desktop, the strip not shortened, Menus not moved aside); `tour`, which compiles the layout: its lit areas never take in Sound | All pass; every mutant caught |
-| H4 | **`audio-codec`** (a new check): Sources/SillHost/AudioEncoder.swift and iOSClient/AudioDecoder.swift in memory; the test tone through the encoder at F 480 and 512, each packet decoded at once | F and P as §3.2; with the first P frames dropped, each click lands at its stamp's sample ±2 frames; 5 s of the busy signal at 120–140 kbps; nothing but AudioToolbox linked |
-| H5 | **The harness at home** (`Scripts/audio/`, step 4: the real StreamServer and sound files with the test tone and fake frames; no VideoToolbox, ScreenCaptureKit or CoreMedia). 60 s of Balanced-sized fake frames at 60 fps; `Scripts/audiocheck.swift` on the home door (a hello with "aac-eld"; it decodes and finds the clicks); the same run with Send Audio off | 100 ± 1 packets a second (93.75 with `SILL_TEST_AUDIO_CHUNK=1024`); no gap in seq; 60 clicks at whole seconds of their stamps ±1 ms; `net.dropped`, `net.sent` and the frames' age the same with and without sound, within run-to-run noise |
-| H6 | **The harness away:** Scripts/pacing's `bottleneck.py` (on main since #34) at 8 and 4 Mbps with 1.5 MB keyframes, and a 12 s dip to 0.5 Mbps; the remote door's slow link through `Scripts/sillrelay.py` at 2 Mbit/s and +150 ms; and the pacing harness's own gate cases (kf25m32, real24, restartkf, stillend) with sound, against the same without | `aud.drop` 0 at 8 and 4 Mbps while `net.dropped` > 0 in the keyframe case; every packet's age at most the frames' age + 20 ms; in the dip, sound and frames arrive late together, and 2 s after it ends the packets' age is back; the pacing cases' fps and drops within their run-to-run noise with sound on (the keyframe asked for while at most 16 KB waits is not held back) |
-| H7 | **Send Audio over the wire.** `sillclient.py --audio --set=sendAudio=1@3 --set=sendAudio=0@8 --expect=sendAudio=0` against a synthetic host started without `--audio` | The answers carry it; the first packet within 300 ms of the first answer, the last within 100 ms of the second; "Settings from sillclient: send audio off → on" and "… on → off"; no "Streaming …" line (the picture never restarted). **Since the beta (Q8):** both changes refused ("Settings from sillclient refused: send audio (set on this Mac only)"), each answer still `sendAudio` false, no packet; and `SillHost --synthetic --audio` with `sillclient.py --audio`: the format, then packets with no seq gap, and "Audio stopped: nothing streams." when the client picks nothing (the bare app's `-SillSetAfter '<s> sendAudio=0'`: "Audio stopped: Send Audio is off.") **Since 2026-10-27 (Noah), as at first:** both changes applied and named ("Settings from sillclient: send audio off → on", "… on → off"), packets between them with no seq gap, "Audio stopped: Send Audio is off." after the second, and a second client's kind 16 saying so each time |
-| H8 | **Epochs and segments** in the harness: the tone paused for 50 ms, then for 500 ms (`SILL_TEST_AUDIO_PAUSE=0.05@3,0.5@6`), and a source change | Each pause: nothing sent for the gap, a segment start at the resumed chunk placed at its stamp ±1 ms, no packet sent more than 40 ms after its stamp, and audiocheck's model keeps its jitter cover; the source change: a new epoch, its format before its first packet on every client |
-| H9 | **Compatibility.** The base's `sillclient.py` against an `--audio` host; the base's StreamProtocol (swiftc) against a kind 43 header and the new kind 16; the new device decoder against the base host's messages | No kind 43 to the old client; `.unknown`; the old kind 16 decode ignores the keys; nothing new decoded |
-| H10 | **Previews.** The bare app's `-SillRenderPreviews` before and after | Only the Streaming and Permissions panes, menu.txt's Send Audio and the new `sound` card sample differ |
-| H11 | **Hard rules** (grep) | No `captureMicrophone`, `AudioHardwareCreateProcessTap`, `updateConfiguration` or `assumeIsolated` in Sources/SillHost; no `UIBackgroundModes` in the iOS Info.plist; `HostConfig.standard` has `sendAudio: false`; the sound's send path never calls the counting `send(_:to:isFrame:isKeyframe:)` and never touches `keyframesInFlight` or `backlogFloor`; no AVFoundation or CoreMedia import in AudioEncoder, AudioPacketizer, AudioPipeline or SyntheticAudio; no render block in iOSClient; `-SillSoundSink` and `-SillSoundVolume` only under `#if DEBUG` |
+| H2 | **The CLI byte for byte.** Base and new `DuoDeckHost --synthetic`, both with `DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1`: idle 35 s; with `duodeckclient.py PORT 8 desktop`; with `duodeckclient.py … --hello=0.6 --audio` (a hello that lists "aac-eld"); all again with `--direct-wireless`; digits masked, sorted | Identical; no `Audio` line and no `aud.` key; no kind 43 in the client's `kinds=` |
+| H3 | **Pure checks, each with its mutants caught.** `audio-packetizer` (Sources/DuoDeckHost/AudioPacketizer.swift), at least 30 cases: F from the first chunk (480, 1024, 441 and 960 frames), stamps against the anchors (±1 µs), the continuity tolerance at a quarter chunk ± 0.1 ms, a whole chunk missing, a chunk early, a format change, a segment ended with nothing flushed, `AudioSourceRule`'s table (a running stream kept, an ended one restarted after 10 s and not before); a gap emits nothing, and each block goes out with the chunk that completes it; at least 10 mutants (`>` for `≥` at the tolerance, the priming's sign, a gap that starts no segment, zeros filled into a gap, the tail flushed, an ended stream never restarted, a running one restarted). `audio-playout` (iOSClient/AudioPlayout.swift), at least 40 scenarios on a simulated clock (a steady home link; a 40 ms burst every 4 s; ±100 ppm for an hour; host clock steps of ±1 s; a 2 s stall, then a burst; duplicates; a seq gap; a join mid-segment; a still window; a link away at 80 ± 50 ms; a picture 1 s late; output latencies of 10 ms, 180 ms (AirPods) and 2 s (AirPlay) at home; IO buffers of 5 and 23 ms; a move's hand-over, both connections carrying the same packets and the new one 30 ms faster, its first packets handled late at the hand-over; a move home, away's bounds to home's; mute and unmute) and 5,000 random runs, with the invariants: nothing plays before it arrives; no two packets overlap; the sound never leads the picture as the model sees it; nothing is scheduled less than the IO buffer + 2 ms before its render; with any output latency up to 2 s and any IO buffer, a steady link loses no packet as late after its first 2 s; a packet decoded on a reset decoder in the middle of a segment is never played; a hand-over plays no packet twice and resets nothing, and a duplicate never counts toward the floor or the need; after a disturbance under 40 ms the error falls at 1.9 ms a second or better until under 5 ms; at most one frame added or dropped a packet; at least 18 mutants (max for min in the floor, no dedupe, no guard, the late test's sign, the jump at 400 ms, no step test, no fades, the need not rising at once, and the critique's: the output latency left out of the need, the late test without the IO buffer, a segment's first packet placed without its P, the packet after a seq gap played, a hand-over resetting the dedupe; and the refresh's: a duplicate counted before it is dropped). Wire cases: `compatibility` (AudioFormat and the new fields round trip; `{}` decodes; unknown keys ignored; the old `Hello`, `StreamSettings` and `ClientStats` decode the new JSON) and `protocol` (type 2 serialized and parsed; every malformed payload gives nil and never traps; 1,000 random byte strings). The kind checks (`protocol`, `menus`, `pointer-control`, and `compatibility` once #38 is in): 43 is `audio` (29 until 2026-10-14), and the rest of 29 to 42 (32 is the clipboard's since the merge with main at 5c323e6) and 44 read as unknown; the mutants that renumbered a kind onto 29 (and `pointer-control`'s onto 30) do so onto numbers from 250 to 254, each still caught (§3.1). `phone-portrait`: row 2 with Sound at its end, with and without Menus, at every width from 300 to 599 pt (Sound under Settings; Menus under Desktop beside it, under Settings without it; the strip ending 8 pt before the first; a whole thumbnail left at 320 pt, two from 375), with mutants (Sound under Desktop, the strip not shortened, Menus not moved aside); `tour`, which compiles the layout: its lit areas never take in Sound | All pass; every mutant caught |
+| H4 | **`audio-codec`** (a new check): Sources/DuoDeckHost/AudioEncoder.swift and iOSClient/AudioDecoder.swift in memory; the test tone through the encoder at F 480 and 512, each packet decoded at once | F and P as §3.2; with the first P frames dropped, each click lands at its stamp's sample ±2 frames; 5 s of the busy signal at 120–140 kbps; nothing but AudioToolbox linked |
+| H5 | **The harness at home** (`Scripts/audio/`, step 4: the real StreamServer and sound files with the test tone and fake frames; no VideoToolbox, ScreenCaptureKit or CoreMedia). 60 s of Balanced-sized fake frames at 60 fps; `Scripts/audiocheck.swift` on the home door (a hello with "aac-eld"; it decodes and finds the clicks); the same run with Send Audio off | 100 ± 1 packets a second (93.75 with `DUODECK_TEST_AUDIO_CHUNK=1024`); no gap in seq; 60 clicks at whole seconds of their stamps ±1 ms; `net.dropped`, `net.sent` and the frames' age the same with and without sound, within run-to-run noise |
+| H6 | **The harness away:** Scripts/pacing's `bottleneck.py` (on main since #34) at 8 and 4 Mbps with 1.5 MB keyframes, and a 12 s dip to 0.5 Mbps; the remote door's slow link through `Scripts/duodeckrelay.py` at 2 Mbit/s and +150 ms; and the pacing harness's own gate cases (kf25m32, real24, restartkf, stillend) with sound, against the same without | `aud.drop` 0 at 8 and 4 Mbps while `net.dropped` > 0 in the keyframe case; every packet's age at most the frames' age + 20 ms; in the dip, sound and frames arrive late together, and 2 s after it ends the packets' age is back; the pacing cases' fps and drops within their run-to-run noise with sound on (the keyframe asked for while at most 16 KB waits is not held back) |
+| H7 | **Send Audio over the wire.** `duodeckclient.py --audio --set=sendAudio=1@3 --set=sendAudio=0@8 --expect=sendAudio=0` against a synthetic host started without `--audio` | The answers carry it; the first packet within 300 ms of the first answer, the last within 100 ms of the second; "Settings from duodeckclient: send audio off → on" and "… on → off"; no "Streaming …" line (the picture never restarted). **Since the beta (Q8):** both changes refused ("Settings from duodeckclient refused: send audio (set on this Mac only)"), each answer still `sendAudio` false, no packet; and `DuoDeckHost --synthetic --audio` with `duodeckclient.py --audio`: the format, then packets with no seq gap, and "Audio stopped: nothing streams." when the client picks nothing (the bare app's `-DuoDeckSetAfter '<s> sendAudio=0'`: "Audio stopped: Send Audio is off.") **Since 2026-10-27 (the maintainer), as at first:** both changes applied and named ("Settings from duodeckclient: send audio off → on", "… on → off"), packets between them with no seq gap, "Audio stopped: Send Audio is off." after the second, and a second client's kind 16 saying so each time |
+| H8 | **Epochs and segments** in the harness: the tone paused for 50 ms, then for 500 ms (`DUODECK_TEST_AUDIO_PAUSE=0.05@3,0.5@6`), and a source change | Each pause: nothing sent for the gap, a segment start at the resumed chunk placed at its stamp ±1 ms, no packet sent more than 40 ms after its stamp, and audiocheck's model keeps its jitter cover; the source change: a new epoch, its format before its first packet on every client |
+| H9 | **Compatibility.** The base's `duodeckclient.py` against an `--audio` host; the base's StreamProtocol (swiftc) against a kind 43 header and the new kind 16; the new device decoder against the base host's messages | No kind 43 to the old client; `.unknown`; the old kind 16 decode ignores the keys; nothing new decoded |
+| H10 | **Previews.** The bare app's `-DuoDeckRenderPreviews` before and after | Only the Streaming and Permissions panes, menu.txt's Send Audio and the new `sound` card sample differ |
+| H11 | **Hard rules** (grep) | No `captureMicrophone`, `AudioHardwareCreateProcessTap`, `updateConfiguration` or `assumeIsolated` in Sources/DuoDeckHost; no `UIBackgroundModes` in the iOS Info.plist; `HostConfig.standard` has `sendAudio: false`; the sound's send path never calls the counting `send(_:to:isFrame:isKeyframe:)` and never touches `keyframesInFlight` or `backlogFloor`; no AVFoundation or CoreMedia import in AudioEncoder, AudioPacketizer, AudioPipeline or SyntheticAudio; no render block in iOSClient; `-DuoDeckSoundSink` and `-DuoDeckSoundVolume` only under `#if DEBUG` |
 | H12 | **Cost.** The harness host's CPU (`ps`, 60 s) with and without sound | At most 1.5 percentage points more |
 
 **The harness** (`Scripts/audio/`, step 4) is built the way Scripts/pacing/build.sh builds its host:
@@ -1303,31 +1303,31 @@ model without a player: its floor, need and late decisions on real arrivals), a 
 
 | # | Check |
 |---|---|
-| S1 | **Photos**, on a private simulator ("Sill audio"). `-SillSound on` and `muted`, with and without `-SillMacMenu`: at 1000x710, 710x1000 and 710x500; the phone's arrangement at 440x956, 402x874, 375x667 and 320x548 and at the Duo's 500x710; the compact halves (`-SillIdiom pad`) at 500x710 and a 320x700 Slide Over (no button: the panel's switch); at the default size and xxLarge text. `-SillSettingsCase sound` and `soundnote` at the same sizes, the panel scrolled to its end (`-SillSettingsEnd 1`) for the switch. The button in every bar that holds it, the strip one button narrower, Menus beside it on the phone, the row after the closing footnote, the switch first in the device's group; against the base build, every other photo pixel for pixel. Send Noah the sheet |
-| S2 | **Live.** `-SillLive 1 -SillConnect 127.0.0.1:P` against the harness's home door, with `-SillSoundSink manual -SillSoundVolume 0`: the console's format and engine lines; within 3 s "late 0" and a steady "behind the picture"; each rendered click within 2 ms of its stamp plus the delay. A headless tap on Sound: "engine off"; again: on, one jump. The panel's switch the same. `sillclient.py --set=sendAudio=0@…` as a second client: the button and the switch go, and "idle, engine off" 10 s later (since the beta the Mac refuses it, Q8: nothing goes; the host's own end of the sound, its client picking nothing or the bare app's `-SillSetAfter '<s> sendAudio=0'`, stands in). **Since 2026-10-27:** no button: `-SillSoundToggle` flips This iPad's Mute ("engine off (muted)", then "unmuted"), and the device's own Send Audio switch (`-SillSettingsScript '<t> set sendAudio=1'`) turns the Mac's sound on and off: the host's "Settings from ‹device›: send audio off → on", the format, the engine on |
-| S3 | **A move.** `-SillMoveTest 1` with sound, against the harness, with `-SillSoundSink manual -SillSoundVolume 0`: no double packets (the console's dedupe count), nothing reset, at most one jump at the hand-over |
+| S1 | **Photos**, on a private simulator ("DuoDeck audio"). `-DuoDeckSound on` and `muted`, with and without `-DuoDeckMacMenu`: at 1000x710, 710x1000 and 710x500; the phone's arrangement at 440x956, 402x874, 375x667 and 320x548 and at the Duo's 500x710; the compact halves (`-DuoDeckIdiom pad`) at 500x710 and a 320x700 Slide Over (no button: the panel's switch); at the default size and xxLarge text. `-DuoDeckSettingsCase sound` and `soundnote` at the same sizes, the panel scrolled to its end (`-DuoDeckSettingsEnd 1`) for the switch. The button in every bar that holds it, the strip one button narrower, Menus beside it on the phone, the row after the closing footnote, the switch first in the device's group; against the base build, every other photo pixel for pixel. Send the maintainer the sheet |
+| S2 | **Live.** `-DuoDeckLive 1 -DuoDeckConnect 127.0.0.1:P` against the harness's home door, with `-DuoDeckSoundSink manual -DuoDeckSoundVolume 0`: the console's format and engine lines; within 3 s "late 0" and a steady "behind the picture"; each rendered click within 2 ms of its stamp plus the delay. A headless tap on Sound: "engine off"; again: on, one jump. The panel's switch the same. `duodeckclient.py --set=sendAudio=0@…` as a second client: the button and the switch go, and "idle, engine off" 10 s later (since the beta the Mac refuses it, Q8: nothing goes; the host's own end of the sound, its client picking nothing or the bare app's `-DuoDeckSetAfter '<s> sendAudio=0'`, stands in). **Since 2026-10-27:** no button: `-DuoDeckSoundToggle` flips This iPad's Mute ("engine off (muted)", then "unmuted"), and the device's own Send Audio switch (`-DuoDeckSettingsScript '<t> set sendAudio=1'`) turns the Mac's sound on and off: the host's "Settings from ‹device›: send audio off → on", the format, the engine on |
+| S3 | **A move.** `-DuoDeckMoveTest 1` with sound, against the harness, with `-DuoDeckSoundSink manual -DuoDeckSoundVolume 0`: no double packets (the console's dedupe count), nothing reset, at most one jump at the hand-over |
 
-**Noah's devices (P), handed over at the end:** the iPad mini, the Mac, headphones, an iPhone for
+**the maintainer's devices (P), handed over at the end:** the iPad mini, the Mac, headphones, an iPhone for
 P6 and P14.
 
 | # | Check |
 |---|---|
-| P1 | **On.** Send Audio from the Mac's menu; Music playing, its window streamed: the iPad plays it, and so does the Mac (the menu's subtitle says so). After a relaunch `defaults read me.saffer.sill.mac sendAudio` is 1 |
+| P1 | **On.** Send Audio from the Mac's menu; Music playing, its window streamed: the iPad plays it, and so does the Mac (the menu's subtitle says so). After a relaunch `defaults read com.agentsai.duodeck.host sendAudio` is 1 |
 | P2 | **The first buffer.** Send the log's "first buffer … frames … ms after its time stamp" line, the encoder's line (480 or 512) and the "first minute" line (pause Music for 20 s in that minute: do silent buffers keep coming?), and say whether the 2×2 picture was taken |
 | P3 | **Per app.** Two Safari windows, a video playing in one; stream the other: the video's sound plays. The Desktop: every app's sound |
 | P4 | **Helpers and daemons.** A YouTube video in Safari and in Chrome, Spotify, a FaceTime call (expected silent), Mail's new-mail sound: which are heard. An app whose sound comes from a helper process and is not heard (a browser's audio service, an Electron app) gets a build that adds its helpers to the filter (the running applications whose bundle identifier begins with the app's and a dot), and P4 again |
 | P5 | **Off screen.** Music minimized while the Desktop streams; Music's window on the virtual display; a second display. A window on the virtual display streaming in silence moves the app's filter to `desktopIndependentWindow` (§Decision), and P5 again |
-| P6 | **Sync.** A clapper or lip-sync test video on the Mac, streamed; film the iPad at 240 fps with the iPhone and count the frames between the flash and the click. The speaker, then AirPods; the console's "behind the picture" at the same time. The film minus the console is what the model cannot see (the picture's time on the Mac, the display's own): once on the hardware encoder and, if convenient, once on the software one (the CLI with `SILL_TEST_ENCODER_HANG=1` and `--audio` falls back at its first hang for about 30 s). Sound ever ahead of the flash: §14's V |
+| P6 | **Sync.** A clapper or lip-sync test video on the Mac, streamed; film the iPad at 240 fps with the iPhone and count the frames between the flash and the click. The speaker, then AirPods; the console's "behind the picture" at the same time. The film minus the console is what the model cannot see (the picture's time on the Mac, the display's own): once on the hardware encoder and, if convenient, once on the software one (the CLI with `DUODECK_TEST_ENCODER_HANG=1` and `--audio` falls back at its first hang for about 30 s). Sound ever ahead of the flash: §14's V |
 | P7 | **Restarts keep the sound.** With music: rotate, cycle Aa, switch 60 and 120 fps, change Quality, turn the virtual display on and off: no gap. Another Music window: no gap. Another app's window: a short gap and a fade in |
 | P8 | **Mute.** The bar's Sound: muted at once, the Mac still playing; relaunch: still muted; unmute: sound within about 0.1 s. VoiceOver reads "Sound from ‹Mac›, On". The iPhone upright: Sound at the end of the thumbnails' row, Menus beside it. The iPad in Slide Over: no button, the Settings panel's switch mutes |
 | P9 | **Interruptions and routes.** A FaceTime call to the iPad, Siri, AirPods in and out (out mutes and says so), wired headphones, AirPlay to a speaker (the console's output latency, and the sound trailing by it), and a stream started during a call (no sound and one line; sound once the call ends) |
 | P10 | **Away.** Tailscale over the iPhone's hotspot at Low: the sound goes on while `net.dropped` counts; the `client …` line's "sound … behind" |
 | P11 | **The Mac muted** (its volume): does the iPad still hear it? |
 | P12 | **The Mac's output changed** mid-stream (headphones into the Mac, AirPods on the Mac): the sound goes on, or one "Audio capture ended" line, and the next pick, or Send Audio off and on, brings it back. The same for the Mac's lock screen and a fast user switch |
-| P13 | **An hour** of music: no drift (the console's error within ±5 ms and no jump after the first minute); Sill.app's CPU in Activity Monitor with sound on and off |
+| P13 | **An hour** of music: no drift (the console's error within ±5 ms and no jump after the first minute); DuoDeck.app's CPU in Activity Monitor with sound on and off |
 | P14 | **Two devices** (the iPad and the iPhone): both play; muting one leaves the other |
-| P15 | **Mixed builds.** This iPad with Sill for Mac 0.3.1, the public release: no row, no button, no sound. An iPad build from before this step that reaches this Sill.app (main's Debug; once #37 is in, a build from before pairing at home, TestFlight's 0.5 among them, reaches its home door not at all) with Send Audio on: nothing changes for it |
-| P16 | **The device's silent mode and volume buttons:** it plays on silent, as a video app does (Q4); the volume buttons set Sill's volume |
+| P15 | **Mixed builds.** This iPad with DuoDeck Host 0.3.1, the public release: no row, no button, no sound. An iPad build from before this step that reaches this DuoDeck.app (main's Debug; once #37 is in, a build from before pairing at home, TestFlight's 0.5 among them, reaches its home door not at all) with Send Audio on: nothing changes for it |
+| P16 | **The device's silent mode and volume buttons:** it plays on silent, as a video app does (Q4); the volume buttons set DuoDeck's volume |
 
 ### 12. Implementation order and sizing (one commit per step; each passes its gates before the next)
 
@@ -1339,17 +1339,17 @@ Commit messages end with the session's attribution lines.
 | 1 | "Protocol: kind 29, the Mac's sound" (43 since 2026-10-14, the last section) | StreamMessage.swift, Audio.swift (new), Compatibility.swift, HostSettings.swift, Viewport.swift; the `compatibility` and `protocol` cases; the kind checks and mutants that name the sound's kind (§3.1), and Tests/checks/README.md's paragraph on them | H1, H3 (wire), H9 (decode) | ½ day |
 | 2 | "Host: the sound's blocks and stamps" | AudioPacketizer.swift (new) with `AudioSourceRule`; `Tests/checks/audio-packetizer` | H3 | ½ day |
 | 3 | "Host and device: the AAC-ELD encoder and decoder" | AudioEncoder.swift (new); iOSClient/AudioDecoder.swift (new, not yet in the Xcode project); `Tests/checks/audio-codec` | H4 | ½ day |
-| 4 | "Host: Send Audio, the sound's stream and its send path" | AudioCapture, SyntheticAudio, AudioPipeline (new); StreamServer, StreamCoordinator, HostConfig, DeviceSettings, HostStatus; the CLI's `--audio`; `sillclient.py --audio` and `sendAudio`; `Scripts/audio/` and `Scripts/audiocheck.swift` | H1, H2, H5–H9, H11, H12 | 2 days |
-| 5 | "Sill.app: Send Audio" | HostSettings, DebugHooks, StatusItemController, SettingsPanes, StatusText, the previews | H1, H10 | ½ day |
+| 4 | "Host: Send Audio, the sound's stream and its send path" | AudioCapture, SyntheticAudio, AudioPipeline (new); StreamServer, StreamCoordinator, HostConfig, DeviceSettings, HostStatus; the CLI's `--audio`; `duodeckclient.py --audio` and `sendAudio`; `Scripts/audio/` and `Scripts/audiocheck.swift` | H1, H2, H5–H9, H11, H12 | 2 days |
+| 5 | "DuoDeck.app: Send Audio" | HostSettings, DebugHooks, StatusItemController, SettingsPanes, StatusText, the previews | H1, H10 | ½ day |
 | 6 | "iOS: the playout model" | AudioPlayout.swift (new); `Tests/checks/audio-playout` | H3 | 1½ days |
 | 7 | "iOS: the Mac's sound" | AudioOutput.swift (new) and the three pbxproj pairs (AA01–AA03); StreamClient, the bars (TopBar, the window bar, the phone's row 2, `MacMenuButton.fits`), PhonePortraitLayout with `phone-portrait` and `tour`, the panel (the Send Audio row, the Sound switch), the ledger, MockCatalog, ContentView, DiagnosticsHUD | H1, H3 (the layout), S1–S3 | 2 days |
-| 8 | "docs: the Mac's sound on the device" | This plan's Results; CLAUDE.md (the current step, Layout, Build and run, Untested for Noah: P1–P16, and the decisions list: audio no longer out of scope); docs/DEVELOPMENT.md (Send Audio); Tests/checks/README.md's table; `ci.yml`'s mutants matrix; BRIEF.md (audio in scope from 2026-09-27, Noah's word). For the release that carries sound, and said so in the commit: README.md's Good to know ("does not play sound from your Mac"), docs/app-store-metadata.md's description ("Sill doesn't play sound from your Mac.") and site/privacy.html (what the Mac sends, and what Screen Recording is for), in public copy's words for Apple's names ("sound from your Mac", never "your Mac's sound": app-store-metadata.md's trademark note) | — | ¼ day |
-| 9 | Review and hand-over | Three lenses: the sync model and its constants; the host's threads and the picture's isolation (nothing of the sound on the picture's queues or counters); the device's session, lifecycle and UI. A "Review fixes" commit if needed, then H5–H8 and S2 again; hand P1–P16 to Noah. **Stop there** | — | ½–1 day |
+| 8 | "docs: the Mac's sound on the device" | This plan's Results; CLAUDE.md (the current step, Layout, Build and run, Untested for the maintainer: P1–P16, and the decisions list: audio no longer out of scope); docs/DEVELOPMENT.md (Send Audio); Tests/checks/README.md's table; `ci.yml`'s mutants matrix; BRIEF.md (audio in scope from 2026-09-27, the maintainer's word). For the release that carries sound, and said so in the commit: README.md's Good to know ("does not play sound from your Mac"), docs/app-store-metadata.md's description ("DuoDeck doesn't play sound from your Mac.") and site/privacy.html (what the Mac sends, and what Screen Recording is for), in public copy's words for Apple's names ("sound from your Mac", never "your Mac's sound": app-store-metadata.md's trademark note) | — | ¼ day |
+| 9 | Review and hand-over | Three lenses: the sync model and its constants; the host's threads and the picture's isolation (nothing of the sound on the picture's queues or counters); the device's session, lifecycle and UI. A "Review fixes" commit if needed, then H5–H8 and S2 again; hand P1–P16 to the maintainer. **Stop there** | — | ½–1 day |
 
 - **In all:** about 8–9 days of focused work, most of it the two pure models and their checks.
-  Noah's P-list: about 2 hours.
+  the maintainer's P-list: about 2 hours.
 - **Rough size:** the host about 900 lines (Audio.swift 150, the packetizer 200, the encoder 180,
-  the capture 150, the tone 80, the pipeline 250, about 150 in existing files); Sill.app about 80;
+  the capture 150, the tone 80, the pipeline 250, about 150 in existing files); DuoDeck.app about 80;
   the device about 1,000 (the playout 400, the decoder 120, the output 350, about 150 in existing
   files); checks and harness about 1,500.
 - **Merges, never rebases.** The pointer (#31), the menus (#36) and remote pacing (#34) are on the
@@ -1371,7 +1371,7 @@ Commit messages end with the session's attribution lines.
 
 ### 13. Hard rules (for every step)
 
-- **The picture first.** Nothing of the sound runs on `sill.capture` or `sill.encode`. The sound
+- **The picture first.** Nothing of the sound runs on `duodeck.capture` or `duodeck.encode`. The sound
   never counts in `inflight`, `inflightFrames` or the drain eviction, and pacing never drops it. A
   failure of the sound never stops, restarts or delays the picture. `follow` runs once the picture
   has started (`active`'s didSet).
@@ -1385,15 +1385,15 @@ Commit messages end with the session's attribution lines.
 - **Kinds 0–42 untouched** (29 to 42 are PR #66's and #78's). 43 is the sound's (the next free, H0;
   29 until 2026-10-14). Additive only: kind 43 goes only to a device whose hello lists the codec;
   every new field is optional.
-- **No Swift on a real-time audio thread:** the player node schedules; Sill writes no render block.
-- **Tests never capture Noah's sound and never make a sound** (§11's hard rules): the test tone,
-  the harness, the engine's manual rendering on the simulator; never `/Applications/Sill.app`,
-  `me.saffer.sill.mac` or Noah's devices; test hosts on loopback and the software encoder, the
+- **No Swift on a real-time audio thread:** the player node schedules; DuoDeck writes no render block.
+- **Tests never capture the maintainer's sound and never make a sound** (§11's hard rules): the test tone,
+  the harness, the engine's manual rendering on the simulator; never `/Applications/DuoDeck.app`,
+  `com.agentsai.duodeck.host` or the maintainer's devices; test hosts on loopback and the software encoder, the
   hardware encoder only while no-device.sh finds no device.
-- **Row 1 of the phone's arrangement stays as Noah approved it** (five buttons), and the Menus
+- **Row 1 of the phone's arrangement stays as the maintainer approved it** (five buttons), and the Menus
   button never gives way to Sound: a bar with room for one of them shows Menus (§7.6). Larger
   Picture (#79), which has no row 2, is the exception: Menus and, from 384 pt, Sound join its row 1
-  ("Merged with main at 5c323e6"; for Noah, Q10). **Since the beta (2026-10-20), Menus alone:**
+  ("Merged with main at 5c323e6"; for the maintainer, Q10). **Since the beta (2026-10-20), Menus alone:**
   Sound never joins Larger Picture's row 1, which stays main's, and the Settings panel's switch is
   the sound's only control there (Q10, as the beta took it; "The beta").
 - **Apple frameworks only** (AudioToolbox, AVFAudio, ScreenCaptureKit). New iOS files need their
@@ -1404,7 +1404,7 @@ Commit messages end with the session's attribution lines.
 - **A quiet Mac.** A Core Audio process tap (macOS 14.2 and later) with `CATapMutedWhenTapped` in
   place of ScreenCaptureKit's sound, so the Mac goes silent while a device plays; it needs its own
   permission ("System Audio Recording Only"). Then Send Audio could be on by default (Q1, Q6).
-- **A path of its own for the sound.** A send queue with priorities (Sill hands the connection only
+- **A path of its own for the sound.** A send queue with priorities (DuoDeck hands the connection only
   a bounded amount) lets sound pass frames not yet handed over, never a keyframe already on the
   wire; a second connection for the sound (or datagrams) passes that too, at home and away, and can
   take the voice service class. It needs its own admission (pairing, the gate, a hello), so it is a
@@ -1418,7 +1418,7 @@ Commit messages end with the session's attribution lines.
 
 ---
 
-## Open questions for Noah (the implementer uses the default unless Noah says otherwise)
+## Open questions for the maintainer (the implementer uses the default unless the maintainer says otherwise)
 
 Refreshed 2026-09-27: the implementation takes every default below. Q13 is answered (now), Q10 is
 rewritten for the layouts main has since #30 and #36, and Q12 says where the kinds stand.
@@ -1433,7 +1433,7 @@ rewritten for the layouts main has since #30 and #36, and Q12 says where the kin
 3. **The bitrate.** Default: **128 kbps** everywhere (4–5 % of Low with the headers; with PR #39 an
    away session starts at Low · Standard). The alternative: 96 kbps away from home.
 4. **The session.** Default: **`.playback` with `.mixWithOthers`**: it never stops the iPad's own
-   music, and plays on silent like a video app. Alternatives: `.playback` alone (Sill's sound
+   music, and plays on silent like a video app. Alternatives: `.playback` alone (DuoDeck's sound
    pauses other audio, like a video app); `.ambient` (obeys the silent switch, like a game).
    Kept for the beta (2026-10-20); the support page says it plays on silent.
 5. **Mute.** Default: **per device, local, remembered.** The alternative: per Mac. Kept for the
@@ -1452,7 +1452,7 @@ rewritten for the layouts main has since #30 and #36, and Q12 says where the kin
    app's sound (calls among it) on every connected device, unmuted (Q5) and on silent (Q4); Share
    Clipboard is the Mac's alone for a like reason, and PR #66's author proposed the same for its
    mute-host. `DeviceSettings.accepted` refuses it, the device's row shows it read-only, and
-   kind 17's field stays for a later decision (#66's Mac viewer asked to set it). **Revised by Noah
+   kind 17's field stays for a later decision (#66's Mac viewer asked to set it). **Revised by the maintainer
    on 2026-10-27: the default again.** "Sound should be a toggle in the settings menu": the
    device's Send Audio switch turns the Mac's Send Audio on and off, saved on the Mac like Quality,
    for every device; each device's Mute stays its own.
@@ -1469,8 +1469,8 @@ rewritten for the layouts main has since #30 and #36, and Q12 says where the kin
     Sound kept before Menus where only one fits (an iPad has the Mac's menus in its own menu bar on
     iPadOS 26, a phone does not); the switch only where no bar holds the button; with Larger
     Picture, Sound never in row 1 (the panel's switch alone). **Taken for the beta (2026-10-20):
-    with Larger Picture, Sound never in row 1**, which §13's hard rule asks (row 1 as Noah approved
-    it); the rest of the default stands. **Revised by Noah on 2026-10-27: no Sound button in any
+    with Larger Picture, Sound never in row 1**, which §13's hard rule asks (row 1 as the maintainer approved
+    it); the rest of the default stands. **Revised by the maintainer on 2026-10-27: no Sound button in any
     bar.** "I've decided the audio setting should not be in the main button tray but instead in
     settings." The Settings panel's two switches instead: the Mac's group's Send Audio (Q8) and
     Mute right under it, the device's own.
@@ -1480,7 +1480,7 @@ rewritten for the layouts main has since #30 and #36, and Q12 says where the kin
     main; 28 is the trackpad gesture of PR #38; no branch holds 29 (2026-09-27). If another branch
     takes it first, the next free. Taken: **43** since 2026-10-14, when PR #66 held 29 to 42 (the
     last section).
-13. **When.** Answered by Noah on 2026-09-27: **now** ("Audio: the plan is done and parked as a v2
+13. **When.** Answered by the maintainer on 2026-09-27: **now** ("Audio: the plan is done and parked as a v2
     feature by your earlier decision", first in what he wants worked on). The plan's default was
     after v1 ships; BRIEF.md and CLAUDE.md say so until step 8 records the decision.
 14. **One stream or two.** Default: **a stream of its own for the sound**, so rotation, Aa and
@@ -1555,13 +1555,13 @@ place:
     comes on top of the keyframe itself: 1–4 s at 4 Mbps, not 0.5–1 s.
 12. **The cost of 100 small messages.** On a still link each packet is its own TCP segment (and a
     TLS record away): about 25 KB/s, and silence 8–12 KB/s, not 3.
-13. **Tests.** Every S gate runs silent (`-SillSoundVolume 0`) and against the harness, never
-    `SillHost` and its encoder; the tone is stamped by its sample count and clicks on whole seconds
-    of the stamps' clock; `SILL_TEST_AUDIO_PAUSE` replaces an undefined signal; audiocheck runs the
+13. **Tests.** Every S gate runs silent (`-DuoDeckSoundVolume 0`) and against the harness, never
+    `DuoDeckHost` and its encoder; the tone is stamped by its sample count and clicks on whole seconds
+    of the stamps' clock; `DUODECK_TEST_AUDIO_PAUSE` replaces an undefined signal; audiocheck runs the
     playout model on real arrivals; H3 gains the invariants and five mutants for 3–7; H8 checks that
     a gap sends nothing late; P2, P4, P5, P6, P9 and P12 gain what the docs leave open.
 14. **Public text.** The README, the App Store description and the privacy policy each say today
-    that Sill plays no sound, or list what the Mac sends without it: step 8 changes them with the
+    that DuoDeck plays no sound, or list what the Mac sends without it: step 8 changes them with the
     release that carries sound.
 15. **Base.** main is 150f781 (PR #20 moved the keyframe interval to HEVCEncoder.swift:168);
     remote-pacing is b4b315e, with its harness, and MessageReader still uncommitted.
@@ -1601,7 +1601,7 @@ Read against main at 643af6b and the three open pull requests that touch the sam
 at da250bc), and every other branch and worktree, the day's keychain-hardening, release-next and
 spotlight-modifier-fix among them. Nothing was built or run. Changed in place:
 
-1. **Noah's decision.** Now, not after v1 (Q13; the header, "Reading of it"); step 8 records it in
+1. **the maintainer's decision.** Now, not after v1 (Q13; the header, "Reading of it"); step 8 records it in
    BRIEF.md and CLAUDE.md. Every other open question takes its default.
 2. **Line numbers** are 643af6b's throughout; the critique's own stay 150f781's.
 3. **Kind 29, confirmed** (43 since 2026-10-14, the last section). 24 to 27 are on main (#31, #36)
@@ -1631,12 +1631,12 @@ spotlight-modifier-fix among them. Nothing was built or run. Changed in place:
    the phone and a Slide Over.
 8. **Project-file IDs** (§7.1). The critique's A401–A403 went to the tour (A401, A402); A501 is the
    phone's layout, A601 home pairing's, A701 the gestures', A801 away's. The sound takes AA01–AA03.
-9. **Test rules** (§4.11, §7.4, §11, §13). Every test host on `SILL_TEST_LOOPBACK` and
-   `SILL_TEST_SOFTWARE_ENCODER` (main's since #31); `Scripts/encoder-check/no-device.sh` before
-   any run that could meet Noah's stream; the simulator's engine in manual rendering
-   (`-SillSoundSink manual`), so no output device opens and nothing reaches a speaker, with the
-   player at volume 0 besides; a private simulator, "Sill audio", screenshots only; nothing
-   installed on Noah's devices; 25 GB free and DerivedData in the session's scratch folder.
+9. **Test rules** (§4.11, §7.4, §11, §13). Every test host on `DUODECK_TEST_LOOPBACK` and
+   `DUODECK_TEST_SOFTWARE_ENCODER` (main's since #31); `Scripts/encoder-check/no-device.sh` before
+   any run that could meet the maintainer's stream; the simulator's engine in manual rendering
+   (`-DuoDeckSoundSink manual`), so no output device opens and nothing reaches a speaker, with the
+   player at volume 0 besides; a private simulator, "DuoDeck audio", screenshots only; nothing
+   installed on the maintainer's devices; 25 GB free and DerivedData in the session's scratch folder.
 10. **Away from home (#39).** `applyingAway` passes Send Audio on as `applying` does (§4.1);
     `audioNote` is the Mac's, beside each connection's `away` and `link` (§3.4); the link report
     counts the frames withheld (never the sound) and the sound's bytes in what the link carried
@@ -1646,7 +1646,7 @@ spotlight-modifier-fix among them. Nothing was built or run. Changed in place:
 11. **A move's first packets** (§7.2). The probe's messages are handled at the hand-over and
     stamped then; a duplicate is now dropped before it counts anywhere, so a move never raises the
     need (a gap the critique left; H3 gains the case and a mutant).
-12. **Compatibility** (§3.5, §3.6, P15). The older host is Sill for Mac 0.3.1, the public release;
+12. **Compatibility** (§3.5, §3.6, P15). The older host is DuoDeck Host 0.3.1, the public release;
     a device build from before #37 reaches no TLS home door at all; if the sound ships in the first
     public builds, its wire joins the compatibility floor.
 13. **Public copy** (step 8): in the words public copy uses for Apple's names, "sound from your
@@ -1658,7 +1658,7 @@ and pipeline, the costs (but for TLS), and the P-list (but for P8 and P15).
 
 ---
 
-## Results: the wire, the host and Sill.app (2026-09-27)
+## Results: the wire, the host and DuoDeck.app (2026-09-27)
 
 Steps 1 to 5 of §12, one commit each, on branch `audio` (from main at 643af6b with the plan merged
 in; main at da43f6b, PR #38 the trackpad gestures, merged in at 2b114e1):
@@ -1666,7 +1666,7 @@ in; main at da43f6b, PR #38 the trackpad gestures, merged in at 2b114e1):
 - 6d1695b: Host: the sound's blocks and stamps.
 - 5d0ef5c: Host and device: the AAC-ELD encoder and decoder.
 - 4001e8e: Host: Send Audio, the sound's stream and its send path.
-- 5dc5a2e: Sill.app: Send Audio.
+- 5dc5a2e: DuoDeck.app: Send Audio.
 
 After them: main's merge (2b114e1), a source's start failure in one line (bdb5775), these docs
 (88026b3), and the sound in a device's stats line (f7303b7, §4.10's ", sound 42 ms behind, 3
@@ -1675,7 +1675,7 @@ late", the late packets summed since the line before).
 Steps 6 and 7 (the device's playout model, its output, the Sound button and the panel's rows) come
 next. Until they land, no device plays the sound: no device's hello lists a codec, so no host sends
 kind 29 (the sound's kind then; 43 since 2026-10-14, the last section). Step 8's docs are done as
-far as these steps go: BRIEF.md and CLAUDE.md record Noah's decision, and CLAUDE.md, DEVELOPMENT.md, Tests/checks/README.md and `ci.yml` cover the new files.
+far as these steps go: BRIEF.md and CLAUDE.md record the maintainer's decision, and CLAUDE.md, DEVELOPMENT.md, Tests/checks/README.md and `ci.yml` cover the new files.
 The README, the App Store text and the privacy policy wait for the release that carries the sound.
 
 **Where the build departs from the plan, and why:**
@@ -1691,7 +1691,7 @@ The README, the App Store text and the privacy policy wait for the release that 
 3. **"Every packet's age at most the frames' + 20 ms"** also allows the sound's own time before it
    goes out. That is its buffer and the codec's priming: 10–17 ms here. A frame stamped at
    encode-out has no such time. In the harness the gap never passed 20 ms on top of it.
-4. **SILL_TEST_AUDIO_PAUSE applies to every tone.** After H8's source change the second tone pauses
+4. **DUODECK_TEST_AUDIO_PAUSE applies to every tone.** After H8's source change the second tone pauses
    too, so there are four gaps, not two.
 5. **The encoder takes 48 kHz stereo only.** Another rate or channel count is refused with one line
    and the note, not resampled as the plan's "any rate" would. ScreenCaptureKit delivers what it is
@@ -1700,7 +1700,7 @@ The README, the App Store text and the privacy policy wait for the release that 
 6. **A synthetic host never captures a real window's sound.** A window picked on a test host plays
    no sound. Only its Desktop, the test pattern, has one: the test tone.
 7. **The log lines.** A source's line prints as it starts, before its first buffer and the encoder's
-   line. A failure then says so after it. The Desktop's line reads "(every app but Sill)" in the CLI
+   line. A failure then says so after it. The Desktop's line reads "(every app but DuoDeck)" in the CLI
    too: `excludesCurrentProcessAudio` leaves the host's own sound out there.
 8. **`AudioDecoder` knows nothing of the wire.** It takes the packet size and the cookie, and gives
    a buffer per channel. With a cookie, AudioToolbox's ELD decoder reads the frame length from it;
@@ -1716,7 +1716,7 @@ The README, the App Store text and the privacy policy wait for the release that 
    Codec quality Low (`kAudioConverterCodecQuality`, 32 against the default 64) would save about
    0.6 points (28–33 µs a packet), at 3–9 dB less SNR on tonal sound: 31.9 → 22.8 dB on the tone,
    19.8 → 17.1 on the music-like signal, 11.1 → 10.7 on the busy one. Not taken: the sound's quality
-   against 0.6 % of one core of a Mac. Noah's call (Q16 below). The real host adds
+   against 0.6 % of one core of a Mac. the maintainer's call (Q16 below). The real host adds
    ScreenCaptureKit's own sound stream on top (P13).
 
 **Verified (2026-09-27, 17:24–19:05)** (no ScreenCaptureKit audio against any app, no sound made, no
@@ -1759,7 +1759,7 @@ device; test hosts on 127.0.0.1 and the software encoder, `no-device.sh` before 
   - The same at 4 Mbit/s: 12 dropped and no packet skipped, 6,465/6,921 against 6,697/6,908.
   - In the dip to 0.5 Mbit/s: the packets' per-second maxima were 13–20 ms over the frames' all the
     way to 9.8 s behind. Both were back at 38 s (the dip ended at 32).
-  - Through `sillrelay.py` at 2 Mbit/s and +150 ms: no eviction, no packet skipped.
+  - Through `duodeckrelay.py` at 2 Mbit/s and +150 ms: no eviction, no packet skipped.
   - The pacing harness's own gate cases with sound (`Scripts/pacing/run.sh --sound`): the same build
     without and with it, every gate passed, fps and drops as without:
 
@@ -1775,14 +1775,14 @@ device; test hosts on 127.0.0.1 and the software encoder, `no-device.sh` before 
     each second's slowest pong was 102–700 ms with sound against 75–86 without, over three runs each.
     The pong waits behind what the link is still taking, and with sound flowing the queue is empty
     less often. Its still spells ended with the last frame shown, 3 of 3, within 2.2 s either way.
-- **H7.** A synthetic SillHost started without `--audio`; `sillclient.py --audio
+- **H7.** A synthetic DuoDeckHost started without `--audio`; `duodeckclient.py --audio
   --set=sendAudio=1@3 --set=sendAudio=0@8 --expect=sendAudio=0`:
   - both answers carried the change;
   - the first packet came 23 ms after the first answer, and the last before the second answer;
-  - "Settings from sillclient: send audio off → on" and "… on → off", then "Audio stopped: Send
+  - "Settings from duodeckclient: send audio off → on" and "… on → off", then "Audio stopped: Send
     Audio is off.";
   - one "Streaming" line: the picture never restarted.
-- **H9.** Main's `sillclient.py` against an `--audio` host: no kind 29 (the sound's kind then; 43
+- **H9.** Main's `duodeckclient.py` against an `--audio` host: no kind 29 (the sound's kind then; 43
   since 2026-10-14, the last section) in its `kinds=`, and the sound never started (no device played
   it). This branch's client, playing sound, against main's host: `audio=-` in its settings, and no
   kind 29. Main's StreamProtocol (da43f6b) read everything:
@@ -1791,7 +1791,7 @@ device; test hosts on 127.0.0.1 and the software encoder, `no-device.sh` before 
   - a hello with codecs;
   - stats with the sound's fields;
   - a Send Audio change (read as an empty change).
-- **H2.** Main's SillHost (da43f6b) against this branch's, both `--synthetic` on loopback and the
+- **H2.** Main's DuoDeckHost (da43f6b) against this branch's, both `--synthetic` on loopback and the
   software encoder, digits masked and sorted, twice each:
   - idle 35 s, with and without `--direct-wireless`;
   - a client picking the Desktop;
@@ -1818,9 +1818,9 @@ device; test hosts on 127.0.0.1 and the software encoder, `no-device.sh` before 
 16. **The encoder's CPU.** Default: **codec quality Medium** (AudioToolbox's default), about 1 point
     of a core on a tonal signal. The alternative is Low: 0.6 points less, 3–9 dB less SNR on tonal
     sound. **Kept for the beta (2026-10-20)**, H12 unmet (+3.9 to +4.4 points of a core in the
-    harness, the gate 1.5) and accepted while Send Audio was off by default (on in Sill.app since 2026-10-27, so P13 measures the
-    default); Sill.app's real cost
-    (P13) is one of the beta's exit criteria. Two levers if Noah wants them: Low, and two packets a
+    harness, the gate 1.5) and accepted while Send Audio was off by default (on in DuoDeck.app since 2026-10-27, so P13 measures the
+    default); DuoDeck.app's real cost
+    (P13) is one of the beta's exit criteria. Two levers if the maintainer wants them: Low, and two packets a
     message (about half the per-message cost, for 10.7 ms more; the wire already carries 1 to 255).
 
 ## Merged with main at 985a733 (2026-10-13)
@@ -1860,7 +1860,7 @@ was fixed or left), one commit per theme:
 - 5126215: **the engine's configuration change** was never observed (§7.4): an output at another rate
   (AirPods, Bluetooth's call profile, another app changing the session's rate) stops and
   uninitializes the engine while `engine` stayed set and packets kept the idle stop away, so the
-  sound stayed silent until a mute and unmute. Now the change stops it on `sill.audio` (never in the
+  sound stayed silent until a mute and unmute. Now the change stops it on `duodeck.audio` (never in the
   handler) and the next packet builds one in the output's new format. **Nothing decoded while
   silent** (§7.5): only mute muted the model, so the background decoded every packet into the
   model's waiting list, and back in front they were placed late and reported to the Mac as late;
@@ -1895,7 +1895,7 @@ was fixed or left), one commit per theme:
 Left as they are: the tail's timer hands the tail over at `max(now, deadline)`, early if a fresh
 reading moved its deadline later (by microseconds, while the output's and the host's clocks agree;
 an early tail only costs a fade out and in); the DEBUG click finder copies TestTone's click (2 kHz,
-4 ms, −6 dBFS, Hann), which iOS cannot import from SillHostCore; `-SillSoundSwitchAt` calls
+4 ms, −6 dBFS, Hann), which iOS cannot import from DuoDeckHostCore; `-DuoDeckSoundSwitchAt` calls
 `setSoundMuted` as the switch's binding does, without the Toggle; no pure case holds
 `MacMenuButton.fits`'s thresholds (666, 640 and 532 pt), which live in a SwiftUI file.
 
@@ -1905,23 +1905,23 @@ an early tail only costs a fade out and in); the DEBUG click finder copies TestT
    faded every packet out and in. The rest of the packet goes to the player at once.
 2. **The output latency is max(the session's, the player's presentation latency)**, not their sum:
    the player's includes the output's own (AVAudioNode.h), so the sum counted the device twice.
-3. **A packet is stamped when the playout takes it on `sill.audio`**, not on the network queue as
+3. **A packet is stamped when the playout takes it on `duodeck.audio`**, not on the network queue as
    frames are (§7.2's Queue): what the packet in hand waits for is the next packet reaching the
    playout, so the hop between the queues is part of what the cover must cover.
 4. **A fourth project file**, StreamClient+Audio.swift (AA04/FA04).
-5. **Harness arguments beyond §7.8:** `-SillSoundToggle`, `-SillSoundSwitchAt`, `-SillSettingsScroll
+5. **Harness arguments beyond §7.8:** `-DuoDeckSoundToggle`, `-DuoDeckSoundSwitchAt`, `-DuoDeckSettingsScroll
    sound` and the settings case `soundoff`.
 6. **The fade before a stop is the mixer's 25 ms ramp**, not 5 ms: the player node offers nothing
-   finer without a render block of Sill's own (§13).
+   finer without a render block of DuoDeck's own (§13).
 7. **A configuration change stops the engine and the next packet builds one**, rather than
    reconnecting the mixer in place: fewer lines, the same new format and latencies, one placement by
    time.
 8. **Sound counts Menus always, and the book pose shows it in the panel alone** (dd9e6fc; the merge's
    §7.6 note said "only while the Mac's menus do not").
 9. **The simulator never opens an output**, in every build: manual rendering is the simulator's
-   default, and `-SillSoundSink device` (DEBUG) opens it for a person at the simulator.
-10. **S2 and S3 ran against `SillHost --synthetic --audio`** on loopback and the software encoder
-    (SILL_TEST_LOOPBACK, SILL_TEST_SOFTWARE_ENCODER, SILL_TEST_NO_ROUTER), not the harness, whose
+   default, and `-DuoDeckSoundSink device` (DEBUG) opens it for a person at the simulator.
+10. **S2 and S3 ran against `DuoDeckHost --synthetic --audio`** on loopback and the software encoder
+    (DUODECK_TEST_LOOPBACK, DUODECK_TEST_SOFTWARE_ENCODER, DUODECK_TEST_NO_ROUTER), not the harness, whose
     window list and kind 16 are zero-filled stand-ins a device cannot decode (no Sound button, and a
     move's probe cancels on such a list). The software encoder answers §11's reason for the
     harness-only rule: the hardware encoder is never touched.
@@ -1958,33 +1958,33 @@ the software encoder, `no-device.sh` before and after each run):
   its restarts, linkstill and real24 never behind, over8 behind with a carried rate of 8.45 Mbit/s
   (within 20 % of 8) and Low suggested. Without sound, main's StreamServer against the merged one
   (`Scripts/pacing/run.sh`): every gate passed.
-- **H2** (main's SillHost at 985a733 against HEAD's, both from `git archive`): idle 35 s, picking the
+- **H2** (main's DuoDeckHost at 985a733 against HEAD's, both from `git archive`): idle 35 s, picking the
   Desktop, and a hello that lists aac-eld, with and without `--direct-wireless`: 4 of 6 identical,
   masked and sorted; the other two only in when the host was stopped (one more 30 s idle line) and
   one stats second with an `enc.mailboxDrop` (the software encoder beside the S1 photos). No Audio
   line, no `aud.` key, no kind 29 (the sound's kind then; 43 since 2026-10-14).
-- **H10** (the bare SillMenuBar's previews from one path, 985a733's and HEAD's): only menu.txt, the
+- **H10** (the bare DuoDeckMenuBar's previews from one path, 985a733's and HEAD's): only menu.txt, the
   Streaming and Permissions panes and the new `card-sound` and `card-remote-sound` differ.
 - **H11** (the device's): no `UIBackgroundModes`; no render block or source node in iOSClient;
-  `SillSoundSink` and `SillSoundVolume` read only under `#if DEBUG`.
-- **S2** (the normal app on a private iPad Pro 13" simulator, "Sill audio", iOS 27.0, with
-  `-SillSoundSink manual -SillSoundVolume 0`): the format and engine lines; "late 0" every second;
+  `DuoDeckSoundSink` and `DuoDeckSoundVolume` read only under `#if DEBUG`.
+- **S2** (the normal app on a private iPad Pro 13" simulator, "DuoDeck audio", iOS 27.0, with
+  `-DuoDeckSoundSink manual -DuoDeckSoundVolume 0`): the format and engine lines; "late 0" every second;
   every click heard within 0.2 ms of where it was placed, and within 2 ms of its due time once rule
   11 had closed a change of the cover (its fall from the 40 ms start, a rise as the app went to the
   background), 2 ms a second as designed; the Sound button
-  (`-SillSoundToggle`): "engine off (muted)", then on again with one join and no jump (nothing played
+  (`-DuoDeckSoundToggle`): "engine off (muted)", then on again with one join and no jump (nothing played
   to jump from), the clicks found again (after 8bbbe52); the panel's switch the same; in the
   background (Settings brought to the front) "engine off (in the background)", and back in front a
   new engine, one join and "late 0"; a second client's `--set=sendAudio=0`: "Audio stopped: Send
   Audio is off." on the host, the Sound button gone from the portrait window bar (the strip one
   thumbnail wider), and "idle, engine off" 10 s later.
-- **S3** (`-SillMoveTest 1`): the move to the network fenced and handed over (the host's second
+- **S3** (`-DuoDeckMoveTest 1`): the move to the network fenced and handed over (the host's second
   "Client connected", the first leaving 0.5 s later), one duplicate counted and dropped, no join, no
   jump, late 0.
 - **S1** (the mock on the same simulator; 1000x710, 710x1000, 710x500, the phone's arrangement at
   440x956, 402x874, 375x667, 320x548 and 500x710, the compact halves at 500x710 and a 320x700 Slide
   Over, the iPhone Duo's 951x669, 669x951, 466x678 and 678x466 and the book pose (951x669,
-  `-SillHinge half`); `-SillSound on` and `muted`, with VS Code's menus and with `-SillMacMenu
+  `-DuoDeckHinge half`); `-DuoDeckSound on` and `muted`, with VS Code's menus and with `-DuoDeckMacMenu
   none`; the panel's `sound` case at its end and `soundnote` at the Send Audio row; at the default
   and xxLarge text; 273 photos, and 90 of main's build at 985a733 from the same stub): every photo
   without the sound pixel for pixel main's, 90 of 90 (two retaken: a first shot of main's own build
@@ -1995,7 +1995,7 @@ the software encoder, `no-device.sh` before and after each run):
   camera's strip, under the compact bar's 640), whose bars are pixel for pixel main's, with Menus
   where it showed. The Send Audio row after the closing footnote, with its note in orange; the Sound
   switch first in the This iPad group, the Slide Over's only Sound control. The photos are in
-  /tmp/sill-audio-s1 (not kept).
+  /tmp/duodeck-audio-s1 (not kept).
 
 **The mutants (2026-10-14, on 1b7d6b0):** every check whose compiled files differ between main and
 this branch, 31 checks and 925 mutants, every one caught: `audio-playout` 36, `audio-packetizer` 27,
@@ -2008,7 +2008,7 @@ this branch, 31 checks and 925 mutants, every one caught: `audio-playout` 36, `a
 copies of an older ledger): 1b7d6b0 gives it twelve one-line ones, the sound's seventh field among
 them, and CI's mutants matrix lists it. Then `Tests/checks/run-all.sh`, all 43.
 
-Not done here: the iOS build with Xcode 27.1 and Noah's P1–P16.
+Not done here: the iOS build with Xcode 27.1 and the maintainer's P1–P16.
 
 ## The review (2026-10-14)
 
@@ -2016,20 +2016,20 @@ Three lenses over `git diff origin/main...HEAD` (the sync model; the host's thre
 session, lifecycle and windows), each finding checked by an adversarial verifier and read again here
 before it was fixed: seven confirmed, none refuted, one commit each.
 - e6bc0a0 (sync): **a packet past the hand's deadline followed the hand.** The deadline's timer and
-  the packets share `sill.audio`, and AudioOutput never ticks before a packet, so a packet taken just
+  the packets share `duodeck.audio`, and AudioOutput never ticks before a packet, so a packet taken just
   after the deadline (the queue busy) sent the hand's tail out under the IO buffer + 2 ms before its
   render, unfaded: an underrun with a click. `place` gives the deadline its turn first, and the
   packet is placed by time with rule 6's test. `audio-playout`'s new case (a packet 4 ms past the
   deadline, no tick) fails without it (M37).
 - 81d43fe (sync): **the wait behind an engine start or stop counted as the link's jitter.** `receive`
-  starts the engine on `sill.audio` and took each packet's time after it, so the cover rose by the
+  starts the engine on `duodeck.audio` and took each packet's time after it, so the cover rose by the
   block's length for 10 s after each unmute, return or idle restart, then a jump dropped packets; the
   deferred stop did the same. Rule 6 exempts the engine starting. A packet the network queue handed
-  over before `sill.audio` last finished starting or stopping an engine gives the model when it came
+  over before `duodeck.audio` last finished starting or stopping an engine gives the model when it came
   (`packet`'s `arrival:`), for the floor and the cover; the late test and the placement keep `now`,
   and departure 3 holds for every other packet. A by-hand case fails without it (M38).
 - 1de43aa (host): **the source's callbacks were cleared under it.** `stopSource` and a failed start
-  set `onPCM` and `onStopped` to nil on the main actor while the source reads them on `sill.audio`
+  set `onPCM` and `onStopped` to nil on the main actor while the source reads them on `duodeck.audio`
   and ScreenCaptureKit's delegate queue: a race on a closure that property alone owns. They stay; the
   generation makes a late call inert, and a failed start goes through `stopSource`.
 - adccdeb (host): **AAC-ELD's failure was said once.** The next source's start wrote a status with no
@@ -2053,7 +2053,7 @@ before it was fixed: seven confirmed, none refuted, one commit each.
 Rerun: `swift build -c release`, no warning; `Scripts/audio/build.sh`, both binaries (not run: the
 send path did not change); `audio-playout` 218 checks and 38 of 38 mutants; the iOS app from the
 scratch copy (Debug for the generic simulator, and ad hoc signed), only the known warning; S2 again on
-a private iPad Pro 13" simulator (iOS 27.0, deleted after) against `SillHost --synthetic --audio` on
+a private iPad Pro 13" simulator (iOS 27.0, deleted after) against `DuoDeckHost --synthetic --audio` on
 loopback and the software encoder, rendering offline at volume 0, `no-device.sh` before and after:
 every click within 0.2 ms of its place after the first second, mute and unmute (the cover unchanged
 by the new engine's start), the background and back (one "engine off (in the background)", a new
@@ -2062,15 +2062,15 @@ engine in front, clicks again); then `Tests/checks/run-all.sh`, all 43.
 Left open: in the background packets still count for the cover (§7.5), and the simulator's
 throttled background app raised it to 150 ms, kept 10 s past the return (the first S2 saw it too); a
 resumed app's backlog would do the same. Leaving the background's packets out of the cover changes
-§7.5, for Noah. In this S2 the host made its first AAC-ELD encoder 3.3 s after the tone's first chunk
+§7.5, for the maintainer. In this S2 the host made its first AAC-ELD encoder 3.3 s after the tone's first chunk
 (beside the catalog's installed-apps scan, the Mac loaded by the mutants), the chunks waiting on
-`sill.audio` behind it, so the session's first second came as a burst of old stamps: 205 late and two
-jumps, then steady. A real capture's buffers would wait the same; making the encoder off `sill.audio`
+`duodeck.audio` behind it, so the session's first second came as a burst of old stamps: 205 late and two
+jumps, then steady. A real capture's buffers would wait the same; making the encoder off `duodeck.audio`
 is not done.
 
 ## Kind 43 (2026-10-14)
 
-A review of PR #94 found the sound's kind 29 taken: PR #66 (Sill Viewer, a Mac controlling another
+A review of PR #94 found the sound's kind 29 taken: PR #66 (DuoDeck Viewer, a Mac controlling another
 Mac; #72 and #73 build on it) numbers 29 `sideStreams`, 30 `sideParameterSets`, 31 `sideFrame`, 32
 `clipboard`, 33 its own `audio`, and 34 to 42 (`fileChunk`, `fileDrop`, `dragOffer`, `fileRequest`,
 `liveDrag`, `dockMenu`, `pickDisplay`, `takenBack`, `rebuildDesk`), and #78 (the clipboard) takes 32
@@ -2085,7 +2085,7 @@ What changed, in one commit: `case audio = 43` in StreamMessage.swift (its comme
 Compatibility.swift, HostSettings.swift, Viewport.swift, the host's AudioPipeline, HostConfig,
 StreamCoordinator and StreamServer, the device's AudioOutput, AudioPlayout, StreamClient and
 StreamClient+Audio, Scripts/audio/run.sh and Scripts/audiocheck.swift); the scripts that read the
-number themselves (`sillclient.py`'s kinds table, its first-kinds filter and its parser;
+number themselves (`duodeckclient.py`'s kinds table, its first-kinds filter and its parser;
 Scripts/pacing/device.py's parser); the kind checks (`compatibility`: 43 is audio, 29, 42 and 44
 are not this build's; `protocol` and `menus`: 29 and 44 read as unknown, 43 as audio;
 `pointer-control`: 43 is audio and every kind from 29 to 42 and 44 to 254 is unknown); the mutants
@@ -2098,8 +2098,8 @@ stats are as they were. Results above that record a step run before this one kee
 Verified: `Tests/checks/run-all.sh` for the four kind checks, `compatibility` 131, `protocol` all
 pass (220 and crosscheck.py's 8), `menus` 309, `pointer-control` 157; their mutants, `compatibility`
 31 of 31, `protocol` 33 of 33, `menus` 43 of 43, `pointer-control` 33 of 33, every one caught; live,
-`SillHost --synthetic --audio` on loopback (the software encoder, no router) with
-`sillclient.py --audio --set=sendAudio=1`: 584 kind 43 messages, one format, epoch 1, no seq gap;
+`DuoDeckHost --synthetic --audio` on loopback (the software encoder, no router) with
+`duodeckclient.py --audio --set=sendAudio=1`: 584 kind 43 messages, one format, epoch 1, no seq gap;
 `Scripts/encoder-check/no-device.sh` passing before and after.
 
 ## Merged with main at 5c323e6 (2026-10-18)
@@ -2116,7 +2116,7 @@ the sound:
 - **§4.1, the settings.** `sendAudio` sits beside #78's `shareClipboard` in HostConfig (its
   `standard`, its change line), and the CLI's `--audio` beside `--no-clipboard`.
 - **§4.7, the source.** #75 keeps a regular-mode window streaming through three of the catalog's
-  looks while it is off the list (one that was full screen when last listed, or that Sill fitted),
+  looks while it is off the list (one that was full screen when last listed, or that DuoDeck fitted),
   `active` unchanged. The sound found a regular-mode window's app only through the catalog, so a
   follow in those seconds (a device that plays sound joining or leaving, Send Audio turned on or
   off) stopped it ("the streamed window's app is not known"), and nothing followed again once the
@@ -2131,7 +2131,7 @@ the sound:
   or more. Narrower (375 pt: the SE, the 12 and 13 mini, a 6.7-inch iPhone with Display Zoom), Sound
   is the Settings panel's switch alone. The standard arrangement is unchanged: Sound ends row 2.
   Checked by `phone-portrait`'s cases and mutants A1–A4 and `tour`'s case for the Sound button in
-  Larger Picture's row 1. This departs from §13's hard rule and Q10's default, and is left to Noah
+  Larger Picture's row 1. This departs from §13's hard rule and Q10's default, and is left to the maintainer
   (Q10; the beta took it out again, `row1Beside` with it: "The beta").
 
 Verified (2026-10-18): `swift build -c release`; the iOS app from a scratch copy with the iOS 27.1
@@ -2147,7 +2147,7 @@ H2 and the previews.
 
 ## The beta (2026-10-20)
 
-Noah, about PR #94: "Check the sound branch and see if it is polished, if so then merge as beta
+the maintainer, about PR #94: "Check the sound branch and see if it is polished, if so then merge as beta
 support." A pre-review found it polished as engineering, nothing blocking and CI green on 3fc77c7
 (the tree's first Xcode 27.1 build), with three things owed before a merge as a beta: words that say
 beta, the public copy this PR had left for "the release that ships it" (once it merges, main is that
@@ -2157,10 +2157,10 @@ commit each on the contributor's branch, never a rebase:
   off, from either door, names it in the log ("Settings from iPad (iPad14,1) refused: send audio
   (set on this Mac only)") and applies the rest of the change. The device's row shows the Mac's
   value as a disabled switch, as Direct Wireless's does from afar, its footnote saying where it is
-  set ("Turn on Send Audio in Sill on ‹Mac› to hear what streams on every connected device; ‹Mac›
+  set ("Turn on Send Audio in DuoDeck on ‹Mac› to hear what streams on every connected device; ‹Mac›
   keeps playing it too."). Kind 17's field stays on the wire, never reused: a later decision may let
   a device set it again (#66's Mac viewer asked to). `away-quality`: 12 cases, mutants AQ20–AQ24.
-  **Revised on 2026-10-27** (Noah: "Sound should be a toggle in the settings menu"; the last
+  **Revised on 2026-10-27** (the maintainer: "Sound should be a toggle in the settings menu"; the last
   section): the device's Settings panel sets it for every device again, the host accepts it, and
   the cases and mutants turn to acceptance.
 - **The labels** (e42f1a3). The status menu's "Send Audio (Beta)" (in the title, so VoiceOver and
@@ -2174,7 +2174,7 @@ commit each on the contributor's branch, never a rebase:
   is the Settings panel's switch alone there; the standard arrangement keeps Sound at row 2's end.
   `row1Beside` goes. `phone-portrait`: the Sound-in-row-1 cases give way to "no Sound button" on
   every phone and across the Larger Picture grid (495 checks), A1–A4 to three mutants of the new
-  lines (80 in all); `tour`: its row-1 Sound case goes (111,191). **Revised on 2026-10-27** (Noah:
+  lines (80 in all); `tour`: its row-1 Sound case goes (111,191). **Revised on 2026-10-27** (the maintainer:
   "the audio setting should not be in the main button tray but instead in settings"; the last
   section): no Sound button in any bar, This iPad's Mute in the Settings panel instead, and
   `phone-portrait` and `tour` main's before the sound again (484 and 73, 111,189 and 84).
@@ -2187,8 +2187,8 @@ commit each on the contributor's branch, never a rebase:
   AudioOutput's seven notification observers removed in its deinit, with its two timers. f448c46: a
   SoundEngine freed while it played gives the app's session back (else `SharedSession` counted it
   for good). 6503bc5: AAC-ELD's codec loaded in the background when Send Audio is on at start and
-  when it turns on (`AudioPipeline.prepare`), so the first encoder on `sill.audio` no longer waits
-  for the load: the review's last item left open ("making the encoder off `sill.audio` is not
+  when it turns on (`AudioPipeline.prepare`), so the first encoder on `duodeck.audio` no longer waits
+  for the load: the review's last item left open ("making the encoder off `duodeck.audio` is not
   done").
 - **The words** (ba59b74, 841bc2f, 4769266, a2a6901, ecbd4db). README (How it works' "Sound from
   your Mac" and Good to know); site/privacy.html (what the Mac sends while Send Audio is on, the
@@ -2212,13 +2212,13 @@ commit each on the contributor's branch, never a rebase:
 **The beta's defaults**, each one place to change: Q8 and Q10 as above; Q4 (it plays on silent, the
 support page says so) and Q5 (a device starts unmuted) kept; Q16, codec quality Medium, with H12
 unmet (+4.0 points of a core in the harness on 2026-10-20, against the gate's 1.5) and accepted
-while Send Audio was off by default (on in Sill.app since 2026-10-27), P13 (Sill.app's CPU in
+while Send Audio was off by default (on in DuoDeck.app since 2026-10-27), P13 (DuoDeck.app's CPU in
 Activity Monitor, sound on and off, now the default) to be
 measured before the beta ends. Left as the review left it: packets that come while muted or in the
 background still count for the cover (§7.5), so a short trip to the background can hold it at its
 bound (150 ms at home, 600 ms away) for 10 s before the sound jumps back; #152 (the stream kept
 alive in the background) would make that likelier. Leaving them out, or clearing the cover on the
-return, changes §7.5: Noah's.
+return, changes §7.5: the maintainer's.
 
 Verified (2026-10-20, on 9104023 with main at 4d990e9 merged in; this Mac shared with other work all
 along, a load average of 300 to 900):
@@ -2237,12 +2237,12 @@ along, a load average of 300 to 900):
   CaptureProbe warning; `phone-portrait`'s 80 of 80 ran on the morning of 2026-10-20 on the same
   PhonePortraitLayout.swift and check (main's merge since touches neither).
 - **H2**, main's CLI against this one, both `--synthetic` on loopback and the software encoder: idle
-  35 s, `sillclient.py PORT 8 desktop`, and the same with `--hello=0.6 --audio`, masked and sorted,
+  35 s, `duodeckclient.py PORT 8 desktop`, and the same with `--hello=0.6 --audio`, masked and sorted,
   identical in each mode across two rounds but for the stop's timing (one heartbeat) and, in one
   round, the software encoder giving up on a session under that load in main's run; no `Audio` line,
   no `aud.` key, no kind 43 (`AUDIO 0 packets` in every client).
 - **H7**, the beta's: a device's `sendAudio` on at 3 s and off at 8 s against a host without
-  `--audio`, both refused ("Settings from sillclient refused: send audio (set on this Mac only)"),
+  `--audio`, both refused ("Settings from duodeckclient refused: send audio (set on this Mac only)"),
   each answer `sendAudio` false, no kind 43; with `--audio` the format, then 746 packets in 7.4 s
   with no seq gap, and "Audio stopped: nothing streams." once the client picked nothing; and a
   second client's `sendAudio=0` refused while the first kept its sound (1,375 packets, one format,
@@ -2259,27 +2259,27 @@ along, a load average of 300 to 900):
   passed every gate (no late packet, no jump after 3 s, the cover 20 ms). **H12**: the host 5.4 % of
   a core with sound and 1.4 % without, +4.0 points (2026-10-14: +3.9 to +4.4), against the gate's
   1.5.
-- **H10**, the bare SillMenuBar's previews of main and of this branch from one path: only menu.txt
+- **H10**, the bare DuoDeckMenuBar's previews of main and of this branch from one path: only menu.txt
   ("Send Audio (Beta)", and the `sound` sample), the Streaming pane ("Send audio (beta)", "Beta.
   …"), the Permissions pane and the two sound cards (`card-sound`, `card-remote-sound`, new) differ.
 - **S1–S3**, on a private iPad Pro 13-inch (M5) simulator on iOS 27.0 (the 27.1 runtime here runs
   only the iPhone Duo), deleted after: S1, the mock's photos from Xcode 27.1's Debug builds of main
   and of this branch: at 1000×710, 710×1000, 500×710, the phone's 440×956, without the Mac's menus,
-  the Settings panel and its end, and with Larger Picture and `-SillSound on` at 440×956 and
+  the Settings panel and its end, and with Larger Picture and `-DuoDeckSound on` at 440×956 and
   375×667, 8 of 9 pixel for pixel main's and the ninth (the panel's end) but for the simulator's
   home indicator, shown in one and faded in the other: so no Sound button in Larger Picture's row 1.
-  With `-SillSound on` the Sound button after Desktop in the landscape bar (with and without Menus)
+  With `-DuoDeckSound on` the Sound button after Desktop in the landscape bar (with and without Menus)
   and in the iPad's portrait window bar, at row 2's end beside Menus on a phone, none in a 500 pt
   window upright (the panel's switch); and the panel's Send Audio row read-only, its "Beta" tag and
   footnotes, on and off and at an accessibility text size, where the tag grows with the text. S2,
-  live (`-SillLive 1 -SillConnect` against `SillHost --synthetic --audio`, the engine rendering
+  live (`-DuoDeckLive 1 -DuoDeckConnect` against `DuoDeckHost --synthetic --audio`, the engine rendering
   offline at volume 0): "audio: format aac-eld 48000 Hz 2 ch, 480 frames (priming 240), epoch 1, a
   test tone", "engine on, manual rendering"; 35 clicks, each heard 0.0 to 0.1 ms from where it was
   placed; 54 late packets in the first 6 s under that load, none in the 29 s after; the Sound button
   at 8 s ("engine off (muted)") and 12 s ("unmuted", a new engine, one join); one jump (−95 ms) as
   the cover's window forgot the start's 150 ms; and a second client's `sendAudio=0` refused
   ("Settings from second refused: send audio (set on this Mac only)") while the device played on
-  (its reports "sound 71 to 89 ms behind", the clicks heard). S3, `-SillMoveTest 1` with sound: the
+  (its reports "sound 71 to 89 ms behind", the clicks heard). S3, `-DuoDeckMoveTest 1` with sound: the
   move to the network with its fence ("fence down … after 15 ms"), the hand-over's copies dropped
   ("duplicates 31"), nothing reset and no jump, 28 clicks heard within 0.1 ms of their places; later
   the test host's software encoder, starved by the load, gave up and stopped the stream ("Software
@@ -2289,10 +2289,10 @@ along, a load average of 300 to 900):
   other work): `swift build -c release` from `git archive`, only the CaptureProbe warning;
   `run-all.sh`, all 50 (`display-wake` 193); `display-wake`'s mutants, 61 of 61. H2, main's CLI at
   7b4c313 against this one, both `--synthetic` on loopback and the software encoder: the host's
-  output identical masked and sorted idle 35 s, with `sillclient.py PORT 8 desktop` and with
+  output identical masked and sorted idle 35 s, with `duodeckclient.py PORT 8 desktop` and with
   `--hello=0.6 --audio` (the client's own lines differ only in kind 16's `sendAudio`, which main's
   host does not send, and in timing). H7: a host without `--audio` refused a device's `sendAudio` on
-  at 3 s and off at 8 s ("Settings from sillclient refused: send audio (set on this Mac only)",
+  at 3 s and off at 8 s ("Settings from duodeckclient refused: send audio (set on this Mac only)",
   twice, each answer `sendAudio` false, no kind 43); with `--audio`, the format at 0.22 s and 979
   packets in 9.8 s with no seq gap, "Audio stopped: nothing streams." once the client picked
   nothing, and a second client's off refused while the first kept its sound. The iOS app's sources
@@ -2301,7 +2301,7 @@ along, a load average of 300 to 900):
 
 ## Two switches in the device's Settings panel (2026-10-27)
 
-Noah, a week into the beta: "I've decided the audio setting should not be in the main button tray but
+the maintainer, a week into the beta: "I've decided the audio setting should not be in the main button tray but
 instead in settings. Sound should be a toggle in the settings menu." He had asked, too, why the iPad's
 Send Audio row was greyed out (it was read-only: Q8 as the beta took it), and settled the shape as two
 switches in the device's Settings panel: **Send Audio**, the Mac's, which a device turns on and off
@@ -2310,15 +2310,15 @@ Sound button. Branch `sound-toggle` from main at b4caa91, PR #235, one commit pe
 revised, and each section above marks what changed.
 
 - **The host.** `DeviceSettings.accepted` takes a device's `sendAudio`, on or off, from either door,
-  as Prioritize Speed (a switch: nothing to check), and `sendAudioRefusal` goes. Sill.app's hook lays
+  as Prioritize Speed (a switch: nothing to check), and `sendAudioRefusal` goes. DuoDeck.app's hook lays
   it over its settings and saves it as a menu click: `applying`, or `applyingAway` for a device away,
   which passes it on to the one shared value. It is not in `restartNeeded`, so, as with the Mac's own
   switch, a device's change starts or stops the sound's stream and never restarts the picture. The
   log says "Settings from ‹device›: send audio off → on", and kind 16 tells every device, as before.
-  Sill.app's menu ("Send Audio (Beta)") and the CLI's `--audio` are as they were; Settings ›
+  DuoDeck.app's menu ("Send Audio (Beta)") and the CLI's `--audio` are as they were; Settings ›
   Streaming's footnote no longer says "each device can mute it with its Sound button. Only this Mac
   turns it on.": "… The Mac keeps playing it too. A connected iPhone or iPad can also turn this on or
-  off from Sill’s settings there, and mute it for itself alone. Nothing is recorded."
+  off from DuoDeck’s settings there, and mute it for itself alone. Nothing is recorded."
 - **The Mac's group on the device.** Send Audio is a switch again (`binding(send) {
   HostSettingsChange(sendAudio: $0) }` through the ledger, as at first), its pending mark after the
   "Beta" tag, "Send Audio, beta" to VoiceOver ("Send Audio" for Voice Control). Its footnotes: on,
@@ -2326,12 +2326,12 @@ revised, and each section above marks what changed.
   this ‹device›, turn on Mute below." (while this device is muted, "This ‹device› is muted (Mute,
   below)." in place of the advice); off, "Beta. Turn this on to hear what streams on every connected
   device; ‹Mac› keeps playing it too." (the muted sentence after it while muted). A Mac without
-  sound (kind 16 without `sendAudio`: Sill for Mac 0.5.1, the public release, and older) shows the
-  row off and disabled, "Beta. Update Sill on ‹Mac› to hear its sound on this ‹device›." under it
+  sound (kind 16 without `sendAudio`: DuoDeck Host 0.5.1, the public release, and older) shows the
+  row off and disabled, "Beta. Update DuoDeck on ‹Mac› to hear its sound on this ‹device›." under it
   and as its hint, where it had no row; the ledger's rule 9 never sends it there. A Mac from the beta (main
   from 2026-10-20 to 27) refuses the change, and the switch goes back to the Mac's value with the
   warning haptic (none on an iPad) and "‹Mac› kept its setting" to VoiceOver, as for any refusal.
-- **This iPad's Mute.** First in the group: on mutes (`soundMuted`, kept as `Sill.soundMuted`, never
+- **This iPad's Mute.** First in the group: on mutes (`soundMuted`, kept as `DuoDeck.soundMuted`, never
   sent), its footnote "Silences ‹Mac›’s sound on this ‹device› alone; ‹Mac› keeps sending it and
   playing it.", VoiceOver's label "Mute sound from ‹Mac›". It shows for every Mac with sound, Send
   Audio on or off (`macHasSound`: the Mac's kind 16 carries `sendAudio`; across a move's hand-over,
@@ -2344,16 +2344,16 @@ revised, and each section above marks what changed.
   again: PortraitStreamScreen.swift, PhonePortraitLayout.swift (`sound`, `menusBesideSound` and
   `stripBesideBoth` gone) and MacMenuButton.swift are byte for byte c215514's (main before #94), and
   StreamScreen.swift's bar is, but for a comment.
-- **The harness.** `-SillSound on|muted`: Send Audio on, Mute off or on. The mock's `default` is a
+- **The harness.** `-DuoDeckSound on|muted`: Send Audio on, Mute off or on. The mock's `default` is a
   Mac with sound, Send Audio off, so every panel photo now has the Send Audio row and Mute (it was a
   Mac without sound); `nosound` is one without, and `nodirect`, an older Mac, has none either.
-  `-SillSettingsScroll mute`; `-SillSoundToggle` and `-SillSoundSwitchAt` flip Mute;
-  `-SillSettingsScript`'s `set sendAudio=1|0` is the device's Send Audio switch.
+  `-DuoDeckSettingsScroll mute`; `-DuoDeckSoundToggle` and `-DuoDeckSoundSwitchAt` flip Mute;
+  `-DuoDeckSettingsScript`'s `set sendAudio=1|0` is the device's Send Audio switch.
 - **The words.** README, site/support.html and privacy.html inside their `<!-- Sound` markers (a
   device's settings panel turns it on, Mute silences one device; nothing new collected: the device's
-  change is among "changes you make in Sill’s settings panel", and its mute was kept already;
+  change is among "changes you make in DuoDeck’s settings panel", and its mute was kept already;
   privacy.html's date October 27, 2026), docs/app-store-metadata.md (the bullet, What's New and the
-  counts; the review notes as they were: their WHAT TO TRY line names the Sill menu, which still
+  counts; the review notes as they were: their WHAT TO TRY line names the DuoDeck menu, which still
   turns it on), BRIEF.md, DEVELOPMENT.md and CLAUDE.md.
 
 **Checks.** `away-quality`: its Send Audio cases turn to acceptance (applied on or off, at home and
@@ -2375,52 +2375,52 @@ every heavy step paused while it was over 20):
   compiles nothing this branch changed) again on its own, its first run having failed its timed slow
   case only because the load rule paused it for 35 s; the mutants above, every one caught.
 - **H2**, main's CLI (b4caa91) against this one, both `--synthetic` on loopback and the software
-  encoder: idle for 2.7 minutes, identical masked and sorted (13 lines each); with `sillclient.py PORT
+  encoder: idle for 2.7 minutes, identical masked and sorted (13 lines each); with `duodeckclient.py PORT
   8 desktop`, identical but for one second's `cursor.shape` in main's run (the Mac's cursor changed);
   with `--hello=0.6 --audio` too, identical but for two seconds' `cursor.shape` in this one's, and no
   sound from either (Send Audio off: `AUDIO 0 packets`).
-- **H7**, this host without `--audio`: `sillclient.py PORT 12 desktop --audio --set=sendAudio=1@3
+- **H7**, this host without `--audio`: `duodeckclient.py PORT 12 desktop --audio --set=sendAudio=1@3
   --set=sendAudio=0@8 --expect=sendAudio=0`, with a second client joined without a pick. "Settings
-  from sillclient: send audio off → on", the answer at 3.001 s with `sendAudio` true, the format and
-  the first packet 12 ms later, 500 packets with no seq gap, "Settings from sillclient: send audio on
+  from duodeckclient: send audio off → on", the answer at 3.001 s with `sendAudio` true, the format and
+  the first packet 12 ms later, 500 packets with no seq gap, "Settings from duodeckclient: send audio on
   → off" and "Audio stopped: Send Audio is off." with the last packet; no "Streaming …" line after
   the start (the picture never restarted); EXPECT ok. The second client's kind 16 said `sendAudio`
   true, then false, and it got the same 500 packets with no gap.
-- **H10**, the bare SillMenuBar's previews of main and of this branch from one path: 146 files each,
+- **H10**, the bare DuoDeckMenuBar's previews of main and of this branch from one path: 146 files each,
   only `pane-streaming-light.png` and `-dark.png` differ (the footnote); menu.txt is main's.
 - **S1**, harness photos on a private iPad Pro 13-inch (M5) simulator on iOS 27.0, deleted after,
-  Debug builds of main and of this branch. Every bar with the Mac sending its sound (`-SillSound on`)
+  Debug builds of main and of this branch. Every bar with the Mac sending its sound (`-DuoDeckSound on`)
   pixel for pixel main's with it off: the landscape bar at 1000×710, the iPad's portrait window bar at
-  710×1000, a phone upright at 393×793 and 375×647 (`-SillIdiom phone`), the Duo's at 951×669 flat and
+  710×1000, a phone upright at 393×793 and 375×647 (`-DuoDeckIdiom phone`), the Duo's at 951×669 flat and
   half (the book pose), 669×951 half (the laptop pose), 466×678 and 678×466 closed. The panel at
   1000×710 and 710×1000, default text and accessibility-extra-large (the panel's xxLarge cap):
   against main's, only the bar (no Sound button), the Send Audio row (a switch, its footnote) and
   This iPad's first row (Mute and its footnote, for "Sound from ‹Mac›") differ; the cases `soundoff`,
-  `nosound` (the row disabled, "Update Sill…", no Mute), `soundnote` and `-SillSound muted` (Mute on,
+  `nosound` (the row disabled, "Update DuoDeck…", no Mute), `soundnote` and `-DuoDeckSound muted` (Mute on,
   "This iPad is muted (Mute, below).") photographed too, and a phone's panel at 393×793. The photos
-  (the mock's, nothing of this Mac's) are in `~/Downloads/sill-handoff/sound-toggle/` (INDEX.md).
-- **S2**, live on that simulator against this `SillHost --synthetic` (no `--audio`), the engine
+  (the mock's, nothing of this Mac's) are in `~/Downloads/duodeck-handoff/sound-toggle/` (INDEX.md).
+- **S2**, live on that simulator against this `DuoDeckHost --synthetic` (no `--audio`), the engine
   rendering offline at volume 0, the panel open: the device's Send Audio switch on 3 s after the
-  first window list (`-SillSettingsScript`): the host's "Settings from Sill sound-toggle iPad
+  first window list (`-DuoDeckSettingsScript`): the host's "Settings from DuoDeck sound-toggle iPad
   (iPad17,4 simulator): send audio off → on", the console's "audio: format aac-eld 48000 Hz 2 ch, 480
   frames (priming 240), epoch 1, a test tone" and "engine on, manual rendering"; Mute on 7 s after
-  the stream showed (`-SillSoundToggle`): "engine off (muted)", the panel's Mute on and its Send Audio
+  the stream showed (`-DuoDeckSoundToggle`): "engine off (muted)", the panel's Mute on and its Send Audio
   footnote "This iPad is muted (Mute, below)."; Mute off at 11 s: "unmuted", the engine on again, one
   join and no jump; every click heard within 0.1 ms of its place (14 packets late as the engine first
   started); the switch off at 16 s: "send audio on → off", "Audio stopped: Send Audio is off.", the
   device's "idle, engine off" 10 s later, Mute still shown. A second client watching the whole run:
   kind 16 `sendAudio` true, 1,299 packets with no seq gap (the device's Mute changed nothing it was
-  sent), then false. Against main's CLI (a host from the beta), the same switch: "Settings from Sill
+  sent), then false. Against main's CLI (a host from the beta), the same switch: "Settings from DuoDeck
   sound-toggle iPad (iPad17,4 simulator) refused: send audio (set on this Mac only)", and the switch
   back off by the next photo (0.2 s).
 
 ### Mute right under Send Audio (2026-10-27, after the review)
 
-Noah, with the two switches on his iPad: "Mute setting should be right below the Send Audio setting",
+the maintainer, with the two switches on his iPad: "Mute setting should be right below the Send Audio setting",
 "And should be set to off by default." So the Mute row is the second row of Send Audio's card (a
 `RowDivider` between them, `muteID` on the row), shown while the Mac has sound (`macHasSound`), and
 This iPad's group lost it; the one footnote under the card says, Send Audio on or off, "Mute silences
 it on this ‹device› alone; ‹Mac› keeps sending and playing it." and, while muted, "This ‹device› is
-muted."; `muteFooter` is gone. Mute was off by default already (`soundMuted` reads `Sill.soundMuted`,
+muted."; `muteFooter` is gone. Mute was off by default already (`soundMuted` reads `DuoDeck.soundMuted`,
 false when unset); an iPad that ran the beta's bar button may carry a saved true, which the row shows.
 The results above photographed Mute first in This iPad; the panel's photos change by that row's place.

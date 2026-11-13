@@ -10,7 +10,7 @@
 // connection controls, and a change from away lands on the away pair and never on the home one, the
 // rest as at home; the whitelist is the same from both routes; who counts as away; when the away
 // quality is the target (and that the flag stays with nobody connected); and the two lines. Also
-// HostConfig's other defaults: Share clipboard, Send Audio, and Sill.app's `app` (the CLI's
+// HostConfig's other defaults: Share clipboard, Send Audio, and DuoDeck.app's `app` (the CLI's
 // `standard` with the virtual display on); and Direct Wireless, a paired device's alone at home
 // (`accepted`'s `paired`, and `DeviceSettings.paired`: the security scan's finding 8, 2026-10-29).
 import CoreGraphics
@@ -95,7 +95,7 @@ do {
     let made = HostConfig(maxFPS: 60, captureScale: 1, bitrate: 8_000_000, awayBitrate: 4_000_000, awayCaptureScale: 1, prioritizeSpeed: false,
                           virtualDisplay: false, directWireless: false, remoteAccess: false, remotePort: 7455, internetAccess: false,
                           requirePairing: true, shareClipboard: false, sendAudio: false)
-    check(!made.shareClipboard, "a HostConfig made with it off has it off (as Sill.app's settings make one)")
+    check(!made.shareClipboard, "a HostConfig made with it off has it off (as DuoDeck.app's settings make one)")
     let all = HostSettingsChange(token: 1, maxFPS: 60, bitrate: 25_000_000, captureScale: 1, prioritizeSpeed: true, virtualDisplay: true,
                                  directWireless: true)
     check(!off.applying(all).shareClipboard && !off.applyingAway(all).shareClipboard
@@ -103,15 +103,15 @@ do {
           "a device's change never moves it, at home or away")
 }
 
-// Sill.app's defaults (HostConfig.app, which its HostSettings registers): the CLI's with the virtual
-// display and Send Audio on (Noah, 2026-10-27); the CLI keeps both off unless --virtual-display and
+// DuoDeck.app's defaults (HostConfig.app, which its HostSettings registers): the CLI's with the virtual
+// display and Send Audio on (the maintainer, 2026-10-27); the CLI keeps both off unless --virtual-display and
 // --audio.
 do {
     let app = HostConfig.app
     check(!standard.virtualDisplay, "standard (the CLI): the virtual display off")
     check(!standard.sendAudio, "standard (the CLI): Send Audio off")
-    check(app.virtualDisplay, "app (Sill.app): the virtual display on")
-    check(app.sendAudio, "app (Sill.app): Send Audio on")
+    check(app.virtualDisplay, "app (DuoDeck.app): the virtual display on")
+    check(app.sendAudio, "app (DuoDeck.app): Send Audio on")
     var sameButTheTwo = app
     sameButTheTwo.virtualDisplay = standard.virtualDisplay
     sameButTheTwo.sendAudio = standard.sendAudio
@@ -181,7 +181,7 @@ do {
 }
 
 do {
-    // Send Audio is a device's to set too, as Quality is (Noah, 2026-10-27: docs/audio-plan.md, Q8 as
+    // Send Audio is a device's to set too, as Quality is (the maintainer, 2026-10-27: docs/audio-plan.md, Q8 as
     // revised; the beta's hosts refused it): a device's change of it is applied on or off, at home and
     // away, with the rest of the same change and nothing refused; it lands on the one shared value from
     // either route (`applying`, `applyingAway`), never on a quality pair; the log names it both ways;

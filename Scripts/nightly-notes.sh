@@ -10,8 +10,8 @@
 # (gh pr list, with GH_TOKEN in a workflow); a number GitHub doesn't answer for keeps a title made
 # from the commit. Nothing here writes anywhere but the two files.
 #
-# SILL_NIGHTLY_DATE (YYYYMMDD, UTC; default today) is the night's date, as release.sh --nightly names
-# the Mac's files. The build number is the commit count (git rev-list --count HEAD), Sill for Mac's
+# DUODECK_NIGHTLY_DATE (YYYYMMDD, UTC; default today) is the night's date, as release.sh --nightly names
+# the Mac's files. The build number is the commit count (git rev-list --count HEAD), DuoDeck Host's
 # and the iOS app's alike; each app's version is its own file's (Packaging/Info.plist, the iOS
 # project's MARKETING_VERSION).
 #
@@ -62,7 +62,7 @@ markdown_safe() {
 }
 
 main() {
-    local markdown="" whats_new="" repo="${GITHUB_REPOSITORY:-Saffsanity/sill}"
+    local markdown="" whats_new="" repo="${GITHUB_REPOSITORY:-samihalawa/2026-CODEX-DuoDeck}"
     while [ "$#" -gt 0 ]; do
         case "$1" in
             --markdown) [ "$#" -gt 1 ] || { usage >&2; exit 2; }; markdown="$2"; shift ;;
@@ -78,18 +78,18 @@ main() {
     case "$whats_new" in ""|/*) ;; *) whats_new="$PWD/$whats_new" ;; esac
     cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-    local date="${SILL_NIGHTLY_DATE:-$(date -u +%Y%m%d)}"
-    [[ "$date" =~ ^[0-9]{8}$ ]] || fail "SILL_NIGHTLY_DATE is '$date', not YYYYMMDD"
+    local date="${DUODECK_NIGHTLY_DATE:-$(date -u +%Y%m%d)}"
+    [[ "$date" =~ ^[0-9]{8}$ ]] || fail "DUODECK_NIGHTLY_DATE is '$date', not YYYYMMDD"
     local day="${date:0:4}-${date:4:2}-${date:6:2}"
     local head short build mac_version ios_version tag range tag_date
     head="$(git rev-parse HEAD)"
     short="${head:0:7}"
     build="$(git rev-list --count HEAD)"
     mac_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Packaging/Info.plist)"
-    ios_version="$(sed -n -E 's/^[[:space:]]*MARKETING_VERSION = "?([^";]*)"?;[[:space:]]*$/\1/p' iOSClient/Sill.xcodeproj/project.pbxproj | sort -u | head -n 1)"
+    ios_version="$(sed -n -E 's/^[[:space:]]*MARKETING_VERSION = "?([^";]*)"?;[[:space:]]*$/\1/p' iOSClient/DuoDeck.xcodeproj/project.pbxproj | sort -u | head -n 1)"
     tag="$(last_release_tag)"
     range="${tag:+$tag..HEAD}"
-    say "The night of $day: $short, build $build; Sill for Mac $mac_version, Sill for iPhone and iPad ${ios_version:-?}; merged since ${tag:-the first commit}"
+    say "The night of $day: $short, build $build; DuoDeck Host $mac_version, DuoDeck for iPhone and iPad ${ios_version:-?}; merged since ${tag:-the first commit}"
 
     # The pull requests, newest first: "<number><tab><title><tab><author>".
     local from_git titles="" merged="" number title author fallback count=0
@@ -119,7 +119,7 @@ main() {
             if [ "$count" = 0 ]; then
                 echo "### Nothing merged into main since ${tag:-the first commit}"
             else
-                echo "### Merged into main since ${tag:+Sill }$since ($count pull request$([ "$count" = 1 ] || echo s))"
+                echo "### Merged into main since ${tag:+DuoDeck }$since ($count pull request$([ "$count" = 1 ] || echo s))"
                 echo
                 while IFS=$'\t' read -r number title author; do
                     [ -n "$number" ] || continue
@@ -133,9 +133,9 @@ main() {
 
     if [ -n "$whats_new" ]; then
         local head_text tail_text body="" line candidate more=0 shown=0 limit=4000
-        local more_line="… and 999 more: https://github.com/Saffsanity/sill/releases/tag/nightly"
-        head_text="Nightly build of main: Sill ${ios_version:-$mac_version} ($build), commit $short, $day. It is not a release and can break. Some changes need Sill for Mac's nightly of the same date: https://github.com/Saffsanity/sill/releases/tag/nightly"
-        tail_text="Feedback: take a screenshot while you use Sill, or Send Beta Feedback in TestFlight, or write to support@getsill.app."
+        local more_line="… and 999 more: https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/nightly"
+        head_text="Nightly build of main: DuoDeck ${ios_version:-$mac_version} ($build), commit $short, $day. It is not a release and can break. Some changes need DuoDeck Host's nightly of the same date: https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/nightly"
+        tail_text="Feedback: take a screenshot while you use DuoDeck, or Send Beta Feedback in TestFlight, or write to sami@samihalawa.com."
         if [ "$count" = 0 ]; then
             body="Nothing merged into main since $since: the same as the last nightly, built again."
         else
@@ -153,7 +153,7 @@ main() {
                 shown=$((shown + 1))
             done <<<"$merged"
             if [ "$more" -gt 0 ]; then
-                body="$body"$'\n'"… and $more more: https://github.com/Saffsanity/sill/releases/tag/nightly"
+                body="$body"$'\n'"… and $more more: https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/tag/nightly"
             fi
         fi
         printf '%s\n\n%s\n\n%s\n' "$head_text" "$body" "$tail_text" >"$whats_new"

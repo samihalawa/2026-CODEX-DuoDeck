@@ -235,7 +235,7 @@ struct PortraitMetrics {
 /// Portrait, in two arrangements. The halves (the inner display's, and an iPad window's) are the
 /// "Laptop mode, half folded" board: the upper half is the streamed window on its own, touched
 /// directly like in landscape; the lower half is the machine you drive it with (window bar, key
-/// row, trackpad), the way a folded laptop's bottom half carries them. A phone's (Noah, 2026-09-27)
+/// row, trackpad), the way a folded laptop's bottom half carries them. A phone's (the maintainer, 2026-09-27)
 /// puts the picture in a fixed 16:10 pane at the top and gives the rest to the controls: row 1
 /// (Apps, Aa, Keyboard, Desktop, Settings), the thumbnails, six keys and a taller trackpad
 /// (`PhonePortraitLayout`). With Larger Picture (the Settings panel's This iPhone; issue #58) the
@@ -590,7 +590,7 @@ struct PortraitStreamScreen: View {
     }
 
     /// Row 1: the landscape bar's five, in its order, widened to share the row with the key row's
-    /// whitespace between them (Noah). Aa's ruler unfolds over the row; the other four fade and take
+    /// whitespace between them (the maintainer). Aa's ruler unfolds over the row; the other four fade and take
     /// no touch until it folds. `menus`: Larger Picture's row 1 while the Mac sent menus, the Menus
     /// button after Apps, six to the row (`buttonsBesideMenus`), where the landscape bar has it.
     private func phoneRow1(_ layout: PhonePortraitLayout, menus: Bool) -> some View {
@@ -946,7 +946,7 @@ private enum Key {
     case spotlight
 
     #if DEBUG
-    /// What the cap says, for `-SillInputTest` to find it by.
+    /// What the cap says, for `-DuoDeckInputTest` to find it by.
     var title: String? {
         switch self {
         case .press(let title, _, _), .modifier(let title, _, _): return title
@@ -1162,7 +1162,7 @@ private struct KeyRow: View {
     }
 
     #if DEBUG
-    /// DEBUG `-SillInputTest 1` (ContentView's contract), the key row's half: once per launch, taps
+    /// DEBUG `-DuoDeckInputTest 1` (ContentView's contract), the key row's half: once per launch, taps
     /// cmd, esc, shift and ctrl through `tap`, as the caps do, 1.0, 1.4, 1.8 and 2.0 s after the row
     /// shows: ⌘esc goes out and spends the ⌘ latch, and shift and ctrl stay latched for the
     /// trackpad's tap (TrackpadSurface's half).

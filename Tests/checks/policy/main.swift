@@ -1,7 +1,7 @@
 // integrate-12 (2026-09-25): this branch merged with main after PR #13 (remote access). Everything above
 // "// remote (the merge)" is follow-best-path's 277 at 8e1e4e3, unchanged; below, the merge's rule: a
 // remote session is no candidate for these moves (PathInput.remote, Keep.remote).
-// H13: iOSClient/DiscoveryPolicy.swift on its own (grown for the fixes after Noah's first sessions,
+// H13: iOSClient/DiscoveryPolicy.swift on its own (grown for the fixes after the maintainer's first sessions,
 // and for their review: a move reaches the same host, and a listing that is another Mac is not retried;
 // then for the connect screen's words, branch connection-method-labels: Wired, Wi-Fi, Direct or none;
 // then for the Settings panel's route word, branch connection-route-in-settings; then for the wired
@@ -323,7 +323,7 @@ var names = Model(); names.wanted = "Studio"
 simulate(&names, from: 0, to: 30) { _ in ([], [("Studio (2)", ["awdl0"])]) }
 check("model: names: \"Studio (2)\" Direct is not the wanted Mac (\(names.events))", names.events.isEmpty)
 
-// The home race: Sill relaunched (the Mac away for a minute), awdl0 reported first, the network row later.
+// The home race: DuoDeck relaunched (the Mac away for a minute), awdl0 reported first, the network row later.
 func homeRace(_ netAt: Double) -> Model {
     var m = Model(); m.wanted = "Studio"; m.connected = true          // streaming over the network
     simulate(&m, from: -120, to: -60.05) { _ in (["Studio"], []) }
@@ -340,7 +340,7 @@ m = homeRace(6.1)
 check("model: home race, the network row only at 6.1 s: Direct at 6.0 s, moved to the network at 8.1 s (\(m.events))",
       m.events == ["-60.00 lost", "6.00 direct", "8.10 moved"])
 
-// Noah's 15:43 (inferred): the Wi-Fi connection evicted at 0 while the network browser lost the Mac
+// the maintainer's 15:43 (inferred): the Wi-Fi connection evicted at 0 while the network browser lost the Mac
 // too; nearby reports awdl0 from 3.5 s; the network lists the Mac again at 20 s.
 m = Model(); m.wanted = "Studio"; m.connected = true
 simulate(&m, from: -30, to: -0.05) { _ in (["Studio"], []) }
@@ -349,7 +349,7 @@ simulate(&m, from: 0, to: 40) { t in (t >= 20 ? ["Studio"] : [], t >= 3.5 ? awdl
 check("model: 15:43 replay: Direct at 10.0 s, back on the network at 22.0 s (\(m.events))", m.events == ["0.00 lost", "10.00 direct", "22.00 moved"])
 
 // method (connection-method-labels): the word each row ends in, from the interfaces its own browser
-// saw its Mac on. Noah, 2026-09-24: "Wi-Fi", "Wired" or "Direct", never the network's name.
+// saw its Mac on. the maintainer, 2026-09-24: "Wi-Fi", "Wired" or "Direct", never the network's name.
 typealias I = P.Interface
 func ifs(_ list: [(String, I.Kind)]) -> [I] { list.map { I(name: $0.0, type: $0.1) } }
 func net(_ list: [(String, I.Kind)]) -> P.Method? { P.method(direct: false, interfaces: ifs(list)) }
@@ -430,7 +430,7 @@ check("rows+method: the cable in and out, Wi-Fi off and on: Wi-Fi, Wired, Wired,
 
 // route (connection-route-in-settings): the word the Settings panel's readout ends in, from the
 // session connection's own path: the Mac's scoped address first, else the path's interfaces when
-// they all agree, else none. Noah, 2026-09-24: the path the live session uses, next to the bitrate.
+// they all agree, else none. the maintainer, 2026-09-24: the path the live session uses, next to the bitrate.
 func one(_ i: (String, I.Kind)) -> I { I(name: i.0, type: i.1) }
 let lo0: (String, I.Kind) = ("lo0", .loopback)
 check("route: over the cable, the Mac's address scoped to a wired interface: Wired", P.route(scope: one(en2), path: ifs([en2])) == .wired)
@@ -478,7 +478,7 @@ check("route vs method: seen on the cable and Wi-Fi (row: Wired), connected over
       P.method(direct: false, interfaces: ifs([en0, en2])) == .wired && P.route(scope: nil, path: ifs([en0])) == .wifi)
 
 // sessionRoute (wired fix, 2026-09-25): which readings of the session connection's path may change
-// the word. Noah's iPad on the cable with Wi-Fi on: the reading at .ready had the Mac's address on
+// the word. the maintainer's iPad on the cable with Wi-Fi on: the reading at .ready had the Mac's address on
 // en2 (wiredEthernet) and said Wired; later path updates without the Mac's address (a Bonjour
 // connection's updates name the service, or nothing) listed "en0 (wifi), en0 (wifi)", which made it
 // Wi-Fi while the connection stayed on en2 (the Mac saw it on %en14 at 1-3 ms throughout). iPadOS
@@ -559,7 +559,7 @@ for w in sessionWords { for s in witnesses { for l in witnesses { for p in pathL
 check("session: describesFlow over its 8 cases: a fresh reading, or the Mac's address and satisfied", truthOK)
 check("session: every reading (\(readingCount)): kept unless it describes the connection, else route(scope ?? local, path)", readingsOK)
 
-// dialInterface (prefer-cable, 2026-09-25): the interface a row's Mac is dialled on. Noah's iPad on the
+// dialInterface (prefer-cable, 2026-09-25): the interface a row's Mac is dialled on. the maintainer's iPad on the
 // cable with Wi-Fi on: a tap on the row that said Wired dialled the service unconstrained, and the Mac saw
 // it on %en0 (7 ms) one time and on %en14 (1 ms) another. A row that says Wired is now dialled on the first
 // wired interface its browser saw the Mac on (anpi0 there: the Mac saw %anri0 at 1-2 ms; en2 gave %en14),
@@ -613,7 +613,7 @@ check("rows+dial: a Wired row dialled on anpi0, a Wi-Fi row and a wordless one a
       && mixed[2] == ("Box", nil, nil) && mixed[3] == ("Air", .direct, nil))
 
 // pathPlan (follow-best-path, 2026-09-25): a live session follows the best path its Mac is reachable
-// on, the cable over Wi-Fi over Direct. Noah's tests: a session made over Wi-Fi stayed on Wi-Fi after
+// on, the cable over Wi-Fi over Direct. the maintainer's tests: a session made over Wi-Fi stayed on Wi-Fi after
 // the cable was plugged in (TCP keeps its interface), and one over the cable, unplugged, hung a while,
 // fell to the connect screen and came back over Wi-Fi. Now: up to the cable once listed for 2 s, down
 // to Wi-Fi at once when the cable's path is gone, a dead connection over the cable reconnected over
@@ -902,7 +902,7 @@ check("model: a cable flapping every 0.5 s never settles: never moves (\(ev))", 
 // works: it is made again over the cable at once (the Wired row's dial, the row as listed as the
 // fallback), not over Wi-Fi, from which the session came back to the cable 2 s later (two hand-overs
 // while the cable was up). 4: a listing of the cable a move up found to reach another Mac, or another
-// launch of Sill, is not tried again while it lasts, and after moves up that did not complete the next
+// launch of DuoDeck, is not tried again while it lasts, and after moves up that did not complete the next
 // waits 10, 20, 40, then 60 s (every 5 s before, for as long as the cable stayed in).
 check("review: upWait: 5, 10, 20, 40, then 60 s (the cap), 5 for a count below zero",
       P.upWait(failures: 0) == 5 && P.upWait(failures: 1) == 10 && P.upWait(failures: 2) == 20 && P.upWait(failures: 3) == 40

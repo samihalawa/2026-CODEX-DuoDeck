@@ -1,43 +1,37 @@
 # DuoDeck project context (current)
 
-This is the independent 2026-CODEX-DuoDeck application at https://github.com/samihalawa/2026-CODEX-DuoDeck.
-The product name, iOS signing ID and current release docs take precedence over historical Sill engineering notes below.
-- iOS bundle ID: com.agentsai.duodeck, display name DuoDeck; Xcode project and many internal types remain named Sill for compatibility.
+This is the 2026-CODEX-DuoDeck application at https://github.com/samihalawa/2026-CODEX-DuoDeck.
+The product name, signing IDs and current release docs take precedence over the engineering notes below.
+- iOS bundle ID: com.agentsai.duodeck, display name DuoDeck; Mac companion: DuoDeck Host, com.agentsai.duodeck.host.
 - Release materials: docs/duodeck-app-store.md, docs/duodeck-app-store-release.md, DUODECK.md, PRIVACY.md.
-- The free original Sill Mac companion works with the current iOS client; this app does not control the iPhone OS.
-- Keep Apache-2.0 LICENSE, source-level copyright notices, and NOTICE attribution.
-- Upstream release workflows are archived under docs/upstream-workflows and must never publish the Sill app using the other project's identity.
+- The iOS client and DuoDeck Host must be released together when the wire names change; this app does not control the iPhone OS.
+- Keep the Apache-2.0 LICENSE and NOTICE files unchanged.
 
 ---
 
-## Historical upstream Sill development notes (reference only)
+## Engineering notes (reference only)
 
-# Sill
-
-Open-source, free app that streams individual Mac app windows to iPhone and iPad
-(designed for iPhone Duo first), with a free Mac companion. Tip jar, no
-subscription, no servers. Read `docs/BRIEF.md` before doing product-level work.
-
-Formerly winstream; the folder still carries the old name.
+Streams individual Mac app windows to iPhone and iPad (designed for iPhone Duo first), with a Mac companion.
+Read `docs/BRIEF.md` before doing product-level work.
 
 ## Current step
 
 **Release 0.6.0 (2026-11-02, PR #274 `integrate-0-6` from main at e4d3034, carrying #269 (the version),
-#270 (the tour once more) and #271 (a locked Mac); Noah's go after testing #274's builds: "Test passed,
-merge please. Do phases 1 through 3").** One version for both apps, as since 0.5.1: Sill for Mac 0.6.0
-(1276) with Sill for iPhone and iPad 0.6.0 (1276), both from the merge commit a39084f4 (`git rev-list
+#270 (the tour once more) and #271 (a locked Mac); the maintainer's go after testing #274's builds: "Test passed,
+merge please. Do phases 1 through 3").** One version for both apps, as since 0.5.1: DuoDeck Host 0.6.0
+(1276) with DuoDeck for iPhone and iPad 0.6.0 (1276), both from the merge commit a39084f4 (`git rev-list
 --count` 1276: the build number is the commit count on both apps since the nightlies, never committed,
-never `--bump`). The steps, the decisions and every text pasted are in sill-handoff's
+never `--bump`). The steps, the decisions and every text pasted are in duodeck-handoff's
 `release-060/` (guide-0.6.0.md, STATUS.md, notes-0.6.0.md, the App Store texts).
 - In it since v0.5.1: 43 pull requests (the release notes list them): among them the clipboard both
   ways (#78), the Mac's sound as a beta (#94), a hardware keyboard and trackpad (#80), Larger Picture
-  (#79), a window Sill sized going back (#75), finding the Mac after hours idle (#77), the Settings
+  (#79), a window DuoDeck sized going back (#75), finding the Mac after hours idle (#77), the Settings
   window on a small screen (#74), tiles (#117), Virtual Display and Send Audio on by default, pinch to zoom
   (#196), Reverse Scrolling (#159), other languages and dictation (#147), the thumbnail hold (#248),
   Aa's Off (#181), the security fixes of 2026-10-29, the tour once more and a locked Mac (the two
   entries below).
-- Noah's decisions (2026-11-02, the guide's D1–D6): D1 universal, "D1 - Universal": Sill for Mac runs
-  on Apple silicon and Intel from 0.6.0 (release.yml's publish job sets `SILL_UNIVERSAL: '1'`, as the
+- the maintainer's decisions (2026-11-02, the guide's D1–D6): D1 universal, "D1 - Universal": DuoDeck Host runs
+  on Apple silicon and Intel from 0.6.0 (release.yml's publish job sets `DUODECK_UNIVERSAL: '1'`, as the
   nightlies do; README, the site, the description and the review notes say so; the Homebrew cask loses
   `depends_on arch: :arm64`); D2 the sound stays in the words (What's New's paragraph and the
   description's bullet); D3 no sentence on typing the Mac's password from the device; D4 0.6.0 (1276)
@@ -47,26 +41,26 @@ never `--bump`). The steps, the decisions and every text pasted are in sill-hand
 - The order run (STATUS.md): the words commit 7871d5c (the 0.6.0 markers' lines out of `site/`, the
   words kept; privacy.html dated November 2, 2026; `style.css?v=2026-11-02`; What's New's blank line),
   the universal commit 8751676 (D1), CI green on it (run 41416969051), #274 merged with a merge commit
-  (a39084f4, 09:15 UTC); the nightly dispatched by hand on it, run 41419194155: Sill for iPhone and iPad
+  (a39084f4, 09:15 UTC); the nightly dispatched by hand on it, run 41419194155: DuoDeck for iPhone and iPad
   0.6.0 (1276) uploaded and processed in 2 minutes ("Assigned build 1276 of 0.6.0 to: no group; by
-  automatic distribution: Internal."), and the Mac pre-release "Sill nightly 0.6.0 (1276), 2026-11-02",
+  automatic distribution: Internal."), and the Mac pre-release "DuoDeck nightly 0.6.0 (1276), 2026-11-02",
   universal ("for x86_64 arm64"), both notarizations accepted (a scheduled duplicate, 41420241620, was
   cancelled); the annotated tag v0.6.0 (tag object 715f0dda) on a39084f4; release.yml's run 41421820998
-  ("Sign, notarize and publish", environment `release`), approved by Noah, publishing the GitHub
-  Release "Sill 0.6.0" at 10:00:51 UTC (Sill.dmg 5,864,060 B, SHA-256
-  de1f5afe1176b419af90743f8beb71112bf3f2eee905f7956bcce96a0149a46d; Sill.zip 5,863,229 B, SHA-256
+  ("Sign, notarize and publish", environment `release`), approved by the maintainer, publishing the GitHub
+  Release "DuoDeck 0.6.0" at 10:00:51 UTC (DuoDeck.dmg 5,864,060 B, SHA-256
+  de1f5afe1176b419af90743f8beb71112bf3f2eee905f7956bcce96a0149a46d; DuoDeck.zip 5,863,229 B, SHA-256
   abcba6c500f1b3dc44a416b9fa23920a53c989b26692222ddc4aedffa5eb11ac; universal, notarized and stapled).
 - Lessons from the day: never dispatch the mutants matrix on a release day (run 41414798311 held every
   macOS runner and was cancelled; a check's mutants run here instead); dispatch the release's nightly
   after 09:17 UTC, or cancel the schedule's duplicate.
-- Still open: the App Store (Noah: 0.6.0 created in App Store Connect with the texts, build 0.6.0
-  (1276), Add for Review and Submit once getsill.app/download gives 0.6.0; manual release; approval
+- Still open: the App Store (the maintainer: 0.6.0 created in App Store Connect with the texts, build 0.6.0
+  (1276), Add for Review and Submit once duodeck.megawebs.com/download gives 0.6.0; manual release; approval
   date: to fill); Public Beta (D4); right after App Review approves, main to 0.6.1 by PR #286
   (`version-0-6-1`, prepared 2026-11-02, held until the approval: `Packaging/Info.plist`
   and `MARKETING_VERSION`, the checklist's part 2 first item and Nightlies, metadata's Version row,
   DEVELOPMENT.md's nightly paragraph), merged before the next 09:17 UTC nightly, since the approval
   closes 0.6.0's train (a nightly of a main saying 0.6.0 would then fail its iOS upload); the Homebrew
-  bump (Saffsanity/homebrew-sill's `Casks/sill.rb` to 0.6.0, its dmg SHA-256, `depends_on arch` gone);
+  bump (samihalawa/homebrew-duodeck's `Casks/duodeck.rb` to 0.6.0, its dmg SHA-256, `depends_on arch` gone);
   #62 told what 0.6.0 is. Docs after the release (this entry, the checklist's part 1 §3, SECURITY.md,
   the metadata's 0.6.0 texts and sizes, the Intel wording) are PR "Docs: the 0.6.0 release".
 - Closed by this release, with their facts in their plans: the version (#269, branch
@@ -74,38 +68,38 @@ never `--bump`). The steps, the decisions and every text pasted are in sill-hand
   of its own), and the two entries that follow.
 
 **A locked Mac shows nothing of itself (2026-10-31, branch `locked-mac`, PR #271; shipped in 0.6.0, the
-entry above).** The rule, the review, the open questions, the results and Noah's tests of 2026-11-01 and 02
+entry above).** The rule, the review, the open questions, the results and the maintainer's tests of 2026-11-01 and 02
 are in `docs/locked-mac-plan.md`. In brief: three readings (`LockPolicy`, pure, `Tests/checks/lock-policy`;
-`SessionLock` on `sill.lock`): unlocked, screen locked (its lock screen streams; a paired session's input
+`SessionLock` on `duodeck.lock`): unlocked, screen locked (its lock screen streams; a paired session's input
 reaches it, the password included), off console (a black placeholder, `StillCapture`, and the device's cover
-"Another user started controlling this Mac.", Noah's words); `LockGate` withholds windows, thumbnails, icons,
+"Another user started controlling this Mac.", the maintainer's words); `LockGate` withholds windows, thumbnails, icons,
 apps, launches, menus, gestures, sound, clipboard, pointer and the virtual display; `WindowList.locked` and
-`offConsole` (additive). TEST ONLY: `SILL_TEST_LOCKED`, `SILL_TEST_LOCKED_FILE`, `SILL_TEST_LOCK_NOTIFY`,
-`SILL_TEST_LOCK_NOTE`, `SILL_TEST_LOCK_IGNORE_MAC`, `SILL_TEST_LOCK_LOG`; `Scripts/lock-check/`; DEBUG
-`-SillMacLocked 1|2|unlocking`.
-- **Untested, for Noah (the plan's 1–7):** a real lock with a window streaming (Virtual Display on and off); the
+`offConsole` (additive). TEST ONLY: `DUODECK_TEST_LOCKED`, `DUODECK_TEST_LOCKED_FILE`, `DUODECK_TEST_LOCK_NOTIFY`,
+`DUODECK_TEST_LOCK_NOTE`, `DUODECK_TEST_LOCK_IGNORE_MAC`, `DUODECK_TEST_LOCK_LOG`; `Scripts/lock-check/`; DEBUG
+`-DuoDeckMacLocked 1|2|unlocking`.
+- **Untested, for the maintainer (the plan's 1–7):** a real lock with a window streaming (Virtual Display on and off); the
   password typed from the paired iPad (secure input may refuse posted keys); another user at the login screen
   (the switched-to-another-user cover, nothing typed reaches the Mac, macOS's own lock after the switch back);
-  Sill.app inactive at the lock and the unlock (`.deliverImmediately`); an unpaired device at a locked Mac; the
+  DuoDeck.app inactive at the lock and the unlock (`.deliverImmediately`); an unpaired device at a locked Mac; the
   rest refused and back after the unlock; mixed builds (the App Store iPad gets the black placeholder).
 
 **The tour once more, with what's new (2026-10-31, branch `tour-0-6`, PR #270; shipped in 0.6.0, the
 entry above).** The plan, its defaults, the results and the review are in docs/first-run-walkthrough-plan.md,
-"The tour once more, for 0.6". In brief: `TourPolicy.version` 2 (`Sill.tourVersion`) clears an older
+"The tour once more, for 0.6". In brief: `TourPolicy.version` 2 (`DuoDeck.tourVersion`) clears an older
 memory once, so everyone who launches 0.6 sees the whole tour again; rows about what is new start with
 "New:" (`TourPolicy.newPrefix`); a Clipboard and Sound card; the rows follow `TourFeatures`. Debug builds
-take the once-more only with `-SillTourState saved`.
-- **Untested, for Noah** (the plan's P1–P12, a TestFlight 0.6 or a Debug build with `-SillTourState
+take the once-more only with `-DuoDeckTourState saved`.
+- **Untested, for the maintainer** (the plan's P1–P12, a TestFlight 0.6 or a Debug build with `-DuoDeckTourState
   saved`): over 0.5.1 with the old tour done, and again after skipping it, the tour once more (four
   cards sideways, five upright, "New:" in blue), then never again; each New row true on the device
-  (the pinch, Virtual Display "is on" with Sill for Mac 0.6, Menus lit, the clipboard both ways, Send
+  (the pinch, Virtual Display "is on" with DuoDeck Host 0.6, Menus lit, the clipboard both ways, Send
   Audio and Mute, Reverse Scrolling, the hold, a Magic Keyboard's keys and Esc); the iPhone's five and
-  four, clear of the Dynamic Island; against Sill for Mac 0.5.1 the update row; VoiceOver; the largest
+  four, clear of the Dynamic Island; against DuoDeck Host 0.5.1 the update row; VoiceOver; the largest
   text size; a hardware keyboard's Return and Esc; Skip, Take the Tour; the Duo's poses.
 
 **The door's waiting places (2026-10-29, branch `sec-door-pending` from main at 150479b5, PR #252; finding 9 of the
-security scan of 2026-10-18, Low; Noah's go of 2026-10-29).** A TLS door (the remote one, and the home one of
-Sill.app and `SillHost --pairing`) held 8 connections waiting for admission, 2 per address, 10 s each, and backed an
+security scan of 2026-10-18, Low; the maintainer's go of 2026-10-29).** A TLS door (the remote one, and the home one of
+DuoDeck.app and `DuoDeckHost --pairing`) held 8 connections waiting for admission, 2 per address, 10 s each, and backed an
 address off only for its own refusals: four addresses closing each connection at 9.9 s kept every place full for good
 and a paired device got "limit". Host only, no wire change. `DoorPolicy.Places` (pure) owns the places, `Door` runs
 it on a monotonic clock: a connection that ends unadmitted, and a pairing connection's kind 19, costs its address a
@@ -133,9 +127,9 @@ address cycling at 1.9 s held 2 places for good on main and was backed off at 47
 updated (an address keeps about 4/5 of a place, so ten IPv4 addresses taking turns fill the shared places; the
 co-located address; a device not yet paired in a backed-off /64, which a stranger in it keeps backed off with a dozen
 refused handshakes as each 5 minutes end; a routed IPv6 prefix from the internet at the remote door).
-- The review (2026-10-29; the report's "The review", f9-pending-slots-report.md in sill-handoff's
+- The review (2026-10-29; the report's "The review", f9-pending-slots-report.md in duodeck-handoff's
   triage/2026-10-29-security): three findings, each reproduced live on 7929c539 first and fixed in a commit of its own.
-  A kind 19 left its place for nothing, and the home door's verify block takes `sill-pair/1` with any key: a holder
+  A kind 19 left its place for nothing, and the home door's verify block takes `duodeck-pair/1` with any key: a holder
   doing TLS on it 3 s in and a kind 19 (`v` 2, answered `closed`, nothing shown) 3.5 s later held all 8 places for
   90 s from four addresses (112 kind 19s), nobody backed off, an unknown paired client refused at all 30 tries; now
   `Places.End.request` pays as a connection that ended then (fd0a58c5): the same holder backed off at 13.07 s. The
@@ -145,7 +139,7 @@ refused handshakes as each 5 minutes end; a routed IPv6 prefix from the internet
   backoff, 13 of 13 served. A known address was charged for all of its 10 s (a cut 4.1, its device's own let-go at
   5 s 1.6, where main charged 1 and nothing): a known device's reconnect whose dials stalled was backed off at 40.06 s
   and refused at all 6 tries after; now it pays as an address not known (1.1 at most for a handshake, 3.1 for a
-  pairing connection; 8e0148a0): no backoff, 6 of 6 served. Docs: the plans' limits tables, sillclient's `--pair-hold`
+  pairing connection; 8e0148a0): no backoff, 6 of 6 served. Docs: the plans' limits tables, duodeckclient's `--pair-hold`
   note, DEVELOPMENT.md, and the /64 trade-off (a check: the /64 open 1.8 s of 15 minutes).
 - The review's second pass (2026-10-29, resumed after the session's limit stopped the first before it pushed; the
   report's "The review"): three more findings, each reproduced first and fixed in a commit of its own. A mutant's
@@ -158,22 +152,22 @@ refused handshakes as each 5 minutes end; a routed IPv6 prefix from the internet
   10.128.0.34 for 300 s: …", and with 3 places the three backed off at 51.5 s (27 connections each) and the client,
   refused at all 17 tries before, served at all 23 after; an address keeps about 4/5 of a place (ten taking turns
   could fill the 8). The /64's 12 was said to need two addresses, true only for a burst: paced under its own 5, one
-  address backed its /64 off (an older Sill's plain try every 2 s on its link-local address backed off its whole link
+  address backed its /64 off (an older DuoDeck's plain try every 2 s on its link-local address backed off its whole link
   at 238 s; a refusal every 16 s, at 176 s); now an address counts for 6 at most, `DoorPolicy.groupShare` (c0e70ab6;
   the model only: the test listener is IPv4). door-policy 254 checks and 109 of 109 mutants, ask-limits 24 of 24,
   home-model 25 of 25, addresses 16 of 16; `run-all.sh` all 56 (513 s); `swift build -c release` from a clean
   `.build`, only the CaptureProbe warning; `Scripts/pacing/build.sh` builds both sides. The first pass's live runs
   again on the final build: the kind 19 holder backed off at 13.18 s, the 20 s stop no backoff and 13 of 13 served,
   the known device's stalled dials no backoff and 7 of 7, the scan's attack backed off by 12.63 s.
-**Untested, for Noah:** a week of ordinary use at home and away (Wi-Fi, cable, Tailscale, the hotspot) with no
-"backed off" line in Sill.log (note any, with what the device did); a new pairing over the hotspot through Tailscale
+**Untested, for the maintainer:** a week of ordinary use at home and away (Wi-Fi, cable, Tailscale, the hotspot) with no
+"backed off" line in DuoDeck.log (note any, with what the device did); a new pairing over the hotspot through Tailscale
 (its handshake inside 4 s); an iPad back after a night asleep; from the review, the Mac's lid closed while the iPad
 reconnects, then opened: the iPad back at once, no "backed off" line; the iPad sent to the background mid-dial a few
 times, or walked out of Wi-Fi range while it redials: no "backed off" line for its address; from its second pass, a
 device whose dial tries the Mac's addresses 1 s apart (through Tailscale), away and back a few times: no "backed off"
 line (its losers now cost up to 0.2 each).
 **A device the Mac stops serving lands no more input (2026-10-29, branch `sec-revoked-input` from main at
-150479b5, PR #254; security scan finding 10, Low; Noah's go of 2026-10-29 for the security batch).** Remove,
+150479b5, PR #254; security scan finding 10, Low; the maintainer's go of 2026-10-29 for the security batch).** Remove,
 Require pairing turned on, and Remote Access or internet access turned off said goodbye and closed the device's
 connection once the goodbye was handed to the network, or 0.25 s later; meanwhile its input kept landing, and
 input held for it while an app came forward (up to 0.6 s) was replayed, also once it had left. Host only; no
@@ -195,8 +189,8 @@ wire change, nothing on the device.
   device, and one that left while it waited (`gone`), the same way, and drop their shortcuts. Its keys still
   down when it leaves go up as before, and its buttons now too (`RevokedInput.buttonsLetGo`; an unremoved
   device's stay down as before: its session may go on over a move's connection). TEST ONLY: with
-  `SILL_TEST_INPUT_LOG` a synthetic host prints where a revoked device's input stops landing;
-  `sillclient.py --key=USAGE,HOLD@T` holds a key. The pacing and sound harnesses compile KeyStrokes beside
+  `DUODECK_TEST_INPUT_LOG` a synthetic host prints where a revoked device's input stops landing;
+  `duodeckclient.py --key=USAGE,HOLD@T` holds a key. The pacing and sound harnesses compile KeyStrokes beside
   StreamServer.
 - The review (2026-10-29, at cf230ed9; three findings, each reproduced on loopback first, then fixed in a
   commit of its own). (1) A cut-off device's mouse button stayed down after it left (departures let go of
@@ -230,9 +224,9 @@ wire change, nothing on the device.
   busy spells, one ending with the decision: 3,000 random sessions; marked by the server alone 1,097 and as
   it was before 2,789 of 3,000 landed input after the cut) and 98 of 98 mutants (15 new); `run-all.sh`, all
   56; `swift build -c release`, only the CaptureProbe warning; the pacing and sound harnesses build; no iOS
-  file changed. Live on loopback (a `--synthetic` bare app with `SILL_TEST_INPUT_LOG`, a paired `sillclient`
+  file changed. Live on loopback (a `--synthetic` bare app with `DUODECK_TEST_INPUT_LOG`, a paired `duodeckclient`
   pressing a key every 25 ms, each held 0.6 s, and moving, tapping, typing and pressing F-keys across the
-  cut, not reading, so its connection lasts the whole 0.25 s): between "Removed sec10-client (sillclient);
+  cut, not reading, so its connection lasts the whole 0.25 s): between "Removed sec10-client (duodeckclient);
   closed 1 connection." and "Client left" main's build posted 48 and 57 events (key downs, moves, clicks,
   typed text, key ups) up to +253 ms, and 56 after Require pairing's line; the branch's builds only key ups
   of keys down at the cut (10 to 11), then at "Client left" the keys it still held; on the final build the same
@@ -253,17 +247,17 @@ wire change, nothing on the device.
 - Not done: a pick already under way, or queued behind a restart, when the cut comes still brings its window
   forward (not input); frames, the clipboard and pointer reports sent after the goodbye queue behind it and go
   with the connection.
-- **Untested, for Noah:** with this Sill.app and the iPad's Magic Keyboard streaming TextEdit, type steadily
+- **Untested, for the maintainer:** with this DuoDeck.app and the iPad's Magic Keyboard streaming TextEdit, type steadily
   (or hold a key) and click Remove in Settings › Devices: nothing typed after the click lands, and no key
-  stays down on the Mac (Sill.log: "Removed …", then "Client left", the `[1s]` line's `in.revoked`); pair
+  stays down on the Mac (DuoDeck.log: "Removed …", then "Client left", the `[1s]` line's `in.revoked`); pair
   again and it works. The same with Require pairing turned on while an unpaired iPad types. From the review:
   drag a window with the iPad's trackpad and click Remove mid-drag: the drag ends, and another device's
   pointer then moves without dragging; choose a menu item from the iPad's Menus in a slow app and click
-  Remove at once: the item is not chosen (Sill.log: "Menu from … refused: …: the Mac no longer serves it").
-**The macOS firewall that blocks Sill's executable (2026-10-29, branch `firewall-executable-block` from main
-at 150479b5; PR #250; the security batch, Noah's go of 2026-10-29).** A user's report: the firewall keeps a
-rule per path, and a Mac held `/Applications/Sill.app` allowed and `…/Contents/MacOS/Sill` blocked
-(`socketfilterfw --listapps`): nothing reached Sill from the network, System Settings showed it allowed, and
+  Remove at once: the item is not chosen (DuoDeck.log: "Menu from … refused: …: the Mac no longer serves it").
+**The macOS firewall that blocks DuoDeck's executable (2026-10-29, branch `firewall-executable-block` from main
+at 150479b5; PR #250; the security batch, the maintainer's go of 2026-10-29).** A user's report: the firewall keeps a
+rule per path, and a Mac held `/Applications/DuoDeck.app` allowed and `…/Contents/MacOS/DuoDeck` blocked
+(`socketfilterfw --listapps`): nothing reached DuoDeck from the network, System Settings showed it allowed, and
 `--getappblocked` on the bundle said "permitted"; `sudo socketfilterfw --unblockapp` on the executable fixed it.
 No wire change.
 - `FirewallCheck` asks `/usr/libexec/ApplicationFirewall/socketfilterfw` `--getglobalstate`, then only while it is
@@ -271,8 +265,8 @@ No wire change.
   and `--listapps`: a process each with 2 s (then SIGTERM, SIGKILL a second later), read-only, no privileges
   (macOS 27.0.1: 4–8 ms each, no prompt, no Full Disk Access needed; asked in one run the tool is killed, 137,
   when `--getstealthmode` or `--getallowsigned` follows `--getappblocked`, or `--listapps` follows it with a
-  bundle's path; no `com.apple.alf.plist` there). At launch, when the listener comes up, when Sill.app's status
-  menu opens (the glyph at once, its item from the next opening), when its General opens or Sill becomes active
+  bundle's path; no `com.apple.alf.plist` there). At launch, when the listener comes up, when DuoDeck.app's status
+  menu opens (the glyph at once, its item from the next opening), when its General opens or DuoDeck becomes active
   over it, and when a device gets in from the network while the verdict says none can (`asksAgain`); never on a
   timer.
 - `FirewallRule` (pure, `Tests/checks/firewall`, 390 checks, 69 mutants): off, allows (only once `--listapps`
@@ -280,19 +274,19 @@ No wire change.
   unknown (with why, in the log).
   While it blocks: General's line in the Permissions style with `sudo …/socketfilterfw --unblockapp <the running
   executable's path>` (a line per option; Copy copies one line), for Block all where to turn it off; the menu's
-  "Devices Can’t Connect — The macOS firewall blocks Sill’s executable." (opens General); one log line per change
-  ("Firewall: …"; none for a first verdict that blocks nothing). Sill never runs the command. support.html's
-  "Your Mac isn’t listed" gains the case (Sill's own line marked `<!-- Firewall`). TEST ONLY
-  `SILL_TEST_FIREWALL=executable|bundle|both|all|off|allowed|unreadable` or a file holding one, test hosts only;
-  the previews are the rule's verdicts on those answers; `-SillPrintMenuAfter` prints General's line.
+  "Devices Can’t Connect — The macOS firewall blocks DuoDeck’s executable." (opens General); one log line per change
+  ("Firewall: …"; none for a first verdict that blocks nothing). DuoDeck never runs the command. support.html's
+  "Your Mac isn’t listed" gains the case (DuoDeck's own line marked `<!-- Firewall`). TEST ONLY
+  `DUODECK_TEST_FIREWALL=executable|bundle|both|all|off|allowed|unreadable` or a file holding one, test hosts only;
+  the previews are the rule's verdicts on those answers; `-DuoDeckPrintMenuAfter` prints General's line.
 - Verified: the check and mutants; `run-all.sh`, all 57; a clean release build (the CaptureProbe warning
   only); main's CLI output identical masked and sorted, idle and with a client; previews main's but the 16 new
   files, menu.txt's two samples and General's path; live on loopback, blocked → allowed → Block all →
   unreadable, a VPN-origin client clearing a stale verdict, the bare app's menu and line, this Mac's real
   firewall "none (allows)". Not built: an Unblock button with the admin password (`osascript` off the main
-  thread, or a privileged helper), Noah's call.
+  thread, or a privileged helper), the maintainer's call.
 - The review (2026-10-29, three lenses; each finding reproduced first, then fixed in a commit of its own;
-  sill-handoff's `triage/2026-10-29-security/firewall-line-report.md`, "The review"): a block that came after
+  duodeck-handoff's `triage/2026-10-29-security/firewall-line-report.md`, "The review"): a block that came after
   launch (a Deny in the firewall's own prompt, Block all turned on) went unsaid until General opened or the
   listener was replaced, as `asksAgain` can only clear one (on loopback, the canned answer blocked from 2 s: a
   client at 3.6 s and the bare app's menu at 4 and 7 s said nothing): the status menu asks again as it opens
@@ -306,7 +300,7 @@ No wire change.
   in from a VPN re-asking without clearing a block that holds, and clearing a stale one.
 - The second review (2026-10-29, after af3283d1; the report's "The second review"): two findings, each reproduced
   first and fixed in a commit of its own. The first review's correction of when the tool dies was wrong both ways
-  (read-only, as noah, 3 runs of 3 each): `--getstealthmode` or `--getallowsigned` after `--getappblocked` kill it
+  (read-only, as sample, 3 runs of 3 each): `--getstealthmode` or `--getallowsigned` after `--getappblocked` kill it
   whatever the path, `--listapps` only after a bundle's, and `--getglobalstate`, `--getblockall` or another
   `--getappblocked` after it answer (78685c9a, docs). A tool that never answered was asked all five questions, and
   one that ignored SIGTERM was left running, a thread blocked on its pipe, after each (FirewallCheck's own code
@@ -315,15 +309,15 @@ No wire change.
   (`asksRules`: off, Block all, a state that doesn't read) and an unanswered question is killed a second after
   SIGTERM (2.01, 3.01 and 12.06 s, none left; 6d836d1f). Re-run: the check 390 and 69 of 69 mutants; `run-all.sh`,
   all 57; a release build from an empty `.build`, the CaptureProbe warning only; this Mac's firewall through the
-  fixed check, 19–22.5 ms for Sill.app's five questions, allows; previews 162 files; on loopback a Block all held
+  fixed check, 19–22.5 ms for DuoDeck.app's five questions, allows; previews 162 files; on loopback a Block all held
   against a device in from a VPN, then blocked, cleared and unreadable as the canned answer changed.
-- **Untested, for Noah:** the report's state by hand (`sudo …/socketfilterfw --add …/Contents/MacOS/Sill`, then
+- **Untested, for the maintainer:** the report's state by hand (`sudo …/socketfilterfw --add …/Contents/MacOS/DuoDeck`, then
   `--blockapp`; `--remove` after): the device's tap failing, the menu item and log line, General's line and
-  Copy, the command in Terminal, then both gone without a relaunch; Block all on and off, also with Sill running
+  Copy, the command in Terminal, then both gone without a relaunch; Block all on and off, also with DuoDeck running
   and its menu opened twice (the glyph turns at the first, Devices Can’t Connect at the second); VoiceOver;
   macOS 14 or 15 (answers that don't read log "Firewall: couldn’t read …" once and show nothing).
 **A password manager's copies go to the devices (2026-10-29, branch `clipboard-concealed` from main at
-6c5b5d24).** Noah, with the clipboard on his iPad: "Copy paste works, including password apps. I think its
+6c5b5d24).** the maintainer, with the clipboard on his iPad: "Copy paste works, including password apps. I think its
 fine to copy password apps. Remove the code that tries to make password copies never arrive." So
 `ClipboardPolicy` no longer skips an item marked `org.nspasteboard.ConcealedType`, `TransientType`,
 `AutoGeneratedType`, the older transient type or 1Password's own (`markerTypes` and `HostSkip.marked` are
@@ -333,9 +327,9 @@ never sent, and the types are still judged before any data is read. Words: Setti
 2026), DEVELOPMENT.md, docs/clipboard-plan.md's last section; `Tests/checks/clipboard` (the marked items now
 sent, the footnote, the model). No wire change.
 **A Desktop after a spell with no device (2026-10-28, branch `idle-display-refresh` from main at 6c5b5d24,
-PR #239; the diagnosis is sill-handoff's `triage/2026-10-20-reports/verdicts-2026-10-27/glitch-wired-black-2026-10-28.md`,
-the report `verdicts-2026-10-28/idle-display-report.md`).** Noah, 2026-10-28 18:15 on the iPad mini over the cable
-with a fresh Debug build: connected, black, left after 7.4 s; the Wi‑Fi tap 25 s later "worked flawlessly". Sill.app
+PR #239; the diagnosis is duodeck-handoff's `triage/2026-10-20-reports/verdicts-2026-10-27/glitch-wired-black-2026-10-28.md`,
+the report `verdicts-2026-10-28/idle-display-report.md`).** the maintainer, 2026-10-28 18:15 on the iPad mini over the cable
+with a fresh Debug build: connected, black, left after 7.4 s; the Wi‑Fi tap 25 s later "worked flawlessly". DuoDeck.app
 had sat 36.5 hours with no device while the dock's two displays came back under new IDs through ~290 sleeps; the
 catalog looks only while a device is connected ("idle means idle"), so it still held display 21 (the displays were
 53 and 52). The first pick built the Desktop's filter on 21's SCDisplay, read before an await during which the
@@ -349,7 +343,7 @@ No wire change.
   among `CGGetActiveDisplayList`'s (gone, or asleep: harmless), it had none while macOS has one, there was no look,
   or the look is older than two poll intervals (4 s) on the clock that counts sleep (`WindowCatalog.lookedAt`,
   `lookAge`; an empty list of displays leaves it to the age). A look the poll keeps fresh needs none, so a pick
-  mid-session is as before. The Desktop reads its display after its last await (`desktopCapture`: Sill's own app
+  mid-session is as before. The Desktop reads its display after its last await (`desktopCapture`: DuoDeck's own app
   looked up, then the display and the app from the newest look), and says "Desktop: display 21 → 53 (the displays
   changed since the last look, 36 h ago)." when the look changed it. A Desktop start that fails looks again and
   tries once more with one line, "Could not start streaming the whole desktop: ‹error›. Looked at the displays
@@ -366,12 +360,12 @@ No wire change.
   re-check is cancelled by the next automatic request, at a session's end and at a move. DEBUG console:
   `session: nothing streams after this device's Desktop request; asking again in 9.8 s, when the 10 s spacing
   ends`, `session: still nothing streams 10 s after this device's Desktop request; asking for it again`. Against
-  Sill for Mac 0.5.1 (the stale display unfixed there) the second ask should stream too: the diagnosis found the
+  DuoDeck Host 0.5.1 (the stale display unfixed there) the second ask should stream too: the diagnosis found the
   first session's own look had replaced the display 0.1 s in, so any second pick streamed (read, not run).
-- TEST ONLY `SILL_TEST_DESKTOP_FAIL=<n>`, honoured only by a `--synthetic` host ("Test Desktop: …" at start;
+- TEST ONLY `DUODECK_TEST_DESKTOP_FAIL=<n>`, honoured only by a `--synthetic` host ("Test Desktop: …" at start;
   otherwise one "ignored" line): the first n Desktop starts fail where the capture would start, as on 2026-10-28.
   With 1 the host's one more try streams; with 2 nothing streams and a device's second ask does.
-- Not done (the report's items 3, 4 and 6, for Noah): the first catalog sent only after the first fresh look (a
+- Not done (the report's items 3, 4 and 6, for the maintainer): the first catalog sent only after the first fresh look (a
   device shows a list up to a day old for about 50 ms); a display reconfiguration callback marking the look stale
   while idle; dropping a client whose path goes unsatisfied before its 8 s grace (the dead cable connection the Mac
   served for 7.6 s). Nor the pair dialog of the same evening (the diagnosis leaves it open: Add a Mac's card or an
@@ -386,25 +380,25 @@ No wire change.
   software encoder and no screen, idle 35 s identical masked and sorted, with a test client picking the Desktop for
   12 s identical (twice; main's own second run differed from its first only in the stats line of the second the
   client left). Live on a private iPad mini (A17 Pro) simulator (iOS 27.0, deleted after) dialling such a host with
-  `-SillConnect` (a plain door): with `SILL_TEST_DESKTOP_FAIL=2` the host's start and its one more try failed 0.23 s
+  `-DuoDeckConnect` (a plain door): with `DUODECK_TEST_DESKTOP_FAIL=2` the host's start and its one more try failed 0.23 s
   after the connection, the device said it would ask again in 9.5 s and did 10.2 s after its first request, and the
   stream came within 10 ms (29–57 fps after); with 1 the one more try streamed in the same pick and the device never asked
   again; with 50 (a Mac that never starts it) the device asked at +0.85, 10.99, 21.24, 31.49 and 41.49 s, 10.0 to
   10.25 s apart. Not run: the real Desktop path (`desktopCapture`, the look before it, the "display 21 → 53" line,
-  the one more try with a new look), since every test host here stays off ScreenCaptureKit (`SILL_TEST_NO_SCREEN`)
+  the one more try with a new look), since every test host here stays off ScreenCaptureKit (`DUODECK_TEST_NO_SCREEN`)
   and never captures this Mac's displays; nor a device, nor main's iOS build beside this one (the model has the rule
   before: one ask, then black).
-- **Untested, for Noah:** with Sill.app from this branch and the iPad on a Debug build: leave Sill.app
+- **Untested, for the maintainer:** with DuoDeck.app from this branch and the iPad on a Debug build: leave DuoDeck.app
   with no device while the dock's displays sleep and wake (or `pmset displaysleepnow`, a key, and a look with
   `system_profiler SPDisplaysDataType` or a `CGGetActiveDisplayList` probe that their IDs changed), then connect: the
-  Desktop at once over any route, and Sill.log's "Desktop: display ‹old› → ‹new› (the displays changed since the last
+  Desktop at once over any route, and DuoDeck.log's "Desktop: display ‹old› → ‹new› (the displays changed since the last
   look, … ago)."; picks while connected exactly as before (no such line, no delay); the Desktop with Virtual Display
-  on, and a window picked first after the spell. The device's part against Sill for Mac 0.5.1 (the host's fix not in
+  on, and a window picked first after the spell. The device's part against DuoDeck Host 0.5.1 (the host's fix not in
   it), after the same spell: black for about 10 s, then the Desktop by itself (the console's `session: still nothing
   streams 10 s after …; asking for it again`); a monitor unplugged while the Desktop streams (ScreenCaptureKit stops
   the capture): the Desktop back within 10 s; VoiceOver unchanged (nothing new is drawn or said).
 **Held keys repeat, as on the Mac (2026-10-28, branch `key-repeat` from main at 6c5b5d2; issue #162; PR #240).**
-Noah, 2026-10-27: "#162 should expand to make holding down keys work on all keys when held, same as a
+the maintainer, 2026-10-27: "#162 should expand to make holding down keys work on all keys when held, same as a
 regular keyboard, wait times and all, where non-command keys wait a second before starting their
 repeating. Same as desktop." An event posted from a CGEventSource never repeats (the HID system repeats
 only the keyboards it reads), so a held arrow, ⌥← or ⌘Z reached the Mac once. The host repeats it, so
@@ -432,7 +426,7 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   time. A late wake posts once, the next at least half an interval on. Off (a delay
   or an interval of a minute or more) and nonsense repeat nothing; a delay under 0.1 s and an
   interval under 15 ms count as those. `in.keyRepeat` on a host that posts; a `--synthetic` host
-  counts `in.dry`, and with SILL_TEST_INPUT_LOG=1 prints "Test input: key 123 repeats after 0.50 s,
+  counts `in.dry`, and with DUODECK_TEST_INPUT_LOG=1 prints "Test input: key 123 repeats after 0.50 s,
   every 0.033 s" at each press and "Test input: key 123 repeat (none)" for each repeat.
 - Device (`HeldCap` in KeyChords.swift, checked in `key-strokes`): the portrait key row's esc, tab and
   arrows go down at a finger's touch and up at its release (a ButtonStyle's isPressed; `KeyChord.down`
@@ -444,7 +438,7 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   leaving the screen lets a held cap up. A phone's esc and tab stay taps at the accessibility text sizes, where a long press
   shows the cap large (`capsHold`). The latching modifiers, Keyboard and Spotlight are taps as before.
   A hardware keyboard's characters: the next bullet (they were thought to keep iPadOS's own repeat).
-- Held letters (2026-10-29; Noah on the iPad mini with a Bluetooth keyboard and through Universal Control:
+- Held letters (2026-10-29; the maintainer on the iPad mini with a Bluetooth keyboard and through Universal Control:
   "hold p didnt work … When I held down e it showed the keyboard options for Spanish characters"). The text
   system's keys never reached the Mac as held keys: in the iPad simulator with `Tests/keyrig` (`wait:S` holds
   a key) against a loopback synthetic host, 4504a96c's build typed a held P once (one `pressesBegan` handed
@@ -458,24 +452,24 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   Latin alphabet directly (its primary language's likely script is Latn, and its input method does not
   compose: `composingLatin`, Vietnamese and Hawaiian, whose input managers say they compose text in the iOS
   27.0 runtime's TextInput bundles), nothing is composed and nothing is latched on the key row (with no
-  keyboard selected, only if every keyboard set up would); else iPadOS's text system, as before (a Sill for
+  keyboard selected, only if every keyboard set up would); else iPadOS's text system, as before (a DuoDeck for
   Mac from before key repeat, which would type each key once where iPadOS repeats Delete and Space itself; an
   input method's keyboard, Chinese, Cantonese, Japanese, Korean, Vietnamese, Hawaiian or a transliteration
   one; another script's, Russian, Greek, Arabic, Hindi…; a latch, whose shortcut `insertText` makes), and
   while marked text is open every key is the input method's. While the Mac types,
   `ForwardedKeys.characterUsages` (the letters, digits, Return, Delete, Tab, Space, the punctuation keys
-  `` - = [ ] \ ; ' ` , . / `` and Shift's two keys, each a key every Sill for Mac answers to) go down and up
+  `` - = [ ] \ ; ' ` , . / `` and Shift's two keys, each a key every DuoDeck Host answers to) go down and up
   as keys, so the host repeats them at the Mac's timing, the Mac's own layout and dead keys make the
   characters (⌥E then E is é), Shift is a key the Mac hears (the repeats follow it; a click with it held is a
   shift-click) and no accent popover comes; Caps Lock stays the iPad's (its key the text system's) and a
   letter typed with it on and no ⌘, ⌃ or ⌥ carries Shift (`ForwardedKeys.carried`). The keypad and the ISO
-  keyboards' Non-US `\` and # stay the text system's (no Sill for Mac before has them as keys). Unchanged:
+  keyboards' Non-US `\` and # stay the text system's (no DuoDeck Host before has them as keys). Unchanged:
   the ⌃Space rule (#138), the on-screen keyboard (`insertText`), dictation, Esc's key command, every key that
   already went as a key, the host's repeat; the wire but for the additive `keyRepeat`. DEBUG: each hardware
   key's down line ends in who types it, and so do textinput's first-responder and keyboard-switch lines:
   `hwkey: usage 19 down via pressesBegan (none): to the Mac; the Mac types: en-US`,
   `…: the text system's; iPadOS types: zh-Hant`,
-  `…; iPadOS types: the Mac repeats no key (a Sill for Mac before key repeat)`; `-SillInputScript`'s
+  `…; iPadOS types: the Mac repeats no key (a DuoDeck Host before key repeat)`; `-DuoDeckInputScript`'s
   `type TEXT` hands the input view text as the on-screen keyboard does. Defaults taken
   (docs/hardware-keyboard-plan.md, open question 12): the Latin alphabet only, as a keyboard chosen in
   another script says which characters are meant and, with two keyboards, ⌃Space is iPadOS's (alternative:
@@ -502,20 +496,20 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   and ⌃Space with one keyboard the base build's events exactly; Zhuyin (ㄋㄧˇ, Return: 你 once) and Japanese
   Romaji (に) composing on the iPad as before; ⌃Space with Zhuyin and English iPadOS's switch, then P
   repeating on the Mac with English and composing ㄣ with Zhuyin; Russian's з typed once through iPadOS; the
-  on-screen keyboard's `insertText "pe"` as text; a held P let up on the Mac when Sill went to the background
+  on-screen keyboard's `insertText "pe"` as text; a held P let up on the Mac when DuoDeck went to the background
   (UIKit's `pressesEnded` at the switch) and when the keyboard went (the hold let go); and the gate: against
   this branch's host P went as a key (54 repeats), against 4504a96c's (no `keyRepeat`) P was typed once
   through iPadOS and Delete repeated by iPadOS, 20 separate presses, as before. The Mac's own press and hold
   applies as to its own keyboard (the repeats carry the autorepeat flag): in TextEdit or Notes with macOS's
   default a held E shows the Mac's accent menu and a held P types once; Terminal, iTerm2 and apps with
-  `ApplePressAndHoldEnabled` off repeat. **Untested, for Noah** (Sill for Mac from this branch, the iPad with
+  `ApplePressAndHoldEnabled` off repeat. **Untested, for the maintainer** (DuoDeck Host from this branch, the iPad with
   a Bluetooth keyboard and through Universal Control), in Terminal (or with the Mac's press and hold off):
   hold P (ppp… after the Mac's delay, at its rate), hold E (eee…, no accents on the iPad), ⌥E then E (é), ⇧
   held over a letter and let go (capitals, then small letters), Caps Lock, Space and Delete held; in
   TextEdit, a held E shows the Mac's accent menu, as the Mac's own keyboard does; a Chinese keyboard on the
   iPad (composes as before; ⌃Space switches); a keyboard layout on the iPad other than the Mac's (the Mac's
   wins).
-- The review of the held letters (2026-10-29, after 79ace754; the report's "The review", sill-handoff's
+- The review of the held letters (2026-10-29, after 79ace754; the report's "The review", duodeck-handoff's
   `triage/2026-10-20-reports/verdicts-2026-10-29/key-repeat-letters-report.md`). A letter typed or a Delete
   (a key held a tenth of a second) whose up a stalled link held back more than 0.4 s was typed again one to
   three times when a ping had come during the press, the host repeating while the device was heard in the
@@ -527,7 +521,7 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   review, stopped at the usage limit: iPadOS's ⌃Space switch (two languages) let the keys held on the Mac go
   on repeating, as ⌃P, so they now come up at the Space (fbcf4b69, `ForwardedKeys.keyboardSwitch`; key-strokes
   450 and 118 of 118), and the Mac's `keyRepeat` is read in one checked place (a66a7fbc, `KeyTyping.macRepeats`;
-  text-composition 194 and 105 of 105). The switch's DEBUG note is made only in Debug (f7374b10). For Noah: a
+  text-composition 194 and 105 of 105). The switch's DEBUG note is made only in Debug (f7374b10). For the maintainer: a
   key held and let go during a stall repeats on for up to half a second (measured: 3, 6, 8 and 11 more for an
   up held back 0.1, 0.2, 0.3 and 0.6 s), as the arrows always did, now Delete too; with two Latin keyboards
   ⌃Space stays the iPad's though the Mac types; a hardware letter ends what dictation can revise. run-all.sh
@@ -536,7 +530,7 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   work): each of the first run's live runs replayed against the final host, its device events as its app logged
   them put through the real `ForwardedKeys`, gave the first run's numbers (P held 55 repeats, E 85, ⇧A 40 and 40,
   Delete 55, Space 56, Caps Lock's A 25 with caps lock and shift, ⌘Z 25, Esc 25, each first at 0.49 to 0.51 s).
-- sillclient.py: `--key=USAGE,HOLD@T` (a key held, pinging four a second meanwhile, as a device) and
+- duodeckclient.py: `--key=USAGE,HOLD@T` (a key held, pinging four a second meanwhile, as a device) and
   `--ping=S`.
 - Defaults taken (docs/hardware-keyboard-plan.md, open question 12): modifiers mid-hold change the
   repeats, never stop them; the silence pause; the floors; the accessibility-size taps. Known: while
@@ -558,7 +552,7 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   deleted after) reached no SwiftUI control at all, through `sendEvent` or UIKit's HID entry point (iOS
   27 has no `UITouch setGestureView:`), so the press's report is untested; if SwiftUI never reports it
   the caps are taps as before, and a missed end is ended by the action.
-- **Untested, for Noah** (a Mac build of this branch and the iPad with a Magic Keyboard): hold ←, →,
+- **Untested, for the maintainer** (a Mac build of this branch and the iPad with a Magic Keyboard): hold ←, →,
   ⌥←, ⌘→, Forward Delete and ⌘Z in TextEdit and a terminal: the first repeat after this Mac's delay
   and then at its rate, as the Mac's own keyboard (System Settings › Keyboard changes both), and
   nothing after the release; ⇧ pressed while → repeats selects; letters held repeat at iPadOS's own
@@ -566,29 +560,29 @@ repeating at its own 0.4 s and 20 a second), which this branch leaves alone.
   and arrows (repeats until the finger lifts; with ⌥ latched, word jumps), slide off a cap (it stops),
   turn the device while holding one (it stops), VoiceOver's double tap (one press), an accessibility
   text size's long press on esc (the large cap, one Esc). Wi-Fi off while holding a key: the repeats
-  stop within about half a second. Sill.log's `[1s]` lines count `in.keyRepeat`.
+  stop within about half a second. DuoDeck.log's `[1s]` lines count `in.keyRepeat`.
 **Nightly builds (2026-10-29, branch `nightly-builds` from main at 35a9c47c, PR #246; issue #134;
-the brief and its Progress are in ~/Downloads/sill-handoff/nightly-plan.md, the procedure in
-docs/release-checklist.md, "Nightlies").** Noah: "Setup the nightly build strategy" (the nine secrets set
+the brief and its Progress are in ~/Downloads/duodeck-handoff/nightly-plan.md, the procedure in
+docs/release-checklist.md, "Nightlies").** the maintainer: "Setup the nightly build strategy" (the nine secrets set
 2026-10-29), then, before the build: "hold off on giving the testflight build to public beta until I try it
 out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, branch `version-0.6.0`) first.
-- `.github/workflows/nightly.yml`: 09:17 UTC while the repository variable `SILL_NIGHTLY` is `true`, and by
+- `.github/workflows/nightly.yml`: 09:17 UTC while the repository variable `DUODECK_NIGHTLY` is `true`, and by
   hand (`verify_only` forces the ad hoc, no-upload path); a scheduled night whose main is the sha at the end
   of the pre-release's notes builds nothing; only main publishes. decide writes the night's words once
   (`Scripts/nightly-notes.sh`: the pull requests merged since the newest `v<version>` tag) and fixes the
-  date and build number (the commit count). Sill for Mac: the pure checks, then with `SILL_SIGN_IN_CI`
-  release.yml's keychain and notary steps, the profile decoded from `SILL_PROVISION_PROFILE`, and
-  `release.sh --nightly --publish` (built and checked as a release, but universal: `SILL_UNIVERSAL=1`, as the
+  date and build number (the commit count). DuoDeck Host: the pure checks, then with `DUODECK_SIGN_IN_CI`
+  release.yml's keychain and notary steps, the profile decoded from `DUODECK_PROVISION_PROFILE`, and
+  `release.sh --nightly --publish` (built and checked as a release, but universal: `DUODECK_UNIVERSAL=1`, as the
   first nightly by hand and #62's word on the next version; no tag rule, the profile required) as
-  `Sill-nightly-<yyyymmdd>-<sha7>.dmg` and `.zip` with their `.sha256` on the rolling pre-release
+  `DuoDeck-nightly-<yyyymmdd>-<sha7>.dmg` and `.zip` with their `.sha256` on the rolling pre-release
   `nightly` (never latest; its tag moved to the commit; the seven newest kept; the commit's sha last in its
-  notes); else ad hoc artifacts. Sill for iPhone and iPad: `release-ios.sh --build-number <commit count>`
+  notes); else ad hoc artifacts. DuoDeck for iPhone and iPad: `release-ios.sh --build-number <commit count>`
   (unsigned, export or upload as testflight.yml; with the key, `asc.swift groups` first, reads only, the
   real group names in the summary; an upload App Store Connect has already is skipped), then
   `Scripts/asc.swift distribute`: waits up to 90 minutes for processing, What to Test, every internal
   TestFlight group, and the public beta group (the external group with the public link) only while
-  `SILL_NIGHTLY_PUBLIC_BETA` is `true`, with Beta App Review right after; asc.swift refuses `--public-beta`
-  unless its environment says that too. Unset at first, on Noah's word.
+  `DUODECK_NIGHTLY_PUBLIC_BETA` is `true`, with Beta App Review right after; asc.swift refuses `--public-beta`
+  unless its environment says that too. Unset at first, on the maintainer's word.
 - A nightly is main's version with the commit count N as its build on both apps, never committed: 0.5.5 (N)
   until 2026-10-31, 0.6.0 (N) since (the 0.6.0 release's own builds are 0.6.0 (1276)), 0.6.1 (N) once main
   moves on after App Review approves 0.6.0. The update check never offers
@@ -596,11 +590,11 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   `prerelease: true`; "nightly" is no version), and offers a nightly nothing until a release newer than its
   version exists. A nightly reads the release's data-protection keychain items (same team, bundle ID and
   profile), so a device paired with one stays paired with the other.
-- Also: release.yml's publish job decodes `SILL_PROVISION_PROFILE` too (the nightly turns on
-  `SILL_SIGN_IN_CI`, which arms it; without the profile a CI release would have moved every Mac to the
+- Also: release.yml's publish job decodes `DUODECK_PROVISION_PROFILE` too (the nightly turns on
+  `DUODECK_SIGN_IN_CI`, which arms it; without the profile a CI release would have moved every Mac to the
   login keychain); testflight.yml takes the commit count as its build number; `release-ios.sh
   --whats-new FILE` (with `--upload`, `--api-key`) sets What to Test after an upload; make-app.sh's
-  `SILL_RELEASE_NIGHTLY=1`; README's Good to know and site/download.html one line each.
+  `DUODECK_RELEASE_NIGHTLY=1`; README's Good to know and site/download.html one line each.
 - Verified (the plan's Progress has every number): asc.swift against a stand-in App Store Connect on
   127.0.0.1 with a throwaway P-256 key (each token's ES256 signature checked with openssl; header, claims,
   exp − iat 900 s), 114 of 114 checks over 21 scenarios and 23 of 23 mutants, the token in no output;
@@ -610,10 +604,10 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   .ipa, 48 of 48 (its App Store path identical to origin/main's); 30 of 30 mutants of the new shell paths caught (15 in release.sh's nightly mode and its release path, 7 in nightly-notes.sh, 8 in release-ios.sh's flags); the workflows: 5 files
   parse (PyYAML), 46 run blocks under /bin/bash -n, 200 structural checks (actions pinned by the commits
   already used, no expression in a run script, secrets only in env, the gates); nightly.yml's run blocks executed under /bin/bash 3.2 -eo pipefail with GitHub's output, env and summary files and the stand-ins, 44 of 44 (decide's skip rule on a schedule only, publishing only from main and not verify only, the notes through the outputs, the Mac's and the iOS mode matrices, `--public-beta` only for exactly `true`), and 8 of 8 mutants of its gates caught; a 12-minute real-time wait (the build listed after 11.5 min, a look a minute): 20 requests, every token valid, renewed once at 600 s; on GitHub
-  `gh workflow run testflight.yml --ref nightly-builds` with `SILL_TESTFLIGHT_IN_CI` unset (`gh variable
+  `gh workflow run testflight.yml --ref nightly-builds` with `DUODECK_TESTFLIGHT_IN_CI` unset (`gh variable
   list` empty) → run 40843967209 passed: Xcode_27.1.app 27A9275, archived with CURRENT_PROJECT_VERSION=987,
   exported through the key; the downloaded .ipa says 0.5.1 (987) while the project says 4, signed "Apple
-  Distribution: NOAH WILLIAM SAFFER (9B2KKVM937)", the App Store profile, get-task-allow false; nothing
+  Distribution: AGENTS AI LTD (U549N38BV6)", the App Store profile, get-task-allow false; nothing
   uploaded. Tonight's real notes: 36 pull requests since v0.5.1, What to Test 3,179 bytes. nightly.yml
   itself runs only once it is on main.
 - The review (2026-10-29, after ba85e191; the plan's "The review"): seven findings, each reproduced, then
@@ -622,7 +616,7 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   and gave it to TestFlight's groups (both workflows' run blocks in a synthetic repository): uploads only
   from main's first-parent line now, other branches export (7c62d6c1; the mode step 12 of 12, 9 before).
   The first nightly, published by hand that morning (0.5.5 (987), tag `nightly` at 150479b5), is universal
-  and its notes give the TestFlight public beta link: the workflow's Mac job builds with `SILL_UNIVERSAL=1`
+  and its notes give the TestFlight public beta link: the workflow's Mac job builds with `DUODECK_UNIVERSAL=1`
   (598d68be) and `nightly_testflight_link` keeps the link in every night's notes (0458239d; the hand-made
   pre-release taken over with the stand-in gh, 8 of 8, 7 before). A malformed .p12 or notary key ended at
   security's or notarytool's words with the file left until the cleanup: named errors in nightly.yml and
@@ -634,13 +628,13 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   requests, renewed at 600 s); release.sh and the notes 104 (a link check added); release-ios.sh 48; 31 of
   31 shell mutants; the workflows 204 structural checks and 46 blocks under bash -n, 44 of 44 run blocks
   executed; the signing run's artifact rechecked (0.5.1 (987), Apple Distribution, get-task-allow false).
-  Not changed here, for the session that talks to Noah: the version (the handoff records his 08:55 UTC
+  Not changed here, for the session that talks to the maintainer: the version (the handoff records his 08:55 UTC
   decision that pre-release builds say 0.5.5 and the release 0.6: #244 and these docs say 0.5.5 since the main session's fix-up of 2026-10-29) and the hour (09:17 UTC, applied the same way); PR #247's README and download-page words repeat this one's.
-- The environments (2026-10-29, the security batch's item for the scan's findings 5 and 6; Noah: "the
-  environments as a checklist step before SILL_SIGN_IN_CI goes on"): the nine secrets were repository
+- The environments (2026-10-29, the security batch's item for the scan's findings 5 and 6; the maintainer: "the
+  environments as a checklist step before DUODECK_SIGN_IN_CI goes on"): the nine secrets were repository
   secrets, which reach a run on any branch or tag, and release.yml and testflight.yml run by hand from
   any ref with that ref's scripts. release.yml's publish job now runs in the environment `release` (only
-  `v*` tags; Noah its required reviewer, so a release waits for his click), nightly.yml's Mac and iOS
+  `v*` tags; the maintainer its required reviewer, so a release waits for his click), nightly.yml's Mac and iOS
   jobs and testflight.yml's job in `nightly` (only main; no reviewer, so a night runs unattended). An
   environment without its secrets gives empty strings, so each job names the environment and what is
   missing when the run needs it: release.yml's first step, before the checkout (it also stops a run by
@@ -678,7 +672,7 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   The second review (2026-10-29, on edda6b6e; the report's "The second review"): one finding, in the
   workflow. The approval is the tag route's gate, but the publish job checked out the tag by name, and
   given a ref actions/checkout v7.0.1 checks nothing against github.sha, so a tag force-moved after
-  the run began (or right after the approval) built and signed another commit while Noah's look still
+  the run began (or right after the approval) built and signed another commit while the maintainer's look still
   matched (his local tag never moves). Reproduced on loopback (tag-move.py in nightly/tests: git
   daemon on 127.0.0.1, checkout's git sequence from its source, the job's own steps with stand-ins):
   the moved commit's release.sh got the identity, the notary profile and the token, a pushed tag, by
@@ -688,7 +682,7 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   moved cases refused, the unmoved ones on. The harness on it: check.py 257 (12 new; 3 problems on
   edda6b6e), run.py 52, env-steps.py 26 (7 new; 4 failing on edda6b6e), tf-mode.py 12, kc-steps.py 16,
   rel-test 104, 21 of 21 mutants (6 new), zsh-paste 36 calls exact, actionlint's 17 notes as before.
-- **Untested, for Noah (docs/release-checklist.md, "Nightlies", "The first run"):** the privacy
+- **Untested, for the maintainer (docs/release-checklist.md, "Nightlies", "The first run"):** the privacy
   manifest's ActiveKeyboards (#147's `UITextInputMode.activeInputModes`, ITMS-91053) is declared on main
   since PR #243 (54BD.1; release-ios.sh's check of run 40843967209's binary against main's manifest: every
   API declared). Merge #244, then this; the environments `release` and `nightly` with their rules, the
@@ -696,63 +690,63 @@ out in Insiders first tomorrow". Merge "Version 0.5.5 for both apps" (PR #244, b
   calls were never run); `gh workflow run nightly.yml -f verify_only=true` and its artifacts (the iOS key
   from `nightly`); the first release through the environment `release` (its tag check passes on the
   run's own commit, which the run's page shows);
-  `SILL_SIGN_IN_CI` and `SILL_TESTFLIGHT_IN_CI` true; a run by hand: the pre-release, the notarized dmg on
+  `DUODECK_SIGN_IN_CI` and `DUODECK_TESTFLIGHT_IN_CI` true; a run by hand: the pre-release, the notarized dmg on
   a second Mac (quarantined: opens, drags, opens, the iPad still paired), TestFlight's groups (the real
-  names: the step lists them) and What to Test; `SILL_NIGHTLY` true; after his Insiders test,
-  `SILL_NIGHTLY_PUBLIC_BETA` true (Test Information filled in; the first build of a version reviewed in full).
-**A copy of Sill.app takes no test hook, from this build on (2026-10-29, branch `sec-test-host-identity` from main
+  names: the step lists them) and What to Test; `DUODECK_NIGHTLY` true; after his Insiders test,
+  `DUODECK_NIGHTLY_PUBLIC_BETA` true (Test Information filled in; the first build of a version reviewed in full).
+**A copy of DuoDeck.app takes no test hook, from this build on (2026-10-29, branch `sec-test-host-identity` from main
 at 150479b5, PR #249; the security scan of 2026-10-18, finding 1, Medium; the security batch of 2026-10-29; the
-report in sill-handoff's `triage/2026-10-29-security/f1-test-host-report.md`).** `AppModel.bundled`, the one gate
-on every TEST ONLY hook that bears on who gets in (`SILL_TEST_REMOTE_DIR`'s trust list, `-requirePairing`, the
-`-Sill…After` hooks, the doors' `SILL_TEST_*`: docs/home-pairing-plan.md §4.3), was
-`Bundle.main.bundleURL.pathExtension == "app"`, the folder's name: Sill.app copied to a folder named Sill.bin, or
+report in duodeck-handoff's `triage/2026-10-29-security/f1-test-host-report.md`).** `AppModel.bundled`, the one gate
+on every TEST ONLY hook that bears on who gets in (`DUODECK_TEST_REMOTE_DIR`'s trust list, `-requirePairing`, the
+`-DuoDeck…After` hooks, the doors' `DUODECK_TEST_*`: docs/home-pairing-plan.md §4.3), was
+`Bundle.main.bundleURL.pathExtension == "app"`, the folder's name: DuoDeck.app copied to a folder named DuoDeck.bin, or
 its executable started through a symlink or a hard link (Foundation then finds no bundle), read as the bare binary
-and took them all, keeping Sill's grants (TCC keys them to the bundle ID and designated requirement; the scan's
-premise, not tried). Now `bundled` is `AppIdentity.isSillApp` (Sources/SillMenuBar/AppIdentity.swift, pure but for
-its reader) of four facts read once at launch: Sill.app when the running code's signing identifier is
-`me.saffer.sill.mac` (the kernel's, SecTaskCopySigningIdentifier: every copy that can hold Sill's grants carries
+and took them all, keeping DuoDeck's grants (TCC keys them to the bundle ID and designated requirement; the scan's
+premise, not tried). Now `bundled` is `AppIdentity.isDuoDeckApp` (Sources/DuoDeckMenuBar/AppIdentity.swift, pure but for
+its reader) of four facts read once at launch: DuoDeck.app when the running code's signing identifier is
+`com.agentsai.duodeck.host` (the kernel's, SecTaskCopySigningIdentifier: every copy that can hold DuoDeck's grants carries
 it, and a file replaced after launch does not change it), when it is signed with any certificate or its signature
-can't be read (fail closed), when its bundle's CFBundleIdentifier is Sill's, or, as before, in a `.app`. The one
-test host is the bare binary as `swift build` makes it (identifier `SillMenuBar`, `adhoc,linker-signed`, no
-Info.plist). Sill.app's code outside a `.app` says why first: "Running from …, which is not a .app, as Sill.app
-itself (signed me.saffer.sill.mac): it takes no test hook." No wire change; the CLI unchanged. Builds from before
+can't be read (fail closed), when its bundle's CFBundleIdentifier is DuoDeck's, or, as before, in a `.app`. The one
+test host is the bare binary as `swift build` makes it (identifier `DuoDeckMenuBar`, `adhoc,linker-signed`, no
+Info.plist). DuoDeck.app's code outside a `.app` says why first: "Running from …, which is not a .app, as DuoDeck.app
+itself (signed com.agentsai.duodeck.host): it takes no test hook." No wire change; the CLI unchanged. Builds from before
 keep the old rule: 0.4.0, 0.5.1 and the nightly 0.5.5 (987) take every hook from a renamed copy or a link
-(SECURITY.md names them; what that leaves open is the review's R1, for Noah, in the report).
+(SECURITY.md names them; what that leaves open is the review's R1, for the maintainer, in the report).
 - Verified: `swift build -c release`, only the CaptureProbe warning; `Tests/checks/test-host` (new, in CI's
   mutants matrix) 133 checks (1,344 combinations against an oracle; the reader for real on ad hoc copies of
-  its own binary under `sandbox-exec`: signed again as Sill, a Sill.bin bundle, a hard link, a symlink, a file
+  its own binary under `sandbox-exec`: signed again as DuoDeck, a DuoDeck.bin bundle, a hard link, a symlink, a file
   replaced after launch) and 22 of 22 mutants; `door-policy` 128, `keychain` and its 7 mutants; `run-all.sh`
   all 57. Live: the bare binary on loopback took `-requirePairing NO` (an unpaired TLS client admitted),
-  `-SillSetAfter 'requirePairing=1'` (the next refused) and the `SILL_TEST_*`; the bare binary in a scratch
-  Sill.bin with Sill's Info.plist, run only under `sandbox-exec` (no network, no LaunchServices database
+  `-DuoDeckSetAfter 'requirePairing=1'` (the next refused) and the `DUODECK_TEST_*`; the bare binary in a scratch
+  DuoDeck.bin with DuoDeck's Info.plist, run only under `sandbox-exec` (no network, no LaunchServices database
   write, no TCC, no preference write, nothing written in the home folder), also signed ad hoc and through a
   symlink: the line, every hook "ignored", "Home door: TLS, pairing required (0 paired)."; origin/main's build
-  in that bundle took every hook. Sill's real preferences byte for byte; LaunchServices' 43 records of Sill's
+  in that bundle took every hook. DuoDeck's real preferences byte for byte; LaunchServices' 43 records of DuoDeck's
   ID the same before and after.
 - The review (2026-10-29, after b0d9b03b; the report's "The review"), three lenses, four findings, each reproduced
-  first, the fixes in commits of their own: R1, the fix holds for Sill.app built from it on, and a build from
-  before keeps its rule: the nightly 0.5.5 (987)'s own Developer ID build, renamed Sill.bin under the same
+  first, the fixes in commits of their own: R1, the fix holds for DuoDeck.app built from it on, and a build from
+  before keeps its rule: the nightly 0.5.5 (987)'s own Developer ID build, renamed DuoDeck.bin under the same
   sandbox, took every hook ("Home door: TLS, pairing not required.", "Settings: require pairing off → on"), so
-  SECURITY.md, the plan's §4.3 and this entry now say which builds (f562b4c3) and what that leaves open is Noah's,
-  in the report; R2, out of the finding's scope, for Noah, in the report; R3, the reader's two fail-closed answers
+  SECURITY.md, the plan's §4.3 and this entry now say which builds (f562b4c3) and what that leaves open is the maintainer's,
+  in the report; R2, out of the finding's scope, for the maintainer, in the report; R3, the reader's two fail-closed answers
   (a read that failed, an identifier with neither a certificate nor the ad hoc flag) were unchecked, three mutants
   turning them into a test host surviving: `signature(read:)`, pure, 12 checks and 2 mutants (7ce5874c); R4, two
   comments with the old rule, DebugHooks' header and the plan's §13 (b16d66c7). Tried and holding: this branch's
-  build signed as Sill in a Sill.bin, every hook "ignored", "pairing required (0 paired)"; `CFProcessPath` and
+  build signed as DuoDeck in a DuoDeck.bin, every hook "ignored", "pairing required (0 paired)"; `CFProcessPath` and
   argv[0] do not move `Bundle.main` (a symlink does, and the kernel's identifier answers it). Verified after:
   `test-host` 145 checks and 24 of 24 mutants; `run-all.sh` all 57 (9 min 58 s); `swift build -c release`, only
   the CaptureProbe warning; the bare binary on loopback took `-requirePairing NO` (an unpaired TLS client
-  admitted), `-SillSetAfter 'requirePairing=1'` (the next refused: "certificate unknown") and the `SILL_TEST_*`;
-  previews 146; Sill's preferences, LaunchServices' 43 records and Sill.log untouched by the sandboxed runs. No
+  admitted), `-DuoDeckSetAfter 'requirePairing=1'` (the next refused: "certificate unknown") and the `DUODECK_TEST_*`;
+  previews 146; DuoDeck's preferences, LaunchServices' 43 records and DuoDeck.log untouched by the sandboxed runs. No
   iOS file and no wire changed, so the three iOS builds were not run.
-- **Untested, for Noah:** a certificate-signed build reading itself (signing needs the keychain): with Sill.app
-  from this branch installed as usual, Sill.log has no "Running from …" line and Settings › Devices and Remote
-  Access work as before. Don't run a copy of Sill.app outside /Applications to see the refusal: a launched copy
-  can register with LaunchServices for Sill's ID and take the login item (2026-10-20). Seen, not changed:
-  LaunchServices lists 43 copies under Sill's ID (old worktrees' `.build/Sill.app`, `wt-mod157` among them, the
+- **Untested, for the maintainer:** a certificate-signed build reading itself (signing needs the keychain): with DuoDeck.app
+  from this branch installed as usual, DuoDeck.log has no "Running from …" line and Settings › Devices and Remote
+  Access work as before. Don't run a copy of DuoDeck.app outside /Applications to see the refusal: a launched copy
+  can register with LaunchServices for DuoDeck's ID and take the login item (2026-10-20). Seen, not changed:
+  LaunchServices lists 43 copies under DuoDeck's ID (old worktrees' `.build/DuoDeck.app`, `wt-mod157` among them, the
   Trash, scratch folders).
 **An open door's reconnect pinned to the key it saw (2026-10-29, branch `sec-reconnect-pin` from main at
-150479b5, PR #255; the security scan's finding 3, Medium; Noah's go of 2026-10-29 for the batch).** The device's
+150479b5, PR #255; the security scan's finding 3, Medium; the maintainer's go of 2026-10-29 for the batch).** The device's
 automatic reconnect to a Mac it was connected to without pairing (Require pairing off, `p=0`) found the row by its
 Bonjour name alone and took any key, so whatever advertised that name with `p=0` (another Mac renamed to it, a
 stranger after a crash) got the session with no tap: what the device typed, and its clipboard (kind 32, on by
@@ -766,10 +760,10 @@ default). Device only, no wire change, nothing on the Mac.
   Mac's reconnect is unchanged (its saved pin). The review of #255 added two: a plain door (no `p`) under the name
   is not dialed after such a session (`reconnectTrust` gives nil for `.plain` with a seen key), where a DEBUG
   build's reconnect dialed it plain with no key to check (the reconnect looks on, as Release's does past "Update
-  Sill"; a tap still dials it); and a tap during the reconnect (its words invite one) whose dial ends before its
+  DuoDeck"; a tap still dials it); and a tap during the reconnect (its words invite one) whose dial ends before its
   handshake leaves the reconnect pinned to the key the last session under that name saw
   (`reconnectKey(lost:earlier:)`, StreamClient's `openKeys` by Bonjour name, in memory, set at a session's first
-  `.ready`), where it took any key. Left as it was: a tap under a name no session has seen a key under since Sill
+  `.ready`), where it took any key. Left as it was: a tap under a name no session has seen a key under since DuoDeck
   started (`openKeys` is memory only) whose dial ends before its handshake leaves a reconnect with any key, as the
   tap would have. DEBUG console: "reconnect: dialing ‹Mac› (dial 1 of this listing), pinned to the key its last
   session saw", "home: this device's pin refused the key that answered as ‹Mac› (-9808)", "home: the session ended:
@@ -781,16 +775,16 @@ default). Device only, no wire change, nothing on the Mac.
   in Release and DEBUG, none to the other key, where main's rule gave it 197) and 171 of 171 (6, O1–O6); the four
   checks that compile DiscoveryPolicy.swift keep every mutant pattern; `run-all.sh`, all 56; `swift build -c
   release`, only the CaptureProbe warning; the three iOS builds, only the known `StreamClient` capture warning
-  (StreamClient.swift:4120). Live on a private iPad mini simulator (iOS 27.0, deleted after), two bare `SillMenuBar
+  (StreamClient.swift:4120). Live on a private iPad mini simulator (iOS 27.0, deleted after), two bare `DuoDeckMenuBar
   --synthetic -requirePairing NO` hosts on 127.0.0.1 alone with identities of their own, each advertised as "Studio
-  f3" (`_silltest._tcp`, `p=0`, a tag) by `dns-sd -i lo0 -R` (a test host's own registration is "Sill test ‹pid›"),
-  the app with `-SillServiceType _silltest._tcp -SillTapRow "Studio f3" -SillNoAutoDesktop 1`: a tap connected to A
+  f3" (`_duodecktest._tcp`, `p=0`, a tag) by `dns-sd -i lo0 -R` (a test host's own registration is "DuoDeck test ‹pid›"),
+  the app with `-DuoDeckServiceType _duodecktest._tcp -DuoDeckTapRow "Studio f3" -DuoDeckNoAutoDesktop 1`: a tap connected to A
   with any key and A's copy reached the device; A killed (-9) with its advertisement; B under the name. Main's build
   (150479b5) reconnected to B by itself (B: "Client connected", "Client hello", "Clipboard: … shares the
   clipboard.") and B's copy was written to the device's clipboard (`simctl pbpaste`); this build dialed it pinned,
   refused B's key, ended with the words above (B logged nothing), the device's clipboard kept its sentinel, and a
   tap then connected to B with any key; A back with its own key (same identity, new port) was reconnected by itself,
-  pinned, its copy arriving. Logs and photos in `~/Downloads/sill-handoff/triage/2026-10-29-security/f3-live/`.
+  pinned, its copy arriving. Logs and photos in `~/Downloads/duodeck-handoff/triage/2026-10-29-security/f3-live/`.
 - The review (2026-10-29; the report's "The review"): two findings, each reproduced first and fixed in a commit of
   its own. R1 (Low, DEBUG builds only), b8f0a7bb: after an open session that had seen a key, a DEBUG build's
   reconnect dialed a plain door under the lost Mac's name with no key at all (live on a private simulator against
@@ -802,19 +796,19 @@ default). Device only, no wire change, nothing on the Mac.
   answer (a dead port, a vanished name, a TLS alert in place of a certificate) stays preparing, so a tap there ends
   with "didn’t answer" and no reconnect at all; R2 needs the waiting case and was not run live. Seen in passing,
   older and not fixed here: `homeEnd` reads -9825/-9829 as the Mac refusing this device's key even before `.ready`
-  (the plans: "right after `.ready`"), reachable only by an address dial at home (DEBUG's `-SillConnect`). Verified:
+  (the plans: "right after `.ready`"), reachable only by an address dial at home (DEBUG's `-DuoDeckConnect`). Verified:
   `home-device` 237 checks and 147 of 147 mutants, `home-model` 87 and 30 of 30, `policy` 482 (its model of the
   glue: 1,560 reconnects with the person's tap among the looks, none to B; before the review B's plain door got the
   session in 194 and B's key after such a tap in 94, main's rule B's key in 444) and 176 of 176 mutants, at b8f0a7bb
   479 and 173 of 173; `remote-rules` 144, its 76 patterns each found once; `run-all.sh`, all 56 (512 s); `swift
   build -c release` from a `git archive` of the head, only the CaptureProbe warning; the three iOS builds, only the
   known `StreamClient` capture warning (StreamClient.swift:4134, main's 4110).
-- **Untested, for Noah:** two Macs with Require pairing off on one network (the scan's own steps): connect the iPad
-  to Mac A without pairing, quit Sill on A, give Mac B A's computer name (System Settings › General › Sharing) and
-  open Sill on B: the iPad shows "‹A› answered with another key, so this iPad didn’t reconnect. Tap it to connect.",
-  B's Sill.log has no "Client connected" for it and a copy on B never reaches the iPad; a tap connects to B. Sill
+- **Untested, for the maintainer:** two Macs with Require pairing off on one network (the scan's own steps): connect the iPad
+  to Mac A without pairing, quit DuoDeck on A, give Mac B A's computer name (System Settings › General › Sharing) and
+  open DuoDeck on B: the iPad shows "‹A› answered with another key, so this iPad didn’t reconnect. Tap it to connect.",
+  B's DuoDeck.log has no "Client connected" for it and a copy on B never reaches the iPad; a tap connects to B. DuoDeck
   reopened on A instead: the iPad reconnects by itself. VoiceOver reads the line once. From the review: with a Debug
-  build from Xcode, the CLI's plain door (`SillHost`, no `--pairing`) or an older Sill.app given A's name after a
+  build from Xcode, the CLI's plain door (`DuoDeckHost`, no `--pairing`) or an older DuoDeck.app given A's name after a
   session with A is not reconnected (the console's "…is a plain door now…"; a tap connects to it); during the
   reconnect to A ("…isn’t answering…"), a tap on its row while the iPad's own network changes (the tap's dial waits
   and is let go), then B under the name: no connection to B ("answered with another key"). And a decision: another
@@ -823,17 +817,17 @@ default). Device only, no wire change, nothing on the Mac.
   the very tap that takes whatever key answers: keep it, skip that row and go on (as a saved Mac's row taken by its
   name is skipped), or change the words.
 **A device's viewport held to what a host takes (2026-10-29, branch `sec-viewport-bounds` from main at
-150479b5, PR #251; the security scan's finding 4, Low; Noah's go of 2026-10-29 for the batch).** Kind 9 carried
+150479b5, PR #251; the security scan's finding 4, Low; the maintainer's go of 2026-10-29 for the batch).** Kind 9 carried
 the panel and Aa's scale as Doubles with no bounds and the host took any number above 0: a viewport of 1e300 points
 (or a scale of 1e-300) from any device a Mac admitted reached the window's fit (`fitToViewport`), whose "Resized …"
-line made an Int of it, which traps, so Sill died with every device's session (the scan's chain with finding 3: its
+line made an Int of it, which traps, so DuoDeck died with every device's session (the scan's chain with finding 3: its
 Bonjour name then free for an impostor); with the virtual display `VirtualStage.windowSize` was unheld and the
 "insists on …" line trapped the same way (a full-screen window's crop of an infinite panel was NaN, which
 `evenPixels` traps on). No wire change.
 - `ViewportBounds` (StreamProtocol's Viewport.swift, pure, `Tests/checks/viewport-bounds`): each side 1 to 16384
   points, a text scale 0.25 to 4 or none. The host refuses any other viewport whole at kind 9, and one that does not
   decode (JSON carries no NaN or infinity): the last viewport stands and nothing of the message is taken, its rate
-  neither; one line naming the device, at most one a second per connection ("Viewport from sillclient refused: width
+  neither; one line naming the device, at most one a second per connection ("Viewport from duodeckclient refused: width
   1e+300 (1 to 16384 points), height 1e+300 (1 to 16384 points)"), `vp.refused` in the `[1s]` lines counting every
   one. Every device build's viewport is within them (the compatibility floor's new line), and a device holds what it
   sends to them (`held`, in `sendViewport`). The two lines print through `ViewportBounds.whole` (Int()'s number,
@@ -843,7 +837,7 @@ Bonjour name then free for an impostor); with the virtual display `VirtualStage.
   0.25; `VirtualDisplaySize.windowSize`, `Tests/checks/capture-scale`): every viewport a host takes is asked as before
   (a side under half a point 1, not 0), the placement fits it to the display, and a full-screen window's crop keeps
   the panel's shape (the review's second finding: held at the display's 4096 it did not).
-- `sillclient.py --raw9=JSON@T` sends a literal viewport.
+- `duodeckclient.py --raw9=JSON@T` sends a literal viewport.
 - Verified: `viewport-bounds` 79 checks and 26 of 26 mutants (18,566 of its 200,000 random viewports main's guard
   took and its line trapped on, none taken now), `capture-scale` 172 and 48 of 48; `run-all.sh`, all 57; `swift
   build -c release` from `git archive`, only the CaptureProbe warning; the three iOS builds, only the known
@@ -869,7 +863,7 @@ Bonjour name then free for an impostor); with the virtual display `VirtualStage.
   (1.7976931348623157e308 refused, as -0 and 5e-324 were in a run on a02c1afe; 1e999 and a rate of 1e300 "does not
   decode"; a duplicate key and a rate of Int.max taken, the rate held by `wantedFPS`; a rate of Int.min, on a02c1afe,
   a restart at 24 fps), beside them a second client's ten stats reports of Int.max: the host alive throughout.
-- A second review (2026-10-29, after 37e47e68; scripts and logs in sill-handoff's
+- A second review (2026-10-29, after 37e47e68; scripts and logs in duodeck-handoff's
   `triage/2026-10-29-security/f4-live/review2/`): one docs fix, e057acaf (DEVELOPMENT.md gave the refusal line's
   limit per device; it is per connection: one device on two connections got two lines 0.11 s apart). No bypass: 92
   hostile payloads of every kind a device sends but 19 and 32, on a loopback host with a scripted pointer, every ping
@@ -879,14 +873,14 @@ Bonjour name then free for an impostor); with the virtual display `VirtualStage.
   `swift build -c release`, only the CaptureProbe warning; the three iOS builds, only the known `StreamClient`
   capture warning. Built, as the first review had not: the pacing harness from origin/main and this tree (`home`:
   60.0 fps both, every gate), the audio harness and the restore probe's driver (not run).
-- **Untested, for Noah:** nothing should change on a device: Aa's steps and none, a rotation and the virtual display
-  as before on the iPad and iPhone, and Sill.log without a "Viewport from … refused" line; if an iPad with Stage
+- **Untested, for the maintainer:** nothing should change on a device: Aa's steps and none, a rotation and the virtual display
+  as before on the iPad and iPhone, and DuoDeck.log without a "Viewport from … refused" line; if an iPad with Stage
   Manager on a large external display is at hand, a full-screen window (a video) on the virtual display at Aa 0.5x
   fills the panel as on main.
 **Direct Wireless only from a paired device (2026-10-29, branch `sec-direct-wireless-paired` from main at
-150479b5, PR #253; the security scan's finding 8, Low; Noah's go of 2026-10-29 for the batch).** Any session at
+150479b5, PR #253; the security scan's finding 8, Low; the maintainer's go of 2026-10-29 for the batch).** Any session at
 the home door could turn Direct Wireless Connection on or off from its Settings panel, an unpaired device at a door
-that lets any device in (Require pairing off) and any device at SillHost's plain door included, and Sill.app saved
+that lets any device in (Require pairing off) and any device at DuoDeckHost's plain door included, and DuoDeck.app saved
 it: the door advertised and accepting over AWDL, radio range, on a stranger's word. Additive wire, host and device.
 - Host: `DeviceSettings.accepted(_:virtualDisplayAvailable:fromRemote:paired:)` (no default arguments now) takes
   `directWireless`, on or off, only from a paired session at home; otherwise refused and named, "Settings from
@@ -905,8 +899,8 @@ it: the door advertised and accepting over AWDL, radio range, on a stranger's wo
   it on a session the Mac says is not paired; the panel disables the switch there, its footnote "Change this on
   ‹Mac›, or from a device paired with it." (away from home as before, "…, or from a device near it."). The mock:
   `default` paired, `cli` and `openpair` not, the older Macs' cases silent.
-- CLI: TEST ONLY `SILL_TEST_REQUIRE_PAIRING=0` (a `--synthetic` host; TestHooks' list) turns Require pairing off
-  at `--pairing`'s TLS door for the run ("Home door: TLS, pairing not required."); sillclient prints `paired=` and
+- CLI: TEST ONLY `DUODECK_TEST_REQUIRE_PAIRING=0` (a `--synthetic` host; TestHooks' list) turns Require pairing off
+  at `--pairing`'s TLS door for the run ("Home door: TLS, pairing not required."); duodeckclient prints `paired=` and
   `--expect` takes `sessionPaired`. Closes the Direct Wireless entry's "revisit it with pairing" (below) and
   docs/direct-wireless-plan.md's; SECURITY.md's known list, DEVELOPMENT.md and support.html say who changes it.
 - Verified: `away-quality` 143 checks and 39 of 39 mutants (96 and 30 before), `compatibility` 146 and
@@ -917,7 +911,7 @@ it: the door advertised and accepting over AWDL, radio range, on a stranger's wo
   and Debug for a device, only the known `StreamClient` capture warning (StreamClient.swift:4110). Live on
   loopback synthetic CLI hosts (software encoder, no router, no screen): at `--pairing`'s door a paired identity
   turned it on and off (`dw=1 paired=1`, "Settings from paired-a: direct wireless off → on", "Direct wireless
-  on: listening on port … again."); at the open door (`SILL_TEST_REQUIRE_PAIRING=0`, "Home door: TLS, pairing
+  on: listening on port … again."); at the open door (`DUODECK_TEST_REQUIRE_PAIRING=0`, "Home door: TLS, pairing
   not required.") an unpaired identity's on and off refused (`dw=0 paired=0`, "Settings from unpaired-b
   refused: direct wireless (only a paired device)") while a paired one beside it turned it on and off, and an
   identity paired by a second connection during its session heard `paired=1` 5.0 s in and was then taken; the
@@ -925,16 +919,16 @@ it: the door advertised and accepting over AWDL, radio range, on a stranger's wo
   connection)"); no "Enabling AWDL" in the kernel log meanwhile. H2 against 150479b5 (`--synthetic` idle, then a
   test client on the Desktop): identical masked and sorted (27 lines) but for the second the client left
   (which counters it listed). Harness photos on a private iPad mini simulator (deleted after), 710×1000 and
-  1000×710: `openpair` and `cli` the switch dimmed with the new footnote, `default` as before (sill-handoff's
+  1000×710: `openpair` and `cli` the switch dimmed with the new footnote, `default` as before (duodeck-handoff's
   `triage/2026-10-29-security/f8-photos/`).
-- The review (2026-10-29, after 73f4892f; sill-handoff's `triage/2026-10-29-security/f8-direct-wireless-report.md`,
+- The review (2026-10-29, after 73f4892f; duodeck-handoff's `triage/2026-10-29-security/f8-direct-wireless-report.md`,
   "The review"): the rule holds (the key from the TLS handshake at `.ready`, the list the status publishes with every
   change of it before anything else runs, `accepted`'s `ok` the only way a device's change reaches the config). The
   scan's own command took it at origin/main's plain door (`dw=1`, "Direct wireless on: listening on port … again.")
   and is refused here (EXPECT FAIL). Every bypass tried on loopback was refused: at the open door a kind 17 forging
   `sessionPaired`, an Int, duplicate keys, six at once and a paired device's name; a pairing window open after kind
   21; the plain door; the remote door. What remains is by design or another finding's: a session that controls the
-  Mac's input can still turn it on in Sill's own menu or Settings (blind: Sill streams none of its windows), any
+  Mac's input can still turn it on in DuoDeck's own menu or Settings (blind: DuoDeck streams none of its windows), any
   paired device can, and the cable's automatic pairing is finding 2. Two docs findings fixed: the plan's host rule
   and the gates that change it at the plain door (91b83561), DEVELOPMENT.md's command-line host (881ac12f).
   Re-run: `away-quality` 143 and 39 of 39 mutants, `compatibility` 146 and 36 of 36, `ledger` 116 and 16 of 16;
@@ -948,23 +942,23 @@ it: the door advertised and accepting over AWDL, radio range, on a stranger's wo
   key used without its private key. Apple's APIs cannot make such a client (SecIdentityCreate refuses a certificate
   with another key; `sec_identity_create_with_certificates` still sends the identity's own certificate first, which
   the open door admits as unpaired and refuses Direct Wireless). A TLS 1.3 client of its own (CryptoKit;
-  sill-handoff's `triage/2026-10-29-security/f8-review2/tls13forge.swift`) sending paired a's certificate with a
-  CertificateVerify signed by another key got a `decrypt_error` alert before any Sill message, at `--pairing`'s door
+  duodeck-handoff's `triage/2026-10-29-security/f8-review2/tls13forge.swift`) sending paired a's certificate with a
+  CertificateVerify signed by another key got a `decrypt_error` alert before any DuoDeck message, at `--pairing`'s door
   and at the open door, and the host logged no "Client connected"; the same client signing with a's own key was
   admitted as paired-a and turned it on. Re-run: `away-quality` 143 and 39 of 39 mutants, `ledger` 116 and 16 of 16,
   `compatibility` 146 and 36 of 36; `swift build -c release`, only the CaptureProbe warning.
-- **Untested, for Noah:** with this branch's Sill.app (release-signed with the profile) and this iPad
-  build: a paired device's switch at home, on and off, Sill.app's menu and General pane following and
-  `defaults read me.saffer.sill.mac directWireless` saved; Require pairing off and a device the Mac has not
+- **Untested, for the maintainer:** with this branch's DuoDeck.app (release-signed with the profile) and this iPad
+  build: a paired device's switch at home, on and off, DuoDeck.app's menu and General pane following and
+  `defaults read com.agentsai.duodeck.host directWireless` saved; Require pairing off and a device the Mac has not
   paired (one never paired, or one removed in Settings › Devices): its switch dimmed with "Change this on ‹Mac›,
   or from a device paired with it.", then Pair This iPad… from that panel: the switch comes back without
   reconnecting; away through Tailscale:
   dimmed with "…, or from a device near it." as before; VoiceOver on the dimmed switch (read as dimmed, then the
-  footnote); mixed builds: this iPad against Sill for Mac 0.5.1 (no `sessionPaired`: the switch works, 0.5.1
-  takes it from any session at home), and the 0.5.1 (4) iPad, unpaired at an open door, against this Sill.app
+  footnote); mixed builds: this iPad against DuoDeck Host 0.5.1 (no `sessionPaired`: the switch works, 0.5.1
+  takes it from any session at home), and the 0.5.1 (4) iPad, unpaired at an open door, against this DuoDeck.app
   (its switch goes back, "‹Mac› kept its setting").
 **Aa's Off, and Aa only for a window (2026-10-29, ArfiArfath21's PR #181 with maintainer edits, branch
-`aa-off`; issue #179, taschaub).** Noah's decisions of 2026-10-29: the Off detent ("off makes more sense
+`aa-off`; issue #179, taschaub).** the maintainer's decisions of 2026-10-29: the Off detent ("off makes more sense
 than 1x"), and Aa not selectable while the Desktop streams ("misleading"). `TextScale` (pure,
 StreamProtocol; `Tests/checks/protocol`) holds Aa's detents: Off, one step left of 0.5×, is no scale (the
 Mac leaves the window alone) and an untouched Aa reads Off; no Off while the window streams on the Mac's virtual
@@ -978,12 +972,12 @@ nothing (one view and one element whatever streams, as a disabled slider: the re
 the next window. The ruler's frame shows two detents each side of the thumb whatever the
 detents (`TextScaleControl.detentsEachSide`): every bar's ruler keeps main's width, a phone's row 1 its
 room (the contributor's grew a step and ran past the phone's row). Host: a device's viewport going from a
-scale to none (`TextScale.endsFit`, per connection, `fitScales`) puts the windows Sill sized back at once
+scale to none (`TextScale.endsFit`, per connection, `fitScales`) puts the windows DuoDeck sized back at once
 (`restoreFits`: whole, its own size where it was moved, left if resized on the Mac) and looks at the
-catalog again, so the stream restarts at the window's own size; `win.fitOff` in the `[1s]` lines. Sill for
+catalog again, so the stream restarts at the window's own size; `win.fitOff` in the `[1s]` lines. DuoDeck for
 Mac 0.5.1 takes Off only as a stop to the fitting: it never puts a window back (#57 came after it). The tour's
 rows say when: "Aa: while a window shows, touch it and slide …" (the review) and VoiceOver's "Swipe up or
-down on it while a window shows." DEBUG: `-SillScaleScript '<s> <scale|off>[; …]'`, the AX dump's value,
+down on it while a window shows." DEBUG: `-DuoDeckScaleScript '<s> <scale|off>[; …]'`, the AX dump's value,
 hint and traits. The review (2026-10-29; its report has each finding, how it was reproduced and the
 re-run): Off by where the window streams (`efcf9177`), 0.5.1 never puts a window back (`2cc12973`), the
 tour's sighted row (`00efae53`), the Desktop's stream never deciding, in `TextScale` and checked
@@ -994,22 +988,22 @@ person expects it) and 95 of 95, tour 84 of 84, run-all 56; the
 three iOS builds (only the StreamClient capture warning) and `swift build -c release` (clean, only CaptureProbe's);
 harness photos in every bar (iPad and phone sizes on 27.0, the Duo's six poses on an iPhone Duo on 27.1, 17 cases
 each) at the default and accessibility-extra-large sizes against main's build: Aa closed at 1×, at 1.25× with its
-ruler, and on Sill's virtual display closed and with its ruler pixel for pixel main's, the ruler at 1× (and at
+ruler, and on DuoDeck's virtual display closed and with its ruler pixel for pixel main's, the ruler at 1× (and at
 1.25× on a 320 pt phone) main's but for the track's faint left end, the strip's fading end as noisy as main's
 against itself; live against a synthetic host: Aa dimmed over its Desktop, VoiceOver's words, viewports 1 → off
-→ 1.25 → off, `win.fitOff 1` at each Off. Untested, for Noah: on the iPad with Virtual Display off, Aa on a window to 1.25×, then Off: the window
-back to its own size at once (Sill.log's "Restored …"), and a later pick of it not resized; Aa dimmed over
+→ 1.25 → off, `win.fitOff 1` at each Off. Untested, for the maintainer: on the iPad with Virtual Display off, Aa on a window to 1.25×, then Off: the window
+back to its own size at once (DuoDeck.log's "Restored …"), and a later pick of it not resized; Aa dimmed over
 the Desktop, VoiceOver too (with its focus on Aa, the window closed on the Mac: the focus stays on Aa); the
 ruler's six detents in each bar; with Virtual Display on, no Off and 1× untouched (Off while a window streams
 in place, the Settings panel's note saying why); two devices (only the one whose scale it was ends the fit
-by Off); with Sill for Mac 0.5.1, Off only stops the resizing.
+by Off); with DuoDeck Host 0.5.1, Off only stops the resizing.
 **The hold before a thumbnail's lights (2026-10-29, branch `thumbnail-hold-stepper` from main at 35a9c47, PR #248; issue #113,
-promised on the issue as "lower the time … and have it be user adjustable").** Noah, 2026-10-29: "The hold time should
+promised on the issue as "lower the time … and have it be user adjustable").** the maintainer, 2026-10-29: "The hold time should
 be patched and editable with a slider in settings (one of those fancy ones with the +/- buttons that increment by 0.1
 seconds, ideally the timer can go from 0.2s to 3s or something like that." Device only: no wire change, never sent.
 - `ThumbnailHold` (pure, `Tests/checks/thumbnail-hold`, 82 checks and 32 mutants, in CI's matrix): 0.2 to 2 s in
   tenths, 0.5 s unless changed (it was a fixed 1.5 s; iOS's own long press, which the reporter cites), counted in whole
-  tenths so no sum of steps drifts; `Sill.thumbnailHold` (a Double; `-Sill.thumbnailHold 0.3`'s string too); the words.
+  tenths so no sum of steps drifts; `DuoDeck.thumbnailHold` (a Double; `-DuoDeck.thumbnailHold 0.3`'s string too); the words.
 - WindowStrip reads it at launch and on each change (every bar: sideways, an iPad's window bar, a phone's row 2), and
   HoldDragOverlay gives the long press already on screen the new length; the drag to another slot starts from the
   same hold. Its 12 pt (a scroll before the hold) and 8 pt (the lift after it), and the picture's 0.45 s right click,
@@ -1019,10 +1013,10 @@ seconds, ideally the timer can go from 0.2s to 3s or something like that." Devic
   every word whole (`ThumbnailHold.titleLines`; ViewThatFits and a small Layout, `WrappingTitle`), else over them, and
   the row never wider than the panel offers it; one adjustable VoiceOver element,
   "Hold to show window controls, 0.5 seconds" (iOS 27's stepper alone is two buttons read with the whole label), its
-  footnote next. `-SillSettingsScroll hold`. Site words (support's section, privacy's item) marked `<!-- Thumbnail
+  footnote next. `-DuoDeckSettingsScroll hold`. Site words (support's section, privacy's item) marked `<!-- Thumbnail
   hold`; the next What's New's paragraph. Not taken from the branch `thumbnail-hold` (2026-10-20, 1 to 5 s, never a
   pull request): its pressed state from touch-down and its fix of the lights' VoiceOver labels; #164 (addhumal, a
-  picker of five lengths) predates Noah's stepper.
+  picker of five lengths) predates the maintainer's stepper.
 - Verified: the three iOS builds and `swift build -c release`, only the known warnings; `run-all.sh`, all 57; on a
   private iPhone Duo simulator (iOS 27.1, the cover display: the harness draws 1000x710 at 0.65, turned), with a driver
   injected into the Debug app (the touch rig's synthesized touches; the scratchpad's, not committed): a press at the
@@ -1051,23 +1045,23 @@ seconds, ideally the timer can go from 0.2s to 3s or something like that." Devic
   0.505–0.507 s into the press, 0.205 at 0.2 s, 3.009 at 3 s, main 1.505; VoiceOver's steps and ends, the stepper's
   taps, a relaunch keeping 0.6 s, a Mac without kind 16; live through a recording relay, the row changed seven times
   and the device sent only pings and its stats meanwhile.
-- **Untested, for Noah:** on the iPad and iPhone, a thumbnail's lights at half a second and the drag after them;
+- **Untested, for the maintainer:** on the iPad and iPhone, a thumbnail's lights at half a second and the drag after them;
   Settings › This iPad's stepper from 0.2 to 2 s and a hold at each end; a swipe across the strip at 0.2 s (no lights);
   VoiceOver's reading and its swipes; the row at the largest text sizes (the panel stops at xxLarge: the title in three
   lines beside the stepper, over it in a narrow panel, an iPad window in Slide Over or a phone with Display Zoom); Voice
   Control, Switch Control and Full Keyboard Access on the row (one adjustable element: its − and + are no elements of
   their own); a Magic Keyboard trackpad's or a mouse's click and hold on a thumbnail.
 
-**Pinch to zoom (2026-10-28/29, addhumal's PR #196 with maintainer edits; issue #65).** Noah's decisions of
+**Pinch to zoom (2026-10-28/29, addhumal's PR #196 with maintainer edits; issue #65).** the maintainer's decisions of
 2026-10-19/20: pinch to zoom, not a slider; Photos-like, centred on the point between the fingers, the Mac's cursor
 not involved; a slight pinch out stays zoomed and only a pinch all the way out (or a lift within 2 % of it) gives the
 whole picture back; cap 5×. `StreamZoom` (pure, `Tests/checks/stream-zoom`, 105 checks and 30 mutants) owns the zoom
 and the two-finger stroke; InputOverlay maps every touch and scroll through it so taps, clicks, the Pencil, hover and
 scrolls land on what shows under the finger; `ZoomedStreamView` scales the picture; three fingers stay the Mac's
 gestures and undo a zoom they interrupt; a turn or another layout keeps the zoom, another source resets it; nothing
-is sent. Harness: `-SillZoom`, `-SillHitTest`, the input script's `pinch` and `touch`; the touch rig's zoom strokes
+is sent. Harness: `-DuoDeckZoom`, `-DuoDeckHitTest`, the input script's `pinch` and `touch`; the touch rig's zoom strokes
 (`RIG_ONLY=zoom`). Verified (the verdict in the handoff): the check and mutants, run-all 56, the touch rig 72 of 72
-against main, photos at 1×, 2.5×, 5× and after a full pinch out. Untested, for Noah: on the iPad and iPhone, the pinch
+against main, photos at 1×, 2.5×, 5× and after a full pinch out. Untested, for the maintainer: on the iPad and iPhone, the pinch
 following the fingers, a two-finger scroll at 1×, moving a zoomed picture, taps and the Pencil landing under the
 finger, three-finger gestures over a zoomed picture, a turn, Larger Picture, ProMotion smoothness, VoiceOver.
 **Trackpad and wheel scrolls stay under the pointer (2026-10-28, PR #217 from andrewgribben's
@@ -1075,7 +1069,7 @@ finger, three-finger gestures over a zoomed picture, a turn, Larger Picture, Pro
 docs/hardware-keyboard-plan.md, "#130 and PR #217").** #217 read each scroll pan's reading as that event's
 own movement on a Magic Keyboard, so that main's diff of a running total (#80) "sent almost nothing", and
 added three stats keys. Checked on a private iPad simulator (iOS 27.0) with keyrig, a probe app of pans
-side by side and Sill's own build against a loopback synthetic host with `SILL_TEST_INPUT_LOG=1`: the
+side by side and DuoDeck's own build against a loopback synthetic host with `DUODECK_TEST_INPUT_LOG=1`: the
 translation is a running total, as a finger's (a wheel's notches 3, 6, 9 pt), and main's build and #217's
 posted the same wheel scroll event for event. The issue's reports were of 0.5.1, whose finger pan had no
 scroll mask (a pan's default is 0, read there): no trackpad scroll reached it at all. Device only but for
@@ -1092,7 +1086,7 @@ a TEST ONLY log line; no wire change.
   whether UIKit adds them up or not); `PointerScroll.total` adds the readings up for the scroll path's
   diff, so the shared path, the DEBUG input script and `scriptScroll` are main's. Gone:
   `minimumNumberOfTouches = 0` (the trackpad's pan began without it through Universal Control on
-  2026-10-15), `in.scrollMiss` (could not count for a Sill device: both ends hold a scroll inside the
+  2026-10-15), `in.scrollMiss` (could not count for a DuoDeck device: both ends hold a scroll inside the
   picture), `in.scroll0` (every coast's sub-point tail), `in.scrollY` (a sum among counts, for amounts that
   were never lost) and `Stats.add`.
 - TEST ONLY: the input log's scroll line says where it lands ("Test input: scroll dy 6 dx 0, wheel (none)
@@ -1105,16 +1099,16 @@ a TEST ONLY log line; no wire change.
   capture warning. Not seen: a real trackpad's events in the continuous pan (none reached it in the
   simulator: keyrig's mouse and its phased events go to the discrete pan, and a virtual touch pad's
   digitizer frames came as touch events).
-- **Untested, for Noah** (the iPad with the Magic Keyboard, a Debug build from the branch): two fingers on
+- **Untested, for the maintainer** (the iPad with the Magic Keyboard, a Debug build from the branch): two fingers on
   the trackpad scroll a window and the Desktop the whole way, under the pointer (a long scroll down and up
   in Safari and in Finder's list); a flick coasts once (note a double coast: the content running on twice
   as far, or a second stretch after the first ends); a mouse's wheel, one notch and a spin; the console's
   `scroll:` lines say whether the pan's own location runs on there too.
 **A saved Mac gone after a force-quit (2026-10-28, PR #224 by addhumal, branch `saved-mac-persistence`,
-main at 6c5b5d24 in it; issue #140).** ZainnQureshii (iPhone 16 Pro Max, iOS 27.0.1, Sill 0.5.1 from
-the App Store, Tailscale at home and away): after pairing with the QR code and swiping Sill away, the
-Mac is absent at the next launch and the code must be scanned again each time; Sill for Mac logs a
-new `sill-pair/1` pairing at every relaunch. Device only, no wire change.
+main at 6c5b5d24 in it; issue #140).** ZainnQureshii (iPhone 16 Pro Max, iOS 27.0.1, DuoDeck 0.5.1 from
+the App Store, Tailscale at home and away): after pairing with the QR code and swiping DuoDeck away, the
+Mac is absent at the next launch and the code must be scanned again each time; DuoDeck Host logs a
+new `duodeck-pair/1` pairing at every relaunch. Device only, no wire change.
 - The cause, from the code and a model (remote-rules' `launch.swift`): the record is written at the
   pairing (`storeSavedMacs`, before the session), and cfprefsd keeps it through a SIGKILL (a private
   iOS 27.0 simulator against a loopback `--remote --pairing` host: kept on main, killed 0.1 s and
@@ -1149,39 +1143,39 @@ new `sill-pair/1` pairing at every relaunch. Device only, no wire change.
   "Paired … (key 5KVZV9…)"), a home pairing killed at once keeping the link's five addresses and
   port 47224 (main's: none, 7455), and an unsigned build's pairing ending "This iPhone couldn’t make
   its key (the Keychain didn’t answer: -34018)." with nothing sent. The report, the drafts for the
-  reporter and addhumal and the evidence: `~/Downloads/sill-handoff/triage/2026-10-20-reports/
+  reporter and addhumal and the evidence: `~/Downloads/duodeck-handoff/triage/2026-10-20-reports/
   verdicts-2026-10-28/pr224-report.md`.
-- **Untested, for Noah:** on the iPad mini (iPadOS 27.0.1, the reporter's) with a Debug build of this
-  branch: once with `-SillForgetMacs 1` (the saved Macs and the device key gone; then remove it), Add a
-  Mac… and the code: the console's "device key: made XXXXXX…, given back by the Keychain" and Sill.log's
-  "Paired ‹iPad› (key XXXXXX…)" alike; swipe Sill away, open it: the Mac listed, its session without a
+- **Untested, for the maintainer:** on the iPad mini (iPadOS 27.0.1, the reporter's) with a Debug build of this
+  branch: once with `-DuoDeckForgetMacs 1` (the saved Macs and the device key gone; then remove it), Add a
+  Mac… and the code: the console's "device key: made XXXXXX…, given back by the Keychain" and DuoDeck.log's
+  "Paired ‹iPad› (key XXXXXX…)" alike; swipe DuoDeck away, open it: the Mac listed, its session without a
   code (this is the making path, which no device here has run on 27.0.1: a key is made once). At home,
-  a tap on the row and the code, Sill swiped away at once: the Mac listed, and its Remote row dials
-  through Tailscale. With the reporter: the key names in Sill.log, and this build's word at pairing.
+  a tap on the row and the code, DuoDeck swiped away at once: the Mac listed, and its Remote row dials
+  through Tailscale. With the reporter: the key names in DuoDeck.log, and this build's word at pairing.
 
 **Tiles, Virtual Display and Send Audio on by default (2026-10-27, branch `defaults-tiles-vd` from main at
-3c257485, fast-forwarded to 3b546374 (#234) before its first commit; PR #236).** Noah, 2026-10-27:
+3c257485, fast-forwarded to 3b546374 (#234) before its first commit; PR #236).** the maintainer, 2026-10-27:
 "make tiles not list the default behavior of the app. Also have Virtual Desktop on by default. Of
 course, if a user changes a setting remember their choice for future sessions as you do now. Make
 this a separate PR after #117 merges." Later that morning, testing #235: "Send Audio should be on
 by default, and mute should be off by default." No wire change.
-- Sill.app's Send Audio is on by default too (`HostConfig.app.sendAudio`; the CLI's `--audio` still
+- DuoDeck.app's Send Audio is on by default too (`HostConfig.app.sendAudio`; the CLI's `--audio` still
   opts in; a saved `sendAudio` wins, so a Mac whose user turned it off stays off): the menu's
   checkmark and Settings › Streaming's switch start on; README's Good to know, support.html's Sound
   section and privacy.html say so. Mute on the device was off by default already (#235).
 - The device: the connect screen shows tiles unless its person chose the list
-  (`ConnectionList.defaultStyle`, `storedStyle`: a stored `Sill.connectionStyle`, "list" or "tiles",
+  (`ConnectionList.defaultStyle`, `storedStyle`: a stored `DuoDeck.connectionStyle`, "list" or "tiles",
   always wins; nothing stored, or a value no build writes, reads as tiles). ConnectScreen keeps the
   key optional (`@AppStorage … String?`), so the rule alone decides, as StreamClient's
   `connectionStyle` already did. So a picture of each saved Mac's screen is kept by default
   (`takesPreview`, unchanged: only with tiles), and Disconnect asks for its fresh keyframe by default
-  (300 ms at most before the connect screen with Sill for Mac 0.5.1, which skips kind 44). The switch
-  beside the title always shows, whichever style is on and whether or not a Mac is listed (Noah,
+  (300 ms at most before the connect screen with DuoDeck Host 0.5.1, which skips kind 44). The switch
+  beside the title always shows, whichever style is on and whether or not a Mac is listed (the maintainer,
   2026-10-27: "The list/tiles switch should always show"; #117 showed it for tiles alone, which with
   tiles the default took it away under the finger of someone with no saved Mac who chose the list).
-  DEBUG: `-SillStyleToggleAt <s>[,<s>…]` toggles the style as
+  DEBUG: `-DuoDeckStyleToggleAt <s>[,<s>…]` toggles the style as
   the switch does (`toggleStyle`); the console's `connect:` lines.
-- The Mac: Sill.app registers `HostConfig.app` (HostSettings), the CLI's `standard` with the virtual
+- The Mac: DuoDeck.app registers `HostConfig.app` (HostSettings), the CLI's `standard` with the virtual
   display on. Registered, never written: a `virtualDisplay` key set from the menu, Settings ›
   Virtual Display or a device always wins (a Mac that turned it off stays off; this Mac's own keys read 1 for
   both on 2026-10-27, set by hand, so nothing changes here), and `-virtualDisplay 0` turns it off for one run. The CLI keeps `standard`: `--virtual-display`
@@ -1190,7 +1184,7 @@ by default, and mute should be off by default." No wire change.
 - The virtual display at 1x, the caveat of that decision: not in the session of 2026-10-26/27.
   Beside the 2560×1440 display at 1x every staged capture that night read "scale 2.0" (`filter
   (1456.0, 1486.0)`, `(2560.0, 1486.0)`, `(2560.0, 2264.0)`); its "scale 1.0" captures were real
-  windows and the Desktop on that display (#233's case). Sill.log's 1x displays were five earlier
+  windows and the Desktop on that display (#233's case). DuoDeck.log's 1x displays were five earlier
   ones (2026-09-26, 09-28, 10-08 twice, 10-15), each asked with both sides under 800 points, 754×784
   or 762×792: an iPhone held upright (its 377- or 381-point picture doubled for Aa's smallest step)
   and the menu bar, beside the Mac's own Retina display too, so the main display's scale played no
@@ -1207,7 +1201,7 @@ by default, and mute should be off by default." No wire change.
   display with it on by default; Good to know), site/support.html (a section, "A window left your
   Mac’s screen", whose sentence on the default is marked `<!-- Virtual Display` for its release; "It
   says Not paired"), site/privacy.html (the tiles' items: kept unless the list is chosen; "touch and
-  hold it"; dated October 27, 2026; the virtual display needs no word there, Accessibility "so Sill
+  hold it"; dated October 27, 2026; the virtual display needs no word there, Accessibility "so DuoDeck
   can move and size the window it shows" says it already), docs/release-checklist.md (the marker,
   its perl line and grep), docs/app-store-metadata.md (the description's "Your Mac shows up.", 3,032
   characters; the next What's New's tiles paragraph, 232, the draft 1,805), docs/DEVELOPMENT.md, the
@@ -1216,11 +1210,11 @@ by default, and mute should be off by default." No wire change.
   55 (562 s); mutants: connection-list 162 checks and 76 of 76, capture-scale 148 and 39 of 39,
   away-quality 96 and 30 of 30 (after #235's merge: its acceptance mutants and the app defaults'), virtual-display-api (VirtualDisplay.swift changed) 17 of 17; H2
   against main at 3b546374 from `git archive`, `--synthetic` on loopback (software encoder, no
-  router, no screen): idle 35 s identical masked and sorted (8 lines), with `sillclient.py PORT 8
+  router, no screen): idle 35 s identical masked and sorted (8 lines), with `duodeckclient.py PORT 8
   desktop` identical (23 lines; a first pair differed only in which counters three stats lines
-  listed, `cursor.shape` among them); the bare SillMenuBar `--synthetic` (domain deleted before and
+  listed, `cursor.shape` among them); the bare DuoDeckMenuBar `--synthetic` (domain deleted before and
   after): no key, "Virtual display: private CGVirtualDisplay API present…" and "✓ Virtual Display";
-  `-SillSetAfter '2 virtualDisplay=0'`, one "Settings: virtual display on → off" and the key 0; a
+  `-DuoDeckSetAfter '2 virtualDisplay=0'`, one "Settings: virtual display on → off" and the key 0; a
   relaunch, off; `-virtualDisplay 1`, on for the run, the key still 0; main's binary with no key,
   off; previews from both bare binaries at one path, 146 files each, only `menu.txt` (the
   update-available sample's ✓ Virtual Display and ✓ Send Audio (Beta)), `pane-virtualDisplay-light.png`,
@@ -1233,34 +1227,34 @@ by default, and mute should be off by default." No wire change.
   differs from itself); this build with the list stored and main's with nothing stored, 44 of 58, the
   rest the switch beside the title, which this build always shows (the verifier's photos of 04c9f226;
   the author's, before 70423d1a, had the switch only with a saved Mac listed); the normal app, a fresh install against a synthetic host
-  registered as `_silltest._tcp`: tiles, toggled to the list (stored "list"), a relaunch the list,
+  registered as `_duodecktest._tcp`: tiles, toggled to the list (stored "list"), a relaunch the list,
   toggled back (stored "tiles"), a relaunch tiles, the key read from the app's container plist
-  (`simctl spawn … defaults read <container>/Library/Preferences/me.saffer.sill.plist`; the domain by
-  name reads elsewhere); `SillHost --virtual-display-selftest 60 800x830` once, at 05:05 with this
+  (`simctl spawn … defaults read <container>/Library/Preferences/com.agentsai.duodeck.plist`; the domain by
+  name reads elsewhere); `DuoDeckHost --virtual-display-selftest 60 800x830` once, at 05:05 with this
   Mac idle 601 s and no device connected: online at the requested mode in 446 ms, 1600×1660 px @2×,
-  a 30-point menu bar, gone 158 ms after (its HID move reset the idle time). Not run: Sill.app,
+  a 30-point menu bar, gone 158 ms after (its HID move reset the idle time). Not run: DuoDeck.app,
   anything with a device, a staged window on 800×830.
-- **Untested, for Noah:** on the iPad with this build, a fresh install (Sill deleted first) shows
-  tiles; once a Mac is paired the switch beside the title shows; to the list, quit Sill from the app
+- **Untested, for the maintainer:** on the iPad with this build, a fresh install (DuoDeck deleted first) shows
+  tiles; once a Mac is paired the switch beside the title shows; to the list, quit DuoDeck from the app
   switcher and reopen: the list; back to tiles, reopen: tiles; an install that chose the list keeps it.
-  On a Mac whose `virtualDisplay` was never set (another Mac or user account, or, with Sill quit,
-  `defaults delete me.saffer.sill.mac virtualDisplay sendAudio`; this Mac's read 1, set by hand, so it
+  On a Mac whose `virtualDisplay` was never set (another Mac or user account, or, with DuoDeck quit,
+  `defaults delete com.agentsai.duodeck.host virtualDisplay sendAudio`; this Mac's read 1, set by hand, so it
   is on here already): the menu shows ✓ Virtual Display and ✓ Send Audio (Beta), a device hears the
   Mac's sound at once (beside the Mac it doubles every sound a moment late until Mute), a window
-  picked moves onto the virtual display (Sill.log "Virtual
+  picked moves onto the virtual display (DuoDeck.log "Virtual
   display … @2× id …: created", "Moved …", "Capturing … of virtual display") and comes back at
   Disconnect; the switch turned off stays off after a relaunch. With the iPhone 15 Pro upright and
   the virtual display on, a pick's display is "Virtual display 800×830 pt @2×" with no "online but not
   at" line, and the window's text crisp.
 **Send Audio and Mute in the device's Settings panel (2026-10-27, branch `sound-toggle` from main at
 b4caa91, main at 3b54637 (#117, #234) merged in, not rebased; PR #235; the bullet "Two switches" in the
-sound's entry below and docs/audio-plan.md's last section have the details).** Noah: "I've decided the
+sound's entry below and docs/audio-plan.md's last section have the details).** the maintainer: "I've decided the
 audio setting should not be in the main button tray but instead in settings. Sound should be a toggle in
 the settings menu." Two switches in the device's Settings panel: **Send Audio** (the Mac's group, its
 "Beta" tag), which a device turns on and off for every device as it does Quality (the host accepts kind
-17's `sendAudio` again and Sill.app saves it, no picture restart; a Mac from the beta refuses it and the
-switch goes back; for a Mac without sound the row is off and disabled, "Update Sill on ‹Mac›…"), and
-**Mute** right under it (`soundMuted`, the device's own, off by default; Noah, 2026-10-27: "right below
+17's `sendAudio` again and DuoDeck.app saves it, no picture restart; a Mac from the beta refuses it and the
+switch goes back; for a Mac without sound the row is off and disabled, "Update DuoDeck on ‹Mac›…"), and
+**Mute** right under it (`soundMuted`, the device's own, off by default; the maintainer, 2026-10-27: "right below
 the Send Audio setting"), shown for every Mac with sound, Send Audio on or off. No Sound button in any bar.
 - Merged with main at 3b54637 (2026-10-27: #117, the connect screen's tiles, and #234, the capture scale
   follow-ups; one merge commit). Only iOSClient/ContentView.swift conflicted, in SettingsScript's doc
@@ -1273,17 +1267,17 @@ the Send Audio setting"), shown for every Mac with sound, Send Audio on or off. 
   simulator as CI builds it, only the known `StreamClient` capture warning (StreamClient.swift:4067);
   `run-all.sh ledger away-quality phone-portrait tour connection-list capture-scale`, all passed (100,
   89, 484, 111,189, 154 and 122 checks).
-- **Untested, for Noah:** the bullet "Two switches"' list (Send Audio from the iPad's panel heard on
+- **Untested, for the maintainer:** the bullet "Two switches"' list (Send Audio from the iPad's panel heard on
   the iPhone too, Mute on one device, Mute before the sound is turned on elsewhere, VoiceOver on both
-  switches, this iPad against a Sill.app from the beta and against 0.5.1).
+  switches, this iPad against a DuoDeck.app from the beta and against 0.5.1).
 **A Mac's row keeps its TXT record when the cable goes (2026-10-27, branch `cable-unplug-row` from main
-at 74d099c, PR #232).** Noah, on the iPad mini's connect screen with the iPad on the Mac's USB cable: the
-row read "Wired", and from the moment the cable came out "Update Sill", for good. The console (Debug):
-`discovery: Noah’s MacBook Pro: Wired, seen on anpi0 (wiredEthernet), en2 (wiredEthernet), en0 (wifi)
+at 74d099c, PR #232).** the maintainer, on the iPad mini's connect screen with the iPad on the Mac's USB cable: the
+row read "Wired", and from the moment the cable came out "Update DuoDeck", for good. The console (Debug):
+`discovery: the maintainer’s MacBook Pro: Wired, seen on anpi0 (wiredEthernet), en2 (wiredEthernet), en0 (wifi)
 (p=1)`, then `…: Wired, seen on en2 (wiredEthernet), en0 (wifi) (saved Mac H6WQ… by its name
 alone)`, then `…: Wi‑Fi, seen on en0 (wifi) (saved Mac … by its name alone)`: iPadOS listed the same
 result on the interfaces left with no TXT record at all, so `rowMac` took the row by its name alone,
-`HomeDoorTXT.door` read a plain door and `rowWord`'s no-downgrade rule said "Update Sill" for a Mac seen
+`HomeDoorTXT.door` read a plain door and `rowWord`'s no-downgrade rule said "Update DuoDeck" for a Mac seen
 over TLS (a tap dialed nothing; by the same rules the saved Mac's Remote row came beside it). Device
 only, no wire change.
 - The rule (`DiscoveryPolicy.rowRecords`, pure, `RowRecord`, `RowRecordKey`): a row is read with its
@@ -1295,7 +1289,7 @@ only, no wire change.
   it delivers itself, and the old one's records serve only the old one's results while they are shown
   beside it. A row never gains a door no record gave it; a tap and the reconnect dial by `homeDial` as
   before (pinned over TLS, never plain for a Mac seen over TLS); a Mac really back on a plain door, or
-  another service under its name, reads "Update Sill" once listed afresh; a result never listed with a
+  another service under its name, reads "Update DuoDeck" once listed afresh; a result never listed with a
   record reads as a plain door, as before. Known: within one browser's listing, a removal it never
   reports (a lost goodbye, a removal and a registration in one report) leaves any recordless service
   that then answers under the name read with the old record: as the Mac its tag names, whose Remote row
@@ -1308,12 +1302,12 @@ only, no wire change.
   `RowRecordKey` and reads every row (by the result it is built from) and the `homeTLS` marking through
   it; the DEBUG test rows (browser 0) carry a record of their own. The `discovery:` line adds "(TXT
   record kept: this result carries none)" or "(no TXT record)", and a plain door's word, "(no p, Update
-  Sill)".
+  DuoDeck)".
 - The review of #232 (2026-10-27, after 6eb6602; main at b4caa91 merged in by then): a kept record
   survived a browser made again (the old results kept beside the new one's, the records keyed by name
-  alone), so a service that took M's name with no record while Sill was in the background read as M by
+  alone), so a service that took M's name with no record while DuoDeck was in the background read as M by
   its old tag (M's Remote row hidden, its remote dial held back, a refusal of the pinned dial marking M
-  `newKey`) where main reads "Update Sill"; now keyed by browser as above. A name in two domains was one
+  `newKey`) where main reads "Update DuoDeck"; now keyed by browser as above. A name in two domains was one
   record for two results; now each result has its own. The checks' two comments naming `door(of:)`.
   Left as main has it (read from the code, not run): back from the background the automatic reconnect
   dials at once from the old browser's last results, trusting their own records (issue #69's settle), so
@@ -1325,31 +1319,31 @@ only, no wire change.
   `swift build -c release` (only the CaptureProbe warning) and the three iOS builds on Xcode 27.1 (Debug
   for the generic simulator as CI builds it, Release for the simulator, Debug for a generic device), only
   the known `StreamClient` capture warning. Live on private iPad mini simulators
-  (iOS 27.0, deleted after) against `SillHost --synthetic --pairing` under `_silltest._tcp` on loopback,
+  (iOS 27.0, deleted after) against `DuoDeckHost --synthetic --pairing` under `_duodecktest._tcp` on loopback,
   paired at the home door. The cable's shape: `dns-sd -R` of the host's name was renamed "(2)", so a bare
   PTR record of it (a scratch `DNSServiceRegisterRecord` tool, lo0, no SRV or TXT) kept the name listed
   once the host was killed, without a record (the simulator's browser lists a new name only once its TXT
   record answers, and keeps a listed one whose record went): origin/main's build `(saved Mac … by its
-  name alone)`, "Update Sill", "… runs an older Sill…", the Remote row beside it, nothing dialed; this
+  name alone)`, "Update DuoDeck", "… runs an older DuoDeck…", the Remote row beside it, nothing dialed; this
   branch `(p=1) (TXT record kept: this result carries none)`, the row as before, no Remote row, the
   reconnect dialing over TLS, pinned (failing there, never plain), and once the name went and a plain
-  registration of it came (`dns-sd -i lo0 -R` to a plain host), "Update Sill", nothing dialed, before
-  and after the review's fix. The review's case: `-SillBrowserFail 1` (the network browser reported
+  registration of it came (`dns-sd -i lo0 -R` to a plain host), "Update DuoDeck", nothing dialed, before
+  and after the review's fix. The review's case: `-DuoDeckBrowserFail 1` (the network browser reported
   failed, cancelled, made again a second later), and meanwhile the TLS host killed and its name
   registered with no TXT record for a plain host: 5c69075e's build read it as M (`(p=1)` kept, no word,
-  no Remote row); this one `(… by its name alone) (no p, Update Sill) (no TXT record)`, "Update Sill",
+  no Remote row); this one `(… by its name alone) (no p, Update DuoDeck) (no TXT record)`, "Update DuoDeck",
   M's Remote row, nothing dialed. Not live: a tap then (no UI input here; the checks have it).
-- **Untested, for Noah:** a Debug build on the iPad mini, Sill.app on the Mac, the connect screen with the
+- **Untested, for the maintainer:** a Debug build on the iPad mini, DuoDeck.app on the Mac, the connect screen with the
   cable in, then unplugged: the `discovery:` lines keep `(p=1)` with "(TXT record kept: this result carries
-  none)", the row reads "Wi‑Fi" (no "Update Sill", no Remote row) and a tap connects; plugged in again,
+  none)", the row reads "Wi‑Fi" (no "Update DuoDeck", no Remote row) and a tap connects; plugged in again,
   "Wired"; the same while streaming over the cable. And a plain CLI host under the saved Mac's name: quit
-  Sill.app and run `swift run -c release SillHost` (no `--pairing`) on that Mac: the row reads "Update
-  Sill" and a tap dials nothing; the same with the switch made while Sill is in the background on the
+  DuoDeck.app and run `swift run -c release DuoDeckHost` (no `--pairing`) on that Mac: the row reads "Update
+  DuoDeck" and a tap dials nothing; the same with the switch made while DuoDeck is in the background on the
   iPad (the console's "browser: rebuilt the network browser (back from the background)"): back, the row
-  reads "Update Sill" with the Mac's Remote row beside it.
+  reads "Update DuoDeck" with the Mac's Remote row beside it.
 
 **Capture scale follow-ups (2026-10-27, branch `capture-scale-followups` from main at b4caa910; PR #234).**
-The post-merge verification of #233 (sill-handoff's
+The post-merge verification of #233 (duodeck-handoff's
 `triage/2026-10-20-reports/verdicts-2026-10-26/pr233-verdict.md`) left small follow-ups, all taken here.
 Host only: no wire change, no device file.
 - A window's odd side, drawn whole (`CaptureScale.windowPixels`, `windowSize`, `windowNeedsRestart`,
@@ -1357,10 +1351,10 @@ Host only: no wire change, no device file.
   ScreenCaptureKit, which only scales a window down (`scalesToFit` left false), shrank its 1117 columns
   into 1116: up to half a pixel of blur mid-picture, where a text stem is one pixel wide. A window
   captured at its display's own scale is drawn 1:1 at the buffer's top-left, so an odd side now rounds
-  up to even: 1118×610, one black column past the window (Sill.log's 818×565, 728×535 and 377×235:
+  up to even: 1118×610, one black column past the window (DuoDeck.log's 818×565, 728×535 and 377×235:
   818×566, 728×536, 378×236); a half point on a 2x display the same; Standard on a 2x display (scaled
   down anyway), the Desktop, a staged crop and the test pattern as before. Chosen over asking even
-  points in the Aa fit (`fitToViewport`), which would reach only windows Sill sizes and that take the
+  points in the Aa fit (`fitToViewport`), which would reach only windows DuoDeck sizes and that take the
   size, not one sized by hand, one with Aa unset or an app that keeps its own steps. The device draws
   the frame aspect-fit on black (HEVCDisplayView): the column joins a letterbox beside it, or is a black
   hairline (a frame's pixel) at the picture's right edge where the frame fills its panel; the viewport
@@ -1382,43 +1376,43 @@ Host only: no wire change, no device file.
   docs) and of main at b4caa910, only the CaptureProbe warning; `Tests/checks/capture-scale` 122 checks
   and 30 of 30 mutants (eleven new: the window rule's ten, `evenPixels`' one; in CI's mutants matrix);
   `Tests/checks/run-all.sh`, all 54 (473 s); H2 against main's CLI, both from `git archive`,
-  `--synthetic` on loopback (the software encoder, no router, no screen; Noah's iPad streamed from
-  Sill.app over the cable meanwhile, and nothing here touched the hardware encoder): idle 35 s identical
-  masked and sorted (8 lines), and with `sillclient.py PORT 8 desktop` every host line but the stats
+  `--synthetic` on loopback (the software encoder, no router, no screen; the maintainer's iPad streamed from
+  DuoDeck.app over the cable meanwhile, and nothing here touched the hardware encoder): idle 35 s identical
+  masked and sorted (8 lines), and with `duodeckclient.py PORT 8 desktop` every host line but the stats
   lines, and every client line but the count of kinds received, identical masked and sorted (the test
-  pattern keeps `evenPixels`, 1512×948, and SILL_TEST_SOFTWARE_ENCODER prints no fallback line, so no
+  pattern keeps `evenPixels`, 1512×948, and DUODECK_TEST_SOFTWARE_ENCODER prints no fallback line, so no
   new words reach H2), the stats lines and the count of cursor shapes differing as main's from itself in
   a second run (`cursor.shape` follows the Mac's own cursor; the second the client leaves in); the
-  previews from the two bare SillMenuBar binaries, run from one path: identical but menu.txt's Standard
+  previews from the two bare DuoDeckMenuBar binaries, run from one path: identical but menu.txt's Standard
   line, in each of its 25 samples. Not run: any capture of this Mac's screen or windows, the hardware
-  encoder, input to this Mac, `--virtual-display-selftest`, Sill.app.
-- **Untested, for Noah** (Sill.app from this branch, release-signed with the embedded profile; the iPad,
-  the 2560×1440 display at 1x): a window with an odd width at Aa 1x (Sill.log: "Capture started: 1118×610
+  encoder, input to this Mac, `--virtual-display-selftest`, DuoDeck.app.
+- **Untested, for the maintainer** (DuoDeck.app from this branch, release-signed with the embedded profile; the iPad,
+  the 2560×1440 display at 1x): a window with an odd width at Aa 1x (DuoDeck.log: "Capture started: 1118×610
   … filter (1117.0, 610.0) scale 1.0, capturing at 1x, the display's own (2x asked)") shows its text as
   sharp as the Desktop's, with at most a black hairline at the picture's right edge; the window made a
   point wider on the Mac (1117 to 1118): no second "Capture started"; Resolution › Standard's new line.
 
 **Capture at the display's own pixel scale (2026-10-27, branch `capture-scale` from main at
-74d099c2, main at 76bc100 (#157) and 48a4ef3 (#147) merged in; PR #233).** Noah, tonight, Sill.app from 74d099c2 on
+74d099c2, main at 76bc100 (#157) and 48a4ef3 (#147) merged in; PR #233).** the maintainer, tonight, DuoDeck.app from 74d099c2 on
 this Mac with its lid closed, an external 2560×1440 display at 1x as the main one and a 1920×1080 at
 1x to its left (CGDisplayBounds (-1920, 214); read, nothing captured): a window picked showed in the
 top-left quarter of the iPad's picture, black around it, Aa changing nothing, while the Desktop
 looked right; and a drag to the bottom of the Desktop's picture never brought up the auto-hidden
 Dock. Host only: no wire change, no device file, VirtualStage and VirtualDisplay untouched.
-- The cause (Sill.log): `Capture started: 5120×2880 … filter (2560.0, 1440.0) scale 1.0` for the
+- The cause (DuoDeck.log): `Capture started: 5120×2880 … filter (2560.0, 1440.0) scale 1.0` for the
   Desktop, `2234×1220 … filter (1117.0, 610.0) scale 1.0` for the window (and 4468×2440, 3024×1898,
   2912×2140, 1960×1200 of others since 2026-10-26): the points times the Resolution knob
   (`captureScale` 2), while ScreenCaptureKit draws a window at its display's own scale into the
   top-left of a larger buffer, never scaling it up, and scales a display up to fill one (four times
   the pixels: the encoder's 1–2 fps there).
-- The rule (`CaptureScale.effective(knob:displayScale:)`, pure, `Sources/SillHost/CaptureScale.swift`):
+- The rule (`CaptureScale.effective(knob:displayScale:)`, pure, `Sources/DuoDeckHost/CaptureScale.swift`):
   the lesser of the knob and the display's own scale, ScreenCaptureKit's for the filter being
   captured (`pointPixelScale`, the capture line's "scale"; not CGDisplayMode's pixel width ÷ point
   width: only the filter's is the scale it draws that content at, a window across two displays
-  held to the one it picks, so no rule of Sill's can disagree). On a 1x display Retina and Standard
+  held to the one it picks, so no rule of DuoDeck's can disagree). On a 1x display Retina and Standard
   both capture at 1x (2560×1440, that window 1116×610 at the merge, 1118×610 since its follow-ups (#234):
   an odd side rounded up, drawn whole); a 2x display as before; the test pattern
-  1512×949 × the knob; a window staged on Sill's 2x virtual display at the knob. The same scale
+  1512×949 × the knob; a window staged on DuoDeck's 2x virtual display at the knob. The same scale
   sizes a window's restart on a resize, each catalog poll restarts a window that moved onto a
   display of another scale (`catalogPolled`: the list never changes for it), the away pair goes
   through it, and the link's suggestion and the re-check's test size follow it; `restartNeeded`
@@ -1433,7 +1427,7 @@ Dock. Host only: no wire change, no device file, VirtualStage and VirtualDisplay
   trigger takes it, is not known here. Now a fraction is held to 0…1 and lands at most at
   `maxX − 1/scale`, `maxY − 1/scale` (1439 at 1x, 981.5 at 2x, a point in for the test pattern), where
   a pointer pinned at the edge is; elsewhere where it did. Not changed, the next suspect if the Dock
-  still does not come: Sill's moves carry no mouse deltas, and macOS moves the Dock to another
+  still does not come: DuoDeck's moves carry no mouse deltas, and macOS moves the Dock to another
   display only for a push against the edge (a Dock last shown on the 1920×1080 display).
 - Verified: `swift build -c release` from `git archive` of b2bb428 and of main at 76bc100, only the
   CaptureProbe warning; `Tests/checks/capture-scale` 79 checks and 19 of 19 mutants (the first
@@ -1442,22 +1436,22 @@ Dock. Host only: no wire change, no device file, VirtualStage and VirtualDisplay
   473 s);
   H2 against main's CLI at 76bc100, both from `git archive`, `--synthetic` on loopback (the software
   encoder, no router, no screen): idle 35 s identical masked and sorted (8 lines), and with
-  `sillclient.py PORT 8 desktop` identical masked and sorted but for the stats lines of the seconds
+  `duodeckclient.py PORT 8 desktop` identical masked and sorted but for the stats lines of the seconds
   the client leaves in, the same kinds reaching the client (the test pattern has no capture line,
-  so no new words); a dry run of input there (SILL_TEST_INPUT_LOG, a scripted pointer, nothing
+  so no new words); a dry run of input there (DUODECK_TEST_INPUT_LOG, a scripted pointer, nothing
   posted): a tap at the pattern's far corner went to 1512,949 on main, to 1511,948 here, its middle
-  (756,475) and origin as before. A second round was refused by no-device.sh (Noah's iPad connected
+  (756,475) and origin as before. A second round was refused by no-device.sh (the maintainer's iPad connected
   at 01:50). Not run: `--virtual-display-selftest`, which warps this Mac's cursor, posts a HID move
   and makes a display (its sources, VirtualDisplay's and VirtualStage's are untouched); any capture
-  of this Mac's displays or windows; Sill.app.
-- **Untested, for Noah** (Sill.app from this branch, release-signed with the embedded profile; the
-  iPad): on the 2560×1440 display a window picked fills the picture (Sill.log: "…, capturing at 1x,
+  of this Mac's displays or windows; DuoDeck.app.
+- **Untested, for the maintainer** (DuoDeck.app from this branch, release-signed with the embedded profile; the
+  iPad): on the 2560×1440 display a window picked fills the picture (DuoDeck.log: "…, capturing at 1x,
   the display's own (2x asked)") and Aa still fits it; the Desktop captures at 2560×1440 and runs at
   60 fps (`enc.out` near `cap.complete`); with the Dock auto-hidden and the Desktop streaming, a drag
   to the picture's bottom edge (the portrait trackpad, the Magic Keyboard's trackpad) brings up the
   Dock (if not, note which display it was last on); a window dragged between the two 1x displays
   streams on with no restart; with Virtual Display on, a picked window still at 2x.
-- From the post-merge verification, for Noah (no code; the verdict, in the entry above): a drag-select
+- From the post-merge verification, for the maintainer (no code; the verdict, in the entry above): a drag-select
   past a text window's bottom or right edge may no longer creep-scroll. A device's far edge now lands on
   the window's last pixel row or column (InputLanding), where main's landed one pixel outside the
   window, and AppKit autoscrolls a text view only while the pointer is outside the view: in a window
@@ -1470,9 +1464,9 @@ Dock. Host only: no wire change, no device file, VirtualStage and VirtualDisplay
   settings change, the encoder's fallback).
 
 **Chinese input and dictation reach the Mac (2026-10-19 to 27, PR #147 from cinminori's `zhuyin-input`,
-finished on it, with main at 76bc100 in it; issue #138).** Noah: "Chinese input and dictation if polished
+finished on it, with main at 76bc100 in it; issue #138).** the maintainer: "Chinese input and dictation if polished
 then merge (detects user language set in iOS settings). Once testflight is enabled, ask users to test."
-Device only: no wire change, nothing on the Mac, no Sill setting: the keyboards and dictation languages
+Device only: no wire change, nothing on the Mac, no DuoDeck setting: the keyboards and dictation languages
 set up in the device's Settings decide.
 - The PR (kept): the stream's input view (`InputOverlayView`) is a `UITextInput`, not only a
   `UIKeyInput`, so an input method's composition (Zhuyin, Pinyin, Japanese…) stays on the device, drawn
@@ -1496,11 +1490,11 @@ set up in the device's Settings decide.
 - Also: Korean (2-Set selects the syllables it rebuilds and types them again: `TextComposition.selection`;
   한글 reached a simulator Mac as 한한한글 before); VoiceOver (the input view stays no element); Writing
   Tools, math results and grammar checking off; Debug `textinput:` lines; #110's latched-shift Return and
-  Tab behind `!composition.isComposing` (Noah's conflict comment). Docs: docs/DEVELOPMENT.md, "Other
+  Tab behind `!composition.isComposing` (the maintainer's conflict comment). Docs: docs/DEVELOPMENT.md, "Other
   languages and dictation"; README's How it works; site/support.html's paragraph inside `<!-- Other
   languages` markers (docs/release-checklist.md part 1 §3's perl line); the next What's New
   (docs/app-store-metadata.md); docs/hardware-keyboard-plan.md's item 11 answered.
-- The verification (2026-10-26, fix-first: sill-handoff's
+- The verification (2026-10-26, fix-first: duodeck-handoff's
   `triage/2026-10-20-reports/verdicts-2026-10-26/pr147-verdict.md`), one commit per theme: a Return or a
   Tab typed as text ("\n", "\r" or "\t", alone or anywhere in it: a hardware one without shift, the
   on-screen return key, dictation's "new line") counted as the Mac's caret moving
@@ -1518,20 +1512,20 @@ set up in the device's Settings decide.
   key-strokes 353; `swift build -c release`; the iOS app
   Debug and Release for the simulator and Debug for a device, only the known StreamClient capture
   warning; the touch rig, 72 scenarios; a private iPad simulator (iOS 27.0) against a loopback synthetic
-  host (software encoder, `SILL_TEST_INPUT_LOG`, a scripted pointer), keys from `Tests/keyrig`: Zhuyin
+  host (software encoder, `DUODECK_TEST_INPUT_LOG`, a scripted pointer), keys from `Tests/keyrig`: Zhuyin
   (ㄋㄧˇㄏㄠˇ, Return), Pinyin (nihao, Space), Japanese (nihonn, Return) and Korean (2-Set's g k s r m f)
   each reached the host once (你好, 你好, 日本, 한글); a scripted tap mid-composition sent 好 first, then
   the click; ⌃Space stayed on the device with keyboards in two languages and reached the host (key 49
   with control) with one; letters as text, ⌘S and Esc as keys, ⌘S mid-composition nowhere;
-  `-SillInputTest 1` as before. The simulator takes a language's keyboards from `-AppleLanguages` and
+  `-DuoDeckInputTest 1` as before. The simulator takes a language's keyboards from `-AppleLanguages` and
   `-AppleLocale`, not from its `AppleKeyboards` preference.
 - Verified after the verification's fixes (2026-10-26, on the tree merged with main at c215514, #159):
   text-composition 119 checks and 65 of 65 mutants; key-strokes 353; `run-all.sh`, all 49; the iOS app
   Debug and Release for the simulator and Debug for a device on Xcode 27.1, only the known StreamClient
   capture warning; the touch rig 72 of 72 against main's; a private iPad simulator (iOS 27.0) against a
-  loopback synthetic host, keys from `Tests/keyrig`, the device's bytes recorded by `sillrelay.py`:
+  loopback synthetic host, keys from `Tests/keyrig`, the device's bytes recorded by `duodeckrelay.py`:
   "send the build", Return, "ok", Backspace, ⌘S and Esc went as the 14 letters, "\n" (then "forgot the
-  15 characters typed"), "o", "k", one backspace, ⌘S's keys and Esc's; `-SillInputTest 1` as before;
+  15 characters typed"), "o", "k", one backspace, ⌘S's keys and Esc's; `-DuoDeckInputTest 1` as before;
   mid-composition (Zhuyin's 你) a scripted tap on the letterbox sent nothing, one on the picture the
   move, 你, then the click; with an uncommitted DEBUG step standing in for dictation (`insertText`,
   then `replace` with the range it held), a correction after a hardware Return sent nothing (2dc6c75's
@@ -1598,15 +1592,15 @@ set up in the device's Settings decide.
   (only the CaptureProbe warning); the iOS app Debug and Release for the simulator and Debug for a device
   on Xcode 27.1, only the known StreamClient capture warning; the touch rig 72 of 72 against main's
   (74d099c); a private iPad simulator (iOS 27.0) against a loopback synthetic host (software encoder, no
-  router, no ScreenCaptureKit, `SILL_TEST_INPUT_LOG`, a scripted pointer), keys from `Tests/keyrig`, the
-  device's bytes recorded by `sillrelay.py`: with an uncommitted DEBUG step standing in for dictation
+  router, no ScreenCaptureKit, `DUODECK_TEST_INPUT_LOG`, a scripted pointer), keys from `Tests/keyrig`, the
+  device's bytes recorded by `duodeckrelay.py`: with an uncommitted DEBUG step standing in for dictation
   (`insertText`, then `replace` through the range from where the text began), "send the build", the
   hardware Return's "\n", nothing for the phrase's correction after it, "send the build\ndeploy it "
   whole, nothing for its whole-phrase pass, 10 backspaces and "Deploy it. " for the words after its
   Return, "hello there" corrected as before; a b c Return d e f as letters and one "\n"; ⌘S and Esc as
   keys; Korean 2-Set's 한글⏎한글⏎한 once (before the crossing fix 한글⏎⏎⏎한글⏎); Zhuyin's ㄋㄧˇ⏎⏎ㄋㄧˇ⏎⏎
-  as 你⏎你⏎ once; a Backspace right after a Return deleted that Return; `-SillInputTest 1` as before.
-- **Untested, for Noah and #138's testers (TestFlight):** Zhuyin and Pinyin on the on-screen keyboard and
+  as 你⏎你⏎ once; a Backspace right after a Return deleted that Return; `-DuoDeckInputTest 1` as before.
+- **Untested, for the maintainer and #138's testers (TestFlight):** Zhuyin and Pinyin on the on-screen keyboard and
   on a Magic Keyboard (the candidates beside the composition), Japanese, Korean, dictation in Chinese and
   in English with its corrections and punctuation (nothing typed twice), Return right after dictating in
   Messages, Slack or Terminal (the line goes once), dictation with "new line" said in the middle of a
@@ -1621,28 +1615,28 @@ set up in the device's Settings decide.
 `fix/remote-desktop-qr-code` on their fork, from main at 5c323e6; issue #108, #137 closed as its
 duplicate).** The pairing window's `sharingType = .none` keeps it out of Screen Sharing, Apple
 Remote Desktop and VNC apps (Screens), so a Mac used only through them (a headless Mac mini) could
-pair a device over the USB cable alone. Noah (2026-10-19, answering the triage): the pairing code
-only, as a toggle, and no other hidden dialog shown. Sill.app only: no wire change, nothing on the
+pair a device over the USB cable alone. the maintainer (2026-10-19, answering the triage): the pairing code
+only, as a toggle, and no other hidden dialog shown. DuoDeck.app only: no wire change, nothing on the
 device, the CLI untouched (`--pairing` prints its code on stdout).
 - Settings › Devices, after Require pairing: **Show the pairing window to screen sharing**
   (`HostSettings.showPairingWindowToScreenSharing`, UserDefaults, off by default; a launch argument
-  for one run; `-SillSetAfter '<s> showPairingWindowToScreenSharing=1'` in the bare app). On, the
+  for one run; `-DuoDeckSetAfter '<s> showPairingWindowToScreenSharing=1'` in the bare app). On, the
   pairing window is `.readOnly` (AppKit's default) instead of `.none`, whoever opened it, the Mac's
   user or a device's ask (`PairingWindowSharing`, pure, `Tests/checks/pairing-sharing`); applied as
   the window is made, as each offer shows, and at once on a change to a window already made
   (`PairDeviceWindowController.applySharing`, the app delegate's `onPairingWindowSharingChange`).
   Footnote: "…While it’s on, anyone who can see this Mac’s screen remotely can read the code.
-  Devices streaming this Mac never show the window." Sill.log: "Pairing window: shown to screen
+  Devices streaming this Mac never show the window." DuoDeck.log: "Pairing window: shown to screen
   sharing (Settings › Devices); …" at each change and at launch while on, "… hidden …" when it goes
-  off. The cable notice and every other window keep AppKit's default, as on main; Sill's own streams
-  leave Sill's windows out whatever it says.
+  off. The cable notice and every other window keep AppKit's default, as on main; DuoDeck's own streams
+  leave DuoDeck's windows out whatever it says.
 - From the PR, kept: the switch, off by default, applied live. Changed: the name (was "Display QR
   code on remote desktops", `displayQRCodeOnRemoteDesktops`); the rule a pure type with a check in
   place of an XCTest target and a `swift test` CI step (both gone, with AppModel's `init(defaults:)`);
   the footnote; the docs (README's Pairing, docs/DEVELOPMENT.md's Pairing at home, support.html's
   "If it doesn’t work" item marked `<!-- Pairing window` for the release, the checklist's republish
   cut, SECURITY.md's known-by-design paragraph, docs/home-pairing-plan.md's open risk).
-- Open for Noah: the 2026-10-19 triage suggested keeping a window a device's ask opened hidden; the
+- Open for the maintainer: the 2026-10-19 triage suggested keeping a window a device's ask opened hidden; the
   task as relayed covers both openers, since a device's tap is how a Mac seen over Screen Sharing
   pairs. One line in `PairingWindowSharing.pairingWindow` and two of the check's cases change it.
 - Verified: `pairing-sharing` 16 checks and 8 of 8 mutants; `Tests/checks/run-all.sh`, all 45;
@@ -1652,7 +1646,7 @@ device, the CLI untouched (`--pairing` prints its code on stdout).
   (`--synthetic`, loopback, the software encoder) with a scratch build whose pairing window was
   transparent and click-through, opened by a test client's ask: the window server's
   `kCGWindowSharingState`, sampled 2 s after each change, 0 with the switch off, 1 once
-  `-SillSetAfter` turned it on, 0 off, 1 on, the same open window throughout; 1 from the first look
+  `-DuoDeckSetAfter` turned it on, 0 off, 1 on, the same open window throughout; 1 from the first look
   with it saved on (the launch line logged) and with `-showPairingWindowToScreenSharing 1` (nothing
   saved).
 - The verifier's findings (2026-10-20, after fa57c2f), each fixed in a commit of its own: the
@@ -1667,28 +1661,28 @@ device, the CLI untouched (`--pairing` prints its code on stdout).
   shared screen may show the code either way (ScreenCaptureKit is reported to ignore `.none` from
   macOS 15). Main merged in at d1fa97e (no conflict), at 4d990e9 (ci.yml's mutants matrix alone:
   both sides kept, sorted) and at 74d099c (#94, #159, #227, #93, #151: six files, both sides kept in
-  each; #94's `sendAudio` beside this switch in HostSettings' keys and registered defaults, as Noah's
+  each; #94's `sendAudio` beside this switch in HostSettings' keys and registered defaults, as the maintainer's
   comment of 2026-10-19 asked of whichever landed second). Verified again on the last merge:
   `swift build -c release` from a clean `git archive` (only the CaptureProbe warning); the iOS app
   for the generic simulator as CI builds it (only the StreamClient capture warning);
   `pairing-sharing` 18 checks and 11 of 11 mutants; `Tests/checks/run-all.sh`, all 52; the previews
   against main's (74d099c), both run from one path: the Devices pane's eight differ, two new, the
   other 136 byte for byte (`menu.txt` among them); the bare binary on loopback with
-  `-SillSetAfter '2 showPairingWindowToScreenSharing=1'`: one line for the change, the key saved;
+  `-DuoDeckSetAfter '2 showPairingWindowToScreenSharing=1'`: one line for the change, the key saved;
   live, on a trial merge of the same code, a test host as above (a scratch copy, its pairing window
   alone transparent and click-through, opened by a test client's ask), `kCGWindowSharingState`
   sampled every 0.1 s: 0 with the switch off, then 1, 0 and 1 within half a second of each
-  `-SillSetAfter` change, one window throughout, off screen after the Cancel; relaunched with it
+  `-DuoDeckSetAfter` change, one window throughout, off screen after the Cancel; relaunched with it
   saved on, 1 from the window's first look and the launch line once; with
   `-showPairingWindowToScreenSharing 1`, 1 and nothing saved.
-- **Untested, for Noah:** with Sill.app from this branch, through Screen Sharing from another Mac
+- **Untested, for the maintainer:** with DuoDeck.app from this branch, through Screen Sharing from another Mac
   (or Screens, or Apple Remote Desktop) to a Mac: Pair iPhone or iPad… shows nothing remotely with
   the switch off, the window and its code with it on, and flipping it with the window open shows or
   hides it at once; a tap on the Mac's "Not paired" row on the iPad does the same; a device pairs
   with the code read remotely. (#121's author saw `.readOnly` show the code through Screen Sharing on
   a headless M4 Mac mini and paired with it.)
 
-**The Mac's sound on the device: the wire, the host and Sill.app (2026-09-27,
+**The Mac's sound on the device: the wire, the host and DuoDeck.app (2026-09-27,
 branch `audio` from main at 643af6b with the plan merged in from `audio-plan`
 (1fb9b71, 6e852ef) and refreshed (51520dd), main at da43f6b (PR #38) merged in
 at 2b114e1, then main at 985a733 (PRs #37, #39 to #56: pairing at home, away
@@ -1696,7 +1690,7 @@ from home, the iPhone Duo with the iOS 27.1 SDK, the 0.5.1 release) merged in on
 2026-10-13, then main at 5c323e6 (PRs #74, #75, #77, #78, #79, #80, #85, #98)
 merged in on 2026-10-18, never rebased; the plan, its critique, the refresh and the results
 are in `docs/audio-plan.md`; PR #94 by Code-Tomato, who finished it from 9288aa6; in, as a beta,
-since 2026-10-20: the bullet "A beta").** Noah (2026-09-27), first in what he wants
+since 2026-10-20: the bullet "A beta").** the maintainer (2026-09-27), first in what he wants
 worked on: "Audio: the plan is done and parked as a v2 feature by your earlier
 decision". So the sound is in scope now (docs/BRIEF.md, the decisions below),
 and every open question takes its default (Send Audio off by default, AAC-ELD
@@ -1716,7 +1710,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   codec it makes (`Hello.audio`; `AudioCodec.choose` takes the first of the
   device's list). Kinds 16 and 17 gain `sendAudio` (nil from a host without
   sound), the state gains `audioNote`, and ClientStats gains `audioBehindMs`
-  and `audioLate`. `SillProtocol` stays 1.
+  and `audioLate`. `DuoDeckProtocol` stays 1.
 - Host: Send Audio (`HostConfig.sendAudio`) is off in `standard` and, since
   the beta, the Mac's alone (its menu and Settings, the CLI's `--audio`): a
   device's kind 17 `sendAudio` is refused from either door (the plan's Q8).
@@ -1729,7 +1723,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
     every 10 s. A failure prints one line and sets the note; the picture never
     notices.
   - `AudioCapture` is a second, audio-only SCStream per app (the Desktop: every
-    app but Sill's) at 48 kHz stereo with `excludesCurrentProcessAudio`. Its 2×2
+    app but DuoDeck's) at 48 kHz stereo with `excludesCurrentProcessAudio`. Its 2×2
     picture is thrown away, start and stop are bounded to 2 s, and each
     buffer's layout is read, never assumed. No test runs it.
   - `SyntheticAudio` (`--synthetic`) plays the test tone: 440 Hz at −30 dBFS
@@ -1751,10 +1745,10 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   - Log lines and the `aud.*` stats appear only while Send Audio is on (the
     plan's §4.10).
 - The CLI's `--audio` adds one startup line; without it the output is main's.
-- Sill.app: Send Audio in the status menu after Resolution ("The Mac keeps
+- DuoDeck.app: Send Audio in the status menu after Resolution ("The Mac keeps
   playing it too") and in Settings › Streaming, with its footer and an orange
   line while it fails. Also the Permissions pane's words, " · sound" on the
-  card's source row, `-SillSetAfter sendAudio=1`, and the `sound` preview.
+  card's source row, `-DuoDeckSetAfter sendAudio=1`, and the `sound` preview.
 - The device: AudioDecoder, AudioPlayout (pure, `Tests/checks/audio-playout`),
   AudioOutput and StreamClient+Audio, in the Xcode project as AA01–AA04; the
   Sound button in every bar and the panel's rows (5f7b1ac; the button gone since
@@ -1765,7 +1759,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
     lag as a guard, placement by time then packet after packet, each packet's
     last 5 ms held for a fade, drift closed a frame a packet, jumps over 40 ms,
     clock steps; a move's hand-over resets nothing, and its copies are dropped.
-  - AudioOutput: AVAudioEngine with a player node (no render block of Sill's),
+  - AudioOutput: AVAudioEngine with a player node (no render block of DuoDeck's),
     `.playback` mixing with others, active only while the engine runs; the
     engine stops on mute, in the background and at a session's end after the
     mixer's 25 ms ramp to volume 0 (measured), and after 10 s without a packet;
@@ -1779,7 +1773,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
     sideways, iPad windows under 532 pt upright) Menus kept its place and
     Sound was the panel's switch alone, as in the iPhone Duo's book
     pose and, since the beta, with Larger Picture on every phone (row 1 as
-    Noah approved it: the plan's Q10). A remote session by address takes
+    the maintainer approved it: the plan's Q10). A remote session by address takes
     home's cover, as the Mac counts it.
   - The review's fixes (2026-10-13): 5126215 (the configuration change, nothing
     decoded while silent, a start's reset, unmute retrying a refused session, a
@@ -1835,7 +1829,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
     test tone (82–101 µs a packet; 53 on a busy signal), and each packet's
     own send on loopback about 1. Codec quality Low would save 0.6 points but
     lose 3–9 dB of SNR on tonal sound, so it was not taken; the plan's Results
-    leave it to Noah.
+    leave it to the maintainer.
 - On 985a733 (2026-10-13): `swift build -c release`; `Tests/checks/run-all.sh`,
   all 43 (`compatibility` 131, `protocol` 220 + 8); the iOS app (Debug for the
   generic simulator) only from a scratch copy with the iOS 27.1 SDK's names
@@ -1857,7 +1851,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   gate but over8's "≥ its base fps", 4.8 against 4.9: the sound is 1.9 % of
   that overfilled 8 Mbit/s link) and without it against main (every gate);
   H2 (4 of 6 identical, the rest the stop's timing); H10 (only the sound's
-  panes, menu.txt and its two cards); S2 and S3 against `SillHost --synthetic
+  panes, menu.txt and its two cards); S2 and S3 against `DuoDeckHost --synthetic
   --audio` on loopback and the software encoder, the engine rendering offline
   at volume 0 (every click within 0.2 ms of its place; mute, the switch, the
   background, Send Audio off from a second client, a move with its duplicate
@@ -1875,7 +1869,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   CLI; with Larger Picture (#79) the Sound button joined row 1 before Settings
   (Apps, Menus, Aa, Keyboard, Desktop, Sound, Settings) only from 384 pt
   (`PhonePortraitLayout.row1Beside`), narrower the panel's switch alone, a
-  question for Noah (the plan's Q10; the beta took it out again: the panel's
+  question for the maintainer (the plan's Q10; the beta took it out again: the panel's
   switch alone there); and #75's regular-mode window that streams
   on through three looks off the catalog's list keeps its sound (`select` keeps
   its app, `streamedPID`, which `audioKey` falls back to; before, a follow then
@@ -1889,14 +1883,14 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   PhonePortraitLayout), 936, every one caught (`compatibility` 34,
   `protocol` 34, `pointer-control` 33, `phone-portrait` 81, `tour` 84,
   `clipboard` 72). No harness, H2 or previews.
-- **A beta (2026-10-20; Noah, about PR #94: "merge as beta support"; docs/audio-plan.md, "The
+- **A beta (2026-10-20; the maintainer, about PR #94: "merge as beta support"; docs/audio-plan.md, "The
   beta").** On the contributor's branch, one commit each, never a rebase: Send Audio the Mac's alone
   (Q8, fdf78ff: `DeviceSettings.accepted` refuses a device's `sendAudio` from either door and names
   it, "Settings from ‹device› refused: send audio (set on this Mac only)"; the device's row
   read-only; `away-quality` 83 and AQ20–AQ24); the labels (e42f1a3: "Send Audio (Beta)" in the menu,
   "Send audio (beta)" and a footnote starting "Beta." in Settings › Streaming, the CLI's "(beta)", a
   "Beta" tag on the device's row, "Send Audio, beta" to VoiceOver; none on the Sound button or This
-  iPad's switch); no Sound button in Larger Picture's row 1 (Q10, 6effec7: row 1 as Noah approved
+  iPad's switch); no Sound button in Larger Picture's row 1 (Q10, 6effec7: row 1 as the maintainer approved
   it, the panel's switch alone there; `phone-portrait` 495 and A1–A3, `tour` 111,191); the
   pre-review's small defects (b813164 `AudioCapture`'s stream under a lock; 2e65f06 and 9104023 no
   frame handed to the sound's queue before the session's first format, the last 32 kept for the
@@ -1907,7 +1901,7 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   docs/app-store-metadata.md's next version, "beta" on the feature, never the app; the compatibility
   floor's reader caps below). Q4 (plays on silent) and Q5 (starts unmuted) kept; Q16, codec quality
   Medium, with H12 unmet (+4.0 points of a core in the harness, against 1.5), accepted while it is
-  off by default; packets while muted or in the background still feed the cover (§7.5, Noah's).
+  off by default; packets while muted or in the background still feed the cover (§7.5, the maintainer's).
   Merged with main at d1fa97e, 9a8e30c, 4d990e9 and 7b4c313 (#153, #142, #136, #110, #87, #88,
   #151: `display-wake` counts kind 43 among the kinds that never declare, 193 checks and M61).
   Verified (2026-10-20, this Mac at a load average of 300 to 900 from other work all along):
@@ -1933,14 +1927,14 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   none of the files the merge changed in the sound harness.
 - **Two switches in the device's Settings panel (2026-10-27, branch `sound-toggle` from main at
   b4caa91, PR #235; docs/audio-plan.md, "Two switches in the device's Settings panel", and Q8 and Q10
-  revised).** Noah: "I've decided the audio setting should not be in the main button tray but instead
+  revised).** the maintainer: "I've decided the audio setting should not be in the main button tray but instead
   in settings. Sound should be a toggle in the settings menu." (He had asked why the iPad's row was
   greyed out: read-only since the beta.) The host takes a device's kind 17 `sendAudio` again, on or
-  off, from either door (`DeviceSettings.accepted`; `sendAudioRefusal` gone), Sill.app saves it as a
+  off, from either door (`DeviceSettings.accepted`; `sendAudioRefusal` gone), DuoDeck.app saves it as a
   menu click (`applying`, `applyingAway`), never a restart ("Settings from ‹device›: send audio off →
   on"), and Settings › Streaming's footnote says a device can turn it on and mute itself (the Mac's
   menu, Settings switch and `--audio` as they were). On the device, the Mac's group's **Send Audio**
-  is a switch through the ledger (the "Beta" tag kept; off and disabled with "Update Sill on ‹Mac›…"
+  is a switch through the ledger (the "Beta" tag kept; off and disabled with "Update DuoDeck on ‹Mac›…"
   for a Mac without sound; a Mac from the beta refuses it: the switch goes back with the warning
   haptic), and **Mute**, right under it (`soundMuted`, kept, off by default), shows for every Mac with sound, on or off
   (`macHasSound`), so a device can stay silent before any device turns the sound on. No Sound button
@@ -1953,28 +1947,28 @@ fixed (5126215 to 8bbbe52, below) and verified in the simulator
   case; `away-quality` 89 and 26 of 26 mutants, `ledger` 100 and 12 of 12, `phone-portrait` 484 and 73
   of 73, `tour` 111,189 and 84 of 84); H2 against main's CLI, idle identical masked and sorted, a
   Desktop client and one whose hello plays sound but for a second or two of `cursor.shape`; H7, a
-  device's Send Audio on and off ("Settings from sillclient: send audio off → on", 500 packets with no
+  device's Send Audio on and off ("Settings from duodeckclient: send audio off → on", 500 packets with no
   seq gap, "Audio stopped: Send Audio is off.", a second client's kind 16 and packets the same, no
   restart); the bare app's previews, only Settings › Streaming's footnote; harness photos on a private
   iPad simulator (deleted after), every bar with the Mac sending sound pixel for pixel main's with it
   off (landscape, the iPad's portrait bar, a phone at 393 and 375 pt, the Duo's five poses), the panel
-  at 1000×710 and 710×1000 at both text sizes; live against `SillHost --synthetic`, the device's
+  at 1000×710 and 710×1000 at both text sizes; live against `DuoDeckHost --synthetic`, the device's
   switch turning the sound on and off on the host, Mute's "engine off (muted)" and "unmuted", every
   click within 0.1 ms, and main's CLI (a beta host) refusing it, the switch back off. **Untested, for
-  Noah:** on the iPad and iPhone with this Sill.app, Send Audio from the iPad's panel (the iPhone
-  hears it too, Sill.app's menu and Settings show it, `defaults read me.saffer.sill.mac sendAudio` is
+  the maintainer:** on the iPad and iPhone with this DuoDeck.app, Send Audio from the iPad's panel (the iPhone
+  hears it too, DuoDeck.app's menu and Settings show it, `defaults read com.agentsai.duodeck.host sendAudio` is
   1), Mute on one device while the other plays, Mute before Send Audio is turned on elsewhere,
-  VoiceOver on both switches, and this iPad against a Sill.app from the beta (the switch goes back)
-  and against 0.5.1 (the row disabled, "Update Sill…").
-- **Untested, for Noah:** everything on the devices, the plan's P1–P16, which end the beta with H12
-  met or accepted (P13, Sill.app's CPU with sound on and off), P5 answered (Virtual Display, a
-  minimized app) and P6 measured (the sync, filmed). Sill.app's menu and Settings rows can be looked
-  at (previews), and `defaults read me.saffer.sill.mac sendAudio` is absent until it is first
-  set, which reads as on in Sill.app since 2026-10-27 (#236).
+  VoiceOver on both switches, and this iPad against a DuoDeck.app from the beta (the switch goes back)
+  and against 0.5.1 (the row disabled, "Update DuoDeck…").
+- **Untested, for the maintainer:** everything on the devices, the plan's P1–P16, which end the beta with H12
+  met or accepted (P13, DuoDeck.app's CPU with sound on and off), P5 answered (Virtual Display, a
+  minimized app) and P6 measured (the sync, filmed). DuoDeck.app's menu and Settings rows can be looked
+  at (previews), and `defaults read com.agentsai.duodeck.host sendAudio` is absent until it is first
+  set, which reads as on in DuoDeck.app since 2026-10-27 (#236).
 
 **The Close timeout and the interrupted picture (2026-10-19 and 20, PR #93 from addhumal, finished on
 its branch `audit-fixes`, which has main at 4d990e9 in it; issue #101).** The triage of 2026-10-16 and
-2026-10-19 (sill-handoff/triage): the close half ready; the re-pick, the broken harness and the
+2026-10-19 (duodeck-handoff/triage): the close half ready; the re-pick, the broken harness and the
 throttle to change. Host, device and one additive kind (44).
 - Close (the contributor's, kept): the button `kAXCloseButtonAttribute` gives is a new element on the
   system's default timeout, pressed on the host's main actor, so an app whose close asks about unsaved
@@ -2009,27 +2003,27 @@ throttle to change. Host, device and one additive kind (44).
   round trip of the last second that measured one), the settings timeout's and the clipboard
   receipt's measure) is owed again as a repeat, so a Mac that never answers is asked after 4, 8 and
   16 s, then every 32 s, which costs a Mac from before kind 44 nothing; only while the picture's
-  window scene is foreground active (each Sill window has its own client) and something streams;
-  2 s apart at least; a picture that fails again within 10 s of its keyframe, Sill active throughout,
+  window scene is foreground active (each DuoDeck window has its own client) and something streams;
+  2 s apart at least; a picture that fails again within 10 s of its keyframe, DuoDeck active throughout,
   or an unanswered ask doubles the spacing (4, 8, 16, then 32 s); a trip away owes an ask that was
-  out again and starts the spacing at 2 s again; a keyframe that comes while Sill is away never makes
+  out again and starts the spacing at 2 s again; a keyframe that comes while DuoDeck is away never makes
   the next interruption a repeat; 10 s back ends a streak. The Mac sends its parameter sets before
   every keyframe and each sample carries the format, so nothing else is sent again. DEBUG lines
   "display: …" and "keyframe: …" ("no keyframe 4.0 s after the last ask; asked again");
-  `-SillLayerFail <s>[,<s>…]` (a frame that cannot decode, enqueued) and `-SillKeyframeLost <n>` (the
-  first n keyframes that end a wait thrown away by the flush); TEST ONLY `SILL_TEST_STILL_AFTER=<s>` (a
-  synthetic Desktop still from then on), `SILL_TEST_KEYFRAME_IGNORE=<n>` (a synthetic host ignores
-  the first n keyframe requests, as a Mac from before kind 44 ignores every one) and `sillclient.py
+  `-DuoDeckLayerFail <s>[,<s>…]` (a frame that cannot decode, enqueued) and `-DuoDeckKeyframeLost <n>` (the
+  first n keyframes that end a wait thrown away by the flush); TEST ONLY `DUODECK_TEST_STILL_AFTER=<s>` (a
+  synthetic Desktop still from then on), `DUODECK_TEST_KEYFRAME_IGNORE=<n>` (a synthetic host ignores
+  the first n keyframe requests, as a Mac from before kind 44 ignores every one) and `duodeckclient.py
   --keyframe@T`. site/privacy.html's list of what a device sends its Mac gains the request ("When the
   picture on your device was interrupted, … a request to send the picture again."), between
   `<!-- Keyframe` and `<!-- /Keyframe -->` for the release that ships it (docs/release-checklist.md
   part 1 §3 has the perl line that cuts it for a republish before that release), and its date is
   October 20. No words for the release yet (the next What's New, README, support.html): as #80's
-  did, they wait for Noah's device run of the trip to the background, the issue's own case, which no
+  did, they wait for the maintainer's device run of the trip to the background, the issue's own case, which no
   simulator shows.
 - With #107 (on hold): its renderer already calls the same `onNeedsKeyframe`. It should drop its own
   throttle (`PictureSmoothing.DecoderRecovery`) and its re-pick, and call `onPictureBack` where its
-  renderer takes a keyframe, so one rule serves both (Noah on #93, 2026-10-15: "One recovery mechanism
+  renderer takes a keyframe, so one rule serves both (the maintainer on #93, 2026-10-15: "One recovery mechanism
   should serve all of them"). #66 compiles StreamClient.swift for its Mac client: the new UIScene and
   UIApplication observers need its platform layer there.
 - Kind 44 is this pull request's (posted on #81, 2026-10-19: 43 is #94's sound, 44 this keyframe
@@ -2040,7 +2034,7 @@ throttle to change. Host, device and one additive kind (44).
   longer compiles, which their mutants.py counts as not caught, so the mutants job fails: a free
   number instead, not 45); and #94, #66 and
   #158 each rewrite `pointer-control`'s "every other kind …" line around 44 (a textual conflict:
-  keep 44 among the known kinds). #128 (Sill Viewer for Mac, left untouched by Noah's decision of
+  keep 44 among the known kinds). #128 (DuoDeck Viewer for Mac, left untouched by the maintainer's decision of
   2026-10-19) compiles iOSClient/StreamClient.swift with MacClient/HEVCDisplayView.swift, which has
   no `renderQueue`, `onNeedsKeyframe`, `onPictureBack` or `checkLayer`, its PlatformShims.swift no
   `UIScene.willDeactivateNotification`, `windowScene` or `activationState`, and its target no
@@ -2054,21 +2048,21 @@ throttle to change. Host, device and one additive kind (44).
   against the fixture: reader 40, budget 4, mirror 69 (it failed 7 once while the screen was locked:
   nothing presses a menu under the login window), close 4 (back in 1.01 s, as no answer, the close
   delivered, the front app unchanged). Live on a private iPad simulator (iOS 27.0) against a loopback
-  synthetic host on the software encoder, its Desktop still from 3 s: `-SillLayerFail 6` gave the
+  synthetic host on the software encoder, its Desktop still from 3 s: `-DuoDeckLayerFail 6` gave the
   layer's own -11821, one ask, one host line, the picture back 75 to 125 ms after, and one "Synthetic
-  capture" line (no re-pick); `-SillLayerFail 6,6.6,12` asked at once, then 4.0 to 4.2 and 8.1 to
+  capture" line (no re-pick); `-DuoDeckLayerFail 6,6.6,12` asked at once, then 4.0 to 4.2 and 8.1 to
   8.3 s after the ask before (spacing 2, 4, 8), three host lines, twice; a trip to the background
   (Settings for 2 s): the simulator's layer never stops, nothing asked, the picture as it was;
-  `sillclient.py --keyframe@3 --keyframe@3.2 --keyframe@3.4 --keyframe@5.5`: keyframes 50 to 60 ms
+  `duodeckclient.py --keyframe@3 --keyframe@3.2 --keyframe@3.4 --keyframe@5.5`: keyframes 50 to 60 ms
   after the two taken, one "ignored" line, and nothing for a request while nothing streams.
 - The verifier's findings (2026-10-20, on 09549b3; each taken, one commit per theme): a keyframe
-  the layer's own flush threw away left its interruption open with its ask out for good while Sill
+  the layer's own flush threw away left its interruption open with its ask out for good while DuoDeck
   stayed active (now the picture back and lost again, and every ask has its wait); a trip to the
   background kept a streak's spacing (24 s more of a frozen picture after the return in its probe),
   and keyframes shown while away built one (now the trip starts the spacing at 2 s, and a keyframe
   shown while away keeps the trip); DEVELOPMENT.md said a Mac from before kind 44 brings the picture
   back when the window next changes (it waits for the stream's next keyframe; shown live against
-  0.5.1); the minimize and full screen words; Noah's TextEdit step and 0.5.1 step; these merge notes.
+  0.5.1); the minimize and full screen words; the maintainer's TextEdit step and 0.5.1 step; these merge notes.
 - Verified after the fixes (2026-10-20, on the merge with main at 4d990e9, a machine shared with
   other agents and its load average in the hundreds, so every time here is slow):
   `keyframe-recovery` 95 checks and 20,000 random sessions against the model (never stuck while
@@ -2081,40 +2075,40 @@ throttle to change. Host, device and one additive kind (44).
   clean derived data (CI's command, Xcode 27.1 27A9275), only the known StreamClient warning
   (StreamClient.swift:3819); `Scripts/menu-check/run.sh close`, 9 checks: back in 1.01 s as no
   answer, the close delivered, every action's words, the front app unchanged. The host alone
-  (`sillclient.py`, loopback, software encoder): with `SILL_TEST_KEYFRAME_IGNORE=1`, requests at 4
+  (`duodeckclient.py`, loopback, software encoder): with `DUODECK_TEST_KEYFRAME_IGNORE=1`, requests at 4
   and 6 s: the first ignored with its line, the second answered (its keyframe 0.09 s later); the
   hook refuses `abc`, `0` and `-2` with its line. Live on a private iPad simulator (iOS 27.0)
   against loopback synthetic hosts on the software encoder, their Desktop still from 3 s, one
-  "Synthetic capture" line a run (no re-pick): `-SillLayerFail 6`: the layer's own -11821, one ask,
-  one host line, the picture back 1.2 s after; with `SILL_TEST_KEYFRAME_IGNORE=1` on the host: the
+  "Synthetic capture" line a run (no re-pick): `-DuoDeckLayerFail 6`: the layer's own -11821, one ask,
+  one host line, the picture back 1.2 s after; with `DUODECK_TEST_KEYFRAME_IGNORE=1` on the host: the
   first ask ignored with its line, then "keyframe: no keyframe 4.0 s after the last ask; asked the
   Mac for a keyframe (spacing 4 s)" 4.2 s after it, the host's "Keyframe for …", the picture back
-  0.15 s later; `-SillKeyframeLost 1`: the keyframe that ended the wait thrown away ("flushed with
+  0.15 s later; `-DuoDeckKeyframeLost 1`: the keyframe that ended the wait thrown away ("flushed with
   the keyframe it waited for"), the next ask 4.06 s after the first (a repeat's spacing), two host
-  lines, the picture back 0.08 s after it; `-SillLayerFail 6,9,13,21.5,37.5`: asks 4.05, 8.1 and
+  lines, the picture back 0.08 s after it; `-DuoDeckLayerFail 6,9,13,21.5,37.5`: asks 4.05, 8.1 and
   16.0 s apart (spacing 2, 4, 8, 16), the fifth interruption held 28.5 s by a 32 s spacing, then
-  Settings in front for 2 s and Sill back: asked at once ("spacing 2 s"), 21 s before the hold would
-  have let it, five host lines and one "Synthetic capture" line in all. This build against Sill for
-  Mac 0.5.1's host (`git archive v0.5.1`, its Desktop moving) with `-SillLayerFail 6`: asks at +0,
+  Settings in front for 2 s and DuoDeck back: asked at once ("spacing 2 s"), 21 s before the hold would
+  have let it, five host lines and one "Synthetic capture" line in all. This build against DuoDeck for
+  Mac 0.5.1's host (`git archive v0.5.1`, its Desktop moving) with `-DuoDeckLayerFail 6`: asks at +0,
   +4.1 and +12.3 s, no line on the host and no disconnect, its pongs and frames throughout, and the
   picture back 15.2 s after the interruption with the stream's periodic keyframe.
-- **Untested, for Noah:** on the iPad (and the iPhone) with this build and a Sill.app from this
-  branch: a still window (TextEdit, nothing changing), Sill sent to the background for 2 s and back:
-  the console's "display: the picture was interrupted …", one "Keyframe for …" in Sill.log, the
+- **Untested, for the maintainer:** on the iPad (and the iPhone) with this build and a DuoDeck.app from this
+  branch: a still window (TextEdit, nothing changing), DuoDeck sent to the background for 2 s and back:
+  the console's "display: the picture was interrupted …", one "Keyframe for …" in DuoDeck.log, the
   picture at once, no "Capture started" and the window not raised; ten quick trips (a line each, and
   each ask at once, never one held for 4 s or more after a trip); a video playing in Split View beside
-  Sill; two Sill windows, one swapped out and back; Close on a TextEdit window with unsaved changes:
-  its sheet on the Mac, input and picks unaffected meanwhile, and in Sill.log most likely "Window N
+  DuoDeck; two DuoDeck windows, one swapped out and back; Close on a TextEdit window with unsaved changes:
+  its sheet on the Mac, input and picks unaffected meanwhile, and in DuoDeck.log most likely "Window N
   close: done" (a document's sheet returns at once; an app that asks in an alert of its own, or a
-  hung one, gives "no answer in time …" after 1 s: either is fine); this iPad against Sill for Mac
+  hung one, gives "no answer in time …" after 1 s: either is fine); this iPad against DuoDeck Host
   0.5.1: the device sends kind 44, which 0.5.1 skips with no line and no disconnect, the console's
   asks again after 4, 8 and 16 s, then every 32 s, and the picture back only with the stream's next
   keyframe (a still window's never, as before).
 **A sleeping display wakes for a device (2026-10-19, PR #151 from acalatrava's
-`fix/keep-display-awake`, reworked on top of its 2b8be47; issue #134).** Noah: "Modify the black
+`fix/keep-display-awake`, reworked on top of its 2b8be47; issue #134).** the maintainer: "Modify the black
 windows pull request to implement it properly (user activity when a device connects as you said)."
 Host only: no wire change, nothing on the device, no setting. Towards #134, not Fixes: the device
-test is Noah's.
+test is the maintainer's.
 - The rule (`DisplayWake`, pure, with StreamMessage.swift and Input.swift; `Tests/checks/display-wake`,
   190 checks and 60 of 60 mutants, in CI's matrix): user activity is declared on the Mac as a key
   press would declare it (`IOPMAssertionDeclareUserActivity`, `kIOPMUserActiveLocal`:
@@ -2135,9 +2129,9 @@ test is Noah's.
   a second share it); else "Declared activity for …, which sent input." (", but the display read
   asleep 0.5 s later." when it did) at most once a minute, a woke line counting as that minute's;
   `disp.wake` in the stats line. A test host (`--synthetic`, as `injector.dryRun`) declares nothing and
-  counts `disp.wakeDry`. TEST ONLY `SILL_TEST_USER_ACTIVE=remote` (every real host, Sill.app included,
+  counts `disp.wakeDry`. TEST ONLY `DUODECK_TEST_USER_ACTIVE=remote` (every real host, DuoDeck.app included,
   with a "TEST:" line) declares `kIOPMUserActiveRemote` instead. docs/DEVELOPMENT.md, "A sleeping
-  display"; site/support.html, "The picture is black" (its Sill paragraph inside `<!-- Display wake`
+  display"; site/support.html, "The picture is black" (its DuoDeck paragraph inside `<!-- Display wake`
   markers, cut by docs/release-checklist.md part 1 §3's perl line for a republish before the release).
 - Changed from the PR as opened: its PreventUserIdleDisplaySleep assertion, held for every session
   (the panel lit all session long, against #133's privacy mode, and at home the Mac kept from idle
@@ -2160,13 +2154,13 @@ test is Noah's.
   gesture; none for the Desktop asked for by itself (twice, each restarting the stream), the
   stand-in's own move as the restarted stream's parameter sets arrived (6 s after the last
   declaration), the other device's tap 1.3 s after the first's, a key 2 s after a move, or a pick of
-  nothing; no `disp.wake`, no line, `pmset -g assertions` nothing of the host's; Sill.app's previews
+  nothing; no `disp.wake`, no line, `pmset -g assertions` nothing of the host's; DuoDeck.app's previews
   (140 files) identical to main's, rendered from one path. Again on the tree merged with main at
   4d990e9 (#110, #87, #88; only lists conflicted, kept whole): `swift build -c release`, no warning;
   the check (190); its mutants re-run until a pause stopped them, 54 of 60 caught and none missed (the
   rule, its check and the two wire files are byte for byte those of the 60 of 60 run); `run-all.sh`,
   all 47; the previews (140) identical; loopback runs with two stand-in devices and with two
-  `sillclient.py` devices: `disp.wakeDry` at both connects, a tap, a person's move 3.3 s after a
+  `duodeckclient.py` devices: `disp.wakeDry` at both connects, a tap, a person's move 3.3 s after a
   restart, a gesture and ⌘ alone; none for a second device's tap 2 s after the first, a pick of
   nothing, the Desktop picked again, the device's own re-centres (5.8 to 8.2 s after the last
   declaration), the viewport, a settings change, the clipboard, a menu fetch or input that does not
@@ -2176,26 +2170,26 @@ test is Noah's.
   more than 2 s after the new stream's first parameter sets left (a slow remote link): either can wake
   a sleeping display once with nobody at the device (docs/DEVELOPMENT.md, A sleeping display). Telling
   them apart would need the device to say so, a wire change.
-- **Untested, for Noah,** with Sill.app from this branch (release-signed with the embedded profile):
+- **Untested, for the maintainer,** with DuoDeck.app from this branch (release-signed with the embedded profile):
   `pmset displaysleepnow`, then connect the iPad at home and through Tailscale: the picture, not black
-  windows, and Sill.log's "Woke the display for …, which connected."; `pmset -g assertions` lists
-  `UserIsActive named: "Sill: a device is using this Mac"`, its timeout the display-sleep setting; with
+  windows, and DuoDeck.log's "Woke the display for …, which connected."; `pmset -g assertions` lists
+  `UserIsActive named: "DuoDeck: a device is using this Mac"`, its timeout the display-sleep setting; with
   the iPad left connected and untouched the display sleeps by its own setting and stays asleep (no
   "Woke" line without a touch, also after "Capture stopped: …"), and a pointer move on the trackpad or
   ⌘ alone on the Magic Keyboard wakes it (Shift alone goes to the device's text system and the key
   row's modifiers only latch, so neither sends anything); a locked Mac (⌃⌘Q, the display asleep): its
   lock screen on the iPad. Then:
   whether `kIOPMUserActiveRemote` also wakes the panel, or keeps the picture live with the panel dark
-  (#133): quit Sill, `open --env SILL_TEST_USER_ACTIVE=remote /Applications/Sill.app` (Sill.log's
+  (#133): quit DuoDeck, `open --env DUODECK_TEST_USER_ACTIVE=remote /Applications/DuoDeck.app` (DuoDeck.log's
   "TEST: user activity is declared as remote …"), `pmset displaysleepnow`, connect; Virtual Display
-  on, a window streaming from Sill's own CGVirtualDisplay with the panel asleep: whether its picture
+  on, a window streaming from DuoDeck's own CGVirtualDisplay with the panel asleep: whether its picture
   needs the panel woken at all (if not, those sessions light the panel needlessly); and a laptop with
-  its lid closed on power (Sill.log's "…, but the display read asleep 0.5 s later." and no "Woke"
+  its lid closed on power (DuoDeck.log's "…, but the display read asleep 0.5 s later." and no "Woke"
   line; with an external display, that display).
 
 **The clipboard both ways (2026-10-14, branch `clipboard` from main at 985a733; issue #64; PR #78;
 the plan, its open questions with the default taken for each, the results and the review's fixes are
-in `docs/clipboard-plan.md`).** Noah: work on the clipboard (after #67/#68, #69, #59, #57, #58), text
+in `docs/clipboard-plan.md`).** the maintainer: work on the clipboard (after #67/#68, #69, #59, #57, #58), text
 first. Wire, host and device; additive.
 - Wire: kind 32 `clipboard`, both ways, JSON `Clipboard {text, image, stop}` (Clipboard.swift): pull
   request #66's number and shape (`image` reserved for a later generation; `stop`, a device's switch
@@ -2220,28 +2214,28 @@ first. Wire, host and device; additive.
   clipboard."), none per copy, never contents; `clip.sent`/`clip.recv`. `HostConfig.shareClipboard`
   (on): Settings › General's `ClipboardSection`, "Share clipboard with devices" (`shareClipboard`),
   and while macOS asks or denies, why and "Allow in System Settings…" (Paste from Other Apps,
-  `Privacy_Pasteboard`; one read on that click first while macOS has not asked about Sill, so it is
+  `Privacy_Pasteboard`; one read on that click first while macOS has not asked about DuoDeck, so it is
   listed); the CLI's `--no-clipboard`; the Mac's alone, applied at once by `setTarget`. A synthetic
-  host shares a pasteboard of its own (TEST ONLY `SILL_TEST_PASTEBOARD`, `SILL_TEST_CLIPBOARD_LOG=1`,
-  `SILL_TEST_CLIPBOARD_ACCESS`), never this Mac's clipboard.
+  host shares a pasteboard of its own (TEST ONLY `DUODECK_TEST_PASTEBOARD`, `DUODECK_TEST_CLIPBOARD_LOG=1`,
+  `DUODECK_TEST_CLIPBOARD_ACCESS`), never this Mac's clipboard.
 - Device: `StreamClient+Clipboard` (subscription, `stop`, the Mac's text written `.localOnly` with a
-  10-minute expiration, the handled change count `Sill.clipboardHandled`) and `ClipboardChip`: when
-  Sill becomes active (or a session starts within 15 s after) with new text on the clipboard
+  10-minute expiration, the handled change count `DuoDeck.clipboardHandled`) and `ClipboardChip`: when
+  DuoDeck becomes active (or a session starts within 15 s after) with new text on the clipboard
   (`changeCount`, `hasStrings`: no prompt), "Paste on ‹Mac›" / "Then press ⌘V there." with the
   system's Paste control (`PasteButton`, UIPasteControl) and Dismiss; its 20 s run only while it
-  shows with Sill active, never under VoiceOver, which is told when it first shows (`chipCounts`);
+  shows with DuoDeck active, never under VoiceOver, which is told when it first shows (`chipCounts`);
   under the bar sideways (bottom corner while the link's line shows), above the window bar or row 1
   upright. A Paste is "Sent to ‹Mac›’s clipboard" only once a ping sent after the text comes back (a
   16-byte random payload, the receipt; none in max(4 s, 4 × the worst round trip): "Didn’t reach
   ‹Mac›. Try Paste again." and the chip again). Settings › This iPad: Share Clipboard
-  (`Sill.shareClipboard`, on) and Paste on ‹Mac›, while the Mac says it. Harness:
-  `-SillClipboardChip 1`, `-SillClipboardNote sent|long|notsent`; live, `-SillSettingsScript '<t> paste
-  TEXT'` and `-SillSettingsCloseAt <s>`.
+  (`DuoDeck.shareClipboard`, on) and Paste on ‹Mac›, while the Mac says it. Harness:
+  `-DuoDeckClipboardChip 1`, `-DuoDeckClipboardNote sent|long|notsent`; live, `-DuoDeckSettingsScript '<t> paste
+  TEXT'` and `-DuoDeckSettingsCloseAt <s>`.
 - The review (2026-10-14, eight findings, all taken; the plan's "The review"): the stop lost to the rate
   and macOS's paste privacy (the two should-fixes), the floor's image rule, "Sent" before the Mac had it,
   the chip unannounced and running out unseen, the Mac's footnote and the support page's sentence, the
   site's words marked `<!-- Clipboard` for the release (docs/release-checklist.md part 1 §3 cuts them
-  for a republish before it), and on-by-default's effect on the device's clipboard left to Noah (open
+  for a republish before it), and on-by-default's effect on the device's clipboard left to the maintainer (open
   question 1).
 - Verified (the plan's Results): `Tests/checks/clipboard` 259 checks and 72 of 72 mutants (in CI's matrix);
   `Tests/checks/run-all.sh` all 41; `swift build -c release` from `git archive` (only the CaptureProbe
@@ -2255,22 +2249,22 @@ first. Wire, host and device; additive.
   byte for byte the reviewed build's but the new note. Earlier (7e6468a): the XCUITest tap on the
   chip's Paste, two devices, every marker, the bare app's switch. This Mac's own clipboard was never
   read or written.
-- **Untested, for Noah:** on the iPad and iPhone with this Sill.app, at home and through Tailscale:
-  copy in TextEdit, paste on the device; copy in Notes, back to Sill, Paste on the chip, ⌘V on the
-  Mac; a password copied in 1Password and in the Passwords app arrives like any copy since 2026-10-29 (it never did before; Sill.log has no
+- **Untested, for the maintainer:** on the iPad and iPhone with this DuoDeck.app, at home and through Tailscale:
+  copy in TextEdit, paste on the device; copy in Notes, back to DuoDeck, Paste on the chip, ⌘V on the
+  Mac; a password copied in 1Password and in the Passwords app arrives like any copy since 2026-10-29 (it never did before; DuoDeck.log has no
   line for it); Universal Clipboard on (same Apple Account): the chip may come once for the Mac's own
   copy (known), an iPhone copy is not passed on; Settings › General's switch live; VoiceOver on the
-  chip (its announcement, no time limit); Split View (the chip waits for Sill's next activation; the
+  chip (its announcement, no time limit); Split View (the chip waits for DuoDeck's next activation; the
   panel's Paste works). From the review: macOS's paste alert through `defaults write
-  me.saffer.sill.mac EnablePasteboardPrivacyDeveloperPreview -bool yes` (the plan's step 9: the
+  com.agentsai.duodeck.host EnablePasteboardPrivacyDeveloperPreview -bool yes` (the plan's step 9: the
   orange line, Allow in System Settings…, Allow and Deny, then `defaults delete` it); Paste right
-  after 10 s away from Sill ("Sent" only when ⌘V pastes it); on by default replacing a photo on the
+  after 10 s away from DuoDeck ("Sent" only when ⌘V pastes it); on by default replacing a photo on the
   device's clipboard, and that clipboard empty 10 minutes later (say whether either should change).
 - **Paste right away (2026-10-29, branch `clipboard-autopaste` from main at 35a9c47, PR #242; the
-  plan's "Paste right away").** Noah, trying #241: "still doesn't automatically Cmd+V is that coming
+  plan's "Paste right away").** the maintainer, trying #241: "still doesn't automatically Cmd+V is that coming
   later?". No wire change; the device's alone but for one change on the Mac since the review (below):
   with Settings › This iPad's "Paste on ‹Mac› Right Away" on (under Share Clipboard;
-  `Sill.pasteRightAway`, on by default, never sent), a Paste's receipt also presses ⌘V on the Mac
+  `DuoDeck.pasteRightAway`, on by default, never sent), a Paste's receipt also presses ⌘V on the Mac
   (`ClipboardPolicy.pastesOnReceipt`: only a receipt in time, only while something streams, only while
   the Mac's last list says it shares its clipboard, never while the tour shows; `KeyChord.paste`, ⌘'s
   own key around V, through `sendFromKeyRow`), 50 ms after the receipt (`pasteDelay`: the host
@@ -2279,14 +2273,14 @@ first. Wire, host and device; additive.
   up to 14 ms early, and with 50 ms in none of 125); then "Pasted on ‹Mac›.", without ⌘V today's
   words; the chip "Where the cursor is.". The other way stays the person's (no iOS app pastes into
   another). Harness:
-  `-SillClipboardNote pasted`, `-Sill.pasteRightAway 0`, DEBUG `-SillPasteDelay <s>`. Verified:
+  `-DuoDeckClipboardNote pasted`, `-DuoDeck.pasteRightAway 0`, DEBUG `-DuoDeckPasteDelay <s>`. Verified:
   `Tests/checks/clipboard` 285 checks and 91 of 91 mutants, `key-strokes` 359 (`KeyChord.paste` leaves
   nothing held) and 86 of 86; `run-all.sh` all 56; the three iOS builds and `swift build -c
   release`, only the known warnings; live on a private iPad simulator against a loopback synthetic host:
   the write, then "key 55 flags changed (command)", "key 9 down (command)", "key 9 up (command)", "key
   55 flags changed (none)"; the switch off, the write and no key; through a relay that stops
   forwarding, neither and "Didn’t reach"; harness photos in
-  `~/Downloads/sill-handoff/device-tests/2026-10-29/autopaste/`; CI's Build and check passed on
+  `~/Downloads/duodeck-handoff/device-tests/2026-10-29/autopaste/`; CI's Build and check passed on
   89f2c21.
 - The review (2026-10-29, the plan's "The review"; six findings, each reproduced, then fixed in a commit
   of its own): a Mac whose Share clipboard with devices went off while a Paste was on its way dropped
@@ -2295,7 +2289,7 @@ first. Wire, host and device; additive.
   2d9428a); the tour's hold, only in the glue and unchecked, is the rule's (`tourShows`, d435e8c); the
   chip "Where the cursor is." ("It goes where the cursor is." was cut short on 375 and 393 pt iPhones at
   xLarge text, 1ddadb9); under the Dvorak layout Paste presses ⌘K (V's place; the layouts' own data):
-  Known, the support page, open question 16 (3dc8596); `-SillSettingsScroll clipboard` for the Paste row
+  Known, the support page, open question 16 (3dc8596); `-DuoDeckSettingsScroll clipboard` for the Paste row
   and footnote at 500x710 (734825d); and the Mac's one change, `HostClipboard`'s Board writes a device's
   text before `received` returns (1d8cf03): a main actor busy as the text arrived (a host's first
   stream start held it 70 to 150 ms) took the text and the keys back to back, and V came within half
@@ -2304,30 +2298,30 @@ first. Wire, host and device; additive.
   the three iOS builds, `swift build -c release` (from `git archive` of the head: 46.7 s, the
   CaptureProbe warning), the PR's live runs, the race (the app at 50 ms 0 of 25, at 0 ms 15 of 25), 11
   of the 12 photos byte for byte; the review's photos in `review/`; CI's Build and check on 694d600.
-  **Untested, for Noah** (the plan's ten): a paste into TextEdit, Notes and a Terminal at their
+  **Untested, for the maintainer** (the plan's ten): a paste into TextEdit, Notes and a Terminal at their
   cursor, the switch off, a paste with no text field in front, VoiceOver's words, Universal Clipboard
-  on, through Tailscale, the Settings panel's Paste row, a Paste as soon as the chip shows after Sill
-  comes back and right after a pick, a Mac with the Dvorak layout (⌘K; open question 16 is Noah's
+  on, through Tailscale, the Settings panel's Paste row, a Paste as soon as the chip shows after DuoDeck
+  comes back and right after a pick, a Mac with the Dvorak layout (⌘K; open question 16 is the maintainer's
   call). The PR's description predates the review.
 
 **A hardware keyboard and trackpad on the device (2026-10-14, branch `hardware-keyboard` from main at
 985a733, PR #80; issues #67 and #68; the plan, its eleven open questions with the defaults taken, and the
-results are in `docs/hardware-keyboard-plan.md`).** Noah: "Work on the keyboard and trackpad change (#67
+results are in `docs/hardware-keyboard-plan.md`).** the maintainer: "Work on the keyboard and trackpad change (#67
 and #68 together)". Device only: no wire change, nothing on the Mac changed.
 - Esc (#67: an iPad Pro M4's Magic Keyboard sent none, 22 `in.text` and no `in.key`):
   `InputOverlayView.keyCommands` adds Esc with each of the sixteen ⌃⌥⇧⌘ combinations
   (`wantsPriorityOverSystemBehavior`, no title) while the view is first responder and no `EscapeKey` is on
   screen in its window (`EscapeKey.onScreen(in:)`; an EscapeKey's own Esc goes to the newest one in the
-  window it was pressed in, `fire(in:)`: each Sill window is its own); the action goes through
+  window it was pressed in, `fire(in:)`: each DuoDeck window is its own); the action goes through
   `ForwardedKeys.commanded` (down and up, the command's modifiers). One key press is sent once whichever
   channel brings it (`pressed`: a press no later than a command is swallowed with its up; `commanded`:
   nothing while the press holds it down). The Settings panel gains `EscapeKey(action: close)` (Done keeps
   `.cancelAction` for ⌘.). DEBUG: an `hwkey:` line for every hardware key and its channel, `escape:` when
-  an EscapeKey takes Esc, `-SillKeyProbe 1` (GameController's view of each key), `-SillEscViaCommand 1`.
+  an EscapeKey takes Esc, `-DuoDeckKeyProbe 1` (GameController's view of each key), `-DuoDeckEscViaCommand 1`.
   For the reporter: Control-[ is Esc in a terminal.
 - Keys without the Keyboard button (#68): `HardwareKeyboardPolicy` (pure, `Tests/checks/hardware-keyboard`),
   owned by `InputOverlayProxy` (one per stream screen; it outlives a rotation). With a hardware keyboard
-  (`HardwareKeyboardMonitor`, GameController's coalesced keyboard; DEBUG `-SillHardwareKeyboard 1|0`) the
+  (`HardwareKeyboardMonitor`, GameController's coalesced keyboard; DEBUG `-DuoDeckHardwareKeyboard 1|0`) the
   input view takes the keyboard by itself when a view joins a window (a session's start, a rotation, a
   reconnect), a keyboard attaches or the last taker closes (`StreamScreen.keyboardTakers`: Settings,
   pairing, the tour, the Apps drawer, Menus), and lets go when a taker opens or the keyboard goes; another
@@ -2342,16 +2336,16 @@ and #68 together)". Device only: no wire change, nothing on the Mac changed.
   at a time; a pointer scroll's first event and a lone notch are deltas (`scrolled(to:at:)`).
 - Defaults taken: the button keeps its software-keyboard meaning; the drawer and Menus are takers; all
   sixteen Esc combinations; nothing drawn during the hold; the person's keyboard across a rotation and ⌘W
-  with a taker open as before; Sill's own coast for a trackpad; no scrolling over the on-screen trackpad;
-  the hold also under Full Keyboard Access and Switch Control until Noah's step 13 says otherwise (UIKit
+  with a taker open as before; DuoDeck's own coast for a trackpad; no scrolling over the on-screen trackpad;
+  the hold also under Full Keyboard Access and Switch Control until the maintainer's step 13 says otherwise (UIKit
   can tell Switch Control, not Full Keyboard Access).
 - Verified (the plan's Results): hardware-keyboard 51 checks, 20,000 random sessions, 31 of 31 mutants (in
   CI's matrix); key-strokes 347 (18 new) and 81 of 81 mutants (9 new); `run-all.sh` all 41; the iOS app
   Debug and Release for the simulator and Debug for a device, and `swift build -c release`, with the known
   warnings only; 19 harness photos identical to main's (the Menus pull-down open among them, the hold let
-  go under it); live on private simulators against `SillHost --synthetic`, with `Tests/keyrig` (new, TEST
+  go under it); live on private simulators against `DuoDeckHost --synthetic`, with `Tests/keyrig` (new, TEST
   ONLY: a virtual HID keyboard and mouse inside the simulator, as duorig): keys and ⌘W with no Keyboard
-  button, after two turns too (an iPhone, `-SillTurnAt`); Esc, ⇧Esc, ⌘Esc and ⌥⌘Esc through both channels;
+  button, after two turns too (an iPhone, `-DuoDeckTurnAt`); Esc, ⇧Esc, ⌘Esc and ⌥⌘Esc through both channels;
   Esc closing Settings and skipping the tour with nothing sent; the tour shown with a keyboard attached; a
   keyboard going and coming; the button's two states on a fresh iPhone; wheel notches; the touch rig 72 of
   72 against main's. Found there and fixed: a lone wheel notch was never sent; the rule asked with no view
@@ -2363,34 +2357,34 @@ and #68 together)". Device only: no wire change, nothing on the Mac changed.
 - The review (2026-10-14; the plan's Results, "The review and its fixes"): four findings, each checked
   here first and fixed in a commit of its own. Esc's key commands and EscapeKey keep to their own window
   (`onScreen(in:)`, `fire(in:)`): Settings open in a window behind took the stream's Esc key commands in
-  front (a private simulator, `-SillSecondWindow 1 -SillSettings 1 -SillEscViaCommand 1`: 2fc53ed's build
+  front (a private simulator, `-DuoDeckSecondWindow 1 -DuoDeckSettings 1 -DuoDeckEscViaCommand 1`: 2fc53ed's build
   sent no key 53 to the host, this one did), and Esc could close another window's panel. README, the
   support page, the App Store bullet and the next What's New kept Esc and trackpad scrolling out until
-  Noah's steps 1, 7 and 9 passed, through Universal Control on 2026-10-15 (the plan's "Words that wait
-  for a device", and the Results' "Noah's test through Universal Control"), and then took them; the support page's Keyboard
+  the maintainer's steps 1, 7 and 9 passed, through Universal Control on 2026-10-15 (the plan's "Words that wait
+  for a device", and the Results' "the maintainer's test through Universal Control"), and then took them; the support page's Keyboard
   button sentence; Full Keyboard Access and Switch Control (open question 11, step 13). Towards #68, not
   Fixes. Again on 7fdc902: the three iOS builds and a clean `swift build -c release`, the known warnings
   only; `run-all.sh` all 41 at the first run; the touch rig 72 of 72; Esc in one window and in two, live; no check
   compiles a file the review changed, so no mutants again.
-- **Untested, for Noah (the plan's 1–13, on the iPad with the Magic Keyboard, a Debug build):** which
-  channel brings Esc (`hwkey:`; `-SillKeyProbe 1`), Esc in iTerm2's vim, zsh's vi mode and Zed, and
-  Control-[; typing right after connecting and after a turn; ⌘W closing the Mac's window, not Sill's;
+- **Untested, for the maintainer (the plan's 1–13, on the iPad with the Magic Keyboard, a Debug build):** which
+  channel brings Esc (`hwkey:`; `-DuoDeckKeyProbe 1`), Esc in iTerm2's vim, zsh's vi mode and Zed, and
+  Control-[; typing right after connecting and after a turn; ⌘W closing the Mac's window, not DuoDeck's;
   nothing drawn, and nothing popping up when the keyboard is taken away; the Keyboard button's two states;
   Esc over Settings, the tour and pairing; the tour on a fresh install with the keyboard attached;
   two-finger scrolling (any double coast) and a mouse's wheel; VoiceOver; an input method's candidates
-  (none drawn during the hold: the Keyboard button brings iPadOS's views back); two Sill windows side by
+  (none drawn during the hold: the Keyboard button brings iPadOS's views back); two DuoDeck windows side by
   side (Settings open in one leaves Esc to the other; Esc closes only its own window's panel); Full
-  Keyboard Access and Switch Control (Tab, Space and Esc through Sill's bar while the stream holds the
+  Keyboard Access and Switch Control (Tab, Space and Esc through DuoDeck's bar while the stream holds the
   keyboard).
 
 **Larger Picture on an iPhone held upright (2026-10-14, branch `larger-picture` from main at 985a733,
 PR #79; issue #58, promised to rosstex; docs/larger-picture-plan.md has the rule, the numbers, the
 open questions with their defaults, the results and the review's fixes).** "The menu and touchpad
 take up more than half of the vertical space." Device only: no wire change, nothing on the host.
-Since Noah's test on his iPhone 15 Pro (2026-10-15: "when in Desktop mode, there is negative space
+Since the maintainer's test on his iPhone 15 Pro (2026-10-15: "when in Desktop mode, there is negative space
 on the bottom, seemingly because of the Mac aspect ratio. Can we disable this feature when Desktop
 mode is active?") it applies only while a window streams (the bullet "Only while a window streams").
-- Settings › This iPhone: **Larger Picture** (off by default; `Sill.largerPicture`,
+- Settings › This iPhone: **Larger Picture** (off by default; `DuoDeck.largerPicture`,
   `StreamClient.largerPictureKey`, never sent; offered only on an iPhone without a hinge whose
   picture it makes larger: the environment's `largerPictureOffered`, from
   `PhonePortraitLayout.offersLargerPicture(screen:)`, judged upright whichever way the phone is
@@ -2407,7 +2401,7 @@ mode is active?") it applies only while a window streams (the bullet "Only while
   reads it after row 1 (PortraitStreamScreen's `AfterRow1`). A change of the switch shows when the
   Settings panel closes (`StreamScreen.largerPictureHeld`), so the panel never moves under the
   finger. Sideways, on an iPad and switched off, everything is main's.
-- Only while a window streams (Noah's test, 2026-10-15; the plan's rule 12, open questions 12 to 14,
+- Only while a window streams (the maintainer's test, 2026-10-15; the plan's rule 12, open questions 12 to 14,
   Results "The Desktop keeps the standard arrangement"): one pure function of the switch and of
   what streams, `PhonePortraitLayout.largerPicture(switchOn:streaming:)` (`Streaming`: nothing,
   desktop, window; StreamScreen maps `client.active` and computes `largerPictureNow`), put in front
@@ -2448,8 +2442,8 @@ mode is active?") it applies only while a window streams (the bullet "Only while
   `copy`) the bar card lights Apps, Aa and Keyboard and its first row is about Apps; upright cards
   are placed against the picture's room (`TourPolicy.place`'s `room`, TourOverlay's), so a card
   stands under a short picture with its tail at row 1. TourLayout stays `.phone` (switching is no
-  turn). DEBUG: `-Sill.largerPicture 1`, `-SillVideoSize WxH`, `-SillLargerPictureToggle`,
-  `-SillDrawerSearch <text>`, `-SillAXDump` (the accessibility tree's order; a private simulator's
+  turn). DEBUG: `-DuoDeck.largerPicture 1`, `-DuoDeckVideoSize WxH`, `-DuoDeckLargerPictureToggle`,
+  `-DuoDeckDrawerSearch <text>`, `-DuoDeckAXDump` (the accessibility tree's order; a private simulator's
   `ApplicationAccessibilityEnabled` first), the console's `trackpad:` and `keyboard:` lines.
 - The review (2026-10-14; five findings, all holding, one commit per theme): the drawer, under row
   1, kept only its search field above a keyboard (62 pt on every phone): now above row 1 (77abae3,
@@ -2468,8 +2462,8 @@ mode is active?") it applies only while a window streams (the bullet "Only while
   live on the 18 Pro Max, the 15 Pro and the SE the whole drawer above the Mac's keyboard and its
   search field's, to the pixel, the switch flipped with Settings open moving nothing until it
   closed (then one viewport), and VoiceOver's order with the drawer open: row 1, then the drawer.
-  Photos in `~/Downloads/sill-handoff/larger-picture/` (`review-fixes/` for the review's).
-- **Untested, for Noah (the plan's P list), on the iPhone 15 Pro with this build:** with the switch
+  Photos in `~/Downloads/duodeck-handoff/larger-picture/` (`review-fixes/` for the review's).
+- **Untested, for the maintainer (the plan's P list), on the iPhone 15 Pro with this build:** with the switch
   on, the Desktop as with it off (no black under it), a window picked: Larger Picture as it appears
   (with Aa set the window grows into the room a moment later), the Desktop again: the thumbnails
   back, a window closed on the Mac: the thumbnails back, then the Desktop; Settings ›
@@ -2486,20 +2480,20 @@ mode is active?") it applies only while a window streams (the bullet "Only while
   On iOS 17 or 18, if an iPhone with one is at hand, the keyboard's height (every height here is
   iOS 27's). On a Duo from October 23: no switch, the cover as before.
 
-**A window Sill sized goes back (2026-10-14, branch `restore-window-frames` from main at 985a733,
+**A window DuoDeck sized goes back (2026-10-14, branch `restore-window-frames` from main at 985a733,
 PR #75; docs/restore-window-frames-plan.md has the rule, the open questions with the defaults taken,
-the review, the results and Noah's steps).** Issue #57 (rosstex): "disconnecting on the iOS app doesn't revert
+the review, the results and the maintainer's steps).** Issue #57 (rosstex): "disconnecting on the iOS app doesn't revert
 apps back to their original shape/size on Mac". In regular mode (Virtual Display off) Aa resized the
 real window (`StreamCoordinator.fitToViewport`) and nothing put it back, on purpose until now. Host
 only; no wire change, nothing on the device, nothing stored.
 - The rule (`WindowRestore`, pure; `Tests/checks/window-restore`): each fit's record (`original`,
-  the AX frame before Sill first touched it; `set`, the frame read back; `asked`; `moved`, noted at
-  a later fit by `movedSince`: at Sill's size its top-left corner elsewhere, at another size both
-  edges of an axis gone the same way from where Sill left it, at either of Sill's sizes, so a resize
+  the AX frame before DuoDeck first touched it; `set`, the frame read back; `asked`; `moved`, noted at
+  a later fit by `movedSince`: at DuoDeck's size its top-left corner elsewhere, at another size both
+  edges of an axis gone the same way from where DuoDeck left it, at either of DuoDeck's sizes, so a resize
   from any edge or corner, or with Option, is no move; 2 pt tolerance) and, when the window stops
-  streaming, `decide`: gone (nothing), full screen (left, a line), home (nothing), `settle` (Sill
+  streaming, `decide`: gone (nothing), full screen (left, a line), home (nothing), `settle` (DuoDeck
   asked another size and the read-back never showed it: an app that applies a size late, stopped
-  first; the original written again, no line), resized on the Mac after Sill's last fit (left
+  first; the original written again, no line), resized on the Mac after DuoDeck's last fit (left
   entirely, a line), unmoved (the whole original frame), moved (its own size where it is, kept on its
   display by `keep`). Lines in the stage's style: "Restored ‹app› — ‹title› to (x,y,w×h)", "…, its
   own size where it was moved", "Left … at (…): it was resized on the Mac", "Left … as it is: it is
@@ -2510,7 +2504,7 @@ only; no wire change, nothing on the device, nothing stored.
   check's stand-in Mac in the model): `fit`, WindowSizer.resize's (nothing for a window in full
   screen; the frame before, the nudge, the size; a refusal puts the nudge back and records nothing; a
   size gone unanswered, `Write.timedOut` from cannotComplete, puts it back and is recorded from where
-  the window was; no read-back: recorded as not yet shown, its old size where Sill put it; the second
+  the window was; no read-back: recorded as not yet shown, its old size where DuoDeck put it; the second
   nudge); `stop`, one window's way back (one read: no frame and listed is not answering, left with a
   line; not listed, gone; else `decide` and `put` through `WindowSizer.restore`); `stageHome`;
   `Ledger.restore` (every window that stops but the staged one); `keepsStreaming` and
@@ -2530,7 +2524,7 @@ only; no wire change, nothing on the device, nothing stored.
   keeps the frame it would have gone back to (`stageHome`) and the record is handed over
   (`Ledger.take`) only once staged; `restoreFits` skips the staged window (Quit mid-`prepare`).
 - Defaults taken (the plan's 19): the CLI's Ctrl-C restores too (a line only when a window was
-  sized, the same exit status); full screen at the stop left (it keeps Sill's size when it leaves
+  sized, the same exit status); full screen at the stop left (it keeps DuoDeck's size when it leaves
   full screen; support.html says so); resized left, position included; moved keeps its place, also
   after a re-fit; a resize a re-fit undid is forgotten, from any edge or corner; a move and a resize
   between two fits judged as the edges show them; a failed restore tried once; nothing after a crash
@@ -2544,7 +2538,7 @@ only; no wire change, nothing on the device, nothing stored.
   resize); 4, an unanswered size or a failed read-back went unrecorded (913deef; recorded as not yet
   shown, not the size asked, which the model showed wrong for late apps); 5, the check's model was a
   hand-written copy (ecd141a: the sequences are WindowRestore's and the check runs them; the glue
-  around them, select, the poll and the stage, is still a copy, and the docs say so); 6, Noah's list
+  around them, select, the poll and the stage, is still a copy, and the docs say so); 6, the maintainer's list
   and the public copy (the docs commit).
 - Verified (after the review's fixes; the plan's Results): `swift build -c release` from clean copies of
   origin/main and of this branch, only the CaptureProbe warning; `Tests/checks/run-all.sh`, all 41
@@ -2554,14 +2548,14 @@ only; no wire change, nothing on the device, nothing stored.
   streaming, 36 windows that left full screen while streaming went back) and 95 of 95 mutants
   (in CI's matrix; the first full run caught 94, F1's pattern gone stale, 299557c); H2 against 985a733: idle identical masked and sorted, a Desktop client identical
   but for the seconds where it comes and goes, as base against base; the restore probe live, 20 of 20
-  (the screen unlocked, Noah idle, no device on Sill.app): step 13, the app stopped during a fit, its
+  (the screen unlocked, the maintainer idle, no device on DuoDeck.app): step 13, the app stopped during a fit, its
   size unanswered then taken late (667×473), put back whole; step 14, the left edge dragged in before
   a re-fit, back whole. No iOS file changed; no screen changed.
-- Not verified: Sill.app with a device; anything in full screen live (a full-screen Space would
-  take over Noah's screen); the virtual display with a fitted window; the coordinator's glue live (a
-  synthetic host picking a window would capture Noah's windows). Known: a pick, Disconnect or Quit
+- Not verified: DuoDeck.app with a device; anything in full screen live (a full-screen Space would
+  take over the maintainer's screen); the virtual display with a fitted window; the coordinator's glue live (a
+  synthetic host picking a window would capture the maintainer's windows). Known: a pick, Disconnect or Quit
   within the second a window takes to enter or leave full screen may still leave it at Aa's size.
-- **Untested, for Noah** (the plan's twelve, with Sill.app from this branch, the iPad, Virtual
+- **Untested, for the maintainer** (the plan's twelve, with DuoDeck.app from this branch, the iPad, Virtual
   Display off, Aa at 1.5×): pick another window, Disconnect, Quit: back each time ("Restored …");
   moved on the Mac then disconnect: its size where it is; resized from the bottom-right then
   disconnect within 2 s: left; the left or top edge dragged, 2 s, disconnect: back whole at its old
@@ -2574,7 +2568,7 @@ only; no wire change, nothing on the device, nothing stored.
 **Finding the Mac again after hours idle (2026-10-14, branch `reconnect-after-sleep` from main at
 985a733, PR #77, issue #69; the plan, the causes with line numbers, the decisions, the results and the
 review's fixes are in `docs/reconnect-after-sleep-plan.md`).** The report: after a few hours dormant
-nothing reconnected until the Mac was logged in to and Sill relaunched on the iPad. Device code, the
+nothing reconnected until the Mac was logged in to and DuoDeck relaunched on the iPad. Device code, the
 support page and the docs; no wire change, nothing on the Mac.
 - The browsers: iOS makes a suspended app's connection to mDNSResponder defunct (-65569), and the
   Bonjour browser was made once (`startBrowsing`), so after hours in the background the rows were
@@ -2596,7 +2590,7 @@ support page and the docs; no wire change, nothing on the Mac.
   20 and every 30 s after the last started, 12 at most, in the foreground only
   (`DiscoveryPolicy.redialRow`; `Reconnect.rowListing`, `rowDials`, `lastRowDialAt`); the row listed
   afresh, the return from the background, or a tap starts again. The line (`reconnectLine`):
-  "Reconnecting to ‹Mac›…", after 3 "‹Mac› isn’t answering. It may be asleep. Sill keeps trying, or
+  "Reconnecting to ‹Mac›…", after 3 "‹Mac› isn’t answering. It may be asleep. DuoDeck keeps trying, or
   tap it to try now.", after 12 "Stopped trying to reach ‹Mac›. Tap it to try again.". The let-go
   looks again; a reconnect dial that ends without a goodbye before it connects is one dial
   (`sessionEnded`); "Waiting for ‹Mac›…" is a tap's line only; the retry chain lives while a
@@ -2604,13 +2598,13 @@ support page and the docs; no wire change, nothing on the Mac.
 - A Desktop the Mac stopped (its capture stopped, so the host selects nothing) is asked for again
   at once, under the old 10 s spacing (`DiscoveryPolicy.autoDesktop`); 0.5.1 asks only with the
   Mac's next window list, sent when a window opens, closes or changes.
-- DEBUG `-SillBrowserFail N` (each of the first N network browsers reported failed with -65569 half
-  a second after it starts) and `-SillConnectCase asleep`. The support page's "Your Mac isn’t listed"
-  gains a sleeping Mac (Sill may not be able to wake it, so keep it awake: Energy, or Battery) and a
-  restarted one (Sill opens after a login, with Launch at Login); README's Good to know, the next
+- DEBUG `-DuoDeckBrowserFail N` (each of the first N network browsers reported failed with -65569 half
+  a second after it starts) and `-DuoDeckConnectCase asleep`. The support page's "Your Mac isn’t listed"
+  gains a sleeping Mac (DuoDeck may not be able to wake it, so keep it awake: Energy, or Battery) and a
+  restarted one (DuoDeck opens after a login, with Launch at Login); README's Good to know, the next
   What's New (docs/app-store-metadata.md), DEVELOPMENT.md.
 - The review (2026-10-14, after 1c4b921), four findings, each fixed in a commit of its own: the
-  home-side words said Sill can't wake a sleeping Mac, at odds with the bound's own reason (a dial
+  home-side words said DuoDeck can't wake a sleeping Mac, at odds with the bound's own reason (a dial
   through a sleep proxy may wake it) and neither verified: now "may not be able to" (1798232); a
   rebuild keeps a Mac by name, not by interface, so a working cable session back from a short trip
   could move to Wi-Fi and back on its pong from before the trip: the stamp above, a model in
@@ -2619,12 +2613,12 @@ support page and the docs; no wire change, nothing on the Mac.
   (0e8a098). Its own runs agreed with the ones below and ran `sessionEnded`'s new branch live (a
   TLS stand-in that never sends a window list: dials at +0, 7.2, 17.2, 37.3, 67.4 s; main's build
   dialled about every 6 s).
-- Verified (the plan's Results): on a private simulator against `SillHost --synthetic --pairing` as a
-  `_silltest._tcp` row, the host stopped for 20 s: main's build dialled at +0 and +6.3 s after the
+- Verified (the plan's Results): on a private simulator against `DuoDeckHost --synthetic --pairing` as a
+  `_duodecktest._tcp` row, the host stopped for 20 s: main's build dialled at +0 and +6.3 s after the
   loss and then nothing for the minute after the host came back; this branch dialled at +0, 5.3, 15.3
   and 35.3 s and the session came back without a tap. Stopped for 300 s: 12 dials at the rule's times,
   the quiet line at +20.5 s, "Stopped trying…" at +281.8 s and no dial after it; back from the
-  background, a dial at once and the session in 40 ms. `-SillBrowserFail 3`: made again 1.05, 2.12 and
+  background, a dial at once and the session in 40 ms. `-DuoDeckBrowserFail 3`: made again 1.05, 2.12 and
   4.21 s after each failure, the row listed throughout. The Desktop: asked for again 10 ms after a
   stand-in Mac said nothing streams. Photos of `asleep` at the Duo's four sizes and 744×1133, default
   and accessibility-extra-large; `homerows` pixel for pixel main's. After the review's fixes: four
@@ -2635,26 +2629,26 @@ support page and the docs; no wire change, nothing on the Mac.
   their mutant patterns as on main; `run-all.sh`, all 40; iOS Debug for the simulator (CI's command),
   Release for the simulator and Debug for a device, only the known `StreamClient` capture warning;
   `swift build -c release`, only the CaptureProbe one; CI green on 0e8a098.
-- **Untested, for Noah:** the real overnight case on the iPad mini (Sill left streaming or on the
+- **Untested, for the maintainer:** the real overnight case on the iPad mini (DuoDeck left streaming or on the
   connect screen for hours, the iPad locked; back: the console's "browser: rebuilt the network
   browser (back from the background)", the Mac's row as it is now, and the session back by itself if
-  the Mac is awake with Sill open); a Mac asleep behind an Apple TV or HomePod (`dns-sd -B
+  the Mac is awake with DuoDeck open); a Mac asleep behind an Apple TV or HomePod (`dns-sd -B
   _sleep-proxy._udp` lists one; the Mac's "Wake for network access" on): the row stays, dials every
   5, 10, 20, 30 s, the quiet line, and whether a dial wakes the Mac and connects, which settles the
   support page's words (the plan's §4 has them for a yes); R6, whether macOS stops a capture when the
-  display sleeps or the Mac locks (Sill.app streaming the Desktop, then `pmset displaysleepnow` or
-  ⌃⌘Q: whether Sill.log says "Capture stopped: …", and whether the picture comes back by itself once
+  display sleeps or the Mac locks (DuoDeck.app streaming the Desktop, then `pmset displaysleepnow` or
+  ⌃⌘Q: whether DuoDeck.log says "Capture stopped: …", and whether the picture comes back by itself once
   the Mac is woken and unlocked: this build asks at once, 0.5.1 with the Mac's next window list); the
-  nearby browser made again (Direct Wireless on, the iPad on the iPhone's hotspot, Sill sent to the
+  nearby browser made again (Direct Wireless on, the iPad on the iPhone's hotspot, DuoDeck sent to the
   background and back: the console's "browser: rebuilt the nearby browser (back from the
   background)", the Direct row kept), which no headless run here could do without turning on this
   Mac's AWDL; a session over the USB cable across a short trip to the background (streaming over the
-  cable, Sill sent away for 2 s and back: no "path: the cable went away" on the console, no second
-  "Client connected" in Sill.log), which no test host on loopback can show.
+  cable, DuoDeck sent away for 2 s and back: no "path: the cable went away" on the console, no second
+  "Client connected" in DuoDeck.log), which no test host on loopback can show.
 
 **The Settings window on a small screen (2026-10-14, branch `settings-window-height` from main at
 985a733, PR #74; issue #59; the probe, the plan and the results are in
-`docs/settings-window-plan.md`).** rosstex, a 14-inch MacBook Pro on macOS 26.6.2 with Sill 0.5.1:
+`docs/settings-window-plan.md`).** rosstex, a 14-inch MacBook Pro on macOS 26.6.2 with DuoDeck 0.5.1:
 "The Remote Access settings on Mac are too tall and cannot be resized." Mac app only: no wire change,
 nothing on the iOS side, the CLI untouched.
 - Cause (a scratch probe of the same setup on macOS 27.0.1): AppKit gives the selected pane's view a
@@ -2662,8 +2656,8 @@ nothing on the iOS side, the CLI untouched.
   preferredContentSize, SwiftUI's whole Form) at priority 501, just over the window's own 500, and
   lays the window out to it, keeping its top-left; the window is not resizable, so nothing shortens
   it (a 50-row pane made a 2,028 pt window). The constraint follows growth and every tab switch; in
-  the probe it did not follow a pane that got shorter, but Sill's Remote Access pane shrank the
-  window with it (909 → 734 pt). Sill's window adds 80 pt of title bar and toolbar. Remote Access
+  the probe it did not follow a pane that got shorter, but DuoDeck's Remote Access pane shrank the
+  window with it (909 → 734 pt). DuoDeck's window adds 80 pt of title bar and toolbar. Remote Access
   with the internet switch on (909 to 983 pt) and rosstex's 951 pt window fit a 14-inch only at More
   Space (1,800 × 1,169); General (727) fits at the default scaling, Dock or not, but not at the
   larger-text scalings with the Dock (`Tests/checks/settings-window` has each case).
@@ -2673,11 +2667,11 @@ nothing on the iOS side, the CLI untouched.
   switch (`SettingsTabController.onSelect`), on `NSApplication.didChangeScreenParametersNotification`
   and `windowDidChangeScreen`; a new cap lays a window on screen out at once. `place()` (after
   `windowDidResize` and `refit`) moves the window back inside the visible frame, 12 pt clear of the
-  edge it ran past, when Sill's own changes leave it partly outside; never sideways, never while a
+  edge it ran past, when DuoDeck's own changes leave it partly outside; never sideways, never while a
   mouse button is down (then once all are up, `placeOnRelease`), and never a window that fits where
   it is: a saved frame sets only the window's top-left, and AppKit orders a window that ran off the
   bottom while hidden back in at the screen's bottom, so a capped window can sit flush with the menu
-  bar or the screen's bottom, the 24 pt on the other side. Sill's virtual display is never the screen
+  bar or the screen's bottom, the 24 pt on the other side. DuoDeck's virtual display is never the screen
   (`SettingsWindowFit.screenIndex`). Rejected in the probe: an NSHostingController subclass clamping
   preferredContentSize (SwiftUI never calls its setter) and a SwiftUI `.frame(maxHeight:)` on the
   pane (lowered while a pane showed, it left the window tall: the probe's 501 constraint did not
@@ -2686,16 +2680,16 @@ nothing on the iOS side, the CLI untouched.
   issue's screens, an external 4K display, screens above and beside, windows partly off the screen,
   the virtual display, the test height, then 20,000 seeded random cases) and 27 of 27 mutants, in
   CI's mutants matrix.
-- TEST ONLY, the bare binary; Sill.app ignores each with one line: `-SillSettingsAfter '<s>
+- TEST ONLY, the bare binary; DuoDeck.app ignores each with one line: `-DuoDeckSettingsAfter '<s>
   <tab>|close|report|end|height=<points>; …'` (opens Settings as the menu does and prints the window's
-  frame, the pane's whole height and how much shows), `-SillTestScreenHeight <points>`,
-  `-SillSettingsShot <dir>` (docs/DEVELOPMENT.md).
+  frame, the pane's whole height and how much shows), `-DuoDeckTestScreenHeight <points>`,
+  `-DuoDeckSettingsShot <dir>` (docs/DEVELOPMENT.md).
 - Verified (the plan's Results; this Mac, a 14-inch at its default scaling, 949 pt under the menu
-  bar; the bare binary on `--synthetic` on loopback, only while no device was connected, Sill.app
+  bar; the bare binary on `--synthetic` on loopback, only while no device was connected, DuoDeck.app
   untouched): `swift build -c release` clean from `git archive`, only the CaptureProbe warning;
   `run-all.sh`, all 41; the previews (130 files) identical to 985a733's; every tab at its natural
   height (limit 845) but Remote Access with the internet switch on (909: shows 845, scrolls, 12 pt
-  from both edges, Sill having moved it); `-SillTestScreenHeight 700`: General (727) and Remote
+  from both edges, DuoDeck having moved it); `-DuoDeckTestScreenHeight 700`: General (727) and Remote
   Access (909) capped at 596 and scrolling; the screen changing under the tall pane (`height=`, the
   notification's path): 845, 596, 396, 845, the window shrinking and growing; a pane growing past
   the cap, and a tab switch to it, with the window low: moved up to 12 pt over the bottom; a window
@@ -2703,72 +2697,72 @@ nothing on the iOS side, the CLI untouched.
   top-left) capped at 925, 0 pt under the menu bar and 24 over the bottom, and a 70 and a 140 pt
   Dock under it, 855 and 785, its top kept; a pane grown while Settings was closed, reopened by
   AppKit at the screen's bottom, 24 pt under the menu bar; General and Streaming scrolled to their
-  ends inside a 600 pt screen (231 and 72 pt); Sill.app's ignore lines, from the binary in a scratch
+  ends inside a 600 pt screen (231 and 72 pt); DuoDeck.app's ignore lines, from the binary in a scratch
   bundle under `sandbox-exec` with binds denied; CI's "Build and check" on c2339e2 and, after the
   review's fixes, 1865ada. Photos without personal details in
-  `~/Downloads/sill-handoff/settings-window/`.
+  `~/Downloads/duodeck-handoff/settings-window/`.
 - Review (2026-10-14, at bb2451e; it re-ran everything above with the same numbers): three findings,
   each fixed in a commit of its own (the plan's "The review"). Should fix: the untested lists left
-  out macOS 26, the reporter's, and Sill's virtual display (now U6 and U7). Nits: "the 501
+  out macOS 26, the reporter's, and DuoDeck's virtual display (now U6 and U7). Nits: "the 501
   constraint never shrinks" and "General does not fit a 14-inch with the Dock" (corrected above,
   with 20 checks for which pane fits which scaling); U1, U2 and the PR's steps promised 12 pt above
-  and below (now: 12 pt only on a side Sill moved the window away from). Re-run after the fixes:
+  and below (now: 12 pt only on a side DuoDeck moved the window away from). Re-run after the fixes:
   `swift build -c release` clean from `git archive`, only the CaptureProbe warning; `run-all.sh`,
   all 41; `settings-window` 27 of 27 mutants; where a capped window sits, with a scratch build whose
   window was invisible and never activated (the screen unlocked, nobody at it).
-- **Untested, for Noah** (the plan's U1 to U8, with Sill.app from this branch on the 14-inch): at
+- **Untested, for the maintainer** (the plan's U1 to U8, with DuoDeck.app from this branch on the 14-inch): at
   the scaling at the far left with the Dock showing, every tab fits between the menu bar and the
-  Dock (12 pt clear only on a side Sill moved it away from), General scrolls to Quit Sill and Remote
+  Dock (12 pt clear only on a side DuoDeck moved it away from), General scrolls to Quit DuoDeck and Remote
   Access (Remote Access and "Allow connections from the internet" on) to Sleep; with Settings open,
   change the scaling and the Dock's size and hiding: it follows each time (note a Dock change that
   shows only at the next tab click); drag it to a smaller external display and let go low: it moves
   up once the button is up, and grows back on the larger one; a held click on a tab never moves it;
-  VoiceOver reaches Quit Sill in a capped General; macOS 26, the reporter's (everything was
+  VoiceOver reaches Quit DuoDeck in a capped General; macOS 26, the reporter's (everything was
   measured on 27.0.1, and merging closes #59): U1 on a Mac with 26, or a build for rosstex; with
-  Sill's virtual display there (Virtual Display on, a window streaming), every tab shows on the
+  DuoDeck's virtual display there (Virtual Display on, a window streaming), every tab shows on the
   built-in display and fits it, also once Virtual Display is turned off with Settings open; macOS 14
   or 15 if at hand.
 
 **Release 0.5.1 (2026-10-09, branch `release-0.5.1` from main at 05f2bb8, main merged in again
-at e3ce043 after PR #47; PR #48; Noah's go the same day: "When #47 passes the CI, merge it, then
-once that is merged do #48. Then run the release procedure").** Noah: "I want the release in the GitHub to line up with the app version, I want
-all versions to be 0.5.1." One release, and one version for both apps from now on: Sill for Mac
-0.5.1 (after 0.4.0; there is no 0.4.1; the tag will be v0.5.1) with Sill for iPhone and iPad 0.5.1
+at e3ce043 after PR #47; PR #48; the maintainer's go the same day: "When #47 passes the CI, merge it, then
+once that is merged do #48. Then run the release procedure").** the maintainer: "I want the release in the GitHub to line up with the app version, I want
+all versions to be 0.5.1." One release, and one version for both apps from now on: DuoDeck Host
+0.5.1 (after 0.4.0; there is no 0.4.1; the tag will be v0.5.1) with DuoDeck for iPhone and iPad 0.5.1
 (4) (`MARKETING_VERSION` 0.5.1 and `CURRENT_PROJECT_VERSION` 4 in both configurations: the build
 numbers keep counting across versions). docs/release-checklist.md has the rule (part 2's first
 item) and the release's order ("The away release").
 - In it since v0.4.0: PR #39, away from home (the entry below), PR #46, a Mac set up again (its
   old saved record retires itself), and PR #47, the iPhone Duo with the iOS 27.1 SDK (the entry
-  below; the status bar hidden on the stream screen in every pose of the inner display, Noah's
+  below; the status bar hidden on the stream screen in every pose of the inner display, the maintainer's
   pick of 2026-10-09); PRs #44 and #45 went to TestFlight as 0.5 (3). Neither half
-  strands the other (read from the code): Sill for Mac 0.5.1 serves 0.5 (2) and (3), and 0.5.1 (4)
-  works with Sill for Mac 0.4.0, without the away quality and the link's notice, which are the Mac's.
+  strands the other (read from the code): DuoDeck Host 0.5.1 serves 0.5 (2) and (3), and 0.5.1 (4)
+  works with DuoDeck Host 0.4.0, without the away quality and the link's notice, which are the Mac's.
 - The words: support.html's and index.html's away sentences (inside the Remote Access markers) and
   privacy.html's date (October 9, 2026: the day the site goes out, if later); README's Good to know
   (0.4.0 or later; one version number); the metadata (the description's Away bullet, 2,603
   characters; the review notes' REMOTE ACCESS sentence, 3,995 bytes of 4,000, and the same sentence
   for App Store Connect's own notes; the version 0.5.1 (4) and its What's New; App Store Connect
   adds a version only once the current one is Ready for Distribution). README's How it works and
-  privacy.html's link-report line came with #39. In sill-handoff's `release-051/`: the release
+  privacy.html's link-report line came with #39. In duodeck-handoff's `release-051/`: the release
   notes (`notes-0.5.1.md`: a WAITS FOR comment to settle, then `fill-notes.sh` after `--publish`),
   What to Test for 0.5.1 (4) (`testflight-0.5.1-4.md`, 1,462 characters), and STATUS.md with every
   command's result.
 - Verified on 336adc0 (STATUS.md): `swift build -c release`, only the CaptureProbe warning;
   `Tests/checks/run-all.sh`, all 39 (`policy` 392); the iOS app for the generic simulator as CI
-  builds it, only the StreamClient capture warning; `release.sh --dry-run`: "Built .build/Sill.app,
+  builds it, only the StreamClient capture warning; `release.sh --dry-run`: "Built .build/DuoDeck.app,
   version 0.5.1 (535)", "identity keychain: data-protection keychain (access group
-  9B2KKVM937.me.saffer.sill.mac)", Sill-0.5.1.zip 3.2 MB and Sill-0.5.1.dmg 3.3 MB, signed, not
-  notarized ("Unnotarized Developer ID"); `release-ios.sh` without `--upload`: 0.5.1 (4), Sill.ipa
+  U549N38BV6.com.agentsai.duodeck.host)", DuoDeck-0.5.1.zip 3.2 MB and DuoDeck-0.5.1.dmg 3.3 MB, signed, not
+  notarized ("Unnotarized Developer ID"); `release-ios.sh` without `--upload`: 0.5.1 (4), DuoDeck.ipa
   2.8 MB, Apple Distribution, the App Store profile, `ITSAppUsesNonExemptEncryption` NO, both
   required-reason APIs declared. Nothing uploaded, tagged or published; only the branch pushed.
-- Shipping (Noah's go of 2026-10-09 lifted the TestFlight hold of 2026-10-08): PR #47 merged
+- Shipping (the maintainer's go of 2026-10-09 lifted the TestFlight hold of 2026-10-08): PR #47 merged
   (e3ce043), main merged into this branch (CLAUDE.md alone conflicted, both adding an entry at the
   top of Current step: both kept, this one first), the Duo in the words (a bullet of the notes, What
   to Test, the description and What's New, README's How it works, index.html), then the pull
   request's steps: merge, tag v0.5.1 on the merge commit, `release-ios.sh --upload` and What to
   Test, `release.sh --publish` from the tag, the notes (`fill-notes.sh`, `gh release edit`), the
-  site republished, the check signed out; the results in sill-handoff's `release-051/STATUS.md`.
-  Still open, and shipped without them on Noah's call: his device tests of away from home (P4–P13
+  site republished, the check signed out; the results in duodeck-handoff's `release-051/STATUS.md`.
+  Still open, and shipped without them on the maintainer's call: his device tests of away from home (P4–P13
   below) and of the iPhone Duo (the Duo entry's P1–P13, on a Duo from October 23); on the App
   Store, 0.5 went live on 2026-10-08 and 0.5.1 (4) on 2026-10-10, approved within hours
   (https://apps.apple.com/app/id6816359860; the large-display iPhone screenshots follow as a
@@ -2776,7 +2770,7 @@ item) and the release's order ("The away release").
 
 **The iPhone Duo with the iOS 27.1 SDK (2026-10-08, branch `duo-layout` from main at e6b3265,
 main at 05f2bb8 (PR #39) merged in at 7bd7c41, not rebased; docs/iphone-duo-plan.md has the probe's
-facts, the decisions, the review, the results and what Noah tests).** Noah: research the iOS 27.1
+facts, the decisions, the review, the results and what the maintainer tests).** the maintainer: research the iOS 27.1
 SDK for iPhone Duo, then "adapt the app to use this SDK, then use the simulator with iPhone Duo, make
 sure it works properly, then take screenshots of all poses", with PR #39's merge kept cheap.
 Approved from mockups: (a) the book pose, one stream across the fold and nothing you touch on it;
@@ -2784,16 +2778,16 @@ Approved from mockups: (a) the book pose, one stream across the fold and nothing
 window's own shape and the trackpad the rest; (c1) the cover upright, the phone's arrangement beside
 the camera's strip; (c2) on its side, the compact landscape bar. Device only, no wire change (a TEST
 ONLY host picture aside).
-- `DuoPosture` (pure) and `DuoPostureReader`: `onHingeChange` at the app's root (SillApp) into the
+- `DuoPosture` (pure) and `DuoPostureReader`: `onHingeChange` at the app's root (DuoDeckApp) into the
   environment; the fold's `.division` region (`.includeInactive`) from each screen's own
   GeometryReader, in its space, and before the hinge's first report the region alone (active: partly
   open; inactive: flat); nothing before iOS 27.1, and a device without a hinge or fold reads
   `unknown`, so every layout there is what it was (the inferred crease included). The fold is in the
   way while the hinge is partly open.
-- Decisions (the plan's "The build: decisions", revised after the review; the status bar Noah's
+- Decisions (the plan's "The build: decisions", revised after the review; the status bar the maintainer's
   pick of 2026-10-09, option 1 of the three the mock canvas drew): the stream screen hides the
   status bar on the inner display in every pose (upright the picture keeps the 82 pt above the
-  fold; sideways Sill has all 951 pt), and every other screen keeps it in every pose, the cover its
+  fold; sideways DuoDeck has all 951 pt), and every other screen keeps it in every pose, the cover its
   strip; at 951 pt the book pose's bar keeps its regular size, its group beginning at 551, past the
   fold's 455.5–495.5, the strip ending 12 pt short of it (at 867 pt, the status bar shown, it would
   take the approved step to the compact width, Menus at 497); the laptop pose splits at 455 and
@@ -2805,34 +2799,34 @@ ONLY host picture aside).
   "Turn your iPhone on its side" for the keys and trackpad. The cover needed nothing.
 - Hooks, a few lines each: StreamScreen (also `duoStatusBar` and LinkLineView), PortraitStreamScreen,
   AddMacCard (`ConnectLayout`), ContentView (the connect screen's room; the harness), PairingOverlay,
-  TourPolicy and TourOverlay, SillApp; pbxproj AB01/FB01, AB02/FB02. The harness: `-SillLayout
+  TourPolicy and TourOverlay, DuoDeckApp; pbxproj AB01/FB01, AB02/FB02. The harness: `-DuoDeckLayout
   951x669`, `669x951`, `466x678`, `678x466` with the displays' safe areas as this build has them,
-  `-SillHinge closed|half|flat`. CI: the Mac side on Xcode 27 (not a beta), the iOS app alone on
+  `-DuoDeckHinge closed|half|flat`. CI: the Mac side on Xcode 27 (not a beta), the iOS app alone on
   27.1 (select-xcode's `allow-beta`: the image has only `Xcode_27.1_beta.app`, 27A9269); release-ios.sh
   refuses an Xcode before 27.1 and an app not built with the iOS 27.1 SDK, so TestFlight from
-  GitHub Actions waits for a 27.1 release there. `SILL_TEST_PATTERN=picture:<path>` (TEST ONLY): a
+  GitHub Actions waits for a 27.1 release there. `DUODECK_TEST_PATTERN=picture:<path>` (TEST ONLY): a
   synthetic host's Desktop a still picture.
 - The review (2026-10-08, two lenses): eleven findings, two of them the same (the status bar).
   Eight fixed, one commit per theme (5c2188a the status bar and the fold before the report, 7db22a3
   the connect column, 8906024 the tour, 9e4f36c CI; the checklist and README with the docs), and
-  the plan's own leftover too (e75ea48 #39's link line); one tested here and given to Noah (the 27.1
+  the plan's own leftover too (e75ea48 #39's link line); one tested here and given to the maintainer (the 27.1
   SDK off the Duo: P9; folds while away: P10, fine on the simulator); one older than the branch and
   left (an unlabeled VoiceOver element on the phone row's Menus button). c70a04c is the test picture.
 - Checks: `duo` 252,557 and 67 of 67 mutants; `tour` 51,840 and 72 of 72; `run-all.sh`, all 40;
   each fix commit builds and passes both. Builds: iOS Debug for the Duo simulator, Release for the
   simulator, Debug for a device, `swift build -c release`, only the known warnings.
-- Verified on a private simulator ("Sill duo", iOS 27.1, deleted after) folded by Tests/duorig
-  against `SillHost --synthetic` on loopback (software encoder, a Weather picture as the Desktop):
+- Verified on a private simulator ("DuoDeck duo", iOS 27.1, deleted after) folded by Tests/duorig
+  against `DuoDeckHost --synthetic` on loopback (software encoder, a Weather picture as the Desktop):
   the stream, connect and Settings screens in all six poses, the tour's cards, folds and turns
-  while Sill was in the background (six, each layout right on return, one connection) and slow
+  while DuoDeck was in the background (six, each layout right on return, one connection) and slow
   folds mid-stream (180→90→180→120→0→90); the harness's mock in every pose with the drawer, lights,
   pairing, Add a Mac, eight Macs, the link line and the Menus pull-down. Photos at App Store
-  Connect's Duo sizes in `~/Downloads/sill-handoff/duo/final/` (INDEX.md; `live/` private: this
+  Connect's Duo sizes in `~/Downloads/duodeck-handoff/duo/final/` (INDEX.md; `live/` private: this
   Mac's windows and name). The harness at 46 earlier cases against main's build (05f2bb8): 39
   identical, 7 differing only as main's build differs from itself. The branch contains main: the
   pull request merges without a conflict. CI run by hand on the branch (37835771799): green, the
   Mac side on Xcode 27.0, the iOS app on `Xcode_27.1_beta.app` (27A9269).
-- **Untested, for Noah (on an iPhone Duo from Oct 23, a build from Xcode 27.1; TestFlight 0.5 (3),
+- **Untested, for the maintainer (on an iPhone Duo from Oct 23, a build from Xcode 27.1; TestFlight 0.5 (3),
   from Xcode 27.0, runs there in an 871×669 compatibility window, sideways only):** the plan's
   P1–P13: every pose, folding mid-stream by hand, the keyboard on the cover, 120 Hz on each display,
   Split View if iOS offers it, VoiceOver in the book pose, the iPad mini and iPhone 15 Pro on a 27.1
@@ -2878,7 +2872,7 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   suggesting Low · Standard.", "… nothing has got through for 3 s …", "…
   keeping up again." A report about a bitrate a pick has just replaced is left
   out of kind 16. No Stats key.
-- Sill.app: Settings › Streaming's "Away from home" section (saved as
+- DuoDeck.app: Settings › Streaming's "Away from home" section (saved as
   `awayBitrate`, `awayCaptureScale`); the menu's Quality subtitle "Away from
   home now: Low · Standard"; a device's card row "3 fps, the link can’t carry
   Pro · RTT 531 ms · through Tailscale" or "Nothing is getting through".
@@ -2898,11 +2892,11 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   session's), the fenced hand-over, the remote connection closed after;
   retries 10, 20, 40, then 60 s; a remote connection that dies meanwhile is
   carried by the move (held, adopted; picks not sent).
-- TEST ONLY and DEBUG (Build and run): SILL_TEST_REMOTE_ORIGIN (the remote
-  door alone counts loopback as a VPN or the internet), SILL_TEST_PATTERN=noise
+- TEST ONLY and DEBUG (Build and run): DUODECK_TEST_REMOTE_ORIGIN (the remote
+  door alone counts loopback as a VPN or the internet), DUODECK_TEST_PATTERN=noise
   (a square of noise, so a test stream's size follows its quality),
-  `-SillSettingsScript`, `-SillMoveHomeTest`, `-SillDialSaved remotely`,
-  `-SillLinkLine behind` and seven settings cases; `sillclient.py`'s `away=`,
+  `-DuoDeckSettingsScript`, `-DuoDeckMoveHomeTest`, `-DuoDeckDialSaved remotely`,
+  `-DuoDeckLinkLine behind` and seven settings cases; `duodeckclient.py`'s `away=`,
   `link=` and `--expect` keys; the pacing harness's link verdicts and cases.
 - Verified (the plan's Results): every pure check (25), the new ones' mutants
   (away-wire 9, away-quality 16, link-judge 26, away-copy 17) and policy's
@@ -2913,7 +2907,7 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   end, H16 previews, H17; the iOS app, Debug and Release; S1 (144 photos),
   S3 (the callout and the line live), S4 and S5 (the move home live, its
   retries, another launch refused once, Connect Remotely staying).
-- Found, and left for Noah (the plan's open question 14): behind needs 3
+- Found, and left for the maintainer (the plan's open question 14): behind needs 3
   short seconds of 5, and under PR A's pacing a link only a little too slow
   loses frames in rounds (drop, drain, keyframe, deltas), which can leave fewer
   than 3 short in any 5: at 1.8 times over the link, 8 s to report (the gate
@@ -2956,7 +2950,7 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   the move home refuses that row (never #44's `newKey`: the session holds
   the Mac's key through the remote door); the kind 18 floor taken as the move
   starts (`DiscoveryPolicy.HomeMoveInfo`), which fixes the review's broadcast race. Host:
-  SILL_TEST_REMOTE_ORIGIN reaches `Door` (`remoteDoor: kind == .remote`) and
+  DUODECK_TEST_REMOTE_ORIGIN reaches `Door` (`remoteDoor: kind == .remote`) and
   TestHooks; StreamCoordinator, StreamServer and HostConfig keep both sides;
   the pacing harness defines LINK_JUDGE by what its StreamServer has. Device:
   the link's line also stays away under the tour's card; `awayhome` is a TLS
@@ -2965,12 +2959,12 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   checks (`policy` 360); the mutants of the 27 checks whose files the merge
   changed, 952, every one caught (`policy`'s five new); H2 against main's CLI;
   H7 and H8 over the TLS doors, 16 of 16; on a private simulator against
-  `SillHost --synthetic --remote --pairing`, 28 of 28: S4 (moved over the TLS
+  `DuoDeckHost --synthetic --remote --pairing`, 28 of 28: S4 (moved over the TLS
   home door, one restart at the home quality), `refused`'s back-off, another
   key refused by the pin once, another launch once, S5, and S4race (the
   remote path cut mid-move: carried, the pick not sent); the pacing harness
   against main, every gate passing with main's figures and the link's
-  verdicts; Sill.app's previews main's but for the away section and the new
+  verdicts; DuoDeck.app's previews main's but for the away section and the new
   cards; photos of the panel and the stream's line, the phone's included.
 - The merge's review (2026-10-08; the plan's "The merge's review"): seven
   findings, two the same, each verified here and fixed in a commit of its own.
@@ -2983,7 +2977,7 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   refusal and tries forgotten once it is no longer listed; `moveHome` lost
   `refusedListing`. The kind 18 floor is a pure rule (`HomeMoveInfo`), checked:
   the broadcast race among `policy`'s cases, and mutant K1 the rule before the
-  fix. Docs: kind 16's `away` comes from a host with an identity (SillHost
+  fix. Docs: kind 16's `away` comes from a host with an identity (DuoDeckHost
   `--pairing` alone sends it, nobody ever away); the plan's §4.4, §7.3, §10,
   P13 and open question 10 say the move home goes only to a TLS home door (a
   plain one: no move, the session stays remote). The fence check's move home
@@ -2995,20 +2989,20 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
   refused at its pin, then the Mac's own row moving home 70 ms after it was
   listed; a plain row first, three launches; a row that never answers first,
   twice) and the merge's S4 to S4race again, 28 of 28; the kind 18 race staged
-  live (the bare SillMenuBar binary broadcasting a kind 18 every 0.25 s, the
+  live (the bare DuoDeckMenuBar binary broadcasting a kind 18 every 0.25 s, the
   home door 0.8 s away): this build moved home 2 of 2, the rule before the fix
   refused the Mac's own row 2 of 2; CI's "Build and check" passed on the
   fixes' head (ea4de23).
-- **Untested, for Noah (the plan's P4–P13; P1–P3 and P14 are PR A's and
-  still open):** with Sill.app built from this branch on the Mac and this
+- **Untested, for the maintainer (the plan's P4–P13; P1–P3 and P14 are PR A's and
+  still open):** with DuoDeck.app built from this branch on the Mac and this
   build on the iPad mini, away on the iPhone 15 Pro's hotspot through
   Tailscale, then home:
   - P4, away starts on Low and Standard: at home set Pro · Retina in the Mac's
     menu, then leave for the hotspot. The session through Tailscale starts at
-    Low · Standard: Sill.log "Away from home: every connected device is away;
+    Low · Standard: DuoDeck.log "Away from home: every connected device is away;
     streaming at Low · Standard (4 Mbps per 60 fps, points). The home quality
     stays Pro · Retina.", the iPad's panel "Away: Low · Standard", and
-    `defaults read me.saffer.sill.mac bitrate` still 40000000.
+    `defaults read com.agentsai.duodeck.host bitrate` still 40000000.
   - P5, the away choice: pick Balanced away: one restart at 15 Mbps,
     `awayBitrate` 15000000, the home bitrate unchanged; the next away session
     starts at Balanced.
@@ -3031,7 +3025,7 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
     comes, then goes about 5 s after the link recovers; no reconnect.
   - P10, coming home: streaming away through Tailscale, join the home Wi‑Fi.
     Within about 5 s of the network listing the Mac the session moves back by
-    itself over the Mac's TLS home door, pinned to its key: Sill.log "Client
+    itself over the Mac's TLS home door, pinned to its key: DuoDeck.log "Client
     connected: …%en0" (never "Home door refused", no pairing asked), "Home
     quality again", then "Client left" for the Tailscale address; the route
     line gives way to "Wi‑Fi", one restart; drag and type through it (no button
@@ -3041,21 +3035,21 @@ sessions are as they were (H2: the CLI's output and kind 16 unchanged).
     cable in: the move goes to the cable ("Wired"; the Mac logs `%en14` or
     `%anri0`).
   - P12: Connect Remotely at home stays remote.
-  - P13, mixed builds: PR #13's iPad against this Sill.app, away: Low ·
-    Standard, its Quality Low, no header line. This iPad against Sill for Mac
+  - P13, mixed builds: PR #13's iPad against this DuoDeck.app, away: Low ·
+    Standard, its Quality Low, no header line. This iPad against DuoDeck Host
     0.4.0 (main's: a TLS home door, no away quality): no header line, no
     callout, and the move home works, pinned; against 0.3.1 (a plain home
     door) the session stays remote.
-  It merged (05f2bb8, 2026-10-08) and ships as Sill for Mac 0.5.1 with Sill for
+  It merged (05f2bb8, 2026-10-08) and ships as DuoDeck Host 0.5.1 with DuoDeck for
   iPhone and iPad 0.5.1 (4), one version for both (the entry above; there is no
-  Sill for Mac 0.4.1): the release drafts' lines held back for it (sill-handoff's
+  DuoDeck Host 0.4.1): the release drafts' lines held back for it (duodeck-handoff's
   `release-next/drafts/for-0.4.1.md`: the notes, What to Test, the site's support
   and index lines, the privacy page's date, the metadata) are on the release's
   branch, `release-0.5.1` (its privacy line was in since the merge's review).
 
 **A Mac set up again: the old saved record retires itself (2026-09-28, branch `stale-duplicate-fix`
-from main at 72d8d1d).** Noah: "When using Tailscale, it shows Noah's MacBook Pro and Noah's MacBook
-Pro (2) and only 2 works." Sill for Mac 0.4.0's new key made the device pair again (#44), and the old
+from main at 72d8d1d).** the maintainer: "When using Tailscale, it shows the maintainer's MacBook Pro and the maintainer's MacBook
+Pro (2) and only 2 works." DuoDeck Host 0.4.0's new key made the device pair again (#44), and the old
 record stayed (#44's known gap): away from home both were Remote rows, the old one's pin refused.
 Device only, no wire change:
 - A remote dial of a saved Mac also takes, at one address, the key of another saved record that
@@ -3071,24 +3065,24 @@ Device only, no wire change:
 - The Remote rows list one name's records together, newest first (`SavedMacs.remoteOrder`), so the
   one that works leads until the old one is tried.
 - Checks: remote-rules 123 (16 new) and 72 of 72 mutants (20 new; CI's mutants matrix has it already).
-- Verified on a private simulator ("Sill dupfix", deleted after) against loopback synthetic hosts
-  (software encoder, `--pairing --remote=47455`, `SILL_TEST_REMOTE_DIR` per identity): paired with
-  identity A, then B at the same address and port, both saved as on Noah's devices ("Noah's MacBook
-  Pro (2)"); `-SillDialSaved 1` dials A as its Remote row does. Before (main's build): -9808 at
+- Verified on a private simulator ("DuoDeck dupfix", deleted after) against loopback synthetic hosts
+  (software encoder, `--pairing --remote=47455`, `DUODECK_TEST_REMOTE_DIR` per identity): paired with
+  identity A, then B at the same address and port, both saved as on the maintainer's devices ("the maintainer's MacBook
+  Pro (2)"); `-DuoDeckDialSaved 1` dials A as its Remote row does. Before (main's build): -9808 at
   127.0.0.1, both kept. After: "answered with the key of B …: A superseded", connected, one record,
   named without "(2)". Negatives: A and B at different ports, both running: A's dial reaches A, both
   kept; A reached after B was paired, then B at A's address: -9808, both kept. iOS Debug for the
   simulator and Release for a generic device (only the known `StreamClient` warning);
   `Tests/checks/run-all.sh` all passed.
-- **Untested, for Noah:** on the iPad and iPhone with this build, away from home on Tailscale: tap
-  the old "Noah's MacBook Pro" row: it connects (to the Mac's new key) and the "(2)" row is gone,
+- **Untested, for the maintainer:** on the iPad and iPhone with this build, away from home on Tailscale: tap
+  the old "the maintainer's MacBook Pro" row: it connects (to the Mac's new key) and the "(2)" row is gone,
   the survivor named plainly. At home over the LAN alone the old row still says it is not the Mac
   paired with (a private address proves nothing); with Tailscale on at home it cleans up too.
 
 **A Mac set up again: pairing again, not "Connecting…" for ever (2026-09-27, branch
-`stale-pairing-fix` from main at d30fca8).** Noah, right after 0.4.0: "First pairing doesn't seem to
-work. When I click Wi-Fi, it says Connecting to Noah's MacBook Pro... and never updates. It does
-work when I click Add a Mac... manually". Sill for Mac 0.4.0 made the Mac a new key and a new
+`stale-pairing-fix` from main at d30fca8).** the maintainer, right after 0.4.0: "First pairing doesn't seem to
+work. When I click Wi-Fi, it says Connecting to the maintainer's MacBook Pro... and never updates. It does
+work when I click Add a Mac... manually". DuoDeck Host 0.4.0 made the Mac a new key and a new
 recognition key (the data-protection keychain, no migration, #42). The iPad's row carried a tag no
 saved record resolves, under the saved Mac's Bonjour name, so `rowMac` took it as that Mac by name:
 it read "Wi-Fi" and a tap dialed pinned to the old key. The pin refused the new key, and a
@@ -3109,43 +3103,43 @@ against a loopback synthetic host set up again, 50 s of "Connecting…"). Device
   reconnect's row taken by its name alone is only skipped, as before. A pinned ask that meets
   another key does the same.
 - Every dial that is not the automatic reconnect's (a tap, the session after a pairing,
-  `-SillConnect`) ends after `DiscoveryPolicy.tapDialDeadline` (10 s) with `HomeCopy.noAnswer`'s words;
+  `-DuoDeckConnect`) ends after `DiscoveryPolicy.tapDialDeadline` (10 s) with `HomeCopy.noAnswer`'s words;
   the reconnect keeps its 5 s.
 - Checks: `home-device` 182 and 124 of 124 mutants, `home-model` 62 and 21 of 21 (the mutants whose
   lines moved follow them, in remote-rules too).
-- Verified on a private simulator ("Sill stalepair", deleted after) against `SillHost --synthetic
-  --pairing --remote` on loopback (software encoder, `SILL_TEST_SERVICE_TYPE=_silltest._tcp`, the
-  identity in `SILL_TEST_REMOTE_DIR`): paired at the home door, then a second host with a fresh
-  identity and the saved record's Bonjour name set to its name (`-SillTapRow`). Before: "Connecting
+- Verified on a private simulator ("DuoDeck stalepair", deleted after) against `DuoDeckHost --synthetic
+  --pairing --remote` on loopback (software encoder, `DUODECK_TEST_SERVICE_TYPE=_duodecktest._tcp`, the
+  identity in `DUODECK_TEST_REMOTE_DIR`): paired at the home door, then a second host with a fresh
+  identity and the saved record's Bonjour name set to its name (`-DuoDeckTapRow`). Before: "Connecting
   to…" for 50 s, nothing on the host. After: the row "Not paired", a tap asks, the host's pairing
   window opens. With the record's recognition key set to the new host's (a tag-named row, the old
   pin): the pin refused at once, the new-key words; the next tap asks, the code pairs, the old record
-  is gone. `-SillConnect 192.0.2.1:9`: "didn't answer" at 10 s.
-- **Untested, for Noah:** on the iPad with 0.5 (3): the Mac's row reads "Not paired" while the old
+  is gone. `-DuoDeckConnect 192.0.2.1:9`: "didn't answer" at 10 s.
+- **Untested, for the maintainer:** on the iPad with 0.5 (3): the Mac's row reads "Not paired" while the old
   record is saved, a tap brings the pairing window up on the Mac, the code pairs and connects. Known:
   that pairing starts from an unsaved row, so the old record stays until it is forgotten (its Remote
   row says it is not the Mac this iPad paired with); only a re-pairing from a row marked `newKey`
   replaces the record it came from.
 
-**Sill for Mac 0.4.0 with Sill for iPhone and iPad 0.5 (2) (2026-09-27, branch `release-next` from
+**DuoDeck Host 0.4.0 with DuoDeck for iPhone and iPad 0.5 (2) (2026-09-27, branch `release-next` from
 main at 643af6b, main merged in once PRs #37, #38, #42 and #43 were on it; #39, away from home, deferred to 0.4.1;
-PR #41).** Noah: "Once all are
+PR #41).** the maintainer: "Once all are
 merged I want to try the latest build", then the go. The first release that needs both apps at
 once: pairing at home (#37) made the home door TLS 1.3 with pairing, so a device from before it
 cannot connect to 0.4.0 at home (a plain dial, a failed handshake, and a redial at once while the
 Mac is listed, so a flicker that can come several times a second; the Mac's menu says "An iPhone
-or iPad Needs Sill Updated"), and 0.5 (2), a Release build, dials no plain door
-(Sill for Mac 0.3.1 and earlier: "Update Sill", nothing dialed). docs/release-checklist.md, "The
+or iPad Needs DuoDeck Updated"), and 0.5 (2), a Release build, dials no plain door
+(DuoDeck Host 0.3.1 and earlier: "Update DuoDeck", nothing dialed). docs/release-checklist.md, "The
 pairing release", has the order: the device build uploaded first, its What to Test as it shows,
 one device on it against a Mac with the release's code once it is processed, the site staged, the
 Mac release, the site pushed at once, and no external group or App Review before 0.4.0 is the
 download.
-- Versions: Sill for Mac 0.4.0 (the build number the commit count at the tag), Sill for iPhone and
+- Versions: DuoDeck Host 0.4.0 (the build number the commit count at the tag), DuoDeck for iPhone and
   iPad 0.5 (2) (0.5 was never submitted, so it stays the App Store's first version; App Store
   Connect takes each build number once per version), both in the release's pull request, so the
   annotated tag v0.4.0 names the commit both came from.
 - Docs (true on main at 643af6b, committed before the merges): the checklist brought up to date (the
-  record "Sill – Mac Streaming", Apple ID 6816359860; 0.5 (1) from b37f47a; the dmg page move and the
+  record "DuoDeck – Mac Streaming", Apple ID 6816359860; 0.5 (1) from b37f47a; the dmg page move and the
   first release done; notes over `--publish`'s one-line body; the check of what was published; What
   to Test per build; one device trying a device build before the Mac release it goes with; the
   site republished right after the release it describes, and hosted by GitHub itself since
@@ -3164,16 +3158,16 @@ download.
   code keeps a second key of one device from pairing by itself; the log names the gestures; no
   gesture claim for macOS 14 or 15 (never tried there); the liveness fix is the device's.
 - Rehearsed on main at 643af6b (2026-09-27): `release.sh --dry-run` 54 s (0.3.1 (391), the zip and
-  the image 3.0 MB each, spctl "Unnotarized Developer ID"), `release-ios.sh` 46 s (0.5 (1), Sill.ipa
+  the image 3.0 MB each, spctl "Unnotarized Developer ID"), `release-ios.sh` 46 s (0.5 (1), DuoDeck.ipa
   2.5 MB, Apple Distribution, the App Store profile, both required-reason APIs declared).
-- **Untested, for Noah:** the published pair on his devices (TestFlight's 0.5 (2) first, then Sill
+- **Untested, for the maintainer:** the published pair on his devices (TestFlight's 0.5 (2) first, then DuoDeck
   for Mac 0.4.0 from the download on another Mac or user account: the iPad paired for Remote Access
   pairs once more, as the iPhone does, with the code or over the cable), and the open
   device tests of #31, #35, #36, #37, #38, #42 and #43 that the App Store's claims wait for.
 
 **The stuck command after Spotlight (2026-09-27, branch `spotlight-modifier-fix`
 from main at 643af6b, with main at da43f6b (PR #38) merged in; not pushed).**
-Noah: "The stuck command after Spotlight", found by PR #38's review. The
+the maintainer: "The stuck command after Spotlight", found by PR #38's review. The
 Spotlight key sent ⌘Space as one key down and up, each carrying command, and
 the host posted both as they came; every keyboard event posted leaves its flags
 in the HID state table its source reads (CGEventSource.h), and pointer and
@@ -3185,7 +3179,7 @@ posted while this is built.
   what the modifier keys down hold, its up only what they hold; a modifier's
   own key is a flags-changed event with what is held; a key or text that no
   longer says a modifier lets go of that key first; a device that leaves, and
-  the host at its end (Sill.app's Quit, a Ctrl-C, kill or hangup; the CLI
+  the host at its end (DuoDeck.app's Quit, a Ctrl-C, kill or hangup; the CLI
   without --virtual-display then dies of the signal as before,
   `HostShutdown.installKeyRelease`), let go of every key and button. Input
   with nowhere to land (nothing streams, or a switch drops held input) is
@@ -3197,11 +3191,11 @@ posted while this is built.
   modifier the up should have taken out and the table still holds, that no
   key down holds and no key since carried, is counted, `in.keyModifiersLeft`,
   and said once with the key ("Keys: a quarter of a second after a device's
-  key 55 came up, …"). TEST ONLY `SILL_TEST_INPUT_LOG=1` (Build and run)
+  key 55 came up, …"). TEST ONLY `DUODECK_TEST_INPUT_LOG=1` (Build and run)
   prints what a `--synthetic` host would post and each check it arms.
 - Device (`KeyChords`, pure): a shortcut goes out as a keyboard sends it, its
   modifiers' own keys around it (`KeyChord.press`: the Spotlight key, the key
-  row, a latched ⌘S), so Sill.app 0.3.x is left nothing held either; a
+  row, a latched ⌘S), so DuoDeck.app 0.3.x is left nothing held either; a
   hardware key's up follows its down (`ForwardedKeys`), a cancelled press
   comes up, and the overlay lets go of its keys when it stops taking them.
 - `Tests/checks/key-strokes` (329 checks, 72 mutants; CI and its mutants
@@ -3225,43 +3219,43 @@ posted while this is built.
   for command at key 55's up; a drag whose stream stops ends "left mouse up
   (none) at 454,285" and the moves after are moves, where 84ddd9c's are
   drags); SIGINT, SIGTERM and SIGHUP with ⌘ and the button held let go of both
-  and end with 84ddd9c's wait status; the app's `-SillInputTest` against that host, a
+  and end with 84ddd9c's wait status; the app's `-DuoDeckInputTest` against that host, a
   rotation rig and the touch rig (72 of 72 against main's) on a private
   simulator, deleted after.
-- **Untested, for Noah:** with this Sill.app and this iPad build, the Spotlight
+- **Untested, for the maintainer:** with this DuoDeck.app and this iPad build, the Spotlight
   key and then a tap on a file in Finder selects it (not a ⌘-click), and the
   same after the key row's ⌘esc, a latched ⌘S and a hardware ⌘C; a latched
   ⌘-click stays a ⌘-click and the next tap is plain; ⌘ held while Wi-Fi drops,
-  and Quit Sill.app while holding it: plain clicks after; a drag held on the
+  and Quit DuoDeck.app while holding it: plain clicks after; a drag held on the
   trackpad while the window is closed on the Mac (⌘W there), let go, then
-  another window picked: the pointer moves there, nothing drags. Sill.log
+  another window picked: the pointer moves there, nothing drags. DuoDeck.log
   should have no "Keys: … came up, this Mac's modifier keys still read" line;
-  if it has, note the key (55 is ⌘). With this iPad build against Sill.app
+  if it has, note the key (55 is ⌘). With this iPad build against DuoDeck.app
   0.3.1, the Spotlight key then a tap is a plain click.
 
 **Keychain hardening (2026-09-27, branch `keychain-hardening` from
 `home-pairing` (PR #37, not yet merged), PR #42 (a draft); the assessment, the
 decision, what was implemented and its proof with the real profile are in
-`docs/keychain-plan.md`).** Noah's pre-1.0 question: move Sill.app's
+`docs/keychain-plan.md`).** the maintainer's pre-1.0 question: move DuoDeck.app's
 remote-access identity (the Mac's key, recognition key, trust list and Require
 pairing) from the legacy login keychain, which does not authenticate who made
-an item (a process running before Sill's first launch can pre-create every item
-and Sill adopts it — the home-pairing security review), to the data-protection
+an item (a process running before DuoDeck's first launch can pre-create every item
+and DuoDeck adopts it — the home-pairing security review), to the data-protection
 keychain, which no other process can pre-create or read. Reproduced the risk
 and settled the cost with test items of own names in throwaway keychains only
-(never the login keychain, never Sill's real items): the legacy keychain's
-creator and ACL are attacker-set, so Sill's verbatim lookups adopt a planted
+(never the login keychain, never DuoDeck's real items): the legacy keychain's
+creator and ACL are attacker-set, so DuoDeck's verbatim lookups adopt a planted
 key (and a planted key signs a verifying require-pairing-off record); and the
 data-protection path needs a `keychain-access-groups` entitlement — a Developer
 ID binary that carries it without a provisioning profile is AMFI-killed at
 launch (exit 137, codesign still valid), while an ad-hoc build without it gets
 `-34018`. So the strong keychain is profile-or-the-app-won't-launch, and only
-Sill.app is affected (the CLI is memory, iOS is already data-protection).
+DuoDeck.app is affected (the CLI is memory, iOS is already data-protection).
 - Implemented (the recommended path): `IdentityStorePlan` (pure,
   `Tests/checks/keychain`, 13 cases, 7 mutants, in CI's matrix) chooses the
-  store from four launch facts — an entitled real Sill.app uses the
+  store from four launch facts — an entitled real DuoDeck.app uses the
   data-protection keychain and **never** the legacy one beside it (so no
-  planted legacy item is adopted), an unentitled real Sill.app uses the login
+  planted legacy item is adopted), an unentitled real DuoDeck.app uses the login
   keychain (the safe, profile-free fallback), a test host uses memory or the
   test directory. `AppModel.entitledKeychainAccessGroup()` reads the running
   binary's own `keychain-access-groups` (`SecTaskCopyValueForEntitlement`);
@@ -3269,7 +3263,7 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   ID build takes the strong path. `KeychainIdentityStore(accessGroup:)` is
   parameterised — nil is the legacy keychain byte-for-byte, a group adds
   `kSecUseDataProtectionKeychain` + the access group to every query.
-  `Packaging/SillRelease.entitlements` and `make-app.sh --release`: with a
+  `Packaging/DuoDeckRelease.entitlements` and `make-app.sh --release`: with a
   profile at `Packaging/embedded.provisionprofile` (gitignored) it verifies the
   profile authorises the access group and is not expired (refusing either, which
   would AMFI-kill or fail to launch the app), embeds it and signs with the
@@ -3285,7 +3279,7 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   have promoted a *planted* key into the strong keychain as the Mac's identity
   — the very attack this closes, only relocated. There is no sound legacy-side
   gate, so migration is dropped: the store now never reads the login keychain,
-  and Noah's own dev Macs (the only Macs with legacy items before the first
+  and the maintainer's own dev Macs (the only Macs with legacy items before the first
   public build) do a documented one-time reset (a fresh key, a new Mac ID,
   re-pair). This also resolves the draft's leaving the exportable legacy key in
   the weak keychain. (2) **The identity key set no accessibility — fixed:** the
@@ -3293,18 +3287,18 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   while the Mac was locked and its owner away; every item is now
   `AfterFirstUnlockThisDeviceOnly` (readable after first unlock, never off this
   Mac). (3) **The release path could not build the hardened app at all —
-  fixed:** `SillRelease.entitlements` carried an XML comment, which codesign's
+  fixed:** `DuoDeckRelease.entitlements` carried an XML comment, which codesign's
   AMFI parser rejects for a restricted-entitlement file, so `--release` with a
   valid profile failed at signing (the draft's rehearsal had no valid profile
   to reach that step); the comment is removed (its rationale moved into
-  make-app.sh; `SillDebug.entitlements` keeps its comment — get-task-allow alone
+  make-app.sh; `DuoDeckDebug.entitlements` keeps its comment — get-task-allow alone
   does not trip AMFI's parser, verified). (4) **make-app.sh did not check the
   profile's expiry — fixed:** Gatekeeper checks a Developer ID profile at every
   launch, so an expired embedded profile stops the app launching; make-app.sh
   now refuses an expired profile (and warns within 30 days) before signing.
 - Verified before the profile existed (no notarization, no device; every keychain touch
   used throwaway keychains and test service names, never the login keychain or
-  Sill's real items): `swift build` clean; `Tests/checks/run-all.sh` all 28
+  DuoDeck's real items): `swift build` clean; `Tests/checks/run-all.sh` all 28
   pass, keychain's 7 mutants caught. The four `make-app.sh` paths, driven with
   throwaway CMS profiles and a real Developer ID signature into `.build` (the
   bundle deleted after, never installed or launched): default (Apple
@@ -3317,16 +3311,16 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   that the entitlements comment broke codesign and that stripping it signs and
   reads the entitlements back.
 - **Proved with the real profile (2026-09-27, `docs/keychain-plan.md` §9b).**
-  Noah registered the App ID `me.saffer.sill.mac` and made the Developer ID
-  profile "Sill Developer ID" (UUID 18e9509f-5498-4533-ba59-293461a61a0d,
-  macOS, team 9B2KKVM937, `keychain-access-groups` `9B2KKVM937.*`, only the
+  the maintainer registered the App ID `com.agentsai.duodeck.host` and made the Developer ID
+  profile "DuoDeck Developer ID" (UUID 18e9509f-5498-4533-ba59-293461a61a0d,
+  macOS, team U549N38BV6, `keychain-access-groups` `U549N38BV6.*`, only the
   Developer ID certificate 42424F38…, until 2044-09-22), at
   `Packaging/embedded.provisionprofile` (git-ignored; copies in
   ~/Library/Developer/Xcode/UserData/Provisioning Profiles/ and ~/Downloads).
   Two findings with it, either of which stopped the hardened release, fixed: the
   draft keyed the application identifier as iOS's `application-identifier`, so
   make-app.sh refused the real profile (a Mac profile says
-  `com.apple.application-identifier`) and, worse, `SillRelease.entitlements`
+  `com.apple.application-identifier`) and, worse, `DuoDeckRelease.entitlements`
   with that key had the app killed at every launch (a probe signed so: exit
   137, taskgated "Unsatisfied entitlements: application-identifier", AMFI "No
   matching profile found"). Now the entitlements use
@@ -3340,22 +3334,22 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   profile byte for byte, carries exactly the three entitlements, the hardened
   runtime and a timestamp, and verifies `--deep --strict`; `release.sh
   --dry-run` exit 0 (check_signature, the zip, the signed image); the built
-  app's executable run only with `-SillRenderPreviews` exits 0 with 124
+  app's executable run only with `-DuoDeckRenderPreviews` exits 0 with 124
   previews, taskgated "allowing entitlement(s) … due to provisioning profile",
   no AMFI denial and no keychain call (then unregistered from LaunchServices and
-  removed); a probe app (bundle ID `me.saffer.sill.mac`, the same profile and
+  removed); a probe app (bundle ID `com.agentsai.duodeck.host`, the same profile and
   entitlements, Developer ID, hardened) reads its group, makes a generic
   password and a P-256 key exactly as `KeychainIdentityStore` does (the group,
   `pdmn` `cku`, `sync` 0), a scratch copy of `KeychainIdentityStore` with only
   its three name constants changed makes all four items, and a rebuilt probe
   finds the same key (a rebuild keeps the Mac ID); the same probe ad hoc, or
   Developer ID without entitlements, gets -34018 and can plant nothing; every
-  test item deleted and confirmed gone, nothing of Sill's own touched, no
+  test item deleted and confirmed gone, nothing of DuoDeck's own touched, no
   prompt. Refusals checked with throwaway profiles (the iOS key, another app
   ID, team, group or certificate, none, a malformed one, expired, garbage) and
   the draft's entitlements against the real profile; the development build and
   the profile-free release as before; `Tests/checks/run-all.sh` all 28.
-  Also corrected: "two teams" (both certificates are team 9B2KKVM937;
+  Also corrected: "two teams" (both certificates are team U549N38BV6;
   HG877AGTQ7 is the Apple Development certificate's member ID).
 - **The adversarial pass (2026-09-27, §9b's last part):** all of the above
   re-run from the commit, and more. The probe with the release's entitlements
@@ -3378,7 +3372,7 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
   --dry-run` (13 s, "Unnotarized Developer ID"), the launch, and the refusals
   (the proof's eleven profiles as before, plus the extra entitlement, the iOS
   key, get-task-allow, an empty list, a dictionary, another team and its group).
-- **For Noah (still device work, `docs/keychain-plan.md` §10,
+- **For the maintainer (still device work, `docs/keychain-plan.md` §10,
   release-checklist.md Part 1 §5):** remote access with the Mac locked and you
   away (the items are `AfterFirstUnlockThisDeviceOnly`, proved `cku`, but never
   read while locked here); the first hardened launch on a Mac that ran a
@@ -3398,14 +3392,14 @@ Sill.app is affected (the CLI is memory, iOS is already data-protection).
 1f3072a, with main merged in at cf05a78, 2b38179 and da43f6b, not rebased,
 PR #37; the plan and every step's results are in
 `docs/home-pairing-plan.md`).**
-Noah: "Yes please lets add a pairing process for Wi-Fi/Direct connect,
+the maintainer: "Yes please lets add a pairing process for Wi-Fi/Direct connect,
 something easy to do but still secure, similar to how Tailscale is being
 paired. Wired should still pair automatically." He also decided it ships
 before 1.0 (the Compatibility floor below).
-- The Mac: Sill.app's home door, the Bonjour port, speaks the remote door's
-  TLS 1.3 with both keys pinned (the same identities, the ALPNs `sill/1` and
-  `sill-pair/1`, the trust list and the pairing window), and so does
-  `SillHost --pairing`; admission is one `Door` behind both listeners, its
+- The Mac: DuoDeck.app's home door, the Bonjour port, speaks the remote door's
+  TLS 1.3 with both keys pinned (the same identities, the ALPNs `duodeck/1` and
+  `duodeck-pair/1`, the trust list and the pairing window), and so does
+  `DuoDeckHost --pairing`; admission is one `Door` behind both listeners, its
   rules `DoorPolicy`'s. An unpaired device's tap sends one "pair me" request
   (kind 19 `ask`). Over the USB cable to an iPhone or iPad, while the Mac is
   unlocked and both ends agree the connection is the cable (the Mac: an IPv6
@@ -3414,7 +3408,7 @@ before 1.0 (the Compatibility floor below).
   link-local addresses), the Mac pairs it on the spot, one key per device by
   a hash of its USB serial, with a 10 s notice that has Remove. Anywhere else
   the Mac opens its pairing window by itself, in front but without activating
-  Sill or taking the keyboard, never for an ask from this Mac itself, at most
+  DuoDeck or taking the keyboard, never for an ask from this Mac itself, at most
   one at a time, three in 10 minutes, and none for 10 minutes to a device
   after the Mac's Cancel or five wrong codes; the device scans the QR code or
   types the 12 digits, as it pairs for remote access, over the home door. One
@@ -3424,9 +3418,9 @@ before 1.0 (the Compatibility floor below).
   trust list in the login keychain, its "off" signed by the Mac's key, never
   in UserDefaults), the paired devices moved from Remote Access (how each
   paired and last connected, Remove, rename) and Pair iPhone or iPad…. The
-  menu: "‹device› Wants to Pair", "An iPhone or iPad Needs Sill Updated" (a
+  menu: "‹device› Wants to Pair", "An iPhone or iPad Needs DuoDeck Updated" (a
   source's third plain try in a minute) and "Devices Can’t Connect" (the
-  keychain unusable: the home door stays closed). Sill.app takes no TEST ONLY
+  keychain unusable: the home door stays closed). DuoDeck.app takes no TEST ONLY
   hook that bears on the doors or pairing (TestHooks: one "ignored" line
   each). The CLI's default door stays plain (the parity baseline): `--pairing`
   opts in, `--print-cable` prints what the cable rule reads.
@@ -3435,25 +3429,25 @@ before 1.0 (the Compatibility floor below).
   included, and a session at home counts as connected at its first window
   list. Rows: a saved Mac's method word; "Not paired" (not saved, removed, or
   a Mac that lets any device in); "Wired" for an unpaired Mac over the cable,
-  which pairs by itself; "Update Sill" for a plain door in Release, and for a
+  which pairs by itself; "Update DuoDeck" for a plain door in Release, and for a
   Mac seen over TLS whose row lost its `p` (no downgrade). A tap on "Not
   paired" asks, then the home card (the scanner, or Enter Code Instead). A
   goodbye `removed` or `pairingRequired` ends the session with its words
   ("‹Mac› removed this ‹iPad›. Tap it to pair again.", "‹Mac› now asks
   devices to pair. Tap it to pair this ‹iPad›.") and no reconnect. A DEBUG
-  build still dials a plain door (the CLI's, a Sill.app from before this
-  branch) until it has seen that Mac over TLS (`-SillForgetHomeTLS 1`
+  build still dials a plain door (the CLI's, a DuoDeck.app from before this
+  branch) until it has seen that Mac over TLS (`-DuoDeckForgetHomeTLS 1`
   forgets); a device from before this branch can no longer connect to this
-  Sill.app at home.
+  DuoDeck.app at home.
 - Merged with main three times, not rebased. d11aa60 (cf05a78, PRs #16 to
   #28): the device gate in `Door` for both TLS doors, the hello first inside
-  TLS, `DoorPolicy.afterGate`, `SillProtocol` 1 as this door's `sill/1`, the
+  TLS, `DoorPolicy.afterGate`, `DuoDeckProtocol` 1 as this door's `duodeck/1`, the
   pure checks into `Tests/checks` and CI. 691b93e (2b38179, PRs #29 to #33):
   the tick keeps both rules (a kind 26 stands in for a device's tick; a TLS
   client skips one right after a send, and one on the cable gets none); main's
-  `SILL_TEST_LOOPBACK` binds both TLS doors (`makeListener` takes the TLS
+  `DUODECK_TEST_LOOPBACK` binds both TLS doors (`makeListener` takes the TLS
   options and the loopback flag) and is among TestHooks' door hooks; one
-  `SILL_TEST_SOFTWARE_ENCODER`, main's (`PointerTestHooks`), this branch's
+  `DUODECK_TEST_SOFTWARE_ENCODER`, main's (`PointerTestHooks`), this branch's
   copy gone; the checks' lists united (27, 26 with mutants). The third
   (da43f6b: PRs #34 remote pacing, #35 the first-run tour, #36 the Mac's
   menus, #38 the trackpad gestures; the plan's Results, "The merge with main
@@ -3464,23 +3458,23 @@ before 1.0 (the Compatibility floor below).
   session connection, TLS at home included, with `MessageReader`; the tour's
   session starts in `markConnected` (a plain door's `.ready`, a TLS session's
   first window list), the menus subscribe after `homeSessionReady`; gestures
-  stay dry, and SILL_TEST_HOTKEYS read, on every host that does not advertise
-  (`synthetic`: `isTestHost` since this branch also leaves out Sill.app's own
+  stay dry, and DUODECK_TEST_HOTKEYS read, on every host that does not advertise
+  (`synthetic`: `isTestHost` since this branch also leaves out DuoDeck.app's own
   executable, which would have posted a chord in test pattern mode); the
   Settings panel ends with Away from home, This iPad's gestures, then Take the
-  Tour; the floor names kinds 0–28 inside `sill/1`; `Scripts/pacing` builds
+  Tour; the floor names kinds 0–28 inside `duodeck/1`; `Scripts/pacing` builds
   against the merged StreamServer (its host set has the Door's files, and
   main.swift calls `serve` either way, `PACING_SERVE_BEFORE_HOME_PAIRING` for
   an older base); the checks' lists united (33, 32 with mutants).
 - Review fixes (2026-09-27, ae2e228 to 1d95c6d, one commit per theme; the
   plan's Results, "The review fixes"). Three lenses confirmed 13 findings; a
   fourth, pairing's security, was read again from the code (one more). The
-  floor: a host offers `sill/1` and `sill-pair/1` for good and refuses a 1.0
-  device inside `sill/1` with "update"; it freezes the TXT keys, the pairing
+  floor: a host offers `duodeck/1` and `duodeck-pair/1` for good and refuses a 1.0
+  device inside `duodeck/1` with "update"; it freezes the TXT keys, the pairing
   exchange, kind 19's `v` and kind 20's reasons, with an optional `message`
   for a reason a device does not know. The Mac: an expiry and a device's own
   Cancel (kind 19 "cancel") quiet nobody; "‹device› Wants to Pair" ends when
-  that key pairs; "An iPhone or iPad Needs Sill Updated" waits for the third
+  that key pairs; "An iPhone or iPad Needs DuoDeck Updated" waits for the third
   plain try; a device-opened window announces its first line; Require
   pairing's stored "off" is "0." and a signature by the Mac's key
   (`RequirePairingValue`), and the trust list exists from the first launch.
@@ -3489,7 +3483,7 @@ before 1.0 (the Compatibility floor below).
   paired"; kind 18 names the session's Mac only when the connection's own
   key signed it, and "removed" revokes only from a session pinned to that
   Mac; the reconnect ends at a door that now asks devices to pair; Pair This
-  iPad… asks on its own `sill-pair/1` connection and says what the Mac
+  iPad… asks on its own `duodeck-pair/1` connection and says what the Mac
   answered; "Paired with ‹Mac› over the cable." stays until the session
   comes; `StreamClient+Home.swift` is A601/F601 in the project file.
 - Verified (the plan's Results, step by step: H0 to H18, S1 to S7, the
@@ -3499,10 +3493,10 @@ before 1.0 (the Compatibility floor below).
   `swift build -c release` clean from `git archive`, only the CaptureProbe
   warning; iOS Debug and Release for the simulator and Debug for a device,
   only the old `StreamClient` capture warning (StreamClient.swift:2861),
-  Release's Info.plist with `_sill._tcp` alone and none of the harness's
+  Release's Info.plist with `_duodeck._tcp` alone and none of the harness's
   arguments in its binary; live on the merged CLI, 23 of 23: both TLS doors
   and Direct Wireless's rebuilt listener on 127.0.0.1 alone under
-  `SILL_TEST_LOOPBACK`, one software-encoder line, pairing by the link and by
+  `DUODECK_TEST_LOOPBACK`, one software-encoder line, pairing by the link and by
   an ask and the code, the hello inside TLS, the remote door serving the key
   paired at home, input's ticks over TLS (33 a second) and on the plain door
   (34), a plain device refused; a private simulator against it, 6 of 6: an
@@ -3524,7 +3518,7 @@ before 1.0 (the Compatibility floor below).
   13 (pairing, "menus: none" over TLS, the tour 1.06 s after the first picture
   of a TLS session, two gestures through `sendGesture`). Every host on
   127.0.0.1 alone and the software encoder.
-- Noah tried PR #37 on his iPad and iPhone against its Sill.app (2026-09-27,
+- the maintainer tried PR #37 on his iPad and iPhone against its DuoDeck.app (2026-09-27,
   before the third merge): "home pairing looks good!", and asked for it to
   merge after PRs #34 and #38. The P1–P16 list below was not reported item by
   item.
@@ -3536,13 +3530,13 @@ before 1.0 (the Compatibility floor below).
   admits is TLS, as before). The device: the automatic reconnect's own dial
   that is not ready 5 s after it started is let go and the reconnect looks
   again (`StreamClient.reconnectDialWait`): a row dialed as its registration
-  went (Sill.app gone without a goodbye) left the Bonjour resolve waiting for
+  went (DuoDeck.app gone without a goodbye) left the Bonjour resolve waiting for
   good and held the reconnect, its remote dial included (on the branch before
-  the merge; main's guard is the same). Docs: `-SillPairURL` pairs at a link's
+  the merge; main's guard is the same). Docs: `-DuoDeckPairURL` pairs at a link's
   own addresses only; docs/app-store-metadata.md describes pairing at home
   (the download it needs, export compliance, the review notes, the
   description, the demo video, the screenshots); Pair This iPad… is in Away
-  from home; the floor's kinds 19 and 20 are `sill-pair/1`'s; the mutants' 32
+  from home; the floor's kinds 19 and 20 are `duodeck-pair/1`'s; the mutants' 32
   jobs and their cost. Verified: `swift build -c release`; iOS Debug and
   Release for the simulator and Debug for a device, only the old
   `StreamClient` capture warning (StreamClient.swift:3011);
@@ -3553,8 +3547,8 @@ before 1.0 (the Compatibility floor below).
   back under another name, nor dialed remotely with none (4 of 7), and this
   build did both (7 of 7), the tour's reconnect rule holding across the let-go
   (9 of 9).
-- **Untested, for Noah:** the plan's §11, P1 to P16, on his devices, the iPad
-  build first (Debug, the usual route), then Sill.app: P1 the upgrade (the
+- **Untested, for the maintainer:** the plan's §11, P1 to P16, on his devices, the iPad
+  build first (Debug, the usual route), then DuoDeck.app: P1 the upgrade (the
   iPad, paired for remote access on 2026-09-25, connects at home with no
   step; the log's "Home door: TLS, pairing required (1 paired)."); P2 the QR
   code over Wi-Fi (Remove it first; the window comes up in front while typing
@@ -3562,14 +3556,14 @@ before 1.0 (the Compatibility floor below).
   the "Wired" row: no code, the Mac's notice, "over the USB cable" in
   Devices; pull and plug while streaming); P5 locked (⌃⌘Q: "Unlock Mac mini,
   then tap it again."); P6 Direct at the café (the hotspot, `%awdl0`); P7 an
-  older build ("An iPhone or iPad Needs Sill Updated"; it retries, the known
+  older build ("An iPhone or iPad Needs DuoDeck Updated"; it retries, the known
   limit); P8 Remove while streaming; P9 the moves, each hop over TLS; P10 a
   stranger's taps (the Mac's Cancel, then 10 minutes of "didn’t show a
   code"); P11 the cost (rtt maxima on Wi-Fi, the cable without ticks,
-  Extreme at 120 fps, Sill.app's CPU); P12 remote after a home pairing; P13
+  Extreme at 120 fps, DuoDeck.app's CPU); P12 remote after a home pairing; P13
   Require pairing off, then on again; P14 VoiceOver (the rows, the card, the
   Mac's window); P15 a USB Ethernet adapter reads "Not paired"; P16 the
-  iPhone's hotspot over USB gets the code window. Also: Sill.app's first
+  iPhone's hotspot over USB gets the code window. Also: DuoDeck.app's first
   launch makes the trust list in the login keychain when it has none, and
   Require pairing off then on again saves (the keychain store's own writes
   ran nowhere else); Pair This iPad… over an open door says "…is showing a
@@ -3577,13 +3571,13 @@ before 1.0 (the Compatibility floor below).
   After the third merge, which no device has run: a fresh install's tour
   after pairing at home, and its reconnect rule (the tour's P13) across a
   TLS reconnect; the Mac's menus and a three-finger gesture over a paired
-  session at home; Force Quit Sill.app while the iPad streams (no goodbye),
+  session at home; Force Quit DuoDeck.app while the iPad streams (no goodbye),
   reopen it 10 s later: "Reconnecting to ‹Mac›…" meanwhile (the console:
   "reconnect: ‹Mac› not ready in 5.0 s …" about 5 s after the loss), and the
-  session back soon after Sill is; with Remote Access on and Sill left
+  session back soon after DuoDeck is; with Remote Access on and DuoDeck left
   closed, a remote dial about 10 s after the loss.
   When this ships: the site's words (privacy.html says connections at home
-  are not encrypted, as Sill for Mac 0.3.1's are; index.html and support.html
+  are not encrypted, as DuoDeck Host 0.3.1's are; index.html and support.html
   pair only for Remote Access), and the README's sentence on 0.3.1.
 
 **Three-finger trackpad gestures (2026-09-27, branch `trackpad-gestures` from
@@ -3591,7 +3585,7 @@ main at 8b0d418, with main merged in at 5c6a850 (6678ca3), at 2b38179, PR #31
 the Mac's pointer among it (5e6ddaa), and at 643af6b, PRs #35 the tour, #36
 the Mac's menus and #34 remote pacing, never rebased, PR #38; the plan, its
 §12 defaults, the results, the review's fixes and the last merge are in
-`docs/trackpad-gestures-plan.md`, §15).** Noah: "I also want to be able to use
+`docs/trackpad-gestures-plan.md`, §15).** the maintainer: "I also want to be able to use
 full macos gestures on the touchpad, so far only 1 or 2 finger gestures are
 working" (2026-09-23), and "Work on 5-12 as well please" (2026-09-26). Built
 and reviewed overnight while he slept, every default of the plan's §12 taken.
@@ -3626,7 +3620,7 @@ Tier 2 (tracking gestures through private IOHID events) is not built and
   later a read of the table counts `in.gestureModifiersLeft` and says once
   "Gestures: after a gesture's shortcut this Mac's modifier keys still read …"
   if they are. A host that does not advertise posts none: "(not posted: a
-  test host)" and `in.gestureDry`; TEST ONLY `SILL_TEST_HOTKEYS` gives it a
+  test host)" and `in.gestureDry`; TEST ONLY `DUODECK_TEST_HOTKEYS` gives it a
   table of its own.
 - Device: `TrackpadGestures` (pure). A stroke goes silent once three fingers
   are down before any finger moved 24 pt, with no button held, however slowly
@@ -3649,7 +3643,7 @@ Tier 2 (tracking gestures through private IOHID events) is not built and
   iPhone's trackpad). The stream's overlay turns off iPadOS's three-finger
   editing gestures. Settings' This iPad (or iPhone) group, after the Mac's and
   before Take the Tour since the merge: Three-Finger Gestures
-  (`Sill.trackpadGestures`, on by default, never sent), the five
+  (`DuoDeck.trackpadGestures`, on by default, never sent), the five
   mappings while the Mac takes them, and a footnote; with VoiceOver on (which
   keeps three fingers) the footnote says the rows do the gestures, and each row
   is an accessibility action doing its gesture (the Spaces row one each way).
@@ -3679,7 +3673,7 @@ Tier 2 (tracking gestures through private IOHID events) is not built and
   the view a gesture opened, as a click does; the Settings panel ends with This
   iPad's gestures, then Take the Tour (whose row no longer pads itself while
   the Mac's settings load); the portrait trackpad keeps `sendGesture` and the
-  tour's target; sillclient.py both sides' flags; the checks that read 28 as
+  tour's target; duodeckclient.py both sides' flags; the checks that read 28 as
   unknown (`protocol`, `menus`, `pointer-control`) or 27 as free
   (`compatibility`) now read the gesture and the fetch, and four mutants that
   renumbered a kind onto one now taken (so they no longer compiled) use free
@@ -3691,20 +3685,20 @@ Tier 2 (tracking gestures through private IOHID events) is not built and
   `StreamClient` capture warning; `Tests/checks/run-all.sh`, all 26; the
   mutants of the 15 checks that compile a file the merge changed, every one
   caught; on a loopback synthetic host on the software encoder, nothing
-  posted: sillclient's menus subscription and choice beside the gestures (a
+  posted: duodeckclient's menus subscription and choice beside the gestures (a
   swipe up, a kind 25, a swipe down gives App Exposé, not "closes Mission
   Control"), and the app in a private simulator (deleted after) sending four
   gestures through `sendGesture` beside its menus subscription; photos of the
   panel's end at 1000×710, an older Mac's, the phone's and the tour's laptop
   step lighting the keys and the trackpad.
-- Noah tried PR #38 on his devices (2026-09-27): "The gestures work amazing.
+- the maintainer tried PR #38 on his devices (2026-09-27): "The gestures work amazing.
   Please merge that code." The P1–P13 list below was not reported item by item.
 - **Left:** the republish of `site/privacy.html` (it names gestures now) after
   the merge; the §10 probe before any Tier 2.
-- **Untested, for Noah (the plan's P1–P13, beyond "the gestures work"):** new
+- **Untested, for the maintainer (the plan's P1–P13, beyond "the gestures work"):** new
   with the merge, a swipe up, then an item chosen from the Menus button, then
   a swipe down: App Exposé (with no choice in between, the swipe down closes
-  Mission Control). On the iPad and iPhone with this Sill.app: each gesture
+  Mission Control). On the iPad and iPhone with this DuoDeck.app: each gesture
   in portrait and landscape, with the Desktop and while a window streams (the
   Desktop first); which shortcut works (P2: that key 160 opens Mission
   Control and 131 Apps when posted, that ⌃→ switches Spaces
@@ -3717,16 +3711,16 @@ Tier 2 (tracking gestures through private IOHID events) is not built and
   with the Mac's Esc coming back at the second swipe up; with the keyboard
   up, no iPadOS undo or paste; the virtual display; the switch and a
   relaunch; the Magic Keyboard trackpad (unchanged); remote; four fingers with
-  iPadOS's gestures on and off; this iPad against main's Sill.app (the update
+  iPadOS's gestures on and off; this iPad against main's DuoDeck.app (the update
   note, nothing sent); VoiceOver (the footnote, the rows as actions).
 
 **Remote pacing (2026-09-27, branch `remote-pacing` from main at 150f781, with
 main at cf05a78, 676b362 and 2b38179 merged in, PR #34; PR A of
 docs/remote-bundle-plan.md, whose "Results: PR A" has every number).** Item 1
-of the away-from-home bundle Noah decided on 2026-09-25 ("a proven keyframe
+of the away-from-home bundle the maintainer decided on 2026-09-25 ("a proven keyframe
 livelock"), its own PR ahead of items 2–4 (the away quality, the link report,
 the move home: PR B, the entry above).
-- The livelock (Sill.log 2026-09-25 14:13–14:36, the iPad on the iPhone's
+- The livelock (DuoDeck.log 2026-09-25 14:13–14:36, the iPad on the iPhone's
   hotspot through Tailscale at Extreme, then Pro · Retina): `paceRemote`
   dropped any frame while more than two messages were unacknowledged, so a
   keyframe the hotspot took in about half a second counted against the deltas
@@ -3759,7 +3753,7 @@ the move home: PR B, the entry above).
   both).
 - `Scripts/pacing/` (Layout, Build and run): the plan's encoder-free harness,
   base against new: the real StreamServer.swift fed fake frames, a shaped path
-  (bottleneck.py, or Scripts/sillrelay.py for the remote door's slow link), a
+  (bottleneck.py, or Scripts/duodeckrelay.py for the remote door's slow link), a
   device stand-in and a table with each case's gate, all on 127.0.0.1. Not a
   pure check: it runs for minutes and waits while the Mac is busy.
 - Verified before the merge, on it and after the review (the plan's Results
@@ -3772,7 +3766,7 @@ the move home: PR B, the entry above).
   59.8–59.9), ext120 at 120.0 fps with nothing dropped (main 5.7 drops a
   minute), the review's restartkf (1.6 against 60.1 fps) and stillend (the
   last frame shown in 0 against 3 of 3 still spells), the remote door's slow
-  link (sillrelay.py at 2 Mbit/s and +150 ms for 90 s: no loss, eviction or
+  link (duodeckrelay.py at 2 Mbit/s and +150 ms for 90 s: no loss, eviction or
   frameless second; a blackhole dropped 13.1 s after connecting on both
   builds), slowkfB's liveness by bytes (64.8 fps, no loss, where the old rule
   lost slowkf 5 times on either host), and home, low, switch and fastbig no
@@ -3813,17 +3807,17 @@ the move home: PR B, the entry above).
     reader. bottleneck.py's comment on its 64 KB receive buffer was wrong
     (macOS keeps loopback buffers at 340–590 KB whatever SO_RCVBUF says) and
     now says so; the relay is unchanged.
-- H2 and H4 (the plan's Results): until main brought `SILL_TEST_LOOPBACK` and
-  `SILL_TEST_SOFTWARE_ENCODER` (PR #31) no synthetic host could run here (its
+- H2 and H4 (the plan's Results): until main brought `DUODECK_TEST_LOOPBACK` and
+  `DUODECK_TEST_SOFTWARE_ENCODER` (PR #31) no synthetic host could run here (its
   doors listened on every interface, its stream shared the hardware encoder
-  with Sill.app), so H4 ran in the harness. H2 ran on the merge with both
+  with DuoDeck.app), so H4 ran in the harness. H2 ran on the merge with both
   hooks: main's CLI against this branch's, idle 35 s and with a test client,
   identical masked and sorted. PR B's gates can use the same two hooks.
 - The pull request's first CI run failed the reader check's slow case on
   GitHub's runner (its stand-in paced each write off a timer that fired late
   there); its writers now keep to the clock (4ca5124).
-- **Untested, for Noah:** the plan's P1 (on the hotspot through Tailscale, Pro
-  and then Extreme · Retina on a busy window, two minutes each: Sill.log has no
+- **Untested, for the maintainer:** the plan's P1 (on the hotspot through Tailscale, Pro
+  and then Extreme · Retina on a busy window, two minutes each: DuoDeck.log has no
   "net.dropped 1 net.sent 3 net.waitKey 5x" every 2 s, and the `client iPad`
   lines stay near what the hotspot carries), P2 (Network Link Conditioner on
   the iPad at 1 Mbit/s and 100 ms, Connect Remotely at Pro · Retina: slow
@@ -3838,7 +3832,7 @@ the move home: PR B, the entry above).
 **The Mac's menus on the device (2026-09-26/27, branch `menu-bar-mirror` from
 main at 150f781, main merged in at cf05a78, 676b362, ed7f8c6 (PRs #30–#32) and
 2b38179 (#33), never rebased, PR #36; the plan, its critique, the review and
-every result are in `docs/menu-bar-plan.md`, "Results").** Noah: "For apps used
+every result are in `docs/menu-bar-plan.md`, "Results").** the maintainer: "For apps used
 in Window mode, how can we access the menu bar options? Is there a way we can
 add that menu and submenu?" (2026-09-25), item 10 of "Work on 5-12 as well
 please" (2026-09-26). The streamed app's menu bar (the Desktop's: the frontmost
@@ -3847,8 +3841,8 @@ iPadOS 26 in the iPad's own menu bar, and behind a Menus button in the bar.
 Each menu is read from the Mac when it opens, and an item chosen there is
 pressed on the Mac through Accessibility. The Mac's shortcuts show as text,
 never as key commands (⌘S typed still reaches the Mac as a key). Never the
-Apple menu, never Sill's own. Built, reviewed (eleven findings, all fixed) and
-checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
+Apple menu, never DuoDeck's own. Built, reviewed (eleven findings, all fixed) and
+checked; PR #36 merged (59c4ec8), and the maintainer's device tests below are still open.
 - Wire (additive; `MacMenu.swift`; the compatibility floor below): kind 24
   `macMenu` (host → device: a top level, or the answer to one request), 25
   `pressMenuItem`, 27 `fetchMenu` (one menu's items; without an id, the
@@ -3862,7 +3856,7 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   subscription is served (older devices and test clients cost the Mac
   nothing); an older host skips 25 and 27, and no button shows.
 - Host (`MenuFormat`, `MenuPolicy`, `MenuReader`, `MenuMirror`,
-  `MenuSelfTest`; Layout): Accessibility on its own queue (`sill.menus`), a 1 s
+  `MenuSelfTest`; Layout): Accessibility on its own queue (`duodeck.menus`), a 1 s
   timeout on each element, 1.5 s and 500 items a menu; one request at a time,
   and one that could no longer be answered in time for its device (its wait,
   from the connection's round trip) is not read, a choice that late refused; a
@@ -3879,7 +3873,7 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   from ‹device›: menufixture › Probe › Set Label A", and a line for a refusal,
   an app that stops or starts answering again, or a device over its rate;
   nothing else prints, and `menu.*` stats keys only while menus are used.
-- Device (`MacMenuState`, `MacMenuElements`, `MacMenuHub`, `SillAppDelegate`,
+- Device (`MacMenuState`, `MacMenuElements`, `MacMenuHub`, `DuoDeckAppDelegate`,
   `MacMenuButton`; Layout): the subscription at a connection's first window
   list and on a move's new connection; each menu an uncached deferred element
   (UIKit's placeholder while the Mac answers), its completion settled exactly
@@ -3899,7 +3893,7 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   Settings panel, it puts back the keyboard the panel took down when it goes.
   A refused choice: the warning haptic (iPhone) and a VoiceOver announcement,
   nothing on screen.
-- Sill.app: nothing on its screen changes (no setting, no menu item); its
+- DuoDeck.app: nothing on its screen changes (no setting, no menu item); its
   coordinator is the CLI's; `--menu-selftest` works in the bundle, and the
   "Menu from" lines are in Show Log….
 - Observed: iOS 27 rebuilds the main menu lazily, as the plan measured on 26:
@@ -3924,7 +3918,7 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   33 of 33 (155), protocol 20 of 20; `Scripts/menu-check/run.sh`, reader 40,
   budget 4 and mirror 69 (the shift, the walks, only subscribers, the
   deadline, a sweep's one top-level read); through synthetic hosts on loopback
-  with the fixture, one at a time, no device on Sill.app and the front never
+  with the fixture, one at a time, no device on DuoDeck.app and the front never
   changing: H2 against main at 2b38179 (the CLI byte for byte, masked and
   sorted, idle and with a client, with and without `--direct-wireless`), and
   H4–H11, H14 (the tree changed in place) and H15 (only subscribers), 99
@@ -3936,17 +3930,17 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   bundle's `--menu-selftest` against the fixture; in a private simulator,
   screenshots only: no button at 320x700 and 460x400, the phone's row at five
   widths, the note's own section, the bar empty with two windows, the
-  keyboard's console lines, and `-SillMacMenu none` pixel for pixel main's
+  keyboard's console lines, and `-DuoDeckMacMenu none` pixel for pixel main's
   build at the Duo's four sizes and the phone's 393x793; live against the
   fixture through a synthetic host (Probe asked by its title, Set Label A
-  chosen), and a renamed copy of it refused by `-SillMenuPress` and
-  `-SillMenusOpen`.
+  chosen), and a renamed copy of it refused by `-DuoDeckMenuPress` and
+  `-DuoDeckMenusOpen`.
 - Known: an app busier still (700 ms a call) answered the fourth menu at
   4.25 s, after the device's 4 s: the deadline is kept between Accessibility
   calls, not inside one. H12 (TextEdit through a host) was not run: TextEdit
   was not open, and none is started.
-- **For Noah:** the plan's open questions took their defaults (Q1 the Mac's
-  menus after the iPad's View, Sill's own kept; Q2 the button in every bar that
+- **For the maintainer:** the plan's open questions took their defaults (Q1 the Mac's
+  menus after the iPad's View, DuoDeck's own kept; Q2 the button in every bar that
   holds it; Q3 shortcuts as subtitles; Q4 no Apple menu; Q5 the app activated
   when a menu opens; Q6 Option alternates as rows of their own; Q7 the
   Desktop's frontmost app; Q8 ⌘W unchanged; Q9 no banner; Q10 no setting; Q11
@@ -3961,18 +3955,18 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
   StreamClient's `handle` gains `.macMenu`, its first window list the
   subscription, a move's `finishMove` `menusMoved()` and `tearDown`
   `resetMenus()`; `TopBar`, the portrait `windowBar` and the phone's
-  thumbnails' row (`PhonePortraitLayout.menus`) the button; `SillApp` the
+  thumbnails' row (`PhonePortraitLayout.menus`) the button; `DuoDeckApp` the
   adaptor.
-- **Untested, for Noah (the plan's P1–P13, and the review's):** VS Code (its
+- **Untested, for the maintainer (the plan's P1–P13, and the review's):** VS Code (its
   ten menus, Copy enabled with a selection, Themes, New Text File, "F5"),
   Weather (a ✓ toggled), Bambu Studio, Blender's two menus, the Desktop
-  following the frontmost app (at once in Sill.app), the virtual display (Save
+  following the frontmost app (at once in DuoDeck.app), the virtual display (Save
   As…'s sheet), ⌘S through a hardware keyboard with the menu showing it as
   text, the iPadOS 26 bar itself (a pointer at the top edge or a swipe down:
   the subtitles, the placeholder, ten or more menus, the lazy rebuild after a
   thumbnail tap), an app that stops answering, mixed builds, VoiceOver ("Code
   menus"), five minutes of use (frame age and rtt unchanged), an iPhone (the
-  button at the end of the thumbnails' row); two Sill windows (the bar shows
+  button at the end of the thumbnails' row); two DuoDeck windows (the bar shows
   none of the Mac's menus, each window's button its own); a Slide Over (no
   button); Menus over the Settings panel with a hardware keyboard (keys reach
   the Mac again once the pull-down goes); a menu whose parent changes while it
@@ -3982,10 +3976,10 @@ checked; PR #36 merged (59c4ec8), and Noah's device tests below are still open.
 **First-run tour (2026-09-27, branch `first-run-walkthrough` from main at
 cf05a78, merged with main at 5c6a850 and 2b38179, not rebased, PR #35; the
 plan, its critique and the results are in
-`docs/first-run-walkthrough-plan.md`).** Noah (2026-09-26): "Add to feature
+`docs/first-run-walkthrough-plan.md`).** the maintainer (2026-09-26): "Add to feature
 list, app usage walkthrough first time after pairing/connecting". The device
 only: no wire change, nothing sent to the Mac, three UserDefaults keys (the
-third, `Sill.tourVersion`, since tour version 2: the entry "The tour once
+third, `DuoDeck.tourVersion`, since tour version 2: the entry "The tour once
 more, with what's new").
 - What it does: a second after the first picture from a Mac (the window list,
   a frame size, a source), if nothing was touched anywhere on the screen, sent
@@ -4008,9 +4002,9 @@ more, with what's new").
   session and layout, and a turn after it offers only what its layout has
   alone (the laptop card). The automatic reconnect's session goes on with the
   last one's decision (`StreamClient.tourSession`), unless that one ended
-  before it or mid-run. Next and Done save each step (`Sill.tourSeen`), so
+  before it or mid-run. Next and Done save each step (`DuoDeck.tourSeen`), so
   an ended session resumes at the first step not passed; Skip ends it for good
-  (`Sill.tourSkipped`), but in Take the Tour only closes it; the Settings
+  (`DuoDeck.tourSkipped`), but in Take the Tour only closes it; the Settings
   panel's last row, Take the Tour, shows every step of the layout again. While it shows the layouts take no touch and
   the keyboard is down (back after, but never under a pairing link), so no
   touch, Pencil, hover or key reaches the Mac, and the device's own pointer
@@ -4034,7 +4028,7 @@ more, with what's new").
   StreamScreen, TopBar and PortraitStreamScreen, the row in
   HostSettingsPanel, `lastInputAt`, `lastActionAt`, `inputPaused`,
   `tourSession` and a DEBUG tripwire in StreamClient, the harness's arguments
-  and `-SillOrientation` in ContentView; `Tests/checks/tour` (compiles
+  and `-DuoDeckOrientation` in ContentView; `Tests/checks/tour` (compiles
   PhonePortraitLayout.swift too; in CI's mutants matrix). pbxproj A401/F401,
   A402/F402.
 - Beyond the plan (its Results say why): the count goes on across a rotation
@@ -4043,7 +4037,7 @@ more, with what's new").
   for an active app in a headless simulator, so every decision passed); the
   strip's lit band takes in the active halo and the badge; the card's tail and
   frame come from its laid-out height (a GeometryReader in it saw the appear
-  animation's scale); `-SillTakeTourAt`. Found and fixed: Done wrapping to two
+  animation's scale); `-DuoDeckTakeTourAt`. Found and fixed: Done wrapping to two
   lines on the iPhone SE at accessibility-extra-large (the footer's line was
   measured with its words free to wrap); a run carried into the other layout
   left that layout's decision open; a card on a 3x screen fading its last
@@ -4063,18 +4057,18 @@ more, with what's new").
   of the layouts; the rule in the mock (fresh, landscape, done, skipped, the
   Apps list, a stand-in touch, the pairing overlay, Next through Done); with
   the real keys in the mock, shown, then "nothing owed", then back from
-  Settings. Live (03:28–03:40, once Noah's iPad had left Sill.app, which it
-  streamed from until then; `SillHost --synthetic` on loopback, the guard
-  before each host and a watchdog on Sill.log during, each host under 40 s,
+  Settings. Live (03:28–03:40, once the maintainer's iPad had left DuoDeck.app, which it
+  streamed from until then; `DuoDeckHost --synthetic` on loopback, the guard
+  before each host and a watchdog on DuoDeck.log during, each host under 40 s,
   none left running; the normal app on an iPhone 18 Pro Max with
-  `-SillConnect`): on a fresh install the first connection showed the touch
+  `-DuoDeckConnect`): on a fresh install the first connection showed the touch
   card 1.06 s after the picture and, the stand-in pressing Next, saved all
   four steps; the second connection said "nothing owed here"; the Settings
-  panel's Take the Tour (`-SillTakeTourAt 2`) showed it again from the first
+  panel's Take the Tour (`-DuoDeckTakeTourAt 2`) showed it again from the first
   step; a session cut at the third card went on next time with what was left
   (the laptop card alone, with its subtitle); a host refusing this version
-  (`SILL_TEST_MIN_DEVICE_VERSION=99`) gave its notice and no tour; every step
-  upright and sideways (`-SillOrientation landscape` turns the normal app) at
+  (`DUODECK_TEST_MIN_DEVICE_VERSION=99`) gave its notice and no tour; every step
+  upright and sideways (`-DuoDeckOrientation landscape` turns the normal app) at
   the default size and accessibility-extra-large, each ring on its controls
   under the real safe areas; the tripwire never fired. Found there and fixed:
   upright on that 3x screen the Settings card faded its second row as if it
@@ -4090,7 +4084,7 @@ more, with what's new").
   turn put the keyboard back under a link's confirmation; a new frame size sent
   a pointer move under the tour. Found while verifying: the tour's delayed work
   acted on a gone stream screen (it now keeps to its session); DEBUG
-  `-SillTourActivityAt` touches in the first session only. Then main at
+  `-DuoDeckTourActivityAt` touches in the first session only. Then main at
   5c6a850 merged in (PRs #29 and #30; ci.yml, CLAUDE.md, DEVELOPMENT.md,
   HostSettingsPanel and PortraitStreamScreen conflicted; the targets on the
   views both arrangements share), and the phone's arrangement got its rules;
@@ -4110,16 +4104,16 @@ more, with what's new").
   arrangement (four phone sizes); live on an iPhone 18 Pro Max, every step
   upright (the phone's arrangement) and sideways at two text sizes under the
   real safe areas; the tripwire never fired.
-- **Untested, for Noah (the plan's P1–P16, on the iPad mini and the iPhone 15
+- **Untested, for the maintainer (the plan's P1–P16, on the iPad mini and the iPhone 15
   Pro):** the automatic tour needs a Release or TestFlight build on a fresh
-  install, or Debug with `-SillTourState fresh` (Xcode's scheme). P1 a second
+  install, or Debug with `-DuoDeckTourState fresh` (Xcode's scheme). P1 a second
   after the Desktop shows, untouched: the tour; while it shows tap, hold and
   drag on the picture, type on a hardware keyboard, hover and touch with the
   Pencil, use a trackpad or mouse: nothing reaches the Mac (no `in.` counters
   in the host's `[1s]` lines) and the picture keeps moving; fresh again,
   touch the picture within the first second: no tour this session. P2 each
   step lights what it names in both layouts; held upright after a tour
-  sideways and left alone: the laptop card once. P3 quit Sill.app at the
+  sideways and left alone: the laptop card once. P3 quit DuoDeck.app at the
   third card, reopen: the next session starts at the first step not passed.
   P4 Take the Tour in both layouts with the keyboard up before Settings: the
   keyboard back after Done. P5 Skip on the first card: no tour at the next
@@ -4146,13 +4140,13 @@ more, with what's new").
 from main at 8b0d418, merged with main at cf05a78 in b6f57d0, at 676b362 in
 e7307e6 and at 5c6a850 (PR #30, the iPhone's portrait layout) in e21ce1c, not
 rebased, PR #31; the plan and the results, host, device and the review's
-fixes, are in `docs/pointer-visibility-plan.md`).** Noah: "When the
+fixes, are in `docs/pointer-visibility-plan.md`).** the maintainer: "When the
 Mac is controlling the mouse pointer, it should show the real mouse pointer
-on the desktop on Sill. When Sill is controlling the Mac, continue to hide
+on the desktop on DuoDeck. When DuoDeck is controlling the Mac, continue to hide
 the real pointer and only render the client side one in portrait mode when
 the trackpad is used" (2026-09-25); the plan's defaults, but Q4: the pointer
 is sampled at the stream's frame rate while it moves. Built, reviewed and
-checked; PR #31 merged (35f7cde), and Noah's device tests (P1–P12, below) are
+checked; PR #31 merged (35f7cde), and the maintainer's device tests (P1–P12, below) are
 still open.
 - Wire: kind 26 `macPointer`, host → device, JSON `MacPointer`
   (`Pointer.swift`): where the Mac's pointer is in the streamed frame (`x`,
@@ -4162,7 +4156,7 @@ still open.
   optional; older readers skip 26. 24, 25 and 27 are the Mac's menus (PR #36).
 - Host: one controller, the Mac or the device whose input the host read last
   (`PointerControl`, pure). Any kind 8 hands the pointer to its device; a
-  pointer or scroll input, and Sill's own post or warp (noted just before it),
+  pointer or scroll input, and DuoDeck's own post or warp (noted just before it),
   open a 0.25 s settle; a read 0.5 pt or more from the last position that
   counted, outside the settle, is the Mac's (a slow drag adds up, jitter never
   does); a read more than 0.25 s after the one before starts afresh.
@@ -4173,7 +4167,7 @@ still open.
   the source every device hears the same `inside: false`, and at 33 fps and
   below the tick samples as often); it judges the read against the streamed
   source (the Desktop's display, a staged window's crop or full-screen band, a
-  regular-mode window's bounds and on-screen flag, re-read on `sill.pointer` at
+  regular-mode window's bounds and on-screen flag, re-read on `duodeck.pointer` at
   most every 0.1 s after a move while some device is sent the pointer, and
   every 2 s anyway), inside meaning 0 ≤ x < 1 and 0 ≤ y < 1 (the far edges are
   the next display's), and reads nothing while nothing streams. StreamServer
@@ -4182,9 +4176,9 @@ still open.
   tick). No line prints; `ptr.sent` and `ptr.mac` join the `[1s]` lines when
   they happen. A synthetic host never reads the real pointer and never posts
   input (`in.dry` instead, InputInjector's dry run, and no activation or
-  raise), and has a pointer only with the TEST ONLY `SILL_TEST_POINTER_PATH`;
-  `SILL_TEST_SOFTWARE_ENCODER=1` keeps a synthetic host off the hardware
-  encoder for good, and `SILL_TEST_LOOPBACK=1` puts both its doors on
+  raise), and has a pointer only with the TEST ONLY `DUODECK_TEST_POINTER_PATH`;
+  `DUODECK_TEST_SOFTWARE_ENCODER=1` keeps a synthetic host off the hardware
+  encoder for good, and `DUODECK_TEST_LOOPBACK=1` puts both its doors on
   127.0.0.1 alone (Build and run).
 - Device: one sprite (`HEVCDisplayView.setPointer`, in the Mac's shape from
   kind 14) shows what `PointerPresence` (pure) says. Kind 26 is judged on the
@@ -4208,7 +4202,7 @@ still open.
   resting while the Mac's mouse moves carries on from the Mac's pointer
   whichever of the two had it when the finger landed. The layout reaches the
   client (`DuoLayout.isPortrait`); nothing shows while nothing streams. Q1's
-  linger timer is built and idle. DEBUG `-SillInputScript` runs only against
+  linger timer is built and idle. DEBUG `-DuoDeckInputScript` runs only against
   a test host on this Mac (a loopback address and no `hostVersion`).
 - Review (2026-09-27, the plan's "Review fixes"): eight findings, each
   reproduced before it was fixed (the seventh, a race, from the code and the
@@ -4219,8 +4213,8 @@ still open.
   at maxY read as inside; a finger that landed while the Mac had the pointer
   and rested while it moved on pulled it back to where it landed (P3's second
   order); a report landing just before a move's hand-over was never drawn;
-  `-SillInputScript` would have sent input to any host a session reached,
-  Sill.app included; a stale comment.
+  `-DuoDeckInputScript` would have sent input to any host a session reached,
+  DuoDeck.app included; a stale comment.
 - Verified (the plan's Results and "Review fixes"): `swift build -c release`;
   iOS Debug and Release for the simulator and Debug for a device (only the old
   `StreamClient` capture warning); `Tests/checks/run-all.sh`, all 19 on the
@@ -4234,12 +4228,12 @@ still open.
   three integration mutants of StreamServer's call each bringing one back; the
   host's synthetic gates on loopback-only hosts (H4–H9, H13, the remote door,
   new ones for the edge and for 24 and 30 fps) and, with no device connected
-  to Sill.app, H2 against the host step's base logs and the sampler at 120 fps
+  to DuoDeck.app, H2 against the host step's base logs and the sampler at 120 fps
   (8.0 ms apart); S1's 40 photos; live on a simulator of its own, 51 of 51 on
   the merge: S2–S7 as before (S5 across the move from AWDL) and S2b and S2c
   (the finger landing while the Mac has the pointer, the Mac's mouse moving it
   on, then a move and a click from where it went) and S8 (the input script
-  refused against a host that says it is Sill, run by 127.0.0.1, ::1 and
+  refused against a host that says it is DuoDeck, run by 127.0.0.1, ::1 and
   localhost against one that does not); H12, the bare app's 100 previews
   identical to main's. On the merge with PR #30 again: all 20 checks, the
   three iOS builds, S2–S8 (51 of 51), S9 (the phone's arrangement: the pad
@@ -4248,7 +4242,7 @@ still open.
   in the phone's arrangement. Not run: S5's moves to the cable and back to Wi-Fi
   (they need a host on this Mac's own Wi-Fi and cable addresses, and test hosts
   listen on loopback only now), the hand-over race live, anything on a device.
-- **Untested, for Noah:** everything on the devices, the plan's P1–P12: the
+- **Untested, for the maintainer:** everything on the devices, the plan's P1–P12: the
   Desktop in landscape (move the Mac's mouse: the arrow on the iPad where it
   is, in its shape, following within about a tick; stop: it stays; tap the
   iPad: gone; move again: back; to another display and back: gone at the
@@ -4264,9 +4258,9 @@ still open.
   virtual display (the arrow over the staged window, a full-screen video's
   band); remote (the arrow trails by about the round trip, `net.dropped` no
   higher while the mouse moves); two devices (the iPhone shows the arrow the
-  iPad's trackpad moves); mixed builds (this iPad against PR #13's Sill.app: no
-  Mac arrow; PR #13's iPad against this Sill.app: as before); five minutes on
-  a still window (Sill.app's CPU as before, frame age and rtt unchanged,
+  iPad's trackpad moves); mixed builds (this iPad against PR #13's DuoDeck.app: no
+  Mac arrow; PR #13's iPad against this DuoDeck.app: as before); five minutes on
+  a still window (DuoDeck.app's CPU as before, frame age and rtt unchanged,
   `ptr.sent` only in seconds the mouse moved over the stream, the arrow never
   choppy enough to want Q4 undone); moves keep the device's control
   (streaming in landscape, tap, plug the cable in and later pull it: no arrow
@@ -4274,7 +4268,7 @@ still open.
 
 **The iPhone's portrait layout (2026-09-27, branch `iphone-portrait` from main
 at cf05a78, PR #30; the plan, its open questions with the defaults taken, its
-gates and the review's fixes are in `docs/iphone-portrait-plan.md`).** Noah: on an iPhone
+gates and the review's fixes are in `docs/iphone-portrait-plan.md`).** the maintainer: on an iPhone
 held upright the software keyboard covered the key row's keyboard cap, so
 nothing on screen could take it down, and the picture's half left black bars
 around a 16:9 or 16:10 window. Approved (2026-09-27): the picture in a fixed
@@ -4304,10 +4298,10 @@ display unchanged; no wire change.
 - Detection: `DuoLayout.outerPortrait`, unchanged (taller than wide, narrower
   than 600 pt), draws the phone's arrangement on an iPhone: every iPhone
   upright and the Duo's outer display (500×710), which has the same keyboard
-  problem, a choice Noah can reverse (`DuoLayout`'s doc says how). An iPad
+  problem, a choice the maintainer can reverse (`DuoLayout`'s doc says how). An iPad
   window that narrow keeps the compact halves as on main, the key row's fold
   into two rows included: the idiom, read once in `DuoLayout.phoneArrangement`
-  (DEBUG `-SillIdiom pad|phone` swaps it). `PortraitMetrics.phone` (`.phone`)
+  (DEBUG `-DuoDeckIdiom pad|phone` swaps it). `PortraitMetrics.phone` (`.phone`)
   draws the phone's arrangement, `.compact` and `.regular` the halves.
 - `PortraitStreamScreen`: the picture pane, key row, trackpad, drawer and panel
   are built once for both arrangements; the phone's are placed by a small
@@ -4330,12 +4324,12 @@ display unchanged; no wire change.
   `tap(key)`.
 - DEBUG (ContentView's contract): the harness draws a fake screen larger than
   the simulator scaled down, laid out at its own size (the Duo's and the iPad's
-  sizes on iPhone simulators); `-SillKeyboard 1` raises the keyboard for real
-  in a live session; `-SillKeyboardToggle <s>[,<s>…]` toggles it as the
-  Keyboard button does; `-SillDrawer`, `-SillSettings` and `-SillScaleOpen`
+  sizes on iPhone simulators); `-DuoDeckKeyboard 1` raises the keyboard for real
+  in a live session; `-DuoDeckKeyboardToggle <s>[,<s>…]` toggles it as the
+  Keyboard button does; `-DuoDeckDrawer`, `-DuoDeckSettings` and `-DuoDeckScaleOpen`
   open theirs 1.5 s into a live session; `viewport: 386×241 pt, scale off,
-  60 fps` on the console; `-SillInputTest 1` (loopback only) runs the key
-  row's and the trackpad's own code once; `-SillIdiom pad` draws an iPad
+  60 fps` on the console; `-DuoDeckInputTest 1` (loopback only) runs the key
+  row's and the trackpad's own code once; `-DuoDeckIdiom pad` draws an iPad
   window's arrangement on an iPhone simulator.
 - Verified at the first build (2026-09-27, 01:05–02:15, d44c132, on private
   simulators of the iPhone 18 Pro Max, 18 Pro and 17e, deleted after; `simctl
@@ -4348,10 +4342,10 @@ display unchanged; no wire change.
   normal app on each phone against a stand-in Mac: the viewport, the keyboard
   from row 1 up and down (its top at 636, 573 and 543 pt: 320 and 301 pt tall,
   no suggestions bar, which the check's table uses), the drawer, the panel,
-  the ruler, AX-XL, `-SillInputTest`; a 16:10 picture filling the pane and a
+  the ruler, AX-XL, `-DuoDeckInputTest`; a 16:10 picture filling the pane and a
   16:9 one with bars of 13.2, 11.9 and 11.3 pt above and below, everything
-  under the picture the same for both. Not run then: `SillHost --synthetic`,
-  which no-device.sh blocked from 01:00 to 02:48 (Noah's iPad mini streaming).
+  under the picture the same for both. Not run then: `DuoDeckHost --synthetic`,
+  which no-device.sh blocked from 01:00 to 02:48 (the maintainer's iPad mini streaming).
 - Review fixes (2026-09-27, after d44c132; the plan's "Review fixes"): row 1
   back in the mockup's band (it sat 6 pt high and everything under it 12, the
   trackpads 401 and 343); the labels on one line; the ruler's value inside the
@@ -4363,19 +4357,19 @@ display unchanged; no wire change.
   window narrower than 600 pt back on the compact halves (the approval was for
   iPhones). Verified (04:40–05:10, the same simulators, one at a time, deleted
   after): the check 149 cases and 28 of 28 mutants; 81 harness photos of every
-  other layout, the iPad's narrow windows included (`-SillIdiom pad`), against
+  other layout, the iPad's narrow windows included (`-DuoDeckIdiom pad`), against
   the base: 56 identical at once, the compact halves' ruler value changed as
   intended, the rest the held thumbnail's wiggle and Δ1–2 anti-aliasing that
   retakes reproduce; 60 harness photos of the phone layout at seven sizes
   measured against the rule (rows within a pixel at 3x, label tops within
   2 px, the panels' edges on row 1's, the ruler's value 2.3 pt inside, the
-  lights below the strip); the normal app against `SillHost --synthetic` behind
+  lights below the strip); the normal app against `DuoDeckHost --synthetic` behind
   a relay that drops input, no-device.sh passing before, during and after, each
   host under 55 s: on the Pro Max the viewport 424×265, Apps at 359–409 pt and
   the trackpad 412×389, the keyboard's top 95 pt under row 3, the panels, the
   ruler, a 16:9 picture's 13.3 pt bars with row 1, the keys and the pad pixel
   for pixel the same as at 16:10, with the keyboard up and at AX-XL,
-  `-SillInputTest` (every event dropped at the relay); on the 18 Pro 386×241,
+  `-DuoDeckInputTest` (every event dropped at the relay); on the 18 Pro 386×241,
   374×331 and 56 pt; on the 17e 374×233, 362×324 and 49 pt; S3's text sizes.
   Merged with main at 676b362 (PR #29, the disk image; merge e73f231): only
   ci.yml's mutants matrix and CLAUDE.md conflicted. After it
@@ -4399,7 +4393,7 @@ display unchanged; no wire change.
   the arrows are gone from phones (⌃ with the key row's ↑ is the halves'
   only); its two-finger deltas follow the span. `home-pairing`: textual merges
   in `StreamScreen.swift` and the harness.
-- **Untested, for Noah (the plan's P1–P8, on the iPhone 15 Pro and the iPad
+- **Untested, for the maintainer (the plan's P1–P8, on the iPhone 15 Pro and the iPad
   mini):** a 16:10 and a 16:9 window upright (bars above and below, nothing
   below the picture moves when switching); the keyboard from row 1 (up with
   esc to shift in view on the 15 Pro, typing, down again), cmd-latch then C,
@@ -4407,7 +4401,7 @@ display unchanged; no wire change.
   keyboard's arrows; the trackpad (a diagonal at the finger's angle, one
   stroke down crossing the picture, two-finger scrolling at about today's
   speed, tap, two-finger tap, hold and drag); Aa (the ruler over row 1; on
-  release the Mac window resizes to 16:10, Sill.log's "Resized … for a 377×235
+  release the Mac window resizes to 16:10, DuoDeck.log's "Resized … for a 377×235
   panel"); the drawer and Settings under a live row 1, as wide as it (Apps
   again closes, a tap on the picture closes and clicks nothing); a held
   thumbnail's lights below the strip; rotation both ways with the drawer, the
@@ -4419,15 +4413,15 @@ display unchanged; no wire change.
   before.
 
 **The Mac download in a disk image (2026-09-27, branch `mac-dmg` from main at
-cf05a78, PR #29).** Noah: "Sill should open in a .dmg and be draggable into
+cf05a78, PR #29).** the maintainer: "DuoDeck should open in a .dmg and be draggable into
 applications folder like regular apps". `Scripts/release.sh` now makes
-`Sill.dmg` beside `Sill.zip`, from the same notarized, stapled app. Nothing was
-notarized, published or tagged here; Sill 0.3.1 (PR #32, 2026-09-27) is the
+`DuoDeck.dmg` beside `DuoDeck.zip`, from the same notarized, stapled app. Nothing was
+notarized, published or tagged here; DuoDeck 0.3.1 (PR #32, 2026-09-27) is the
 first release with the image, and the download page links it (PR #33).
-- The image (`Scripts/make-dmg.sh`, Layout): Sill.app, a link to
+- The image (`Scripts/make-dmg.sh`, Layout): DuoDeck.app, a link to
   /Applications, a white background with an arrow from one to the other
   (`design/DMGBackground.svg`, 660 x 400 points, the arrow in the app icon's
-  greys, "To install Sill, drag it to Applications." under them), and the
+  greys, "To install DuoDeck, drag it to Applications." under them), and the
   app's icon as the volume's. Its window: 660 x 432 points at (200, 120), the
   picture and macOS 27's 32-point title bar, icon view, no toolbar, sidebar,
   path or status bar, 128-point icons at (170, 180) and (490, 180). HFS+ and
@@ -4448,19 +4442,19 @@ first release with the image, and the download page links it (PR #33).
   goes to Apple); a real run, after the zip's checks, makes the image of the
   stapled app, signs it with the same identity, sends it to Apple on its own
   (`notarize`, the zip's code as a function; its answer and log
-  `.build/Sill-<version>-dmg-notary*`), staples it and checks it
+  `.build/DuoDeck-<version>-dmg-notary*`), staples it and checks it
   (`check_disk_image`: hdiutil verify, stapler validate, spctl's open context
   as "Notarized Developer ID", mounted `-nobrowse` in `$TMPDIR` with the
-  Sill.app inside through `check_gatekeeper`, detached on failure too); it
-  prints both SHA-256s, and `--publish` uploads Sill.dmg, Sill.dmg.sha256,
-  Sill.zip and Sill.zip.sha256, the notes naming both hashes. A dry run makes
+  DuoDeck.app inside through `check_gatekeeper`, detached on failure too); it
+  prints both SHA-256s, and `--publish` uploads DuoDeck.dmg, DuoDeck.dmg.sha256,
+  DuoDeck.zip and DuoDeck.zip.sha256, the notes naming both hashes. A dry run makes
   the image from the app before stapling, signed with the identity.
 - The zip stays in every release for now, for older links; the download page
   moved to the image once a release carried it, as docs/release-checklist.md,
   part 2, says (the release first, the link checked, then the page, then the
-  site republished): Sill 0.3.1, then PR #33 and sill-site on 2026-09-27. The
+  site republished): DuoDeck 0.3.1, then PR #33 and duodeck-site on 2026-09-27. The
   release workflow's verify job makes
-  `Sill-<version>-adhoc.dmg` (`make-dmg.sh --sign -`) and keeps it as a second
+  `DuoDeck-<version>-adhoc.dmg` (`make-dmg.sh --sign -`) and keeps it as a second
   artifact; the publish job keeps both submissions' answers and logs as the
   artifact `notary-v<version>`.
 - Review fixes (2026-09-27; one review of the branch, each finding checked
@@ -4482,7 +4476,7 @@ first release with the image, and the download page links it (PR #33).
   - The publish job's notary logs were never kept. The pinned upload-artifact
     (v7.0.1) skips every file and folder whose name starts with a dot, the
     search's root included, unless `include-hidden-files` is true, so
-    `.build/Sill-*-notary*` found nothing and the step passed without an
+    `.build/DuoDeck-*-notary*` found nothing and the step passed without an
     artifact, on main as well (the zip's log). Now `include-hidden-files:
     true` and `if-no-files-found: warn`. Checked with the action's own
     `dist/upload/index.js` under node, the step's inputs read from the YAML,
@@ -4499,23 +4493,23 @@ first release with the image, and the download page links it (PR #33).
     arguments (the script sourced) or the SVG's size and white fill move
     without it.
 - Verified after the fixes (2026-09-27, 03:13-03:17): the rehearsal again,
-  `SILL_SIGN_IDENTITY='Developer ID Application: NOAH WILLIAM SAFFER
-  (9B2KKVM937)' Scripts/release.sh --dry-run`, exit 0 in 17 s (the build
-  cached, the layout tool compiled) with no keychain prompt: Sill-0.3.0.dmg
+  `DUODECK_SIGN_IDENTITY='Developer ID Application: AGENTS AI LTD
+  (U549N38BV6)' Scripts/release.sh --dry-run`, exit 0 in 17 s (the build
+  cached, the layout tool compiled) with no keychain prompt: DuoDeck-0.3.0.dmg
   2.9 MB (the zip 2.8 MB, the app 6.0 MB), UDIF read-only compressed (lzfse),
   its CRC32 valid, signed by that identity with a timestamp, identifier
-  me.saffer.sill.dmg; `spctl -a -vv -t open --context
+  com.agentsai.duodeck.dmg; `spctl -a -vv -t open --context
   context:primary-signature` rejects it as "Unnotarized Developer ID", which
-  notarization changes. Mounted: an HFS+ volume "Sill", 21.0 MB with 6.3 MB
+  notarization changes. Mounted: an HFS+ volume "DuoDeck", 21.0 MB with 6.3 MB
   used, exactly the five items, Applications a link to /Applications, the
   custom-icon flag, .VolumeIcon.icns the app's, the TIFF 660x400 at 72 dpi
   and 1320x800 at 144, white at every corner and edge in both, the
   `.DS_Store` read back by the tool and by the scratch tests' own decoder
   (10,244 bytes in Finder's blocks, bounds {{200, 120}, {660, 432}}, the
   view's colour white, the icons' places, the alias's IDs the folder's and
-  the file's), the alias resolving to the picture on that mount, and Sill.app
-  byte for byte `.build/Sill.app`, passing codesign --deep --strict (the
-  image stays there for Noah's look). `Tests/checks/run-all.sh`, all 16
+  the file's), the alias resolving to the picture on that mount, and DuoDeck.app
+  byte for byte `.build/DuoDeck.app`, passing codesign --deep --strict (the
+  image stays there for the maintainer's look). `Tests/checks/run-all.sh`, all 16
   (130 s), and `dmg-layout --mutants`, 43 of 43. In the session's scratchpad
   (`mac-dmg/tests`, removed at the end): make-dmg.sh for real (hdiutil,
   codesign ad hoc) against a fake app, 101 checks (the build's 97 with the
@@ -4532,31 +4526,31 @@ first release with the image, and the download page links it (PR #33).
   again) and 38 of 38 mutants; publish_release with the real gh against a
   stand-in GitHub API (the four uploads with their names and sizes, the
   notes), 13 checks.
-- **Untested, for Noah:** the `notary-v<version>` artifact on a signed run
+- **Untested, for the maintainer:** the `notary-v<version>` artifact on a signed run
   (0.3.1 was released by hand with `release.sh --publish`: the image signed,
   notarized and stapled, the four assets; its verify job ran on GitHub and
-  kept `Sill-0.3.1-adhoc.dmg`; the page moved, PR #33); the window in the Finder
+  kept `DuoDeck-0.3.1-adhoc.dmg`; the page moved, PR #33); the window in the Finder
   on macOS 27 (the whole picture, a scroll settles back, the names under the
   icons readable in Dark Mode on the white picture, the volume icon): the
   checklist's part 1 §2 has the look; on macOS 14 or 15, the 4 points of white
   below the picture; the image on another Mac (downloaded, so quarantined: it
-  opens, the drag, Sill opens, also offline).
+  opens, the drag, DuoDeck opens, also offline).
 - Known: files written from a Claude session carry `com.apple.provenance`,
   which `xattr -d` can't remove, so the rehearsal image's files carry it
   (Claude.dmg's have none); the zip has always carried the same attributes in
   its AppleDouble entries. Not changed here.
 
 **TestFlight tooling (2026-09-26, branch `testflight-tooling` from main at
-150f781).** Noah: "help me do the 4 opens for TestFlight" (the App Store
+150f781).** the maintainer: "help me do the 4 opens for TestFlight" (the App Store
 Connect record, screenshots, the 0.5 archive and upload, the placeholder and
 the site). This branch makes those minutes of work: the upload tooling and
 the record field by field. Nothing was uploaded and no record was created
-here; on 2026-09-26 the record was made ("Sill – Mac Streaming", Apple ID
+here; on 2026-09-26 the record was made ("DuoDeck – Mac Streaming", Apple ID
 6816359860, PR #27), and 0.5 (1), built from b37f47a, was uploaded.
 - `Scripts/release-ios.sh` (Layout): archive (Release, generic/platform=iOS,
   automatic signing, `-allowProvisioningUpdates`), export with
   `Packaging/ExportOptions-appstore.plist` (app-store-connect, team
-  9B2KKVM937, automatic, destination export, `manageAppVersionAndBuildNumber`
+  U549N38BV6, automatic, destination export, `manageAppVersionAndBuildNumber`
   NO), the .ipa unpacked and checked, and with `--upload` a second export
   whose destination is upload. `--bump` (a clean tree; `CURRENT_PROJECT_VERSION`
   + 1 in both configurations, committed alone), `--api-key`/`--api-issuer`
@@ -4569,10 +4563,10 @@ here; on 2026-09-26 the record was made ("Sill – Mac Streaming", Apple ID
   Xcode but 27; one line per step, xcodebuild's output in `.build/ios/*.log`.
 - Signing, as the rehearsal found it (2026-09-26): the first export made a
   cloud-managed Apple Distribution certificate (a POST for
-  DISTRIBUTION_MANAGED; "Apple Distribution: NOAH WILLIAM SAFFER
-  (9B2KKVM937)", until 2027-09-26; no private key in the keychain) and the
-  profile "iOS Team Store Provisioning Profile: me.saffer.sill" (until
-  2027-09-26); the App ID is Xcode's "XC me saffer sill". An archive made
+  DISTRIBUTION_MANAGED; "Apple Distribution: AGENTS AI LTD
+  (U549N38BV6)", until 2027-09-26; no private key in the keychain) and the
+  profile "iOS Team Store Provisioning Profile: com.agentsai.duodeck" (until
+  2027-09-26); the App ID is Xcode's "XC com agentsai duodeck". An archive made
   with `CODE_SIGNING_ALLOWED=NO` exports the same way with the same
   entitlements, so CI needs no certificate or profile, only an App Store
   Connect key with the Admin role (cloud signing refuses others). Uploading
@@ -4580,11 +4574,11 @@ here; on 2026-09-26 the record was made ("Sill – Mac Streaming", Apple ID
   signs, so the notary key (Developer) can't run the script.
 - `.github/workflows/testflight.yml` (Layout): by hand only. Without the key
   `--unsigned` and that .ipa as the artifact; with the secrets
-  `SILL_TESTFLIGHT_KEY_ID`, `SILL_TESTFLIGHT_ISSUER_ID` and
-  `SILL_TESTFLIGHT_KEY_P8`, `--sign-at-export` and the signed .ipa; with the
-  variable `SILL_TESTFLIGHT_IN_CI` true too, `--upload`.
+  `DUODECK_TESTFLIGHT_KEY_ID`, `DUODECK_TESTFLIGHT_ISSUER_ID` and
+  `DUODECK_TESTFLIGHT_KEY_P8`, `--sign-at-export` and the signed .ipa; with the
+  variable `DUODECK_TESTFLIGHT_IN_CI` true too, `--upload`.
 - docs/release-checklist.md, "TestFlight": the record field by field (§1),
-  the App Store address (§2), the site (§3: sill-site holds main's `site/`
+  the App Store address (§2), the site (§3: duodeck-site holds main's `site/`
   but for download.html, kept at "being prepared" on purpose, so TestFlight
   needs no republish; a later one leaves out download.html, `.nojekyll` and
   `.github`), the build (§4),
@@ -4593,7 +4587,7 @@ here; on 2026-09-26 the record was made ("Sill – Mac Streaming", Apple ID
   metadata §9) and TestFlight from GitHub Actions. docs/app-store-metadata.md:
   the version record says 0.5 (App Store Connect proposes 1.0).
 - Verified: the rehearsal on this Mac, archive and export in 49 s (the plan's
-  numbers are in the checklist's §4), Sill.ipa 2.0 MB, App Store profile,
+  numbers are in the checklist's §4), DuoDeck.ipa 2.0 MB, App Store profile,
   `beta-reports-active` true, get-task-allow false, 0.5 (1),
   `ITSAppUsesNonExemptEncryption` false, the Local Network and camera
   strings, `PrivacyInfo.xcprivacy`, no keychain or Apple Account prompt (no
@@ -4616,42 +4610,42 @@ here; on 2026-09-26 the record was made ("Sill – Mac Streaming", Apple ID
   docs had App Manager, and a notary key that could do neither). The
   workflow's key step names a secret that isn't base64 (it ended at
   base64's own complaint). The checklist's republish (§3, and part 1 §3's)
-  deleted sill-site's own `.nojekyll` and `.github/FUNDING.yml` (tried with
+  deleted duodeck-site's own `.nojekyll` and `.github/FUNDING.yml` (tried with
   this Mac's openrsync on a copy), part 2's first release pointed at the
   rsync below, which leaves out download.html, and §3 said the published
-  pages lacked the email_off comments (Cloudflare strips them; sill-site
+  pages lacked the email_off comments (Cloudflare strips them; duodeck-site
   has them). Verified: the offline checks, 150 (123 and 27 new), and 39 of
   39 mutants (27 and 12 new); the key step under bash 3.2 with a good, a
   raw, a garbled and an empty secret; the export options against Xcode
   27.0's `xcodebuild -help`.
-- **Untested, for Noah:** TestFlight on the devices, any run on GitHub
+- **Untested, for the maintainer:** TestFlight on the devices, any run on GitHub
   (unsigned first, then with the key), signing through an API key, and the
   Organizer's privacy report PDF. The record and the upload are done (above).
 
 **Before going public (2026-09-26, branch `public-sweep` from main at 150f781,
-with main at a550e27 merged in, PR #24).** Noah's four steps for the first Mac
-release end with making Saffsanity/sill public, which publishes its whole
+with main at a550e27 merged in, PR #24).** the maintainer's four steps for the first Mac
+release end with making samihalawa/2026-CODEX-DuoDeck public, which publishes its whole
 history, so a sweep read the tree, every branch's history, the v0.3.0 release
 and the repository's settings first. The branch fixes what the tree can:
 docs/menu-bar-app-plan.md without the Apple Account's address (in the Apple
 Development identity's name) or the name in that certificate's O field; made-up
 Tailscale values in place of this Mac's in DebugHooks' long-name preview
-(compiled into Sill.app: a person's Mac on the real tailnet), three comments,
+(compiled into DuoDeck.app: a person's Mac on the real tailnet), three comments,
 the addresses, pairing-address and origin checks and the remote access plan; the
 README and the site say the Mac download is out and the iPhone and iPad app is
 on its way to the App Store (the site's steps sent visitors to a listing that
-does not exist); the license is Apache-2.0 unless Noah says otherwise (final
+does not exist); the license is Apache-2.0 unless the maintainer says otherwise (final
 once the repository is public); .gitignore leaves out signing keys, profiles,
 keychains and design/reel/, and the checklist's `gh secret set` commands read
 the keys from outside the repository; release docs after v0.3.0 and with
 immutable releases (a deleted immutable release's tag can never be used again);
 SECURITY.md and issue forms; the ledger check's fix, which main's PR #22 also
 made (the merge keeps main's lines). Verified: a clean `swift build -c release`,
-whose SillMenuBar holds none of the old values; `Tests/checks/run-all.sh`, all
+whose DuoDeckMenuBar holds none of the old values; `Tests/checks/run-all.sh`, all
 15; the three changed checks' output equal to main's once the replaced values
 are masked; the four address checks' mutants, 74 of 74; the preview name 291.5
 pt wide with its port against 291.6.
-- **For Noah, before the repository goes public:** what history, the other
+- **For the maintainer, before the repository goes public:** what history, the other
   branches, the tag v0.3.0 and the 0.3.0 binary still carry (the sweep's report
   lists it): accept it, or publish a fresh repository; whether Apache-2.0 stays;
   immutable releases and the Actions allow-list (both possible while private).
@@ -4660,8 +4654,8 @@ pt wide with its port against 291.6.
   edits the comments hold back (the README's CI badge, index.html's "Free and
   open source", support.html's issues link, the checklist's private-repository
   lines). The sweep's report has the commands. Since: public on 2026-09-26
-  with its history as it is (Noah), Apache-2.0 kept, and PR #26 made the
-  held-back edits (sill-site republished with them). On 2026-09-27 the
+  with its history as it is (the maintainer), Apache-2.0 kept, and PR #26 made the
+  held-back edits (duodeck-site republished with them). On 2026-09-27 the
   repository has secret scanning, push protection, private vulnerability
   reporting and the Actions allow-list (selected actions, pinned by SHA) on;
   still open: rulesets for main and the v* tags (none yet) and immutable
@@ -4670,33 +4664,33 @@ pt wide with its port against 291.6.
 **Update check and device notice (2026-09-25, branch `update-notice` from
 `remote-access` at cb0ec55, PR #13, with main merged in at 1f3072a and again
 at 32d532b, not rebased; the plan, its open questions with the defaults taken,
-and the results are in `docs/update-notice-plan.md`).** Noah's
-request: an update check in Sill.app with Apple frameworks only (GitHub's
+and the results are in `docs/update-notice-plan.md`).** the maintainer's
+request: an update check in DuoDeck.app with Apple frameworks only (GitHub's
 releases feed, not Sparkle), and a host-to-device notice so a later Mac can tell
 an old device to update instead of failing silently. The first public builds
 set the compatibility floor for good (the section before Conventions).
 - Wire (additive; `Compatibility.swift`): kind 23 `Hello {appVersion, build,
   protocol, device}`, the first message of every session connection a device
-  makes (never a pairing connection; older hosts skip it); `SillVersion` (tags,
+  makes (never a pairing connection; older hosts skip it); `DuoDeckVersion` (tags,
   bundles and the wire's versions: "v" dropped, the digits-and-dots prefix,
-  compared part by part, "0.10" > "0.9"); `SillProtocol.current` 1. Kind 22
+  compared part by part, "0.10" > "0.9"); `DuoDeckProtocol.current` 1. Kind 22
   gains `message`, `minimumVersion`, `reconnect` and the reason "update" (nil
   fields left out: the five goodbyes of today are byte for byte what they were).
-  Window lists carry `hostVersion` (Sill.app's; nil from SillHost) and
+  Window lists carry `hostVersion` (DuoDeck.app's; nil from DuoDeckHost) and
   `protocol`.
 - Host: `DeviceGate.minimumDeviceVersion` is "0": nobody is refused and nothing
-  waits. Above it (only `SILL_TEST_MIN_DEVICE_VERSION` on a host that does not
+  waits. Above it (only `DUODECK_TEST_MIN_DEVICE_VERSION` on a host that does not
   advertise, in this build), both doors hold a ready connection unregistered
   until its first message: a hello the floor admits is served; a lower version,
   no hello, another kind, the end or 2 s of silence gets kind 22 "update" ("Update
-  Sill on your iPad to keep using ‹Mac›. It needs version 1.2 or later.",
+  DuoDeck on your iPad to keep using ‹Mac›. It needs version 1.2 or later.",
   `"reconnect":false`) and this side's FIN, what it still sends is read and
   dropped until it closes (at most 1 s: cancelling at once answered its later
   messages with a reset, which can beat the notice), and it is never registered
   (no "Client connected", no "Client left", no "Remote client connected"). One Refused line per source a
   minute, then a count line; a source refused 5 times in 60 s hears it 2 s late.
-  `SILL_TEST_GOODBYE` sends another kind 22 instead. A hello is logged ("Client
-  hello: iPad (iPad14,1), Sill 1.0 (42), protocol 1 (…)") and names the Mac
+  `DUODECK_TEST_GOODBYE` sends another kind 22 instead. A hello is logged ("Client
+  hello: iPad (iPad14,1), DuoDeck 1.0 (42), protocol 1 (…)") and names the Mac
   card's row before its stats. Pairing is never refused for age. What changed
   while the gate held a connection is judged again as it admits it: the remote
   door re-reads its trust snapshot (`serve`'s recheck, `RemoteServer.stillAdmits`:
@@ -4714,25 +4708,25 @@ set the compatibility floor for good (the section before Conventions).
   line, spoken, a reconnect only with `"reconnect":true`, looked at before a
   remote dial's failure rules (before, an unknown reason showed "disconnected"
   and redialled at once: a loop against a Mac that refuses). "update" adds
-  "Update Sill in the App Store" under it once `SillLinks.appStoreText` holds
-  the App Store address (the record's since PR #27; DEBUG `-SillAppStoreURL`). The
+  "Update DuoDeck in the App Store" under it once `DuoDeckLinks.appStoreText` holds
+  the App Store address (the record's since PR #27; DEBUG `-DuoDeckAppStoreURL`). The
   hello goes out first on a tap's, a reconnect's, a wired dial's and its
-  fallback's, a move's and a remote winner's connection (`-SillHelloVersion`),
+  fallback's, a move's and a remote winner's connection (`-DuoDeckHelloVersion`),
   written to a home dial's connection as it is made, before it is the
   session's (a send made before `.ready` then follows it), and a tear-down
   forgets the session's viewport and a pointer re-send still waiting;
   `hostVersion`/`hostProtocol` are kept, shown nowhere. A refused home session
   shows the stream screen for a frame or two first (connected at `.ready`;
   accepted, open question 10).
-- Sill.app: `UpdateChecker` (+ pure `UpdatePolicy`) asks
-  https://api.github.com/repos/Saffsanity/sill/releases/latest 30 s after launch
+- DuoDeck.app: `UpdateChecker` (+ pure `UpdatePolicy`) asks
+  https://api.github.com/repos/samihalawa/2026-CODEX-DuoDeck/releases/latest 30 s after launch
   when due, then every 24 h plus 0–30 min, an hour after a check with no answer,
   re-armed at wake, and at Check Now: an ephemeral URLSession, `User-Agent:
-  Sill/‹version›`, GitHub's Accept and API version, `Accept-Language: en` (it would
+  DuoDeck/‹version›`, GitHub's Accept and API version, `Accept-Language: en` (it would
   otherwise send the Mac's languages), If-None-Match; no cookies, cache or
   credentials; redirects only to api.github.com; 1 MB, 10 s. A published release
   (not a draft or prerelease, its page on github.com) whose tag is newer than
-  CFBundleShortVersionString is offered as "Sill 0.4 Is Available…" after the
+  CFBundleShortVersionString is offered as "DuoDeck 0.4 Is Available…" after the
   card (the glyph stays) and in Settings › General ("Check for updates
   automatically", on by default, wired to the checker from launch; Check Now's
   result until GitHub answers an automatic check, else the offer or the last
@@ -4746,12 +4740,12 @@ set the compatibility floor for good (the section before Conventions).
   GoodbyePolicy 42 (16 of 16), UpdatePolicy 124 (18 of 18); cb0ec55's
   StreamProtocol reads the new payloads and skips kind 23; the CLI's stdout,
   idle 35 s and with a Desktop pick, masked and sorted, equals cb0ec55's;
-  UpdateChecker alone against `sillfeed.py` (every answer of §6.4, the headers
+  UpdateChecker alone against `duodeckfeed.py` (every answer of §6.4, the headers
   and nothing else, the timeout, the retry, Check Now joining); the bare app end
   to end (the live menu item, the pane, 304, 404 silent, off, test pattern
   mode); previews differ from cb0ec55's only in General, menu.txt's new sample
   and the new update states; the gate on the CLI (both doors, the loop
-  slowdown, the count line, SILL_TEST_GOODBYE) and on StreamServer alone (no
+  slowdown, the count line, DUODECK_TEST_GOODBYE) and on StreamServer alone (no
   resets); the simulator against real hosts: the notice at home and through
   the remote door, no reconnect, redials only when asked, an older host, and
   photos at eight sizes.
@@ -4782,12 +4776,12 @@ set the compatibility floor for good (the section before Conventions).
   included: `startMove` (from AWDL, to the cable, to Wi-Fi, a rescue's
   reconnect, each fallback) writes it as the connection is made, as
   `connect(to:)` does, and a remote winner says it in `adopt`; main's `rescue`
-  reads `goodbye`. `SillLinks` is one enum (the site's addresses and the App
+  reads `goodbye`. `DuoDeckLinks` is one enum (the site's addresses and the App
   Store one), once in the project file. The public README stays main's; this
   branch's Updates, tag and hello paragraphs are in docs/DEVELOPMENT.md. The
   pointer plan's Mac menu bar kinds move to 24, 25 and 27 (23 is the hello).
   Fix-ups: `release.sh --dry-run` builds an untagged commit again
-  (`SILL_RELEASE_DRY_RUN=1`) while a real run names the missing tag in its
+  (`DUODECK_RELEASE_DRY_RUN=1`) while a real run names the missing tag in its
   preflight, and the checklist gains the tag and the App Store address
   (184d902); the privacy policy's Update check section, and the download page
   (05d9d3a). Verified on the merge: clean builds (only the CaptureProbe and
@@ -4800,7 +4794,7 @@ set the compatibility floor for good (the section before Conventions).
   protocol 188); the hello first on the merged SessionLink (the review's check,
   and a new one for #12's hold and fenced hand-overs: the move's connection
   says hello first, one without it is caught; the source: two connections
-  made, three hellos sent); the checker alone against sillfeed.py (42, and the
+  made, three hellos sent); the checker alone against duodeckfeed.py (42, and the
   stale-result check); the bare app's H8 runs 1 and 2; previews from the bundle
   against origin/main's: only General, menu.txt's `update-available` sample and
   the 20 new update states differ; the CLI's stdout against origin/main's,
@@ -4808,24 +4802,24 @@ set the compatibility floor for good (the section before Conventions).
   the merged CLI (H5, H6 a–h with the remote door, the slowdown and its count
   line) and origin/main's host skipping the hello; a simulator of its own
   (deleted after): at floor 99 the notice, no reconnect, no second connection
-  in 60 s; at floor 0.1 admitted and streaming, and with `-SillMoveTest 1` the
+  in 60 s; at floor 0.1 admitted and streaming, and with `-DuoDeckMoveTest 1` the
   move's own connection admitted with its hello and the session moved to it;
   the update and notice cases at four sizes above main's footer.
 - Review fixes after the merge (2026-09-25; the plan's "Review fixes after the
   merge"): `release.sh --publish` refuses, before building, unless origin's tag
   v‹version› names HEAD (gh would make a missing tag from the default branch's
-  tip), passes gh `--verify-tag` in Saffsanity/sill, and warns when
-  `SILL_RELEASE_REPO` is elsewhere, since every update check reads only
-  Saffsanity/sill (the checklist's sill-site fallback publishes a download no
-  Sill.app offers); the tag match is `grep -Fx`. A goodbye on a move's
+  tip), passes gh `--verify-tag` in samihalawa/2026-CODEX-DuoDeck, and warns when
+  `DUODECK_RELEASE_REPO` is elsewhere, since every update check reads only
+  samihalawa/2026-CODEX-DuoDeck (the checklist's duodeck-site fallback publishes a download no
+  DuoDeck.app offers); the tag match is `grep -Fx`. A goodbye on a move's
   connection before its window list ends a session whose own connection has
   gone with the Mac's words (a rescue refused by a newer Mac: the notice, no
   reconnect), and a live session's move up no longer retries the listing that
   refused it. The privacy policy says the device tells the Mac its version
   "when it connects" (no VPN outside the Remote Access markers), and its short
   version names the fixed "en" and the IP address. §13 of the plan is the floor
-  as written here; getsill.app and support@getsill.app read as confirmed in
-  SillLinks, the checklist and the metadata. Verified: the builds; release.sh
+  as written here; duodeck.megawebs.com and sami@samihalawa.com read as confirmed in
+  DuoDeckLinks, the checklist and the metadata. Verified: the builds; release.sh
   and make-app.sh against scratch repositories (60 checks, 13 of 13 mutants;
   d4abceb's fail 40) and `publish_release` against a fake GitHub API; the
   simulator against Python stand-ins, before and after; the site's cut gate;
@@ -4835,13 +4829,13 @@ set the compatibility floor for good (the section before Conventions).
   "Merged with main again"). No host source changed on main since 1f3072a.
   Where they met: `sessionEnded` keeps GoodbyePolicy's rule and passes #16's
   `afterQuit` after goodbye "quit" (a notice never sets it); release.sh keeps
-  both sides' checks, main's `SILL_RELEASE_TAG`, `--check-tag`, icon check and
+  both sides' checks, main's `DUODECK_RELEASE_TAG`, `--check-tag`, icon check and
   `gh api` preflight (`gh auth status`, which the Actions token can't answer,
   is gone) and this branch's tag rule, and the release workflow
-  (`GITHUB_ACTIONS` with `SILL_RELEASE_TAG`) does not ask origin for the tag
+  (`GITHUB_ACTIONS` with `DUODECK_RELEASE_TAG`) does not ask origin for the tag
   (`in_release_workflow`: its checkout is origin's tag and keeps no
   credentials); the checklist says a pushed tag starts the release workflow,
-  which publishes when `SILL_SIGN_IN_CI` is on, so `--publish` by hand then
+  which publishes when `DUODECK_SIGN_IN_CI` is on, so `--publish` by hand then
   does not. `Tests/checks`: protocol's kind 23 case is the hello, and this
   branch's four pure checks moved in (662a70e): `compatibility` 74,
   `device-gate` 58, `goodbye` 42 and `update-policy` 124, with 61 mutants, in
@@ -4854,29 +4848,29 @@ set the compatibility floor for good (the section before Conventions).
   fake GitHub API; the simulator against this head's CLI (floor 99: the
   notice, no reconnect; floor 0.1: admitted and streaming, and a move's own
   connection with its hello; a goodbye "quit": its words and one connection).
-- **Untested, for Noah:** the plan's V1–V7: V1 the real check while the
+- **Untested, for the maintainer:** the plan's V1–V7: V1 the real check while the
   repository had no release (moot since it went public with v0.3.0 on
   2026-09-26: within a minute "Update check failed: GitHub has no release of
-  Sill (HTTP 404)." once, no menu item, Check Now says "Couldn’t check: GitHub
-  has no release of Sill yet.", `updateLastCheck` set), V2 now that it has a
-  newer release (0.3.1 for a 0.3.0 Sill.app), V3 a refusal on the iPad (its
-  Debug build, `-SillConnect <this Mac>:P`, against
-  `SILL_TEST_MIN_DEVICE_VERSION=99 SillHost --synthetic`; VoiceOver speaks it; no
+  DuoDeck (HTTP 404)." once, no menu item, Check Now says "Couldn’t check: GitHub
+  has no release of DuoDeck yet.", `updateLastCheck` set), V2 now that it has a
+  newer release (0.3.1 for a 0.3.0 DuoDeck.app), V3 a refusal on the iPad (its
+  Debug build, `-DuoDeckConnect <this Mac>:P`, against
+  `DUODECK_TEST_MIN_DEVICE_VERSION=99 DuoDeckHost --synthetic`; VoiceOver speaks it; no
   reconnect in 2 minutes), V4 mixed builds (PR #13's iPad build against this
-  Sill.app and this iPad build against PR #13's: as before), V5 VoiceOver on the
+  DuoDeck.app and this iPad build against PR #13's: as before), V5 VoiceOver on the
   Mac, V6 the first two notarized builds (permissions kept across the update;
   `--release` refuses an untagged HEAD, `release.sh --dry-run` only warns,
   `--publish` refuses until the tag is pushed), V7
   the privacy policy's Update check section (site/privacy.html) on the
-  published site (Saffsanity/sill-site republished with it on 2026-09-26).
+  published site (samihalawa/2026-CODEX-DuoDeck-site republished with it on 2026-09-26).
 
 **GitHub Actions (2026-09-25, branch `github-actions` from main at 1f3072a).**
-Noah: the download link still fails; a new release should be checked by
+the maintainer: the download link still fails; a new release should be checked by
 GitHub, and does that cost money. The link fails twice over: there is no
 release (`release.sh --publish` has never run; `gh release list` is empty), and
-Saffsanity/sill is private, so its release files are a 404 to anyone not signed
+samihalawa/2026-CODEX-DuoDeck is private, so its release files are a 404 to anyone not signed
 in with access (docs/release-checklist.md, "Releasing from GitHub Actions",
-has both ways out: go public, or publish in sill-site; it went public on
+has both ways out: go public, or publish in duodeck-site; it went public on
 2026-09-26, and v0.3.0 and v0.3.1 are published there). Added:
 - `.github/workflows/ci.yml` (Layout): pull requests and pushes to main that
   touch more than documents, the site or design files, and by hand; one job on
@@ -4897,18 +4891,18 @@ has both ways out: go public, or publish in sill-site; it went public on
   pinned by commit (checkout v7.0.1, cache v6.1.0, upload-artifact v7.0.1, the
   newest on 2026-09-25).
 - `.github/workflows/release.yml`: a pushed tag `v*` or by hand with a tag
-  (`SILL_RELEASE_TAG`); checkout with the whole history (make-app.sh's build
-  number is the commit count). Repository variable `SILL_SIGN_IN_CI` not
+  (`DUODECK_RELEASE_TAG`); checkout with the whole history (make-app.sh's build
+  number is the commit count). Repository variable `DUODECK_SIGN_IN_CI` not
   `true`: verify (the tag, the checks, `make-app.sh` signed ad hoc, the icon
-  there, `Sill-<version>-adhoc.zip` as an artifact for 14 days). `true`:
+  there, `DuoDeck-<version>-adhoc.zip` as an artifact for 14 days). `true`:
   the checks, a check that the five secrets are set, the .p12 into
-  `$RUNNER_TEMP/sill-release.keychain-db` (random password, masked; first in
+  `$RUNNER_TEMP/duodeck-release.keychain-db` (random password, masked; first in
   the search list and the default keychain, where notarytool keeps profiles),
-  `notarytool store-credentials sill-notary --keychain` (validates the key),
+  `notarytool store-credentials duodeck-notary --keychain` (validates the key),
   `release.sh --publish` with `GH_TOKEN` (the run's token, `contents: write`,
-  or `SILL_RELEASE_TOKEN` for `SILL_RELEASE_REPO`), the notary log as an
+  or `DUODECK_RELEASE_TOKEN` for `DUODECK_RELEASE_REPO`), the notary log as an
   artifact, and an always() step that deletes the keychain and key files.
-- `Scripts/release.sh`: `SILL_RELEASE_TAG` in the preflight (the tag must be
+- `Scripts/release.sh`: `DUODECK_RELEASE_TAG` in the preflight (the tag must be
   `v<CFBundleShortVersionString>` and, when it is here, name HEAD);
   `--check-tag` checks only that. It refuses a build without Assets.car and
   AppIcon.icns (make-app.sh only warns when Quick Look or actool fail). Publish
@@ -4939,7 +4933,7 @@ has both ways out: go public, or publish in sill-site; it went public on
   release.sh's `--check-tag` on a match, a mismatch, unset, a tag on another
   commit and an annotated tag (a scratch clone), and a dry run with a wrong
   tag stopping before it builds; the Xcode rule on two fake image layouts; `gh
-  api repos/Saffsanity/sill` answers.
+  api repos/samihalawa/2026-CODEX-DuoDeck` answers.
 - Review fixes (one pass: triggers and permissions, secrets, the Xcode step,
   the cache, injected failures, costs, docs):
   - The Xcode step would have failed every job: the image's `bash` is 3.2 (its
@@ -4982,13 +4976,13 @@ has both ways out: go public, or publish in sill-site; it went public on
     only with "Stop usage when budget limit is reached" where offered, 15 to
     20 CI runs a month fit in Free's included minutes, the mutants take about
     an hour and a half (some 900 included minutes).
-- **Untested, for Noah:** every run on GitHub (the first will be this
+- **Untested, for the maintainer:** every run on GitHub (the first will be this
   branch's pull request: a draft counts too). The keychain and notary steps
   never ran (they change the keychain search list and the default keychain,
   which is not for this Mac), nor make-app.sh's Quick Look icon, spctl or
-  notarytool on a runner. The steps: decide public or sill-site; set the secrets
+  notarytool on a runner. The steps: decide public or duodeck-site; set the secrets
   (`gh secret set`, the checklist); push a tag with the variable unset and
-  try the artifact; then set `SILL_SIGN_IN_CI` and push the next tag. Costs:
+  try the artifact; then set `DUODECK_SIGN_IN_CI` and push the next tag. Costs:
   free once public; private, about 10 minutes a CI run against roughly 200
   included macOS minutes a month on GitHub Free (a macOS minute counts ten),
   then $0.062 a minute with a payment method on file, and nothing without one.
@@ -4996,7 +4990,7 @@ has both ways out: go public, or publish in sill-site; it went public on
   release workflow's verify job ran for v0.3.0 and v0.3.1 (make-app.sh's Quick
   Look icon on the runner included); the repository is public, so the runs
   cost nothing. The sign job never ran (no secrets are set, and
-  `SILL_SIGN_IN_CI` is not), so both releases were published by hand with
+  `DUODECK_SIGN_IN_CI` is not), so both releases were published by hand with
   `release.sh --publish`.
 
 **Public README (2026-09-25, branch `public-readme` from main at b50e224,
@@ -5005,14 +4999,14 @@ public front page, everything the old README said is in `docs/DEVELOPMENT.md`
 (word for word but for local paths, cross-references and two notes on the iOS
 project, plus the two cable sentences main's README gained from
 follow-best-path, PR #12, after this branch began), `LICENSE` is the Apache
-License 2.0 as apache.org publishes it with "Copyright 2026 Noah Saffer" in
-its appendix, and `.github/FUNDING.yml` names GitHub Sponsors (Saffsanity)
+License 2.0 as apache.org publishes it with "Copyright 2026 Agents AI Ltd" in
+its appendix, and `.github/FUNDING.yml` names GitHub Sponsors (samihalawa)
 only, until there is a Ko-fi handle (see Layout for all four). The README
 claims only what the site and this file back: Apple silicon and macOS 14, iOS
 17, no latency figures, and the home connection's lack of encryption said
 plainly.
-- **For Noah:** Sponsorships turned on in the repository's settings (General,
-  Features), or GitHub shows no Sponsor button (github.com/sponsors/Saffsanity
+- **For the maintainer:** Sponsorships turned on in the repository's settings (General,
+  Features), or GitHub shows no Sponsor button (github.com/sponsors/samihalawa
   is live since 2026-09-25); a Ko-fi handle, if wanted, goes in two places, a
   `ko_fi:` line in FUNDING.yml and a link in the README's Tips; the license
   stays Apache-2.0 (the repository went public with it on 2026-09-26); the App
@@ -5027,14 +5021,14 @@ plainly.
   app-store-readiness's release paragraph under Releasing (its Layout list
   fits the Overview), encoder-two-in-flight's stats-line bullet and its
   Resolution note under What to try if it's slow, and update-notice's (local,
-  not pushed) Updates paragraph under Sill.app, the menu bar host, its
+  not pushed) Updates paragraph under DuoDeck.app, the menu bar host, its
   Distribution text under Releasing and its device-hello paragraph after the
   gear paragraph of The iOS app. A change the public README describes (pairing
   at home, say) also updates README.md's How it works and Good to know.
 
 **App Store readiness (2026-09-25, branch `app-store-readiness` from main at
 76366e8; main at ba91136, PR #13 remote access, merged in, not rebased).** What
-a first upload of the iOS app and the first Developer ID download of Sill.app
+a first upload of the iOS app and the first Developer ID download of DuoDeck.app
 need, after the App Store audit. `docs/app-store-metadata.md` has the reasons,
 Apple's sources and every text to paste into App Store Connect;
 `docs/release-checklist.md` the order of work, once and on every release.
@@ -5048,12 +5042,12 @@ Apple's sources and every text to paste into App Store Connect;
   screen's footer (Layout, `ContentView`), for guidelines 1.5, 2.1 and
   5.1.1(i); the website in `site/` and `Scripts/release.sh` (Layout); the two
   docs, with the Remote Access switch (the cuts for a 1.0 without it).
-- Confirmed by Noah on 2026-09-25 (the site is live): the site at `https://getsill.app`
-  (`site/CNAME`, `SillLinks.swift`, both docs), the contact address
-  `support@getsill.app` (the privacy and support pages, the README and the
-  metadata; Cloudflare Email Routing forwards it to Noah), and the Mac download
+- Confirmed by the maintainer on 2026-09-25 (the site is live): the site at `https://duodeck.megawebs.com`
+  (`site/CNAME`, `DuoDeckLinks.swift`, both docs), the contact address
+  `sami@samihalawa.com` (the privacy and support pages, the README and the
+  metadata; Cloudflare Email Routing forwards it to the maintainer), and the Mac download
   at `/download` (`site/download.html`, which links the newest GitHub Release's
-  `Sill.dmg`, `Sill.zip` until 0.3.1, and is never edited per release). The
+  `DuoDeck.dmg`, `DuoDeck.zip` until 0.3.1, and is never edited per release). The
   checklist's Placeholders table has the commands that change each everywhere.
 - The merge: the footer sits under main's connect screen (Add a Mac…, the
   Remote rows, the card, the leading anchor, the Duo's top half, the column at
@@ -5109,7 +5103,7 @@ Apple's sources and every text to paste into App Store Connect;
 - Main moved on while this ran: PR #11 (encoder recovery) is b50e224, not
   merged here then (the branch took it with main at cea195c in 11e01cd, and PR #14
   merged at 2df7ad6); it overlaps this branch only in CLAUDE.md and README.md.
-- **Untested, for Noah:** the decisions: the domain, the contact address, and
+- **Untested, for the maintainer:** the decisions: the domain, the contact address, and
   whether 1.0 keeps Remote Access, which main has had since ba91136 (the
   audit advised a 1.0 without it before it merged; the metadata's switch lists
   the cuts). On a device: the footer's links open Safari (the site: live since
@@ -5119,10 +5113,10 @@ Apple's sources and every text to paste into App Store Connect;
   under it), and a phone held sideways, which only the harness drew here
   (956x440). The release: the Developer ID
   certificate, notary credentials, release.sh for real, a first launch on a
-  Mac that never had Sill, the site on GitHub Pages with its DNS record, the
+  Mac that never had DuoDeck, the site on GitHub Pages with its DNS record, the
   App Store Connect record (the checklist's part 1). The description's claims
   not yet seen on a device: the cable on an iPhone, Pencil hover, 120 fps.
-  Done since: the domain and the address (2026-09-25), the site at getsill.app,
+  Done since: the domain and the address (2026-09-25), the site at duodeck.megawebs.com,
   the Developer ID certificate, the notary credentials and release.sh for real
   (v0.3.0 and v0.3.1), and the App Store Connect record (2026-09-26).
 
@@ -5146,7 +5140,7 @@ says; remote access works as its entries say. Where the two meet:
   "quit" at home: the session ends at once with its words, not after a
   rescue's dial to a Mac that is going; the reconnect waits too, see the
   review fixes below) and when this device closed the connection itself
-  (`end`: a message no Sill sends). #13's `reconnectIfListed` never runs
+  (`end`: a message no DuoDeck sends). #13's `reconnectIfListed` never runs
   beside a move (`moveUnderWay`: a move, or a session one carries on, which
   stays `connected` until the move takes over or ends it). #13's liveness (no
   byte for 6 s) now ends a stranded cable connection too; the rescue then
@@ -5159,7 +5153,7 @@ says; remote access works as its entries say. Where the two meet:
   `wiredDial`, or this branch's `wifiDial`), both for network rows only now
   that a row has a route (a Remote row is not Direct either) and an optional
   endpoint. `FoundMac.wifi` joined #13's initializer; `adopt` (a remote dial's
-  winner) forgets the path state as `connect` does; `-SillPathTest`'s
+  winner) forgets the path state as `connect` does; `-DuoDeckPathTest`'s
   addresses go through #13's address parser first, then the split at the last
   colon.
 - `SessionLink` is this branch's (hold, adopt, unhold, the chained fences):
@@ -5176,7 +5170,7 @@ says; remote access works as its entries say. Where the two meet:
   a 12,288-case grid, a model) and 9 mutants of it, 70 of 70 with the 61;
   remote access's rules check 64 of 64 and 35 of 35; the fence check's 12
   modes and 16 of 16 mutants. On a simulator of its own against the merged
-  `SillHost --synthetic`, one host at a time (21 hosts, the longest 49 s):
+  `DuoDeckHost --synthetic`, one host at a time (21 hosts, the longest 49 s):
   this branch's 18 scenarios as before the merge (refused-cable's other
   launch now a Python stand-in, so one real host suffices); remote access's
   pairing by link, a remote session by address that the plan keeps where it
@@ -5187,10 +5181,10 @@ says; remote access works as its entries say. Where the two meet:
   ends 7.5 s later with #13's words), 66 of 66 checks. close-slow on the merge
   commit's own build printed "connection silent for 6 s: lost" seven times,
   0.25 s apart, until the move ended; with the fix-up, never. The first run
-  stopped after four scenarios when Noah's iPad connected to Sill.app: that
+  stopped after four scenarios when the maintainer's iPad connected to DuoDeck.app: that
   host had passed the check before it started and ran 24 s beside his stream,
   so the runner (`scratchpad/integrate-12/sim/simmerge.py`) now also kills its
-  host the moment Sill.log shows a device connecting.
+  host the moment DuoDeck.log shows a device connecting.
 - Then main at b50e224 (PR #11, encoder recovery) merged at f863c74. Only
   CLAUDE.md conflicted: both Current-step entries kept, the best-path ones
   first; README merged by itself. Sources, Package.swift, Scripts and
@@ -5202,21 +5196,21 @@ says; remote access works as its entries say. Where the two meet:
   check 286 of 286 and 70 of 70 mutants, main's 187 of 187 and 25 of 25, the
   20 older mutants; remote access's rules check 64 of 64 and 35 of 35; the
   fence check's modes and 19 of 19 mutants. Not run on it: Release and device
-  builds, and the simulator scenarios against its `SillHost --synthetic`,
+  builds, and the simulator scenarios against its `DuoDeckHost --synthetic`,
   which now has b50e224's encoder recovery (the 21 hosts above ran ba91136's).
 - Review fixes after the merges. After goodbye "quit" the reconnect no longer
   dials the Mac's row at once. The row outlives the goodbye by about a second
   (a receiver keeps a record 1 s past its goodbye, RFC 6762 §10.1; a stand-in
-  for Sill.app's Quit, browsed on this Mac: gone 1.05–1.22 s after the
+  for DuoDeck.app's Quit, browsed on this Mac: gone 1.05–1.22 s after the
   connection ended, 11 of 11), and `sessionEnded` ran `reconnectIfListed` in
   the same main-queue turn, which took it (over the cable for a Wired row):
-  "Reconnecting to ‹Mac›…" replaced "‹Mac› quit Sill." before it was drawn,
+  "Reconnecting to ‹Mac›…" replaced "‹Mac› quit DuoDeck." before it was drawn,
   and the dial waited on a Mac that was going (#13 alone did the same at
   home). Now a row listed since before the goodbye is left alone for 3 s
   (`DiscoveryPolicy.quitWait`; `reconnectRow`'s `quitAt` and `networkSince`,
   from `Reconnect.afterQuit` and `sightings`): the words stay; the row listed
-  again (Sill is back) is taken at once by the usual rules (a Direct row after
-  its own 6 s), and one still listed at 3 s (Sill relaunched within that
+  again (DuoDeck is back) is taken at once by the usual rules (a Direct row after
+  its own 6 s), and one still listed at 3 s (DuoDeck relaunched within that
   second, a lost goodbye packet) is taken then. Any other end is as before.
   Verified: the policy check 310 of 310 (the merge's 286, and 24 for the
   rule: its cases, a grid of 17,820 against the old rule, a model of the
@@ -5224,26 +5218,26 @@ says; remote access works as its entries say. Where the two meet:
   `StreamClient` capture warning. No simulator scenario can show it: the
   synthetic hosts do not advertise, so no row lingers after their goodbye,
   and a session by address has no Bonjour name to reconnect by. DEBUG:
-  `-SillMoveTest to:HOST:PORT` split HOST:PORT at its last colon itself, so
+  `-DuoDeckMoveTest to:HOST:PORT` split HOST:PORT at its last colon itself, so
   `to:[::1]:P` listed the name "[::1]", which never connected (each try given
-  up after 5 s); it now reads it as `-SillConnect` does (`address(_:)`: the
+  up after 5 s); it now reads it as `-DuoDeckConnect` does (`address(_:)`: the
   address parser, then the split), and Build and run below names `other:PORT`
-  and `-SillWiredTest` too. Verified on a simulator of its own against
-  `SillHost --synthetic` built from the same tree (b50e224's host code), one
+  and `-DuoDeckWiredTest` too. Verified on a simulator of its own against
+  `DuoDeckHost --synthetic` built from the same tree (b50e224's host code), one
   host at a time (9 hosts, the longest 18 s;
   `scratchpad/integrate-12/apply-fixes/sim/simapply.py`): `to:[::1]:P`,
   `to:::1:P` and `to:fe80::…%en0:P` from 127.0.0.1 each list the address and
   move (the host sees the second connection; the scoped one reads its route
-  again at the hand-over), and, as before, `-SillMoveTest 1`, a move's wired
+  again at the hand-over), and, as before, `-DuoDeckMoveTest 1`, a move's wired
   test, a plain session, close-slow (#13's words) and remote access's host
   gone and back (the session's end and the remote redial, which the quit fix
   runs through): 32 of 32 checks. The runner's app is signed to run locally:
   unsigned, the simulator gives it no keychain, and pairing stops at the
   device key (-34018) before it prints anything. Comments and docs: the
-  harness contract in `ContentView` names `-SillSettingsEnd 1`,
-  `-SillDeviceKeySE 1` and `-Sill.directWirelessMacs`, says the pairing
-  arguments run under `-SillLive 1` too, and which remote settings cases are
-  away from home (no route word) and which at home (Wi-Fi); `-SillWiredTest`'s
+  harness contract in `ContentView` names `-DuoDeckSettingsEnd 1`,
+  `-DuoDeckDeviceKeySE 1` and `-DuoDeck.directWirelessMacs`, says the pairing
+  arguments run under `-DuoDeckLive 1` too, and which remote settings cases are
+  away from home (no route word) and which at home (Wi-Fi); `-DuoDeckWiredTest`'s
   comment says network rows (a Remote row is not Direct either);
   `address(argument:)` no longer repeats `address(_:)`'s paragraph. Left as
   it is here: README's "four source files", which main's PR #15 replaced
@@ -5257,16 +5251,16 @@ says; remote access works as its entries say. Where the two meet:
   remote access's rules check 64 of 64 and 35 of 35, the fence check's 14
   modes and 19 of 19 mutants. The branch still merges into main (1f3072a,
   after PRs #14 and #15) without a conflict.
-- **Untested, for Noah:** the entries below on the merged build, and: a remote
+- **Untested, for the maintainer:** the entries below on the merged build, and: a remote
   session at home with the cable plugged in stays remote (the console's "path:
-  kept: a remote session…", the card's "through Tailscale"); Sill.app's Quit
-  while the iPad streams over the cable gives "‹Mac› quit Sill." at once and
+  kept: a remote session…", the card's "through Tailscale"); DuoDeck.app's Quit
+  while the iPad streams over the cable gives "‹Mac› quit DuoDeck." at once and
   keeps it, with no "dialing ‹Mac› on anpi0 (wired)" on the console before
-  the row is listed again or 3 s have passed, and reopening Sill reconnects
+  the row is listed again or 3 s have passed, and reopening DuoDeck reconnects
   over the cable.
 
 **The session follows the best path (2026-09-25, branch `follow-best-path` from
-main at 76366e8, after PRs #9 and #10).** Noah's tests: plugging the cable in
+main at 76366e8, after PRs #9 and #10).** the maintainer's tests: plugging the cable in
 left a Wi-Fi session on Wi-Fi until he reconnected (a TCP connection keeps its
 interface), and pulling it hung the session a while, then the connect screen,
 then Wi-Fi. A live session now follows the best path its Mac is reachable on,
@@ -5303,12 +5297,12 @@ DEBUG console: "path: the cable appeared: moving the session to anpi0", "path:
 the cable went away: moving to Wi-Fi on en0", "path: the cable went away with
 the connection: reconnecting over Wi-Fi on en0 now", "path: kept: …", and what
 iOS said ("path: the session's connection is not viable…", "path: iOS says the
-session's path is unsatisfied…"); `-SillPathTest` drives it in the simulator
+session's path is unsatisfied…"); `-DuoDeckPathTest` drives it in the simulator
 (ContentView's contract). Verified: the policy check at 253 (187 plus 66: the
 plan at every boundary, a 20,480-case grid, a model of plugs, pulls, blinks,
 silence and a loose cable), 48 of 48 mutants caught (25 plus 23); the fence
 check's eight modes (new: hold, holdclosed, unhold, adoptfence), six mutants of
-the new SessionLink code caught; in the simulator against `SillHost
+the new SessionLink code caught; in the simulator against `DuoDeckHost
 --synthetic`, dialling this Mac's own `fe80::…%en0` ("Wi-Fi") and
 `fe80::…%en14` (the USB cable to the iPad, "Wired"): the cable listed at 3 s,
 moved about 2 s later with the fence down in 1–2 ms; the path reported gone,
@@ -5317,7 +5311,7 @@ Wi-Fi in 10–20 ms with no connect screen and the Desktop picked again; the
 cable dropped with pongs silent, moved at the 1 s mark, with pongs flowing,
 kept; a loose cable moved up at 3.7, 8.9, 13.9 s and down at 4.6, 9.6, 14.6 s;
 no Wi-Fi, the ordinary end; the move from AWDL and PR #10's wired-dial
-fallbacks unchanged. **Untested, for Noah:** the real plug and pull on the
+fallbacks unchanged. **Untested, for the maintainer:** the real plug and pull on the
 iPad while streaming. Plugged in: a few seconds later "path: the cable
 appeared", the readout's Wired, and the host's "Client connected: …%anri0" (or
 `%en14`) then "Client left" for the Wi-Fi one. Pulled: within about a second
@@ -5326,7 +5320,7 @@ over Wi-Fi (`%en0`, or the iPad's Wi-Fi IPv4 address; the cable's connection
 leaves by itself, at the latest by eviction 4 s on); and which signal iOS gave
 first (the console's "path:" lines), since a pull's own signals have never
 been seen on a device. And on the cable, another app for over 4 s (the Mac
-evicts the suspended iPad), then back to Sill: "path: the connection went
+evicts the suspended iPad), then back to DuoDeck: "path: the connection went
 away, the cable did not", the host's "Client connected" over the cable again,
 and no hop to Wi-Fi.
 
@@ -5350,7 +5344,7 @@ a dead path), and a connection ready again after waiting clears `waiting` and
 starts no second read loop. A listing of the cable that reached another Mac
 or launch is not tried again while it lasts (`refusedCable`), and moves up
 that do not complete wait 10, 20, 40, then 60 s (`upWait`), where before they
-went every 5 s for as long as the cable stayed in. `-SillPathTest` gained
+went every 5 s for as long as the cable stayed in. `-DuoDeckPathTest` gained
 `close` (the connection closed, the row as it is) and `direct` (the session
 counts as one over AWDL). Verified: the policy check at 277 (the 253, whose
 grid now also spans refused listings and failed moves up, plus 24: the
@@ -5362,7 +5356,7 @@ three: 27 inputs lost with 41 inversions, and two holds refused), 16 of 16
 mutants of the new code caught; iOS Debug for the simulator and the iPad
 (build only) and Release for the simulator, only the old `StreamClient`
 warning; in a simulator of its own (another agent's UI tests had the shared
-one) against `SillHost --synthetic`: the connection closed over the cable,
+one) against `DuoDeckHost --synthetic`: the connection closed over the cable,
 reconnected over the cable in 10 ms with no Wi-Fi hop; the cable's dial never
 answering, on Wi-Fi 2.5 s later, then moves up 5, 15 and 35 s after, each
 given up; a cable that connects but sends no list, and one refused at once,
@@ -5376,11 +5370,11 @@ and both old connections closed; the earlier scenarios unchanged.
 `encoder-recovery` at 4fe37d4, with main at 32d532b merged in and the review's
 fixes after it: the next section's last bullets).** A Retina Desktop stream
 (3024×1964, hardware encoder) sat at 30–36 fps in a third of the logged seconds
-of Noah's home streams at 40 Mbps (7,445 of 22,081 seconds with 50 or more
+of the maintainer's home streams at 40 Mbps (7,445 of 22,081 seconds with 50 or more
 frames captured and none idle), and nearly always over Tailscale at 4 and 15
 Mbps; every such second read like
 `cap.complete 56 enc.mailboxDrop 24 enc.out 33 net.sent 33`. An investigation
-and a verifier (read-only: Sill.log and the kernel's AppleAVE2 log) found:
+and a verifier (read-only: DuoDeck.log and the kernel's AppleAVE2 log) found:
 - The network held nothing back (`net.dropped` 0, `net.sent` = `enc.out`);
   nothing after the encoder waits. The whole loss was the mailbox.
 - The hardware encoder falls into a slow state, often after a few seconds of
@@ -5406,9 +5400,9 @@ on an engine shared with the Claude app's iOS Simulator panel, where two inside
 gained nothing: 35.7 against 35.6 fps, capture to output 36 → 64 ms). Sharing
 alone reads like the slow state in the stats line: in those runs a synthetic
 Retina stream with one inside, beside the panel alone (15:43:39–15:44:09),
-read ~32 fps with ~27 drops a second, and Noah's Retina Desktop beside it
+read ~32 fps with ~27 drops a second, and the maintainer's Retina Desktop beside it
 33–36 fps (the operational rule in "The hardware encoder: busy, not stuck").
-The HeartBeat tells them apart: it lists the panel's session beside Sill's,
+The HeartBeat tells them apart: it lists the panel's session beside DuoDeck's,
 and its C/F, the engine's figure, read 9.5–10.6 ms there against 14.0 for the
 slow state alone. The deciding run had the engine alone:
 
@@ -5424,7 +5418,7 @@ interposer on `VTCompressionSessionEncodeFrameWithOutputHandler`
 motion, then 5, 10 or 20 s still (or 15 s with a step every 0.3 s), then 35 s
 of motion (90 s once), for the slow state; 35 s of motion from the start for
 the fast state. One and two frames inside (the switch,
-`SILL_TEST_ENCODER_IN_FLIGHT=2`), in alternating pairs.
+`DUODECK_TEST_ENCODER_IN_FLIGHT=2`), in alternating pairs.
 - What the slow state is. A fresh session's turnaround (submit to output) is
   8.7–9.2 ms for its first ~4 s, then ~16.2 ms at the same 57 fps, just under
   the frame interval, with C/F 9.0 throughout. About a second into a quiet
@@ -5448,7 +5442,7 @@ the fast state. One and two frames inside (the switch,
   ms a frame (40–45 fps), in 6 of 8 runs (one was on the faster step from its
   first second, one never stepped: 35.5 fps), which one inside never did. It
   cost 17–27 ms from capture to output per pair (median 39.7 → 59.4 ms, p95 51
-  → 68.5; the turnaround 28.9 → 45–56 ms), which Sill's frame age, taken after
+  → 68.5; the turnaround 28.9 → 45–56 ms), which DuoDeck's frame age, taken after
   the encoder, cannot show. In the fast state it gained and lost nothing
   (57.3–57.5 fps either way, +0.2 ms at the median). The harness (the real
   `HEVCEncoder` with synthetic frames, no ScreenCaptureKit: 3 s at 60 fps, 6 s
@@ -5467,14 +5461,14 @@ the fast state. One and two frames inside (the switch,
   motion never moved it); the engine paces itself to the rate it sees (9 → 16
   ms at 57 fps with C/F unchanged); at the slow levels the turnaround is about
   twice C/F. In two runs discarded for sharing, another agent's independent
-  3024×1904 session on the engine lifted Sill's one-inside session to 49–57
+  3024×1904 session on the engine lifted DuoDeck's one-inside session to 49–57
   fps at C/F ~6 ms, and it fell back to ~34 when that load paused: load, not a
   second frame of the same stream, moves the engine. Next to try: the engine's
   power state or rate control (`EnableLowLatencyRateControl`, "The hardware
   encoder: busy, not stuck" below), not pipelining. Tried first instead, and
   kept: a new session (below). Resolution: Standard avoids the plateau too
   (57 fps with no drops at 1512×982).
-- Not measured: Sill.app (the CLI only), 120 fps, other bitrates, a device,
+- Not measured: DuoDeck.app (the CLI only), 120 fps, other bitrates, a device,
   other chips (a Max has two encode engines), real content beyond the
   scrolling window.
 
@@ -5519,18 +5513,18 @@ What the branch keeps:
   30 ms 33.3 fps with 26.7 mailbox drops a second and a latency median of
   36.7 ms; 40 ms 25 fps; random turnarounds with refusals, second notices,
   rate-control drops and keyframe requests, every frame settled once; a stuck
-  frame, `SILL_TEST_ENCODER_HANG`, slow and blocked encode calls, `abandon`,
+  frame, `DUODECK_TEST_ENCODER_HANG`, slow and blocked encode calls, `abandon`,
   the teardown, keyframes and timestamps), and its mutants (`mutants.py`, each
   must fail it); the probe check, the real `EncoderProbe.swift` against a
   stand-in encoder in real time (one frame inside at most, 33 fps at 30 ms a
-  frame, a stuck frame counted and reported back, `SILL_TEST_PROBE_HOLD=0.08`
+  frame, a stuck frame counted and reported back, `DUODECK_TEST_PROBE_HOLD=0.08`
   ~11 fps); the encoder check, the real `HEVCEncoder.swift` against
   `encoder/FakeVT.swift` in real time (every kind of session holds one frame at
   most and prints nothing when made, what a stuck encoder keeps, the order
   race, the keyframe's second look). `verify-hardware.sh` runs the hardware
   steps (parity, stream, harness, probe, keyframe) against 4fe37d4 built from
   `git archive`, each only while `no-device.sh` finds no device connected to
-  Sill.app.
+  DuoDeck.app.
 - Verified after the two-inside paths were removed (2026-09-25, 21:30–22:05):
   a clean `swift build -c release` from `git archive` (only the old
   CaptureProbe warning); the mailbox check, 38,256 checks, and 27 of 27 mutants
@@ -5549,7 +5543,7 @@ What the branch keeps:
   streaming the synthetic Desktop for 22 s identical (40 lines) but for one
   `enc.mailboxDrop` in the first streaming second of one of origin/main's two
   runs.
-- **Untested, for Noah:** a device joining a still window gets its picture
+- **Untested, for the maintainer:** a device joining a still window gets its picture
   within about 0.1 s (the keyframe's second look has run only in the checks and
   the hardware harness).
 
@@ -5603,13 +5597,13 @@ whose session has settled in it gets a new session in place, on by default
   stalled. A waiting new session is dropped when the stream's session dies
   (the watchdog, `abandon`), with the encoder, or when it is made after the
   encoder went.
-- `SILL_TEST_ENCODER_RECYCLE=1` or `0` overrides the constant for one process
+- `DUODECK_TEST_ENCODER_RECYCLE=1` or `0` overrides the constant for one process
   (an A/B from one binary; a "TEST:" line says so).
 
 Measured alone on the engine with the solo measurement's method (its scripts,
 guards and motion window, copied): the CLI built from c27d6df by `git
 archive`, the real Desktop at 3024×1964, 60 fps and 40 Mbps to a loopback
-test client, this M2 Pro on AC power. No device connected (Sill.log's last
+test client, this M2 Pro on AC power. No device connected (DuoDeck.log's last
 connect 18:50:52; the guard before and after every run), no user input
 (HIDIdleTime rising through every run), and each run's HeartBeat listing only
 its own sessions (the stream's and, switched on, its replacement, both
@@ -5666,7 +5660,7 @@ two runs each. Figures are the resumed motion less its first 2 s:
   in the seconds after a start that fell 80 ms before a stats tick, by one
   mailbox drop, and by `cursor.shape` in two seconds (the Mac's cursor
   changed).
-- Not measured: Sill.app (the CLI only; the same core), a device (the keyframe
+- Not measured: DuoDeck.app (the CLI only; the same core), a device (the keyframe
   over Wi-Fi, its decode), 120 fps, other bitrates, a shared engine (a new
   session there should be judged no faster and kept: the checks only), a size
   the engine is slow at (never replaced: the checks only; since the review
@@ -5736,10 +5730,10 @@ two runs each. Figures are the resumed motion less its first 2 s:
     Mbps, 12 s of motion from the start: no replace (24.64 ms at best, 32.8 at
     the median, the engine slowing to ~33 ms after about 4.5 s, as the review
     saw).
-  - Not measured: the order fix or the new rule in Sill.app or SillHost with
+  - Not measured: the order fix or the new rule in DuoDeck.app or DuoDeckHost with
     ScreenCaptureKit and real content, the iPad's decoder at a swap, other
     sizes, rates and bitrates.
-- **Untested, for Noah:** stream the Retina Desktop from Sill.app to the iPad,
+- **Untested, for the maintainer:** stream the Retina Desktop from DuoDeck.app to the iPad,
   leave the screen still for a few seconds, then scroll: about 2 s into the
   scroll the log shows one "Encoder (hardware HEVC …): frames took 29 ms each
   …; a new session takes 9 ms …" line and `enc.out` climbs back to
@@ -5752,9 +5746,9 @@ two runs each. Figures are the resumed motion less its first 2 s:
 
 **The hardware encoder: busy, not stuck (2026-09-24; fixed 2026-09-25, branch
 `encoder-recovery` from main at 76366e8, with main at ba91136 merged in: the
-bullet before the last).** Sill.app's watchdog fired twice on 2026-09-24 and
+bullet before the last).** DuoDeck.app's watchdog fired twice on 2026-09-24 and
 both times the host stayed on the software encoder until it relaunched, which
-was Noah's poor frame rate (~3 h at 1512×982, 46–55 fps with motion, 6–46 fps
+was the maintainer's poor frame rate (~3 h at 1512×982, 46–55 fps with motion, 6–46 fps
 at the end, through 18 settings changes the fallback's caps made useless). The
 kernel's AppleAVE2 log (every hardware session's open with its size, bitrate
 and firmware "Priority", and a HeartBeat every 5 s listing each session's
@@ -5762,14 +5756,14 @@ frames submitted | completed) shows neither was a wedge:
 - 19:00:21 (40 Mbps, the Retina desktop at 60 fps, a 61 s old session): the
   iOS Simulator's screen recorder (SimRenderServer, what `simctl io
   recordVideo` drives: H.264 2064×2752 of the iPad Pro 13" simulator, 38 Mbps,
-  priority 80) shared the one encoder engine with Sill and an agent's `SillHost
-  --synthetic` (both priority 0). Sill fell to 7–8 fps, then its frame waited
+  priority 80) shared the one encoder engine with DuoDeck and an agent's `DuoDeckHost
+  --synthetic` (both priority 0). DuoDeck fell to 7–8 fps, then its frame waited
   ~8.6 s; the invalidate blocked 7.06 s, off-thread, and the frame completed
-  0.3 s after the other SillHost process died. A fresh 256×256 probe answered
+  0.3 s after the other DuoDeckHost process died. A fresh 256×256 probe answered
   within 270 ms with the recorder still running, while the next stream-size
   sessions stalled again (0.3–9.5 s).
 - 23:30:04 (150 Mbps, a 36 s old session, running 57–58 fps alone): the
-  recorder opened a session at 23:29:45.2 and Sill fell from 58 to 22 fps in
+  recorder opened a session at 23:29:45.2 and DuoDeck fell from 58 to 22 fps in
   that second, then ran 13–45 fps; a frame waited ~1.8 s and completed (the
   invalidate took 0.17 s). A near miss at 23:27:54 (57 → 2–34 fps) came from
   the same recorder. The render and the benchmarks named at the time ran later.
@@ -5785,8 +5779,8 @@ frames submitted | completed) shows neither was a wedge:
   HEVC and H.264 0, not real-time 0, `EnableLowLatencyRateControl` 60 (RCMode
   20), the recorder 80. No public key sets it. One engine on this M2 Pro:
   unthrottled HEVC 3024×1968 runs ~105–115 fps (~650 MP/s), so the Retina
-  desktop at 60 fps takes 55–65 % of it and any other encode costs Sill frames
-  without a hang (a 3024×1904 test beside Noah's 1512×982 desktop: both at
+  desktop at 60 fps takes 55–65 % of it and any other encode costs DuoDeck frames
+  without a hang (a 3024×1904 test beside the maintainer's 1512×982 desktop: both at
   57–60 fps for ~4 s, then both at ~50, 2026-09-25). A Retina desktop at 120 fps
   (~713 MP/s) exceeds it alone (untested).
 - A bitrate change still needs a new session (measured 2026-09-25, 1512×948 at
@@ -5836,15 +5830,15 @@ What the host does now:
   test that ends with no device left is dropped without a line or a backoff.
 - Why a rate at the stream's size and not one small frame: at 03:26 on
   2026-09-25, with another agent's Simulator recording (priority 80) and a
-  second SillHost on the engine, a 256×256 frame answered in 72 ms, the
+  second DuoDeckHost on the engine, a 256×256 frame answered in 72 ms, the
   stream went back to the hardware and ran at 12 fps there (it had run at ~57
-  on the software encoder), and no watchdog fires for a slow stream. Noah's
-  own Sill.app sat at 8–18 fps in the same minutes, and at 03:32:02 it fell
+  on the software encoder), and no watchdog fires for a slow stream. the maintainer's
+  own DuoDeck.app sat at 8–18 fps in the same minutes, and at 03:32:02 it fell
   back once more (16, then 2 fps, then the watchdog), which the old build
   keeps until it relaunches.
 - Why the bar follows the size (review, 2026-09-25): a fixed 45 fps asked more
-  than a free engine gives a large frame. Measured with the engine free (Noah's
-  Sill.app on the software encoder), as the probe was (frames drawn inside the
+  than a free engine gives a large frame. Measured with the engine free (the maintainer's
+  DuoDeck.app on the software encoder), as the probe was (frames drawn inside the
   timing, utility QoS) and as it is: 6016×3384, a Retina 6K Desktop, 37 and
   39 fps; 5120×2880 50 and 53; 3024×1904 115 and 121. So a host streaming a 6K
   Desktop read "busy" at every check and stayed on the software encoder for
@@ -5872,12 +5866,12 @@ What the host does now:
   run at up to 60 fps at Standard." (it said "until the Mac restarts"; it
   promises neither now, as hosts before this change keep the fallback until
   they relaunch), and goes away by itself when the host clears the flag.
-- Test hooks, read once and inert without them: `SILL_TEST_ENCODER_HANG=N`
+- Test hooks, read once and inert without them: `DUODECK_TEST_ENCODER_HANG=N`
   (the first N hardware stream sessions hold frame 90 for 3 s before it goes
-  in: a busy engine; it prints a "TEST:" line), `SILL_TEST_PROBE_HOLD=S` (every
+  in: a busy engine; it prints a "TEST:" line), `DUODECK_TEST_PROBE_HOLD=S` (every
   frame of every probe waits S s: 0.08 a starved engine, 2 a busy one, a huge
-  S a stuck one), `SILL_TEST_RECHECK_SECONDS=N` (intervals N to 10 N instead
-  of 30 to 300) and `SILL_TEST_PROBE_SIZE=WxH` (the re-check tests that size,
+  S a stuck one), `DUODECK_TEST_RECHECK_SECONDS=N` (intervals N to 10 N instead
+  of 30 to 300) and `DUODECK_TEST_PROBE_SIZE=WxH` (the re-check tests that size,
   as for a Retina 5K or 6K Desktop on a smaller screen).
 - Diagnosis: `/usr/bin/log show --start '2026-09-24 18:55' --end '2026-09-24
   19:05' --style compact --predicate 'sender == "AppleAVE2" AND (eventMessage
@@ -5887,40 +5881,40 @@ What the host does now:
   "Priority: 80" beside it is the recorder), plus `process ==
   "VTEncoderXPCService" AND eventMessage CONTAINS "videoencoder.peer"` to map
   sessions (the next "AVE : open") to client PIDs.
-- Operational rule, from the same logs: while Noah streams, agents do not run
-  `simctl io recordVideo`, SillHost streams, ReelRenderer or encoder benchmarks;
-  each shares the one engine, and the recorder outranks Sill. The Claude app's
+- Operational rule, from the same logs: while the maintainer streams, agents do not run
+  `simctl io recordVideo`, DuoDeckHost streams, ReelRenderer or encoder benchmarks;
+  each shares the one engine, and the recorder outranks DuoDeck. The Claude app's
   iOS Simulator panel counts too: `claude-ios-sim` encodes the simulator's
-  screen at priority 60 (~62 fps at 2064×2752), and Noah's Retina Desktop fell
+  screen at priority 60 (~62 fps at 2064×2752), and the maintainer's Retina Desktop fell
   from 57 to 33–36 fps beside it (33–34 for its first 40 s), and to 11–18 fps
   while another agent's priority-80 recording of that simulator ran as well
-  (8–17 with a SillHost besides; 2026-09-25, 15:14–15:24).
-- Not in this change: `EnableLowLatencyRateControl` would put Sill at priority
+  (8–17 with a DuoDeckHost besides; 2026-09-25, 15:14–15:24).
+- Not in this change: `EnableLowLatencyRateControl` would put DuoDeck at priority
   60 (above every default session, still below the recorder's 80) and follows
   live bitrate changes, but it changes the bitstream and rate control (frames
   dropped at 8 Mbps in the rate test): a flagged experiment with iPad tests.
-Verified headless (the synthetic host; hardware runs kept to seconds, Noah's
-Sill.app streaming beside them): clean build (only the old CaptureProbe
+Verified headless (the synthetic host; hardware runs kept to seconds, the maintainer's
+DuoDeck.app streaming beside them): clean build (only the old CaptureProbe
 warning); the CLI against 76366e8 built from `git archive`, masked and
 sorted: idle identical, and with a client and a bitrate change identical but
 for `enc.mailboxDrop` counts, which follow the other encoder users of the
-moment (either build had them); `SILL_TEST_ENCODER_HANG=1` with a client: the
+moment (either build had them); `DUODECK_TEST_ENCODER_HANG=1` with a client: the
 hang at 1.5 s, the fallback, 1512×948, "came back after 3.0 s", back 30.0 s
 later (114 fps in the test) and 3024×1898 on the hardware at 60 fps for 67 s,
 the client getting frames every second but the hang's; `=2`, while another
-agent's Simulator recording and SillHost came and went: the check at 30 s
+agent's Simulator recording and DuoDeckHost came and went: the check at 30 s
 "busy (25 fps …); next check in 60 s", back 60 s later at 114 fps, the
 second hang 3 s after the return and "next check in 120 s"; with
-`SILL_TEST_PROBE_HOLD=0.08` while the recorder and another SillHost really
+`DUODECK_TEST_PROBE_HOLD=0.08` while the recorder and another DuoDeckHost really
 shared the engine (the test's own hardware stream ran at 16 fps): "busy
 (7 fps …)" at 30 s and "(8 fps …)" 60 s later, no return; the client leaving
 during a fallback: no session from the host in the kernel log for 40–45 s
 (the next check was due after 30), then a client again: the test at the
 Desktop's size (112 fps) and back ~100 ms after its stream started on the
-software encoder; `SILL_TEST_PROBE_HOLD=100000 SILL_TEST_RECHECK_SECONDS=1`
+software encoder; `DUODECK_TEST_PROBE_HOLD=100000 DUODECK_TEST_RECHECK_SECONDS=1`
 with a client picking nothing: the launch fallback, then checks 1, 2, 4, 8,
 10, 10 and 10 s apart, all unanswered, and the stuck line after the 8th
-unanswered probe (the launch one and 7 checks); `SILL_TEST_PROBE_HOLD=2`:
+unanswered probe (the launch one and 7 checks); `DUODECK_TEST_PROBE_HOLD=2`:
 unanswered probes, each back 2 s later, never stuck; previews against
 76366e8: only menu.txt (the copy and a new `software-encoder-stuck` sample,
 its cards equal to the busy one's) and the General pane's "Running from" path
@@ -5933,31 +5927,31 @@ mutants caught (the fixed 45, the engine term without its share, no 60 fps
 cap, an assumed rate above this engine); the CLI against 76366e8 (`git
 archive`), masked and sorted: idle identical, with a client and a bitrate
 change identical (a first pair differed by one `enc.mailboxDrop` in the
-base's first second); `SILL_TEST_ENCODER_HANG=1`: back 30.1 s after the
+base's first second); `DUODECK_TEST_ENCODER_HANG=1`: back 30.1 s after the
 fallback ("121 fps at 3024×1896 in a test, 45 needed"), the client getting
 frames every second but the hang's (40–57 fps on the software encoder, 60 on
-the hardware); `=2` with `SILL_TEST_PROBE_SIZE=6016x3384
-SILL_TEST_RECHECK_SECONDS=5`: "39 fps at 6016×3384 in a test, 15 needed", the
+the hardware); `=2` with `DUODECK_TEST_PROBE_SIZE=6016x3384
+DUODECK_TEST_RECHECK_SECONDS=5`: "39 fps at 6016×3384 in a test, 15 needed", the
 second hang and "next check in 10 s", then "39 fps …, 29 needed"; the
-verifier's overlap run (`SILL_TEST_PROBE_HOLD=1000
-SILL_TEST_RECHECK_SECONDS=4`, a device leaving during a test and another
+verifier's overlap run (`DUODECK_TEST_PROBE_HOLD=1000
+DUODECK_TEST_RECHECK_SECONDS=4`, a device leaving during a test and another
 arriving): one line, "next check in 8 s" (it was two, 8 then 16 s), none when
 nobody comes back, and the second device's own check 8 s later;
-`SILL_TEST_PROBE_HOLD=70 SILL_TEST_RECHECK_SECONDS=1`: the stuck line at
+`DUODECK_TEST_PROBE_HOLD=70 DUODECK_TEST_RECHECK_SECONDS=1`: the stuck line at
 65.0 s, the launch probe's frame back at 70.2 s, "a check's frame came back
 after 70.0 s, so it is not stuck; checks resume" and a check at once; with
 the device gone by then, the same line at 70.2 s and the next device checked
 the moment it connected.
 - Merged with main at ba91136 (2026-09-25: PR #13, remote access; one merge
-  commit, not a rebase). Git stopped only on `Scripts/sillclient.py`, and both
+  commit, not a rebase). Git stopped only on `Scripts/duodeckclient.py`, and both
   sides stay: main's remote-door flags and LINK line, this branch's `kB=` each
   second. Checked by hand in every file both sides changed: `StreamCoordinator`
-  has main's routes, kind 21, the kind 17 cap, Sill's own windows kept off the
+  has main's routes, kind 21, the kind 17 cap, DuoDeck's own windows kept off the
   Desktop and the goodbye at quit beside the fallback and the re-check; the
   re-check runs while any device is connected, at home or through the remote
   door (both register in `StreamServer.clients`, which `onClientCountChanged`
   counts), and a return restarts the stream through `select` like any other
-  restart (`switching` is set before main's new wait for Sill's own app). The
+  restart (`switching` is set before main's new wait for DuoDeck's own app). The
   menu lists the encoder's item (Busy or Stuck) before main's "Remote Access
   Can’t Start"; `HostStatus`, `HostSettings.swift` (the `softwareEncoder` doc
   beside the seven presets), `SettingsPanes`, `DebugHooks` (both sides'
@@ -5972,10 +5966,10 @@ the moment it connected.
   Responding, and the `software-encoder-stuck` sample) and that sample's two
   cards, equal to the busy one's. Not run at the merge: the CLI's output
   against main's (idle 35 s and a Desktop pick, masked and sorted) and the
-  `SILL_TEST_ENCODER_HANG=1` run (the fallback, the stalled-frame line, the
-  return ~30 s later), both kept off the hardware encoder because Noah's iPad
-  was streaming from Sill.app the whole time.
-- **Untested, for Noah:** a build of this branch in /Applications
+  `DUODECK_TEST_ENCODER_HANG=1` run (the fallback, the stalled-frame line, the
+  return ~30 s later), both kept off the hardware encoder because the maintainer's iPad
+  was streaming from DuoDeck.app the whole time.
+- **Untested, for the maintainer:** a build of this branch in /Applications
   (`Scripts/make-app.sh --install --open` from this branch, which now carries
   remote access too, or from main, which has it since b50e224; only a new
   build comes back by itself). Then, with the iPad streaming the Desktop,
@@ -6024,7 +6018,7 @@ two meet:
   sightings by Mac ID); every row dial, a tap's or the reconnect's, goes
   through `dial`, so a "Wired" row dials the cable first. The move to the
   network keeps its SessionLink fence and sets the session's route to network.
-  `-SillConnect` takes `[::1]:P` (the address parser) and
+  `-DuoDeckConnect` takes `[::1]:P` (the address parser) and
   `fe80::…%en0:P` (split at the last colon). In the project file main's
   SessionLink keeps A015/F015 and DeviceIdentity moved to A01D/F01D.
 - Verified without devices: `swift build` (only the CaptureProbe warning), iOS
@@ -6051,10 +6045,10 @@ two meet:
   disconnects a home client on this Mac's en0 link-local address and not a
   remote session from the same address, and the remote door's port never
   changes (a build without the remote-session guard fails this); the home
-  door's caps and origin gate; the bare app's `-SillSetAfter` bitrate, Direct
+  door's caps and origin gate; the bare app's `-DuoDeckSetAfter` bitrate, Direct
   Wireless and Remote Access (one Settings line each, one restart in all),
   saved across a relaunch. On a simulator of its own: by address, the route
-  word read; `-SillMoveTest 1` moved and fenced; `-SillPairURL` pairing and a
+  word read; `-DuoDeckMoveTest 1` moved and fenced; `-DuoDeckPairURL` pairing and a
   remote session; the host gone and back, redialled remotely.
 - Review of the merge (2026-09-25, after 3a7b501). Fixed: a lost saved Mac's
   automatic remote dial counts `networkGrace` from the moment its network row
@@ -6075,23 +6069,23 @@ two meet:
   listed) with 35 of 35 mutants (two new, on the leave), main's policy check 187
   with its 25 and the 20 old mutants; an event model of the reconnect on these
   files: with the row gone at the loss the first remote dial moves from +3.2 s
-  to +10.0 s (Sill quitting: +8.0 to +11.0 s), what the by-name sightings give;
-  the probe copied verbatim into a loopback harness: Sill's traffic probed as
+  to +10.0 s (DuoDeck quitting: +8.0 to +11.0 s), what the by-name sightings give;
+  the probe copied verbatim into a loopback harness: DuoDeck's traffic probed as
   before, an SSH banner and a 1.7 GB frame header closed at once (before, both
   held the move until its 5 s ran out, the second with the harness at 534 MB), a
   window list cut short and then the stream's end no longer taken as the Mac's;
   the CLI's output idle and with a client, masked and sorted, main's; on a
-  simulator of its own `-SillMoveTest 1` and `to:` this Mac's `fe80::…%en0`
+  simulator of its own `-DuoDeckMoveTest 1` and `to:` this Mac's `fe80::…%en0`
   (moved and fenced, the second gaining "Wi-Fi" at the hand-over),
-  `-SillPairURL` pairing, a remote session and its automatic redial; 63 photos
+  `-DuoDeckPairURL` pairing, a remote session and its automatic redial; 63 photos
   of the route line (seven layouts, three text sizes) identical to 3a7b501's but
   for the six at xxLarge on the 340 pt panels, and long VPN names wrap at the
   route's words, never inside one. The review's reruns on 3a7b501, none failing:
   on the simulator S4 and S5 13 of 13, S7 against a9cc248's host, S8 in short
   host runs (typed pairing through the relay, 60 fps through a VPN route and 120
   by address, the 300 ms callout), testS3OutsideLink and the three RF2 UI tests
-  (the link test's Mac A a stand-in, not a second host), `-SillConnect` by this
-  Mac's `fe80::…%en0` ("Wi-Fi") and `-SillMoveTest to:` it; the host gates
+  (the link test's Mac A a stand-in, not a second host), `-DuoDeckConnect` by this
+  Mac's `fe80::…%en0` ("Wi-Fi") and `-DuoDeckMoveTest to:` it; the host gates
   H7–H12, H10(f) on the bare app, H15, H17 and a variant with `--remote` through
   Direct Wireless off (a fresh tag, only the scoped home client disconnected,
   the remote session streaming on), H18 and H19, and H14 (no base run), H16 and
@@ -6099,12 +6093,12 @@ two meet:
   nohook, burst and appfail (the app's failed replacement disconnects the en0
   stand-in and keeps a paired remote session from the same address; a build
   without the guard fails it).
-- **Untested, for Noah:** everything the entries below leave for the devices,
+- **Untested, for the maintainer:** everything the entries below leave for the devices,
   now on the merged build, and in particular a remote session's card on the
   real menu (the label on the source row is a merge decision), a "Wired" row's
   reconnect after a loss (it goes through `dial` now), and the move to the
   network with remote access on. The grace: at home with a paired Mac and
-  Remote Access on, quit Sill.app while the iPad streams and reopen it 7–10 s
+  Remote Access on, quit DuoDeck.app while the iPad streams and reopen it 7–10 s
   later; the iPad should come back on the home door (the host logs no remote
   client).
 
@@ -6120,30 +6114,30 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   Wireless (`OriginPolicy`), with caps (1 MiB messages, 4 kind-17 changes a
   second, a clean device name). The remote door (`RemoteServer`, port 7455) is
   TLS 1.3 only, both ends self-signed P-256 keys pinned by SPKI SHA-256, ALPN
-  `sill/1` for a paired key, `sill-pair/1` only while a pairing window is
+  `duodeck/1` for a paired key, `duodeck-pair/1` only while a pairing window is
   open; pre-auth caps (8 pending, 2 per source, backoff after 5 of its own
   refusals), 8 sessions, remote clients evicted after 8 s of silence, forced
   keyframes at least 2 s apart. Kinds 18 (the signed MacInfo: Mac ID, name,
   addresses), 19/20 (one pairing request and its answer), 21 (Pair This iPad…,
   home door only) and 22 (goodbye) are skipped by older readers; the TXT record
   carries a recognition tag (`r`) only paired devices can read.
-- Pairing: the Mac's window shows a QR code (`sill://pair?…`, pinned to the
+- Pairing: the Mac's window shows a QR code (`duodeck://pair?…`, pinned to the
   Mac's key) and a 12-digit code (Damm check digit; PBKDF2 600k), 5 minutes,
   single use, five wrong tries, and the address to type with the code:
   Tailscale's MagicDNS name and its IPv4 under it ("or 100.101.102.103"), else a
   Tailscale IP (100.64/10, else fd7a:115c:a1e0::/48), else this network's
   address with any other VPN's IP under it ("or 10.8.0.6"). Another VPN never
   takes this network's place, since NordVPN's or WARP's address answers from
-  nowhere; which of the two goes first is Noah's call. `PairingWindowAddress`
-  decides, pure (Noah, 2026-09-25: from an iPhone's hotspot this network's
+  nowhere; which of the two goes first is the maintainer's call. `PairingWindowAddress`
+  decides, pure (the maintainer, 2026-09-25: from an iPhone's hotspot this network's
   address answered nothing, the Tailscale name and address both paired;
   checked with swiftc, 80 checks and 35 of 35 mutants, and photographed as the
   previews' `pairing-novpn`, `pairing-othervpn` and `pairing-longname`).
-  Sill.app: Settings › Remote Access (a fifth tab: the switch, the addresses,
+  DuoDeck.app: Settings › Remote Access (a fifth tab: the switch, the addresses,
   the port, paired devices, the internet switch with the router's answer, the
   address name, sleep), the menu's Remote Access… and Pair iPhone or iPad…,
-  identity in the login keychain (`KeychainIdentityStore`; label "Sill Remote
-  Access", service `me.saffer.sill.remote`), idle sleep held off while a
+  identity in the login keychain (`KeychainIdentityStore`; label "DuoDeck Remote
+  Access", service `com.agentsai.duodeck.remote`), idle sleep held off while a
   device is connected remotely. The CLI's `--remote` uses a throwaway identity
   per run.
 - iOS: `DeviceIdentity` (a Keychain key, this device only), `SavedMacs`,
@@ -6151,11 +6145,11 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   apart, every failure's words), Remote rows after the network's 3 s, the
   reconnect order after a loss, liveness on every route; the connect screen's
   "Add a Mac…" card (the VisionKit scanner or the typed address and code),
-  `sill://pair` links only ever confirmed, Pair This iPad… as an overlay over
+  `duodeck://pair` links only ever confirmed, Pair This iPad… as an overlay over
   the stream, the panel's route line ("Connected through Tailscale · 48 ms"),
   its Away from home group and the slow-link callout; the Low preset (4 Mbps,
   first of the seven on both sides) and 60 fps away from home.
-- Verified without Noah's devices: the plan's H1–H24 headless (the CLI's
+- Verified without the maintainer's devices: the plan's H1–H24 headless (the CLI's
   output byte for byte, the pure checks with mutants, the doors' refusals and
   caps, no plaintext on the wire, no code or secret in any log, a 2 Mbps
   +150 ms relay with no eviction and the base's keyframe rate), the app's
@@ -6165,8 +6159,8 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   every failure's words, an older host, and a slow link (60 fps through a VPN
   route; the callout at +300 ms).
 - Review fixes (step 9, the plan's "Review fixes (step 9)"): a pick never
-  streams Sill's own windows (the virtual display's lookup skips them; the
-  Desktop looks for Sill among every window when the on-screen look missed it);
+  streams DuoDeck's own windows (the virtual display's lookup skips them; the
+  Desktop looks for DuoDeck among every window when the on-screen look missed it);
   the internet switch counts only while Remote Access is on; Remove changes
   nothing when the keychain cannot be written, and the pane says so; a spent
   code shows no QR; kind 18 lists no addresses before the Mac's first look,
@@ -6179,7 +6173,7 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   is announced; saved Macs are cleared only when no device key exists at all.
   Checked headless, on the simulator with three new XCUITests against live
   hosts, and against the pre-fix build (which fails them).
-- **Untested, for Noah (R0–R13; the plan's Results say exactly what):** R0 the
+- **Untested, for the maintainer (R0–R13; the plan's Results say exactly what):** R0 the
   probes (the Secure Enclave key, the login keychain identity with your OK, the
   router probe, the scanner on the iPad, with a failed pairing's code held
   until tapped); R1 Tailscale setup and pairing,
@@ -6190,8 +6184,8 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   VoiceOver and a hardware keyboard (Esc never reaches an app in the iPadOS 27
   simulator; only ⌘. was tested); R13 mixed builds. Also the pairing window's
   Address row, live (only its offscreen previews were seen): with this build's
-  Sill.app, Pair iPhone or iPad… reads this Mac's MagicDNS name with "or" and
-  its Tailscale IPv4 muted under it (what `SillHost --print-reachability`
+  DuoDeck.app, Pair iPhone or iPad… reads this Mac's MagicDNS name with "or" and
+  its Tailscale IPv4 muted under it (what `DuoDeckHost --print-reachability`
   lists); with the window open, Tailscale off on the Mac gives 10.128.0.34
   alone and a window 18 pt shorter, and back on the name and the "or" line
   return (the IPv4 alone for a few seconds, until MagicDNS answers, is
@@ -6208,7 +6202,7 @@ fixes of step 9's first review round (below); the branch merged as PR #13
   fresh simulator (-34018): build it ad hoc signed (`CODE_SIGN_IDENTITY=-`).
 
 **Quality presets (2026-09-24, branch `quality-presets` from main at
-ad7fba2).** Noah's decisions: Maximum is renamed Pro; two presets above it,
+ad7fba2).** the maintainer's decisions: Maximum is renamed Pro; two presets above it,
 Ultra (80 Mbps) and Extreme (150 Mbps), for the USB cable or very fast Wi-Fi;
 the bitrate knob's cap goes from 100 to 200 Mbps per 60 fps (a 120 fps stream
 still gets double, so Extreme at 120 fps is 300 Mbps); no Unlimited.
@@ -6234,9 +6228,9 @@ still gets double, so Extreme at 120 fps is 300 Mbps); no Unlimited.
   `StreamClient` warnings); the CLI's synthetic output, idle and with a client,
   equals ad7fba2's (masked and sorted; unmasked only timings and ports
   differ); a test client's Extreme then Ultra restart the stream at 150 and 80
-  Mbps ("Settings from sillclient: bitrate 15 → 150 Mbps per 60 fps"), Extreme
+  Mbps ("Settings from duodeckclient: bitrate 15 → 150 Mbps per 60 fps"), Extreme
   at 120 fps runs at 300 Mbps, and 200 and 250 Mbps are refused with the value
-  unchanged in the answer; the bare app runs `-SillSetAfter` and `-bitrate`
+  unchanged in the answer; the bare app runs `-DuoDeckSetAfter` and `-bitrate`
   250 Mbps at 200 ("Settings: bitrate 15 → 200 Mbps per 60 fps", devices told
   200) and saves a device's Extreme across a relaunch; the hardware encoder
   takes and reads back AverageBitRate up to 400 Mbps at 3024×1898; previews
@@ -6249,14 +6243,14 @@ still gets double, so Extreme at 120 fps is 300 Mbps); no Unlimited.
   the longest readout), at all four sizes and at xLarge and xxLarge text: the
   readout wraps at xxLarge, and at 710×500 already at xLarge; the header and
   Disconnect stay put and the rows scroll.
-- **Untested, for Noah:** Ultra and Extreme on the iPad over the USB cable and
+- **Untested, for the maintainer:** Ultra and Extreme on the iPad over the USB cable and
   over Wi-Fi, streaming a busy window (the synthetic pattern compresses to
   under 1 Mbps whatever the target): watch the frame age in the host's
   `client …` lines and the menu's device row, and step down if it climbs.
 
 **Direct Wireless Connection (2026-09-24, branch `direct-wireless` from
 `ipad-host-settings` at 35a1238; the plan and its measurements are in
-`docs/direct-wireless-plan.md`).** Noah's decision: AWDL off by default on both
+`docs/direct-wireless-plan.md`).** the maintainer's decision: AWDL off by default on both
 ends, and an opt-in host setting named Direct Wireless Connection in the Mac's
 Settings and menu and in the device's panel. `includePeerToPeer` on the host's
 NWListener made its Bonjour registration include AWDL, which the kernel counts
@@ -6268,7 +6262,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   16/17 stay compatible both ways (old device: ignores the key; old host: the
   device sees nil).
 - Host: `HostConfig.directWireless`, off in `standard` (the CLI and a fresh or
-  updated Sill.app), accepted from a device on every host (since 2026-10-29 only
+  updated DuoDeck.app), accepted from a device on every host (since 2026-10-29 only
   from a paired session at home: the Current step's "Direct Wireless only from a
   paired device"), and absent from `restartNeeded`: it is the listener's.
   `StreamServer` builds the listener
@@ -6284,7 +6278,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   good), every device still on peer-to-peer Wi-Fi is disconnected, one line
   each ("Direct wireless off: disconnecting iPad (…) at fe80::…%awdl0.N, which
   was connected over peer-to-peer Wi-Fi; it can reconnect over the network."),
-  because an open awdl0 socket keeps the kernel's AWDL up (Noah's sessions,
+  because an open awdl0 socket keeps the kernel's AWDL up (the maintainer's sessions,
   2026-09-24: off changed nothing while the iPad was on awdl0). `ClientLink`
   reads the route from the endpoint's scope (`%awdl0`/`%llw0`; AWDL has only
   link-local addresses); other clients are untouched, and a burst that ends on
@@ -6295,12 +6289,12 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   exits 1), and the next toggle retries. CLI: `--direct-wireless` prints one
   startup line; without it the output is the branch point's byte for byte
   (masked and sorted).
-- Sill.app: Settings › General "Direct wireless connection" right after
+- DuoDeck.app: Settings › General "Direct wireless connection" right after
   "Visible on your network as", and a "Direct Wireless Connection" item at the
   top of the status menu's second group, absolute like Virtual Display. Saved
   under `directWireless`; an existing install has no key, so it comes up off.
   The status menu's card ends each device's row in how it reaches this Mac
-  (Noah, 2026-09-24, branch `connection-route-in-settings`: "next to bitrate"),
+  (the maintainer, 2026-09-24, branch `connection-route-in-settings`: "next to bitrate"),
   and while exactly one device is connected the source row too, after the Mbps:
   "Wired" (the cable's anri0, or any wired Ethernet interface), "Wi-Fi" or
   "Direct" (awdl0, llw0), else no word (loopback, a VPN, a path that says two
@@ -6316,13 +6310,13 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   120 fps"): "120 fps, nothing changing" (the plan's copy) plus the word
   wrapped the row only while still, and the open menu, which resizes the card
   on every change, jumped a line each time a window stopped or started
-  changing. The wording is Noah's call. Over 405 layouts (three sizes, 60 and
+  changing. The wording is the maintainer's call. Over 405 layouts (three sizes, 60 and
   120 fps, 8 to 200 Mbps, each word or none, each suffix, the real StatusCard)
   a row's line count never changes between still and changing unless the
   count's own digits change it (16 layouts, all without a word; with "nothing
   changing" 198 did); the `still-window` preview is the widest case the menu
   offers. Verified: the link check at 89 (PR #6's 40 plus 49;
-  `swiftc -package-name sill`), 14 mutants caught; the real host in a scratch
+  `swiftc -package-name duodeck`), 14 mutants caught; the real host in a scratch
   package (loopback, `fe80::1%lo0` and `::1` clients: no word; with the lo0
   stand-in, Direct on the device rows and on the source row only while one is
   connected); previews: only the five cards with a device, the new
@@ -6331,7 +6325,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
 - iOS: the network browser and connections to the Macs it lists never use
   peer-to-peer. A nearby (peer-to-peer) browser runs only while not connected,
   and only when a Mac this device last saw with the setting on
-  (`Sill.directWirelessMacs`, from each state, keyed by the Bonjour name the
+  (`DuoDeck.directWirelessMacs`, from each state, keyed by the Bonjour name the
   connection was made to, which is what the browsers list: the window list's
   "Mac" stays "Mac" when Bonjour renames a clash "Mac (2)"; a connection by
   address teaches nothing) is missing from the network 3 s after the connect
@@ -6343,15 +6337,15 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   with swiftc). A Mac seen only over awdl/llw is a "Direct" row, the one kind
   connected with peer-to-peer; a Mac the network lists is always a network row,
   so at home nothing takes AWDL. Each row ends in where the device sees its
-  Mac (`DiscoveryPolicy.method`; Noah, 2026-09-24, branch
+  Mac (`DiscoveryPolicy.method`; the maintainer, 2026-09-24, branch
   `connection-method-labels`): "Wired" if the network browser saw it on a wired
   Ethernet interface, else "Wi-Fi" on a Wi-Fi one that is not peer-to-peer,
   "Direct" for a Direct row, else no word; never the Wi-Fi network's name,
   which needs the Access Wi-Fi Information entitlement and Location access,
-  and Sill asks for neither. The word follows the browser as interfaces come
+  and DuoDeck asks for neither. The word follows the browser as interfaces come
   and go (the cable in or out), and the DEBUG console says what it was read
   from ("discovery: <Mac>: Wired, seen on …"). A row that says "Wired" is
-  dialled over the cable (Noah, 2026-09-25, branch `prefer-cable`: unpinned,
+  dialled over the cable (the maintainer, 2026-09-25, branch `prefer-cable`: unpinned,
   with Wi-Fi and the cable both up, the same tap reached the Mac over `%en0`
   at 7 ms one time and over `%en14` at 1 ms another): a tap, an automatic
   reconnect and a move from AWDL resolve its Bonjour service on the first
@@ -6361,7 +6355,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   waiting (at once), gives way to the row as listed, unconstrained, once,
   which can take Wi-Fi (DEBUG console: "dialing <Mac> on anpi0 (wired)",
   "wired dial did not connect in 2.5 s; dialing unconstrained";
-  `-SillWiredTest HOST:PORT` runs that fallback in the simulator). The route
+  `-DuoDeckWiredTest HOST:PORT` runs that fallback in the simulator). The route
   is the Settings panel's (branch
   `connection-route-in-settings`): its readout ends in how this session's own
   connection reaches the Mac, "… · 15 Mbps · Wi-Fi", "Wired" or "Direct"
@@ -6385,14 +6379,14 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   header's "Connected directly" line (the footer's warning and the switch's
   hint stay), and a no-break space before each "·" makes a wrap at larger
   text fall after one. The Mac's card names its own side the same way (see
-  Sill.app above), so the two can differ (an iPad on Wi-Fi, a Mac on
+  DuoDeck.app above), so the two can differ (an iPad on Wi-Fi, a Mac on
   Ethernet). Verified: the policy check at 155 (138 plus 17 for the route),
   eight mutants of it caught; photos of the panel cases `default` (Wi-Fi),
   `wired`, `directlink` (Direct), `noroute` and `vdstream` at 1000x710 and
   500x710, and at accessibility-extra-large also at 710x500 (the readout wraps
   after a "·", never truncates, never splits "Wi-Fi"); live against a
   synthetic host: by 127.0.0.1 no word, by this Mac's `fe80::…%en0` "Wi-Fi",
-  and `-SillMoveTest to:` from the first to the second gains "Wi-Fi" at the
+  and `-DuoDeckMoveTest to:` from the first to the second gains "Wi-Fi" at the
   hand-over. What each end calls the cable (2026-09-25): iPadOS names its ends
   anpi0 and en2 and types both as wired Ethernet (the connect screen's row
   says "Wired", seen on anpi0, en2 and en0, and a session over it reads the
@@ -6401,7 +6395,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   The fix for the updates above, verified on the iPad: the policy check at 174
   (155 plus 19), 18 mutants caught (the route's 8 plus 10); "session: Wired,
   read from the Mac's address on en2" at `.ready` (a row resolved on en2 and
-  tapped by a scratch build, and `-SillConnect` to the Mac's en14 address) and
+  tapped by a scratch build, and `-DuoDeckConnect` to the Mac's en14 address) and
   at a move's hand-over from awdl0, the host on `%en14` each time; a row's
   unscoped updates after
   `.ready` logged as ignored with the word kept (that session ran over Wi-Fi,
@@ -6421,7 +6415,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   Pro" and "MacBook Pro (2)" are two Macs) and take the network row at once, a
   Direct row only once it has stayed Direct for 6 s and the network last listed
   that Mac 10 s ago or more (`NetworkSightings`): a listener swap makes the
-  network row blink for a few seconds, a Mac back on the shared network (Sill
+  network row blink for a few seconds, a Mac back on the shared network (DuoDeck
   relaunched, the Mac awake) registers there and on AWDL together and the
   nearby browser can report awdl0 first, and mDNS is lost to radios that leave
   the channel. A tap is never held back. A session over AWDL moves to the
@@ -6450,7 +6444,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   15:43:17) after an eviction on en0 and stayed there for minutes at rtt maxima
   ~265 ms. Local Network access denied (the network browser waits with
   PolicyDenied): the status says "To find your Mac, allow Local Network for
-  Sill in Settings.", with no hint and no nearby search. The panel's last group
+  DuoDeck in Settings.", with no hint and no nearby search. The panel's last group
   is the row (never disabled), after the closing footer, with "Direct" ending
   the header's readout while this device's own connection runs over AWDL,
   and then, while the switch shows on, a warning in its footer and hint
@@ -6459,9 +6453,9 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   sideways when a row or the hint appears; it is still centred vertically, so
   it moves up by half of what they add.
 - Verified without permissions (the plan's H0–H15 and S1–S4): the kernel's
-  AWDL service count (ValidSvc, baseline 2 from Noah's PR #4 Sill.app) rises by
+  AWDL service count (ValidSvc, baseline 2 from the maintainer's PR #4 DuoDeck.app) rises by
   2 exactly for a registration made with the AWDL flag: `dns-sd -includeAWDL -R`
-  and `SillHost --synthetic --direct-wireless` (test type) both 2 → 4, while
+  and `DuoDeckHost --synthetic --direct-wireless` (test type) both 2 → 4, while
   `dns-sd -R`, the suffix form `dns-sd -R … -includeAWDL` (a TXT record, no
   flag) and the default host stay at 2; off, the test registration never
   appears on awdl0 (index 16), on it does 1.1 s after launch and leaves no
@@ -6469,8 +6463,8 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   frames every second, no restart, the awdl0 record added 2.6 s after on and
   removed 1.3 s after off; 55 connections across a replacement all accepted;
   five toggles in 0.4 s give one replacement; mixed with a bitrate change, one
-  restart and one replacement; the fallbacks (SILL_TEST_SWAP_FAIL); the bare
-  app saves it from -SillSetAfter and from a device and relaunches with it on;
+  restart and one replacement; the fallbacks (DUODECK_TEST_SWAP_FAIL); the bare
+  app saves it from -DuoDeckSetAfter and from a device and relaunches with it on;
   previews: only the General pane and menu.txt changed (one unchecked item per
   sample); the ledger check (43 checks, 5,000 random runs, 1,227 against a host
   without the field, three mutants caught) and the policy check (40); iOS
@@ -6497,7 +6491,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   cases (looking, hint, nearby, denied) and of Search Nearby tapped at the four
   sizes (the title does not move); the panel's warning goes when its switch
   is tapped off; an address connection to a host with it on writes no memory.
-- Fixes after Noah's first sessions (2026-09-24, branch `direct-wireless-fixes`
+- Fixes after the maintainer's first sessions (2026-09-24, branch `direct-wireless-fixes`
   from a9cc248; the plan's last section has the log, the causes with line
   numbers and every check). W5 is answered: off never ended a direct session
   (its open awdl0 socket kept AWDL up), and now the host disconnects it; the
@@ -6506,13 +6500,13 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   survives it (only Settings › Wi-Fi or another network ends the shared
   route). Verified headless: the CLI identical to 22209db; `ClientLink` 40
   checks, five mutants caught; end to end with a link-local en0 client standing
-  in for awdl0 (`SILL_TEST_PEER_TO_PEER_INTERFACE`): disconnected 1.5 s after
+  in for awdl0 (`DUODECK_TEST_PEER_TO_PEER_INTERFACE`): disconnected 1.5 s after
   off with one line, the loopback client streaming on, untouched without the
   variable, nobody disconnected by an off-on burst, disconnected also when the
   app's replacement fails; the policy check at 98 (blinks of 1.5, 4 and 7 s
   never take Direct, absent 10 s takes it at 10.0 s, the move at exactly 2 s,
   the café at 6 s, a 15:43 replay), seven mutants caught; on the simulator
-  (`-SillMoveTest 1|refused`) the move hands over with the host streaming
+  (`-DuoDeckMoveTest 1|refused`) the move hands over with the host streaming
   throughout (1 → 2 → 1 clients, no Desktop restart), a panel change after it
   is answered, and a refused network row leaves the session direct. Review
   fixes (the plan's "Review fixes of the move"): the hand-over fenced
@@ -6526,16 +6520,16 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   301 ms for its fence, then rtt 302 → 1 ms; `other:PORT` (another synthetic
   host) is refused at its first list and not tried again, the session streaming
   on; the panel shows the Mac's state after a move.
-- **Untested, for Noah (the plan's W1–W9):** W1 the payoff: both builds
+- **Untested, for the maintainer (the plan's W1–W9):** W1 the payoff: both builds
   installed, `/usr/bin/log stream --style compact --predicate 'process ==
   "kernel" AND (eventMessage CONTAINS "abling AWDL" OR eventMessage CONTAINS
   "ValidSvc")'` shows "Disabling AWDL due to no services and no active
-  sockets" once the old Sill is gone (unless AirDrop, Sidecar or Universal
+  sockets" once the old DuoDeck is gone (unless AirDrop, Sidecar or Universal
   Control hold it), and five minutes on a still window with trackpad strokes
   keep the `rtt m/M` maxima near the LAN's, with no ~100 ms spikes. W2 on from
   the iPad panel while streaming: no restart, one "listening on port N again"
   (same N), the Mac's Settings and menu follow, `defaults read
-  me.saffer.sill.mac directWireless` is 1, "Enabling AWDL due to Mdns" and the
+  com.agentsai.duodeck.host directWireless` is 1, "Enabling AWDL due to Mdns" and the
   maxima rise; off from the menu two minutes later and they fall back. W3 with
   it on, the iPad on the iPhone's hotspot and the Mac at home: within 3–5 s a
   "Direct" row; connected, the host logs `%awdl0`, and the panel's readout
@@ -6557,23 +6551,23 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   readout goes from "Direct" to "Wi-Fi" (the plan: the header loses "Connected
   directly"), and the Mac's card shows the iPad twice for a moment (Direct,
   Wi-Fi), then once, Wi-Fi (drag and type through the move: no button stays
-  down, no letters swap); and relaunching Sill.app at home, the iPad
+  down, no letters swap); and relaunching DuoDeck.app at home, the iPad
   reconnects over the network (the host logs no `%awdl0`). The blink: at home
-  with it on and the iPad streaming, quit and reopen Sill.app a few times, at
+  with it on and the iPad streaming, quit and reopen DuoDeck.app a few times, at
   once and after 15 s: the iPad comes back on `%en0` (on `%awdl0` only if the
   network takes over 6 s to list the Mac, and then it moves to `%en0` ~2 s
   after it does). Control Center: connected directly with its Wi-Fi switch
-  off, the session goes on; off on the Mac then ends it. W7 relaunch Sill.app
-  with it on: `dns-sd -t 3 -includeAWDL -B _sill._tcp local` lists one
+  off, the session goes on; off on the Mac then ends it. W7 relaunch DuoDeck.app
+  with it on: `dns-sd -t 3 -includeAWDL -B _duodeck._tcp local` lists one
   instance on awdl0, no "(2)". W8 the CLI with and without
   `--direct-wireless`. W9 mixed builds (PR #4 iPad with this host, this iPad
-  with PR #4's Sill.app: both connect on the LAN, the latter with no row) and
+  with PR #4's DuoDeck.app: both connect on the LAN, the latter with no row) and
   VoiceOver ("Mac mini, Direct", the hint, Search Nearby and its announcement,
   the row).
 - Known, not fixed here: the simulator's browsers run in the Mac's
   mDNSResponder, so a nearby search on the simulator turns the Mac's AWDL on:
   never measure latency with a simulator sitting on the connect screen.
-  Security: with it on, anyone within radio range running Sill can
+  Security: with it on, anyone within radio range running DuoDeck can
   find and connect to the Mac until pairing (M5); the host-settings plan's §9
   payload cap and a kind 17 rate limit matter more with it on. It is the first
   device-writable setting that widens who can reach the Mac, against that
@@ -6582,7 +6576,7 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
   device sets it only from a session whose key is on the Mac's trust list,
   never unpaired at an open door, at the CLI's plain door or from away. A Mac
   is known by its Bonjour name for a reconnect, so another
-  Mac of the same name running Sill on the device's network would be joined
+  Mac of the same name running DuoDeck on the device's network would be joined
   (pairing again; the move checks the launch ID, which a reconnect cannot, as
   the host may have relaunched). The host can print "Client left" twice for a
   connection that ends with a reset, as the direct one after a move may.
@@ -6590,10 +6584,10 @@ its Wi-Fi channel up to ~97 ms every 524 ms (see the trackpad-stutter section).
 **iPad host settings (2026-09-23, branch `ipad-host-settings` from
 `menu-bar-app`, rebased onto its e89add6; the plan and its reasoning are in
 `docs/ipad-host-settings-plan.md`).** A device changes the Mac's five streaming
-settings the way the Sill menu does: Quality (bitrate), Resolution (capture
+settings the way the DuoDeck menu does: Quality (bitrate), Resolution (capture
 scale), Frame Rate limit, Prioritize Speed, Virtual Display. Defaults taken for
 the plan's open questions: Settings replaces Leave in every bar's last slot and
-Disconnect moves to the panel's pinned foot (Q1); Sill.app saves a device's
+Disconnect moves to the panel's pinned foot (Q1); DuoDeck.app saves a device's
 change like a menu click (Q2); the virtual display has full menu parity, so
 turning it off from a device brings the window home and forward (Q3).
 - Wire: kind 16 `.hostSettings` (host → device, JSON `HostSettingsState`: the
@@ -6622,11 +6616,11 @@ turning it off from a device brings the window home and forward (Q3).
   (`pickArrivedWhileSwitching`, newest wins, the restarted source itself
   dropped); during a switch to another source it is still dropped (the device's
   automatic Desktop request must not override a pick).
-- Sill.app: `HostSettings.onChange` calls `setTarget` synchronously, so the
+- DuoDeck.app: `HostSettings.onChange` calls `setTarget` synchronously, so the
   target equals `settings.config` at every main-actor turn, and
   `onDeviceSettingsChange` lays a device's change over `settings.config`: saved
   (only the keys it changed), shown live in Settings and in the menu when it
-  next opens. The CLI sets no hook: a device's change lasts until SillHost quits
+  next opens. The CLI sets no hook: a device's change lasts until DuoDeckHost quits
   (`persistent: false` says so on the device).
 - iOS: `HostSettingsLedger` (pure logic) holds the Mac's last state on this
   connection with this device's unanswered picks over it: a pick sends only what
@@ -6645,15 +6639,15 @@ turning it off from a device brings the window home and forward (Q3).
 - Verified without permissions (the plan's H0–H21, S1, S2, S5, S6): clean
   builds (only the old CaptureProbe warning; iOS Debug and Release only the old
   `StreamClient` capture warning); the CLI's output masked and sorted equals
-  the branch point and its idle stdout is unchanged; `sillclient.py` shows one
+  the branch point and its idle stdout is unchanged; `duodeckclient.py` shows one
   kind 16 after the first window list and one when the Desktop starts, accept /
   no-op / refusals / partial / a burst of three (one restart) / two clients /
   rapid pairs 0–300 ms (at most two restarts) / reconnect / malformed and
   tokenless changes / 20 s idle (two states, CPU as before) / the toggle on the
   `--virtual-display` host (no restart); the bare app saves a device's change,
-  keeps it across a relaunch, sends a `-SillSetAfter` change to the device,
+  keeps it across a relaunch, sends a `-DuoDeckSetAfter` change to the device,
   lets the device and the Mac change different keys at once, and every
-  `-SillSetAfter` change still gives one "Settings:" and at most one restart;
+  `-DuoDeckSetAfter` change still gives one "Settings:" and at most one restart;
   previews byte-identical; the ledger check (28 scenarios, 5,000 random runs
   with two mutants caught); the queued pick with a race client that sends the
   pick while the restart runs (before: 8 of 8 picks lost; now 24 of 24 stop the
@@ -6678,7 +6672,7 @@ turning it off from a device brings the window home and forward (Q3).
   undoes that change; in the panel the readout wraps instead of cutting off and
   "On the virtual display" is a line of its own, Done's tap area is 44 pt tall,
   and the speed switch is "Prioritize Encoding Speed" (the Mac's name) in its
-  own group under the Mac's explanation; `sillclient.py` checks every argument
+  own group under the Mac's explanation; `duodeckclient.py` checks every argument
   before connecting; HostSettings.swift lists every place a new setting must
   go. Verified: the CLI's output against e89add6's (masked; idle, 35 s idle,
   the Desktop, `--virtual-display`); H4–H21 again, previews byte-identical;
@@ -6690,12 +6684,12 @@ turning it off from a device brings the window home and forward (Q3).
   that never answers, a pick times out after 4.3 s with prompt pongs and 8.3 s
   with pongs held 2 s; against one that closes the watched window, the Desktop
   request follows 2 s later unless the user picks, and then never comes.
-- **Untested, for Noah:** D1–D11 (the plan's §7.4): the panel's values
+- **Untested, for the maintainer:** D1–D11 (the plan's §7.4): the panel's values
   against the Mac's menu and status card with a real window; every control from
   the iPad (one restart each; the Mac's Settings window follows; saved in
-  `me.saffer.sill.mac` and after a relaunch); the virtual display on and off
+  `com.agentsai.duodeck.host` and after a relaunch); the virtual display on and off
   from the iPad, also full screen; a Mac-menu change showing in the open panel;
-  two devices at once; `SillHost` without and with `--virtual-display`;
+  two devices at once; `DuoDeckHost` without and with `--virtual-display`;
   reconnecting after a change made while away; the 60 fps note and Low Power
   Mode on the iPad mini; a Magic Keyboard (keys stop while the panel is open,
   Esc closes it and does not reach the Mac, keys come back); VoiceOver (modal,
@@ -6714,7 +6708,7 @@ turning it off from a device brings the window home and forward (Q3).
   old checkmarks until reopened (every item sets the value it shows, so a
   click there never inverts a device's change).
 
-**Sill.app, the menu bar host (2026-09-23, branch `menu-bar-app`; the plan and
+**DuoDeck.app, the menu bar host (2026-09-23, branch `menu-bar-app`; the plan and
 its background are in `docs/menu-bar-app-plan.md`).** The same host as the CLI,
 as an LSUIElement app. A status item whose glyph (drawn from AppIcon.svg:
 idle, connected, streaming, attention) and menu card show the network, each
@@ -6723,11 +6717,11 @@ Display, Frame Rate, Quality, Resolution, Launch at Login (SMAppService),
 Permissions, Show Log…, Settings… and Quit. Settings is an AppKit window with
 four SwiftUI panes (General, Streaming, Virtual Display, Permissions), kept off
 the virtual display; the Log window shows HostLog's last 5,000 lines, and
-`~/Library/Logs/Sill/Sill.log` has them all. SwiftPM builds the `SillMenuBar`
+`~/Library/Logs/DuoDeck/DuoDeck.log` has them all. SwiftPM builds the `DuoDeckMenuBar`
 executable; `Scripts/make-app.sh` wraps it (Packaging/Info.plist, an icon
 compiled by actool from design/AppIcon.svg), signs it with the Apple Development
-identity and, with `--install`, replaces /Applications/Sill.app. Bundle ID
-`me.saffer.sill.mac`. Settings persist (`defaults read me.saffer.sill.mac`)
+identity and, with `--install`, replaces /Applications/DuoDeck.app. Bundle ID
+`com.agentsai.duodeck.host`. Settings persist (`defaults read com.agentsai.duodeck.host`)
 and apply live: `StreamCoordinator.setTarget` hands a new `HostConfig` to the next
 `select`, which takes it between pipelines; a change restarts the stream once,
 or not at all when nothing running depends on it (the virtual display toggle
@@ -6735,7 +6729,7 @@ restarts only a window stream, and sends a staged window home first). Virtual
 display off by default in the CLI; in the app off until 2026-10-27 and on since
 (`HostConfig.app`, registered, so a saved key still wins; Current step, "Tiles and
 Virtual Display on by default").
-- Rules. Host code is the `SillHostCore` library (folder `Sources/SillHost`),
+- Rules. Host code is the `DuoDeckHostCore` library (folder `Sources/DuoDeckHost`),
   reached with `package` access; make it `public` only if an Xcode target ever
   needs it (M5 CloudKit). Never `MainActor.assumeIsolated` in core code: under
   the CLI's dispatchMain the main queue drains on a worker thread and it traps;
@@ -6751,7 +6745,7 @@ Virtual Display on by default").
   (identifier + Apple anchor + the certificate's CN), so rebuilds signed with
   the same Apple Development identity keep it; ad hoc would lose it on every
   rebuild. Terminal's grants for the CLI don't carry over, and running
-  Contents/MacOS/Sill from Terminal makes Terminal responsible. The app asks
+  Contents/MacOS/DuoDeck from Terminal makes Terminal responsible. The app asks
   for nothing at launch (no Accessibility alert, no window list before Screen
   Recording is granted); Settings opens on Permissions until both are allowed
   or the user closes it. Allow… shows each system alert once
@@ -6762,7 +6756,7 @@ Virtual Display on by default").
   executables record the deployment target as their SDK (`xcrun vtool
   -show-build`: sdk 14.0), and macOS 26+ draws such an app in the pre-26 look.
   make-app.sh writes the bundle's executable with vtool, recording the SDK in
-  use (27.0 here) as Xcode would; the CLI and the bare SillMenuBar keep 14.0.
+  use (27.0 here) as Xcode would; the CLI and the bare DuoDeckMenuBar keep 14.0.
   It signs by the identity's SHA-1 hash (a renewed certificate with the same
   name makes the name ambiguous to codesign), and `--release` refuses anything
   but a Developer ID Application signature. NSTabViewController selects its
@@ -6774,7 +6768,7 @@ Virtual Display on by default").
 - Verified without permissions: clean build (only the old CaptureProbe
   warning); the CLI's output matches the pre-change baseline line for line
   (sorted, digits masked) at 60 fps, exits 130/143 on the flag path; the bare
-  app streams the test pattern at 60 fps, each `-SillSetAfter` change gives one
+  app streams the test pattern at 60 fps, each `-DuoDeckSetAfter` change gives one
   "Settings:" line and at most one restart (virtual display on while the
   Desktop streams: none), Quit exits 0 through `releaseForQuit`, a saved setting
   survives a relaunch, idle CPU 0.0 %; the Settings and Log windows open and
@@ -6786,7 +6780,7 @@ Virtual Display on by default").
   panes render in the macOS 26 look (the Streaming pane matches the design
   draft); `--release` refuses a missing, ad hoc or Apple Development identity;
   a stub harness showed the Settings tab now survives a relaunch.
-- **Untested, for Noah:** N1–N12 in the plan: first run and the grants, the
+- **Untested, for the maintainer:** N1–N12 in the plan: first run and the grants, the
   menu's live rows with the iPad, every control while streaming a real window
   (virtual display on and off, also full screen), Settings placement, Launch
   at Login, quitting with a staged window, App Nap and latency against the CLI,
@@ -6795,7 +6789,7 @@ Virtual Display on by default").
   look that the SDK fix turned on (only offscreen renders were checked), and
   Settings reopening on the last tab after a relaunch.
 - Known, not fixed here: the CLI's synthetic mode still prints "Advertising
-  _sill._tcp" although it no longer advertises.
+  _duodeck._tcp" although it no longer advertises.
 
 Milestone 3, scaling and the virtual display. Two paths exist; adopt the second.
 
@@ -6807,19 +6801,19 @@ Milestone 3, scaling and the virtual display. Two paths exist; adopt the second.
   Accessibility (`WindowSizer`) to panel ÷ scale points, so text renders at
   that scale on the device. Until the slider is first touched the scale is nil
   and the Mac window is left alone (the control shows 1×; since PR #181 it
-  shows Off, a sixth detent left of 0.5×, and Off again puts a window Sill
+  shows Off, a sixth detent left of 0.5×, and Off again puts a window DuoDeck
   sized back at once; no Off with the virtual display on; Aa dimmed unless a
   window streams: Current step, "Aa's Off"). Since 2026-10-14
   (issue #57) the window goes back to its own frame when it stops streaming
-  (`WindowRestore`; Current step, "A window Sill sized goes back"). Harness:
-  `-SillScaleOpen 1` photographs the unfolded state.
+  (`WindowRestore`; Current step, "A window DuoDeck sized goes back"). Harness:
+  `-DuoDeckScaleOpen 1` photographs the unfolded state.
 - **Virtual display (implemented 2026-09-22 behind `--virtual-display`, off by
-  default; on by default in Sill.app since 2026-10-27, Noah's call, the CLI's
-  flag still opt-in).** With the flag, SillHost
+  default; on by default in DuoDeck.app since 2026-10-27, the maintainer's call, the CLI's
+  flag still opt-in).** With the flag, DuoDeckHost
   runs `NSApplication.run()` (activation policy `.prohibited`: no Dock icon,
   never activatable) instead of `dispatchMain()`, because only under the AppKit
   loop does the creating process see the display's modes. `select(.window)`
-  asks `VirtualStage` to create one `CGVirtualDisplay` ("Sill", 2×, at the
+  asks `VirtualStage` to create one `CGVirtualDisplay` ("DuoDeck", 2×, at the
   stream's rate),
   move the window onto it with Accessibility (`WindowSizer.placement/move/
   restore`; AX writes never activate or raise anything), and capture it with
@@ -6901,15 +6895,15 @@ Milestone 3, scaling and the virtual display. Two paths exist; adopt the second.
   frame lags too (it applies the size after answering the write) still reads
   as a refusal, and its old frame stays the crop until a catalog poll (2 s;
   one that lands mid-switch is ignored) re-selects.
-  **Untested, for Noah** (Screen Recording + Accessibility on the terminal):
-  (a) `swift run -c release SillHost --virtual-display`, pick a window: the
+  **Untested, for the maintainer** (Screen Recording + Accessibility on the terminal):
+  (a) `swift run -c release DuoDeckHost --virtual-display`, pick a window: the
   log shows "Virtual display … created", "Moved …", "Capturing … of virtual
   display", and the frame fills the panel edge to edge at Aa 1× with the title
-  bar as the top edge; System Settings › Displays shows one "Sill" display.
+  bar as the top edge; System Settings › Displays shows one "DuoDeck" display.
   (b) Cover the window's old spot, switch Spaces, open Mission Control: the
   device keeps updating. (c) Deselect, pick Desktop, quit the iOS app, Ctrl-C
   mid-stream: each prints "Restored …" then "Removed virtual display", the
-  window is back within 2 pt, no "Sill" display remains. (d) Rotate and cycle
+  window is back within 2 pt, no "DuoDeck" display remains. (d) Rotate and cycle
   Aa while staged: one "Capture started" per change, no new display created.
   (e) The 1Password Aa step that showed the stale crop (staged at Aa 0.5,
   then 1×): the first "Moved … to" shows the asked 1117×610 and "Capture
@@ -6934,7 +6928,7 @@ request brought nothing: 2026-10-28), so a fresh connection starts on the Deskto
 the drawer no longer opens by itself. When the watched window has closed it
 waits 2 s first, and asks for nothing if the user picked or launched something
 meanwhile (the host cannot tell that request from a Desktop tap). Harness:
-`-SillWindowMenu 1` keeps the first thumbnail's lights open.
+`-DuoDeckWindowMenu 1` keeps the first thumbnail's lights open.
 
 **Frame rate follows the device (2026-09-22).** `Viewport.fps` carries the
 device's wanted rate: `UIScreen.maximumFramesPerSecond` (120 on ProMotion, 60
@@ -6981,18 +6975,18 @@ Dead-client eviction is time-based (no frame drained for 4 s, none in the first
 8 s after connect): the frame-count rule evicted the simulator at full Retina.
 A client evicted while the Mac is still advertised now retries on a timer.
 Learned (2026-09-23; this replaces the caveat on (1)): the RTT spikes left with
-ticks flowing come from AWDL, and Sill turns AWDL on itself. `includePeerToPeer
+ticks flowing come from AWDL, and DuoDeck turns AWDL on itself. `includePeerToPeer
 = true` on the host's NWListener (`StreamServer`) and the iPad's NWBrowser and
 NWConnection (`StreamClient`), there since the first commit, makes the kernel
-enable AWDL as `_sill._tcp` registers ("Enabling AWDL due to Mdns"; off ~3 s
-after Sill quits). The Mac's one radio then leaves the Wi-Fi channel on a
+enable AWDL as `_duodeck._tcp` registers ("Enabling AWDL due to Mdns"; off ~3 s
+after DuoDeck quits). The Mac's one radio then leaves the Wi-Fi channel on a
 512 TU schedule (kernel: infra 72 % while streaming, 48 % or 0 % around
 switches). A 20 Hz ping from the Mac to its gateway stalls up to ~97 ms once
 every 524 ms (p90 48 ms, 17 % over 10 ms; with AWDL off, p90 4 ms and max
 13 ms). The same Bonjour service registered with the AWDL flag gave p90
 67.5 ms with 32 % of pings delayed, against 3.9 ms without the flag. An rtt
 sample that lands in a stall reads baseline plus 0–100 ms. AWDL carries none
-of Sill's data (the connection is on en0). Ticks keep the radio awake but not
+of DuoDeck's data (the connection is on en0). Ticks keep the radio awake but not
 on the channel, and every earlier RTT reading, those in (1) and (2) included,
 ran with AWDL on. The fix is applied (2026-09-24, Direct Wireless Connection
 in the current step): `includePeerToPeer` is off by default on both sides and
@@ -7018,7 +7012,7 @@ value), and the menu's device row and the HUD show "–" the same way.
 
 **Frozen stream, 2026-09-22 evening — the Mac's hardware video encoder wedged.**
 Every new HEVC session (and later H.264) accepted one frame and never returned
-it, even from a fresh process with synthetic frames (`SillHost
+it, even from a fresh process with synthetic frames (`DuoDeckHost
 --encoder-selftest`, `CaptureProbe --synthetic`). The old encoder called
 VideoToolbox synchronously on the capture queue, so the stuck call froze
 ScreenCaptureKit, then `stopCapture`, then the coordinator's `switching` flag,
@@ -7050,7 +7044,7 @@ only one. Protections now in the host:
 - Never reconfigure a running SCStream (`updateConfiguration` also wedged it);
   the Mac cursor is left out of the video for good and the device draws it,
   with the Mac's live cursor shape streamed as `.cursorShape`.
-- Regular mode raises the picked window on select (2026-09-23, Noah: the Mac
+- Regular mode raises the picked window on select (2026-09-23, the maintainer: the Mac
   must show the picked window): app activated, window raised and made key,
   before capture starts. Picks only (switcher, command line, an app launched
   from the device); the host's own restarts (resize, rate change, encoder
@@ -7060,7 +7054,7 @@ only one. Protections now in the host:
   typed text activates the app through Accessibility only
   (`NSRunningApplication.activate` is refused from a background process, and
   a Launch Services "open" of a running app counts as opening it, which
-  switched on Noah's Work Focus automation, so it is never used; an app that
+  switched on the maintainer's Work Focus automation, so it is never used; an app that
   refuses AX simply stays back), input held until it is up (at most 0.6 s) so
   the first click lands; on the regular path a window covered at the click or
   scroll point is also raised. Input that arrives mid-switch is delivered but raises nothing
@@ -7101,7 +7095,7 @@ good.
   one heartbeat line per 30 s and no ScreenCaptureKit calls; connected with
   nothing selected 0.0–0.1 %; streaming a Retina window ~3 %. Capture stops when
   the last client leaves.
-- Diagnostics: `-SillHUD 1` (DEBUG) overlays fps · frame age · rtt · frame size
+- Diagnostics: `-DuoDeckHUD 1` (DEBUG) overlays fps · frame age · rtt · frame size
   on the device; the client reports the same to the host every second and the
   host prints `client <device>: …`.
 - Learned: `_AXUIElementGetWindow` is private, so AX windows are matched by
@@ -7112,8 +7106,8 @@ good.
 - Mac host builds and runs from `swift build -c release`: window listing,
   ScreenCaptureKit capture, VideoToolbox HEVC encode, Bonjour advertisement,
   TCP fan-out to clients.
-- iOS client is a real Xcode project (`iOSClient/Sill.xcodeproj`), builds
-  clean, runs on Noah's iPad Mini (the test device: iPad scalability plus a
+- iOS client is a real Xcode project (`iOSClient/DuoDeck.xcodeproj`), builds
+  clean, runs on the maintainer's iPad Mini (the test device: iPad scalability plus a
   Duo-like aspect ratio).
 - End to end verified on Wi-Fi: ~58 fps captured, encoded and sent with zero
   drops at 3024×1898 (Retina capture of a 1512×949 window), 15 Mbps.
@@ -7123,9 +7117,9 @@ good.
   that connected to a static window never receiving a keyframe.
 - Host prints a per-second stats line (captured/encoded/sent/dropped) so a
   stalled stage is visible without a debugger.
-- Toolchain on Noah's Mac: Xcode 27 selected as developer dir, license
+- Toolchain on the maintainer's Mac: Xcode 27 selected as developer dir, license
   accepted, first-launch packages installed. No signing identities existed;
-  Noah signs with his own team in Xcode.
+  the maintainer signs with his own team in Xcode.
 - Learned: ScreenCaptureKit delivers frames only when the window repaints, and
   macOS stops repainting fully covered windows, so a streamed window buried
   behind others on the Mac freezes on the device. Inherent to window capture;
@@ -7135,8 +7129,8 @@ good.
 ## Layout
 
 - `Package.swift` — SwiftPM. Products: `StreamProtocol` (shared wire format,
-  iOS + macOS), `SillHost` (the CLI, target `SillHostCLI`) and `SillMenuBar`
-  (Sill.app's executable). `SillHostCore` (the host, folder `Sources/SillHost`)
+  iOS + macOS), `DuoDeckHost` (the CLI, target `DuoDeckHostCLI`) and `DuoDeckMenuBar`
+  (DuoDeck.app's executable). `DuoDeckHostCore` (the host, folder `Sources/DuoDeckHost`)
   is a library target with no product, so the iOS project never sees it.
 - `Sources/StreamProtocol/StreamMessage.swift` — 14-byte header + payload framing,
   message kinds in both directions, HEVC parameter set encoding. Shared by both
@@ -7170,7 +7164,7 @@ good.
   certificate, keys), `Pairing.swift` (`PairingCode`, `PairingProof`,
   `RecognitionTag`, `PairLink`, and `HomeDoorTXT`, the home door's TXT key
   `p`), `AddressParser.swift`, `SafeText.swift`.
-  `Compatibility.swift` — `SillProtocol.current` (1), `SillVersion` (tags,
+  `Compatibility.swift` — `DuoDeckProtocol.current` (1), `DuoDeckVersion` (tags,
   bundles and the wire's versions, compared part by part) and `Hello` (kind 23,
   the device's first message); `Goodbye` (Remote.swift) carries `message`,
   `minimumVersion` and `reconnect` too, and `WindowList` the host's
@@ -7198,14 +7192,14 @@ good.
   ("aac-eld", and `choose`: the first of a device's `Hello.audio` the host
   makes); only to a device whose hello lists one. `ScrollDirection.swift` —
   which way a scroll on the device moves the Mac's content: the device's
-  Reverse Scrolling (issue #143, `Sill.reverseScroll`, never sent) turns a
+  Reverse Scrolling (issue #143, `DuoDeck.reverseScroll`, never sent) turns a
   finger's drag over the picture and two fingers on the on-screen trackpad
   around, their coast too, never a connected trackpad's or mouse's scroll
   events (iPadOS's own Natural Scrolling set those); pure,
   `Tests/checks/protocol`. Kind 44, `keyframeRequest` (device → host, no
   payload: this device's picture was interrupted and waits for a keyframe;
   issue #101), has no type of its own.
-- `Sources/SillHost/` — the `SillHostCore` library. `StreamCoordinator` (main
+- `Sources/DuoDeckHost/` — the `DuoDeckHostCore` library. `StreamCoordinator` (main
   actor; owns the pipeline, switches sources on client request, raises the
   picked window in regular mode (never on the virtual display), applies
   viewports, falls back to the software encoder on a hang and re-checks the
@@ -7220,19 +7214,19 @@ good.
   its window key first, as a click does: `focusForMenus`), answers a device's
   keyframe request (kind 44) with `HEVCEncoder.requestKeyframe`, at most one a
   second per connection, never a restart (a synthetic host ignores the first n
-  with the TEST ONLY SILL_TEST_KEYFRAME_IGNORE=<n>, as a Mac from before kind 44
+  with the TEST ONLY DUODECK_TEST_KEYFRAME_IGNORE=<n>, as a Mac from before kind 44
   ignores every one), and writes `HostStatus`),
   `HostConfig` (the knobs: maxFPS, captureScale, bitrate per 60 fps, the
   away pair awayBitrate and awayCaptureScale, prioritizeSpeed, virtualDisplay,
   directWireless, remoteAccess, remotePort, internetAccess, requirePairing,
-  sendAudio, shareClipboard; `standard` is the CLI's values, `app` Sill.app's
+  sendAudio, shareClipboard; `standard` is the CLI's values, `app` DuoDeck.app's
   defaults, the same with the virtual display and Send Audio on (2026-10-27); `effective(away:)`), `HostClipboard` (the clipboard's host side: who
   subscribed, the look at the pasteboard's change count four times a second
   while one has and macOS allows every read, a device's text written
   `.currentHostOnly` with this launch's marker and passed to the others, one
   line a subscription and none per copy; a synthetic host's own pasteboard,
-  the TEST ONLY SILL_TEST_PASTEBOARD, SILL_TEST_CLIPBOARD_LOG and
-  SILL_TEST_CLIPBOARD_ACCESS; `MacClipboard`, macOS's paste privacy for the
+  the TEST ONLY DUODECK_TEST_PASTEBOARD, DUODECK_TEST_CLIPBOARD_LOG and
+  DUODECK_TEST_CLIPBOARD_ACCESS; `MacClipboard`, macOS's paste privacy for the
   look and for Settings › General's `ClipboardSection`),
   `AwayPolicy` (who counts as away, when the away quality is the target, its
   two lines; pure, `Tests/checks/away-quality`), `LinkJudge` (each device's
@@ -7245,10 +7239,10 @@ good.
   for this host: a rule that blocks the running executable or its bundle, or
   Block all incoming connections, keeps devices out; Settings › General's
   line with the Terminal command that unblocks it, the menu's subtitle, the
-  log's lines; the TEST ONLY SILL_TEST_FIREWALL's canned answers; pure,
+  log's lines; the TEST ONLY DUODECK_TEST_FIREWALL's canned answers; pure,
   `Tests/checks/firewall`) and `FirewallCheck` (asks `socketfilterfw` five
   read-only questions, a process each, no privileges: at launch, when the
-  listener comes up, when Sill.app's status menu or General opens, when a
+  listener comes up, when DuoDeck.app's status menu or General opens, when a
   device gets in while the verdict says none can), `DeviceSettings` (what a device may
   set, `HostConfig` ↔ wire), `HostLog` (the print shadow, the app's ring and
   log file),
@@ -7268,14 +7262,14 @@ good.
   window on a 1x display fills its picture and nothing is upscaled; and
   `InputLanding`, where a device's position lands on the Mac: at most the
   source's last pixel row and column at its display's scale; and
-  `VirtualDisplaySize`, the size of Sill's virtual display, no side under 800
+  `VirtualDisplaySize`, the size of DuoDeck's virtual display, no side under 800
   points, which macOS kept at 2x (an iPhone's 754×784 came up at 1x), and of
   the window on it, 1 to 65536 points a side, the most a host takes, so a
   full-screen window's crop keeps the panel's shape (`windowSize`); pure,
   `Tests/checks/capture-scale`), `SyntheticCapture` (test pattern for
-  `--synthetic`; SILL_TEST_PATTERN=noise adds a square of noise,
-  SILL_TEST_PATTERN=picture:<path> shows a still picture instead,
-  SILL_TEST_STILL_AFTER=<s> sends no frame from s seconds on, as a window that
+  `--synthetic`; DUODECK_TEST_PATTERN=noise adds a square of noise,
+  DUODECK_TEST_PATTERN=picture:<path> shows a still picture instead,
+  DUODECK_TEST_STILL_AFTER=<s> sends no frame from s seconds on, as a window that
   stopped changing), `HEVCEncoder` (VideoToolbox with one frame inside, a
   one-slot mailbox behind it and a hang watchdog; hardware or software; says
   whether a stalled frame came back; gives a stream whose session settled in
@@ -7288,7 +7282,7 @@ good.
   the stream's size, one frame at a time like a stream, the rate it keeps and
   the rate a return needs), `EncoderSelfTest`
   (`--encoder-selftest`), `CursorShapeWatcher` (NSCursor.currentSystem →
-  `.cursorShape`), `StreamServer` (Network.framework + Bonjour `_sill._tcp`, both
+  `.cursorShape`), `StreamServer` (Network.framework + Bonjour `_duodeck._tcp`, both
   directions, keepalive, dead-client eviction, ping echo, client-stats print;
   a remote client's frames paced by the bytes its connection has not taken
   (`paceRemote`, docs/remote-bundle-plan.md §3); one sweep a second closing
@@ -7300,14 +7294,14 @@ good.
   gate (`lockGate`, LockPolicy.withheld) read on its queue for every message,
   frames tagged with what they show (`broadcast(_:picture:)`), each message
   handed on with the reading at its arrival, an icon or app list it withheld
-  reported (`onCatalogWithheld`); the test-only SILL_TEST_REMOTE_ORIGIN;
+  reported (`onCatalogWithheld`); the test-only DUODECK_TEST_REMOTE_ORIGIN;
   the listener built with or without peer-to-peer and replaced live when Direct
   Wireless changes, and turned off, the devices on peer-to-peer Wi-Fi
-  disconnected; the test-only SILL_TEST_SERVICE_TYPE, SILL_TEST_SWAP_FAIL,
-  SILL_TEST_PEER_TO_PEER_INTERFACE and SILL_TEST_LOOPBACK), `ClientLink`
+  disconnected; the test-only DUODECK_TEST_SERVICE_TYPE, DUODECK_TEST_SWAP_FAIL,
+  DUODECK_TEST_PEER_TO_PEER_INTERFACE and DUODECK_TEST_LOOPBACK), `ClientLink`
   (which route a client came by, from its endpoint's scope, and the menu card's
   word for it: Wired, Wi-Fi, Direct or none; pure, checked on its own with
-  `swiftc -package-name sill`, which its `package` access needs),
+  `swiftc -package-name duodeck`, which its `package` access needs),
   `InputInjector` (CGEvents: pointer and scroll where InputLanding lands them, scroll with phases, text with modifier
   flags cleared explicitly (a ⌘Space before typing otherwise tainted the text
   events and Spotlight ignored them), HID keys as KeyStrokes gives them, each
@@ -7344,7 +7338,7 @@ good.
   lights (kind 15), each element with a timeout, Close's button 1 s, and what
   came of it, `CommandOutcome`: done, refused or no answer in time, its words
   per action), `WindowRestore` (a
-  window Sill sized for a device goes back when it stops streaming: each fit's
+  window DuoDeck sized for a device goes back when it stops streaming: each fit's
   record and `movedSince`, the decision at the stop, the sequences that fit a
   window and put it back over `WindowRestore.Access` (`fit`, `stop`,
   `stageHome`), `keepsStreaming` and `coversDisplay` for a window off the list
@@ -7367,7 +7361,7 @@ good.
   (who may use which door; pure), `RefusalSummary` (one refusal line a minute),
   `HostIdentity` (the `IdentityStore` protocol, `MemoryIdentityStore`, the TEST
   ONLY `FileIdentityStore`, `PairedDevice`, the lock-protected trust snapshot
-  the door reads on the network queue), `KeychainIdentityStore` (Sill.app's),
+  the door reads on the network queue), `KeychainIdentityStore` (DuoDeck.app's),
   `PairingWindow` (pure), `RemoteServer` (the remote door), `Reachability`,
   `AddressList` (pure) and `RouterAddress` (read-only NAT-PMP/PCP),
   `RemoteAccess` (main actor; ties them together, signs kind 18; owns
@@ -7375,10 +7369,10 @@ good.
   Remove at both doors). Pairing at home (docs/home-pairing-plan.md): `Door`
   (admission at a TLS door, one class behind both listeners: the places
   waiting for admission and their deadlines, the backoff and its line, the
-  verify block, the device gate, one pairing request per `sill-pair/1`
+  verify block, the device gate, one pairing request per `duodeck-pair/1`
   connection; `RemoteServer` keeps the remote door's listener), `DoorPolicy`
   (who each door admits, the ask rule's six steps, `afterGate`,
-  `isTestHost`: a host that does not advertise and is not Sill.app's own
+  `isTestHost`: a host that does not advertise and is not DuoDeck.app's own
   executable; `Places`, what waiting for admission costs an address and its
   IPv6 /64, and the places kept for addresses that proved a paired key; pure,
   `Tests/checks/door-policy`), `CableLink`
@@ -7387,21 +7381,21 @@ good.
   registers later is still served, `stillServes`). Pairing at home (docs/home-pairing-plan.md): `Door`
   (admission at a TLS door, one class behind both listeners: the pending
   caps, the backoff, the verify block, the device gate, one pairing request
-  per `sill-pair/1` connection; `RemoteServer` keeps the remote door's
+  per `duodeck-pair/1` connection; `RemoteServer` keeps the remote door's
   listener), `DoorPolicy` (who each door admits, the ask rule's six steps,
   `afterGate`, `stillServes` (a session registered behind a change that cut
   it off), `isTestHost`: a host that does not advertise and is not
-  Sill.app's own executable; pure, `Tests/checks/door-policy`), `CableLink`
+  DuoDeck.app's own executable; pure, `Tests/checks/door-policy`), `CableLink`
   (whether a connection came over the USB cable to an iPhone or iPad, from
   InterfaceSnapshot's IOKit reading, and the device's ID; pure,
   `Tests/checks/cable-link`), `CableReport` (`--print-cable`), `SessionLock`
   (this Mac's console, docs/locked-mac-plan.md: the witnesses on its own queue
-  `sill.lock`, never the main actor: the console's user in the dynamic store and
+  `duodeck.lock`, never the main actor: the console's user in the dynamic store and
   notify(3)'s screen state, both watched, the session dictionary bounded and off
-  main; Sill.app's notifications, `.deliverImmediately`, whose handler sets the
+  main; DuoDeck.app's notifications, `.deliverImmediately`, whose handler sets the
   reading; `gate`, set the moment the reading changes; `onChange`, `devices`;
-  the TEST ONLY SILL_TEST_LOCKED, SILL_TEST_LOCKED_FILE, SILL_TEST_LOCK_NOTIFY,
-  SILL_TEST_LOCK_NOTE and SILL_TEST_LOCK_LOG), `LockPolicy` (a locked Mac: the
+  the TEST ONLY DUODECK_TEST_LOCKED, DUODECK_TEST_LOCKED_FILE, DUODECK_TEST_LOCK_NOTIFY,
+  DUODECK_TEST_LOCK_NOTE and DUODECK_TEST_LOCK_LOG), `LockPolicy` (a locked Mac: the
   three readings and the witnesses' rule, unknown counting as locked; `Reader`,
   the settle before an unlock; what each reading allows; what the server's gate
   withholds; each request at each reading; the window list; the placeholder's
@@ -7420,7 +7414,7 @@ good.
   `DeviceGate` (the device floor, "0" in every build so far, and a refusal's
   words and log lines; pure, checked with swiftc; the gate itself, which runs
   only above "0", is StreamServer's, with the TEST ONLY
-  SILL_TEST_MIN_DEVICE_VERSION and SILL_TEST_GOODBYE).
+  DUODECK_TEST_MIN_DEVICE_VERSION and DUODECK_TEST_GOODBYE).
   The Mac's menus (docs/menu-bar-plan.md): `MenuFormat` (a shortcut as the
   Mac draws it, "⇧⌘S", "fn ⌃F"; an item and a top-level menu as sent; pure),
   `MenuPolicy` (`MenuPath`, the ids; `MenuCache`, a menu's read kept 1 s,
@@ -7430,22 +7424,22 @@ good.
   their places; `PressDecision`, only a leaf whose title now is the one shown;
   `TopLevel`; the refusals' words and log lines; pure; both checked by
   `Tests/checks/menus`), `MenuReader` (every Accessibility call for menus, on
-  its own queue `sill.menus`: the top level, one menu's items under the title
+  its own queue `duodeck.menus`: the top level, one menu's items under the title
   shown, walks checked against the version's record, a press; a 1 s timeout
   per element, 1.5 s a menu, and no item begun that would end past the
   request's deadline), `MenuMirror` (main actor: the target, the version, the
   subscribers (only they are served), one request at a time with its
   deadline, the cache and the kept elements; a cut-off device's waiting
   requests neither read nor made, `clientRevoked`; the TEST ONLY
-  SILL_TEST_MENU_PID, honoured only by a synthetic host, makes a process's
+  DUODECK_TEST_MENU_PID, honoured only by a synthetic host, makes a process's
   menus the test pattern's) and `MenuSelfTest` (`--menu-selftest[=APP]`,
   read-only).
   The Mac's pointer: `PointerControl` (who moves it, the Mac or the device
-  whose input the host read last, with the settle for Sill's own motion; the
+  whose input the host read last, with the settle for DuoDeck's own motion; the
   fraction kind 26 carries; pure, `Tests/checks/pointer-control`) and
   `PointerWatch` (the host's sampling of it: PointerControl under a lock, the
   streamed source's rectangle, a regular-mode window's bounds re-read on
-  `sill.pointer`, the TEST ONLY scripted pointer `TestPointerPath` and
+  `duodeck.pointer`, the TEST ONLY scripted pointer `TestPointerPath` and
   `PointerTestHooks`; `Tests/checks/pointer-watch`). StreamServer samples it at
   each tick, and at the stream's frame rate while it moves over the source and
   some device is sent it (`PointerWatch.samplerInterval`), and sends kind 26
@@ -7453,8 +7447,8 @@ good.
   post just before it and, on a synthetic host, posts nothing (`in.dry`).
   Trackpad gestures: `GestureChords` (kind 28's gesture as the Mac's own
   shortcut for its action, the first of its shortcuts that is on; the view
-  Sill's last gesture opened, which the opposite gesture closes; the log line;
-  the TEST ONLY `SILL_TEST_HOTKEYS` table; pure, `Tests/checks/gesture-chords`)
+  DuoDeck's last gesture opened, which the opposite gesture closes; the log line;
+  the TEST ONLY `DUODECK_TEST_HOTKEYS` table; pure, `Tests/checks/gesture-chords`)
   and `SymbolicHotKeys` (the Mac's Keyboard Shortcuts read through SkyLight's
   two getters at each gesture, read-only); the coordinator takes four a second
   per connection, waits for a switch in flight, queues the chord behind held
@@ -7463,14 +7457,14 @@ good.
   state table's flags from before it (`KeyStrokes.chord`;
   `in.gestureModifiersLeft` if some stay).
   The Mac's sound (docs/audio-plan.md; a beta since 2026-10-20): `AudioPipeline` (the source it follows
-  from `active`'s didSet, one transition at a time; on `sill.audio` the
+  from `active`'s didSet, one transition at a time; on `duodeck.audio` the
   packetizer, the encoder, the epochs and the stamps; the status and kind 16's
-  note; `prepare`, AAC-ELD's codec loaded once off `sill.audio` when Send Audio
+  note; `prepare`, AAC-ELD's codec loaded once off `duodeck.audio` when Send Audio
   is on), `AudioCapture` (ScreenCaptureKit's audio-only stream of one app, or of
-  every app but Sill's, bounded start and stop, the running stream under a
+  every app but DuoDeck's, bounded start and stop, the running stream under a
   lock; never run by a test),
   `SyntheticAudio` (a synthetic host's test tone; the TEST ONLY
-  `SILL_TEST_AUDIO_CHUNK` and `SILL_TEST_AUDIO_PAUSE`), `TestTone` (440 Hz and a
+  `DUODECK_TEST_AUDIO_CHUNK` and `DUODECK_TEST_AUDIO_PAUSE`), `TestTone` (440 Hz and a
   click at each whole second of the stamps' clock; pure), `AudioPacketizer`
   (blocks, stamps and segments, `AudioSourceRule`, `PCMLayout`,
   `AudioBufferTally`; pure, `Tests/checks/audio-packetizer`) and `AudioEncoder`
@@ -7488,7 +7482,7 @@ good.
   DisplayActivity says, `Report`: "Woke the display for …" only when the
   display read asleep before and on 0.5 s after, once for one wake, else
   "Declared activity for …" once a minute at most, and the refusal's, once; the
-  TEST ONLY `SILL_TEST_USER_ACTIVE`; pure, with StreamMessage.swift and
+  TEST ONLY `DUODECK_TEST_USER_ACTIVE`; pure, with StreamMessage.swift and
   Input.swift, `Tests/checks/display-wake`) and `DisplayActivity`
   (IOPMAssertionDeclareUserActivity with kIOPMUserActiveLocal, or Remote under
   the TEST ONLY switch, on its own queue, the main display's sleep state read
@@ -7496,14 +7490,14 @@ good.
   again by the Mac's own setting); the coordinator's `handle` forwards every
   message to the rule (`deviceActive`), and `parameterSetsSent` its stream
   changes.
-- `Sources/SillHostCLI/main.swift` — the CLI: flags, `dispatchMain` vs
+- `Sources/DuoDeckHostCLI/main.swift` — the CLI: flags, `dispatchMain` vs
   `NSApplication.run`, the Terminal permission hint; `--pairing` (the home
   door's TLS with pairing required, a throwaway identity, the code and link
   on its own stdout), `--print-cable` and `--no-clipboard`.
-- `Sources/SillMenuBar/` — the app: `main.swift` (AppKit lifecycle, accessory
+- `Sources/DuoDeckMenuBar/` — the app: `main.swift` (AppKit lifecycle, accessory
   policy), `AppDelegate` (launch order, Quit, the modal-loop rule), `AppModel`
   (owns the coordinator, presentation, App Nap guard, onboarding), `AppIdentity`
-  (whether this launch is Sill.app itself, by its signing identifier, signature and bundle
+  (whether this launch is DuoDeck.app itself, by its signing identifier, signature and bundle
   wherever it runs from, or the bare binary, the one test host; pure but for its reader,
   `Tests/checks/test-host`),
   `HostSettings` (UserDefaults; the presets are StreamProtocol's
@@ -7526,14 +7520,14 @@ good.
   address; pure, checked with swiftc), `UpdatePolicy` (the update check's rules
   and words; pure, checked with swiftc) and `UpdateChecker` (main actor; asks
   GitHub's releases feed and times the checks; compiles on its own with swiftc).
-- `Packaging/` — Sill.app's `Info.plist` and the development entitlements
-  (get-task-allow only), the release's (`SillRelease.entitlements`:
+- `Packaging/` — DuoDeck.app's `Info.plist` and the development entitlements
+  (get-task-allow only), the release's (`DuoDeckRelease.entitlements`:
   `com.apple.application-identifier`, the team and the keychain group, signed
   in only with `embedded.provisionprofile`, the Developer ID profile, which is
   git-ignored; docs/keychain-plan.md), and `ExportOptions-appstore.plist`, how
   the iOS app's archive is exported for App Store Connect. `Scripts/release-ios.sh`
   makes the iOS app's build: the Release archive (automatic signing on team
-  9B2KKVM937, or none with `--sign-at-export` and `--unsigned`), the export
+  U549N38BV6, or none with `--sign-at-export` and `--unsigned`), the export
   (destination export; `--upload` adds a second one whose destination is
   upload), the .ipa checked (version and build, the export compliance key,
   the Local Network, Bonjour and camera entries, the privacy manifest, an
@@ -7548,9 +7542,9 @@ good.
   checks must say DTPlatformVersion 27.1 or later),
   with `--bump` or `--upload` a working tree with changes (new files in
   iOSClient and Sources/StreamProtocol count), and an App Store address in
-  `SillLinks.swift` that isn't one, and sourced it only defines its
+  `DuoDeckLinks.swift` that isn't one, and sourced it only defines its
   functions (docs/release-checklist.md, TestFlight). `Scripts/make-app.sh`
-  builds, iconizes, signs and installs the bundle (with `SILL_UNIVERSAL=1`
+  builds, iconizes, signs and installs the bundle (with `DUODECK_UNIVERSAL=1`
   arm64 and x86_64, each in its own scratch path under `.build/universal`,
   joined with lipo, #62; off by default here, on in the nightlies and, since
   0.6.0, in release.yml's publish job, so releases are universal; `release.sh`'s
@@ -7560,43 +7554,43 @@ good.
   `make-app.sh --release`, `make-dmg.sh --prepare` (the image's tool and
   background, before anything goes to Apple), a zip (`ditto -c -k
   --keepParent`), Apple's notary service (`notarytool submit --wait`, the
-  profile in `SILL_NOTARY_PROFILE`), the ticket stapled, the zip made again
+  profile in `DUODECK_NOTARY_PROFILE`), the ticket stapled, the zip made again
   with the ticket inside, and a copy unpacked from it checked with `stapler
   validate` and `spctl` ("Notarized Developer ID"); then the disk image of the
   stapled app (`make-dmg.sh --sign`), notarized on its own, stapled, and
   checked (`hdiutil verify`, `stapler validate`, `spctl -t open --context
   context:primary-signature` as "Notarized Developer ID", mounted `-nobrowse`
-  in `$TMPDIR` and the Sill.app inside checked as the zip's copy); it prints
-  `.build/Sill-<version>.dmg` and `.zip` with their SHA-256. A dry run makes
+  in `$TMPDIR` and the DuoDeck.app inside checked as the zip's copy); it prints
+  `.build/DuoDeck-<version>.dmg` and `.zip` with their SHA-256. A dry run makes
   the image too, from the app before stapling, signed with the same identity.
   It refuses to start, before building, without a
-  Developer ID Application identity (`SILL_SIGN_IDENTITY`, checked against the
+  Developer ID Application identity (`DUODECK_SIGN_IDENTITY`, checked against the
   keychain) or the profile, or on a HEAD without the tag v‹version› (the
-  update check's), or with `SILL_RELEASE_TAG` (the release workflow sets it)
+  update check's), or with `DUODECK_RELEASE_TAG` (the release workflow sets it)
   not `v<CFBundleShortVersionString>` or naming another commit (`--check-tag`
   checks only that), and `--dry-run` stops before notarytool (the profile and
-  the tag only warned about: it sets `SILL_RELEASE_DRY_RUN=1`, with which
+  the tag only warned about: it sets `DUODECK_RELEASE_DRY_RUN=1`, with which
   `make-app.sh --release` builds an untagged commit); it refuses a build
   without Assets.car and AppIcon.icns. `--publish` makes the GitHub Release in
-  `SILL_RELEASE_REPO` (default Saffsanity/sill, the only repository the update
+  `DUODECK_RELEASE_REPO` (default samihalawa/2026-CODEX-DuoDeck, the only repository the update
   check reads), asks `gh api repos/<repo>` whether it can reach the repository
   (`gh auth status` asks GET /user, which the Actions token can't answer), and
   refuses to start unless origin's tag v‹version› names HEAD (gh would make a
   missing tag from the default branch's tip; not asked in the release
   workflow, whose checkout is the run's own commit with every tag, stopping
   when its tag moved, and keeps no credentials); in
-  Saffsanity/sill it passes gh `--verify-tag`, anywhere else it warns that no
-  Sill.app will offer the release. It uploads `Sill.dmg`, `Sill.dmg.sha256`,
-  `Sill.zip` and `Sill.zip.sha256` (the zip kept for older links: the download
+  samihalawa/2026-CODEX-DuoDeck it passes gh `--verify-tag`, anywhere else it warns that no
+  DuoDeck.app will offer the release. It uploads `DuoDeck.dmg`, `DuoDeck.dmg.sha256`,
+  `DuoDeck.zip` and `DuoDeck.zip.sha256` (the zip kept for older links: the download
   page names the image since 0.3.1). Sourced, it only defines its functions.
   `release.sh --nightly [--dry-run | --publish]` (docs/release-checklist.md,
   "Nightlies"): main's head built, signed, notarized and checked as a release,
-  without the tag rule (make-app.sh's `SILL_RELEASE_NIGHTLY=1`) and only with
-  the Developer ID profile, as `.build/Sill-nightly-<yyyymmdd>-<sha7>.dmg` and
-  `.zip` (`SILL_NIGHTLY_DATE`, UTC); `--publish` puts them and their `.sha256`
+  without the tag rule (make-app.sh's `DUODECK_RELEASE_NIGHTLY=1`) and only with
+  the Developer ID profile, as `.build/DuoDeck-nightly-<yyyymmdd>-<sha7>.dmg` and
+  `.zip` (`DUODECK_NIGHTLY_DATE`, UTC); `--publish` puts them and their `.sha256`
   on the rolling pre-release `nightly` (made when missing, its tag moved to
-  the commit, never latest, `SILL_NIGHTLY_KEEP` newest nightlies kept, its notes
-  `SILL_NIGHTLY_NOTES` or nightly-notes.sh's, ending in the commit's sha in a
+  the commit, never latest, `DUODECK_NIGHTLY_KEEP` newest nightlies kept, its notes
+  `DUODECK_NIGHTLY_NOTES` or nightly-notes.sh's, ending in the commit's sha in a
   comment that `nightly_last_sha` reads for the skip rule).
   `Scripts/nightly-notes.sh --markdown F --whats-new F`: a night's words for both
   apps, the pull requests merged on main's first-parent line since the newest
@@ -7606,12 +7600,12 @@ good.
   script): App Store Connect's API for TestFlight with an ES256 token from the
   .p8 key (`groups`, `build-state`, `whats-new`, `distribute`: wait for
   processing up to 90 minutes, What to Test, every internal group, the public
-  beta group only with `--public-beta` and `SILL_NIGHTLY_PUBLIC_BETA=true` in its
+  beta group only with `--public-beta` and `DUODECK_NIGHTLY_PUBLIC_BETA=true` in its
   environment, Beta App Review only right after that); the token goes only to
   api.appstoreconnect.apple.com (or a stand-in on 127.0.0.1 in tests) and is
   never printed.
   `Scripts/make-dmg.sh --sign IDENTITY APP DMG` (`-` for ad hoc) makes the
-  image: an HFS+ volume "Sill" (not APFS: Finder names the background by an
+  image: an HFS+ volume "DuoDeck" (not APFS: Finder names the background by an
   HFS+ alias record, and Finder-made and current third-party images are
   HFS+) with the app (`ditto`), a link to /Applications, `.background/`
   (design/DMGBackground.svg rendered by Quick Look at 1x and 2x, cropped,
@@ -7622,13 +7616,13 @@ good.
   DMGLayout.swift) writes without Finder and reads back (`check`): 660 x 432
   points, the picture's 400 and macOS 27's 32-point title bar
   (`DMGLayout.titleBar`; `Tests/checks/dmg-layout` checks the writer); converted
-  to ULFO (LZFSE, read-only), signed (identifier `me.saffer.sill.dmg`, a
+  to ULFO (LZFSE, read-only), signed (identifier `com.agentsai.duodeck.dmg`, a
   timestamp unless ad hoc) and checked mounted (exactly five items at the
   root, the link, the layout, the app byte for byte). Mounts are `-nobrowse`
   in a new folder in `$TMPDIR`: mounted under the home folder, fseventsd
   writes `.fseventsd` onto the image as it unmounts. `--prepare` only builds
   the tool and the background. Sourced, it only defines its functions.
-  `Scripts/sillclient.py` is the wire-format test client
+  `Scripts/duodeckclient.py` is the wire-format test client
   (timed `--set=K=V[,K=V]@T` kind 17 changes with tokens 1, 2, 3…,
   `--raw17=JSON@T`, `--raw9=JSON@T` (a literal viewport, kind 9),
   `--pick=none|desktop|window:ID@T`, `--stats`,
@@ -7650,7 +7644,7 @@ good.
   the one listed for the id), `--press=ID[,TITLE]@T`, `--raw25=JSON@T`,
   `--raw27=JSON@T` and
   `--expect-menus=TITLE[,…]`, the fetches and presses only with
-  SILL_TEST_MENU_PID in its own environment (against any other host they
+  DUODECK_TEST_MENU_PID in its own environment (against any other host they
   would open and choose the menus of whatever app is in front); every
   argument is checked before it connects, and a bad one exits 2).
   `Scripts/menufixture.swift` (TEST ONLY) is the menu gates' app: an AppKit
@@ -7664,7 +7658,7 @@ good.
   SIGHUP inserting an item at the top of Probe in place and SIGALRM giving
   Probe a new NSMenu; `menufixture label PID` reads its label over
   Accessibility. `Scripts/menu-check/run.sh` runs the real MenuReader and
-  MenuMirror against it with no host and no encoder (safe while Sill.app
+  MenuMirror against it with no host and no encoder (safe while DuoDeck.app
   streams; it needs Accessibility for whatever runs it, and an unlocked screen),
   and its `close` step WindowSizer's Close (with WindowRestore.swift, which
   WindowSizer needs since #75) against Slow Close: back within 1 s, as no answer.
@@ -7689,10 +7683,10 @@ good.
   synthetic test hosts on loopback (each under 60 s) through locks, a switch to
   another user, the unlock's settle, the flap and a start while locked, with the
   TEST ONLY lock hooks and test clients that save what they receive
-  (`sillclient.py --dump`), and prints a verdict per rule; `frames.swift` (`build.sh`: with StreamProtocol, into
+  (`duodeckclient.py --dump`), and prints a verdict per rule; `frames.swift` (`build.sh`: with StreamProtocol, into
   `.build/lock-check/frames`) decodes the saved keyframes on VideoToolbox's
   software decoder and prints each one's size and luma, so the placeholder's
-  black is measured. `Scripts/sillrelay.py` is a
+  black is measured. `Scripts/duodeckrelay.py` is a
   shaping passthrough relay (`--listen 0 --to HOST:PORT [--delay-ms N]
   [--rate-mbps R] [--blackhole-after S] [--record PREFIX]`; TLS passes
   through). `Scripts/pacing/` is the remote pacing harness
@@ -7705,7 +7699,7 @@ good.
   refused; on cue, new sizes, a still window or a restart); `run.sh [--full]
   [--cases a,b] [--repeat N] [--base REF] [--list]`
   runs each case on both, host → `bottleneck.py` (a downlink rate on a virtual
-  clock, a delay, a finite queue, rate changes) or `Scripts/sillrelay.py` →
+  clock, a delay, a finite queue, rate changes) or `Scripts/duodeckrelay.py` →
   `device.py` (the device's reader, pings, stats and liveness;
   `--liveness-bytes` for MessageReader's rule), everything on 127.0.0.1 and
   each run only while the load average is under 20; `summarize.py` prints the
@@ -7718,18 +7712,18 @@ good.
   links VideoToolbox), and `verify-hardware.sh` the hardware runs against a
   base commit built from `git archive` (parity, stream, harness, probe,
   keyframe), each only while `no-device.sh` finds no device connected to
-  Sill.app; outputs go to `.build/encoder-check/`.
-  `sillclient.py --hello=VER[,PROTO]` (or `none`) sends a device's hello
+  DuoDeck.app; outputs go to `.build/encoder-check/`.
+  `duodeckclient.py --hello=VER[,PROTO]` (or `none`) sends a device's hello
   first (`--hello-delay=S` S seconds after the connection is up, for a change
   made while a host's device gate holds it), and kind 22's new fields are
-  printed. `Scripts/sillfeed.py PORT`
+  printed. `Scripts/duodeckfeed.py PORT`
   is a fake GitHub releases feed for the update check's tests (`--tag`,
   `--status`, `--etag`, `--draft`, `--prerelease`, `--html-url`, `--body`,
   `--big`, `--slow`, `--reset`, `--redirect`, `--set-cookie`,
   `--all-headers`; `GET /__control?key=value` changes them while it runs).
 - `site/` — the website, for GitHub Pages at the domain in `site/CNAME`:
-  `index.html`, `download.html` (links the newest GitHub Release's `Sill.dmg`
-  and `Sill.dmg.sha256`; never edited per release), `privacy.html` (the policy
+  `index.html`, `download.html` (links the newest GitHub Release's `DuoDeck.dmg`
+  and `DuoDeck.dmg.sha256`; never edited per release), `privacy.html` (the policy
   App Store Connect and the app link to), `support.html`, `contribute.html` (how to sponsor,
   the public sponsors and the contributors by name, the rules for a pull request; linked from
   every page's header and footer, README's Tips and Contributing, FUNDING.yml's custom link and
@@ -7751,7 +7745,7 @@ good.
   Connect record) and every release's steps.
 - `Sources/VirtualDisplayProbe/` — CLI experiment for milestone 3; run it from
   Terminal (needs Screen Recording + Accessibility): `.build/release/VirtualDisplayProbe "Activity Monitor" --seconds 20`.
-- `iOSClient/` — `Sill.xcodeproj` and its sources: `StreamClient` (Bonjour: a
+- `iOSClient/` — `DuoDeck.xcodeproj` and its sources: `StreamClient` (Bonjour: a
   network browser and, when `DiscoveryPolicy` says, a nearby peer-to-peer one,
   each made again after the background and after a failure (`cameForward`,
   `rebuildBrowser`); `FoundMac` rows; connection, parsing, reconnect, the move of a session over
@@ -7881,7 +7875,7 @@ good.
   that failed, could not decode a frame or needs a flush to decode again, at each
   frame, at its notifications and when the window becomes active, and says so,
   `onNeedsKeyframe`, then `onPictureBack`, both, back first, for a keyframe the
-  flush throws away; DEBUG `-SillLayerFail` and `-SillKeyframeLost`),
+  flush throws away; DEBUG `-DuoDeckLayerFail` and `-DuoDeckKeyframeLost`),
   `KeyframeRecovery` (when the device asks the Mac for a keyframe, kind 44,
   after its picture was interrupted: one ask per interruption while its keyframe
   is due, again when none came within `answerWait`, max(4 s, 4 round trips);
@@ -7892,7 +7886,7 @@ good.
   `DiagnosticsHUD` (client stats reporter),
   `StreamClient+Viewport`, `ContentView` (connect screen with rows ending in
   Wired, Wi-Fi, Direct or Remote, the hint and Search Nearby, Add a Mac…, and
-  a footer along the bottom, "Needs the free Sill app on your Mac." with links
+  a footer along the bottom, "Needs the free DuoDeck app on your Mac." with links
   to the download, support and the privacy policy, which open in Safari (one
   line while they fit, else the download link over the other two, as wide as
   the column); the column stays where it would be without the footer
@@ -7903,9 +7897,9 @@ good.
   12 pt clear, both inside the gap); one scroll view
   whatever the fit (`ColumnOverFooter`, measuring a hidden copy of the
   footer), so a fit that changes never builds the card anew (its fields, the
-  camera); + DEBUG harness, and `InputScript`, `-SillInputScript`'s steps),
-  `SillLinks`
-  (the site's addresses, written once; getsill.app is live since 2026-09-25;
+  camera); + DEBUG harness, and `InputScript`, `-DuoDeckInputScript`'s steps),
+  `DuoDeckLinks`
+  (the site's addresses, written once; duodeck.megawebs.com is live since 2026-09-25;
   and the App Store address for a Mac's update notice, the App Store Connect
   record's since PR #27),
   `MockCatalog` (harness data and the settings cases), `HostSettingsLedger`
@@ -7936,7 +7930,7 @@ good.
   pure, `Tests/checks/menu-state`), `MacMenuElements` (the one builder of
   `UIMenuElement`s for the iPad's bar and the button: uncached deferred
   elements, `UIAction` leaves with the Mac's shortcut as the subtitle, never a
-  `UIKeyCommand` or `UICommand`), `SillAppDelegate` (`SillApp`'s
+  `UIKeyCommand` or `UICommand`), `DuoDeckAppDelegate` (`DuoDeckApp`'s
   `@UIApplicationDelegateAdaptor`; only `buildMenu(with:)`) with `MacMenuBar`
   (where the Mac's menus go in the iPadOS 26 bar, once per build, every
   anchor looked up first), `MacMenuHub` (whose session the bar shows: the
@@ -7958,7 +7952,7 @@ good.
   `StreamClient+Clipboard` (the subscription at the first window list that
   says `clipboard` and on a move's new connection, `stop` when the switch goes
   off, the Mac's text written `.localOnly` for 10 minutes, the chip's look when
-  Sill becomes active and its time while it shows, Paste's send and its
+  DuoDeck becomes active and its time while it shows, Paste's send and its
   receipt, a ping whose pong says the Mac read it; pbxproj AC64/FC64) and `ClipboardChip`
   (the chip and `ClipboardPasteButton`, the system's Paste control;
   AD64/FD64); StreamScreen places the chip, the Settings panel's This iPad
@@ -7972,15 +7966,15 @@ good.
   pure, Foundation and CoreGraphics, `Tests/checks/tour`) and `TourOverlay`
   (the dim with the lit cutout and its ring, the card placed by a Layout, the
   "New:" drawn in the accent, the targets' preference in the stream screen's
-  named space `sill.screen`, `TourStore` for `Sill.tourSeen`,
-  `Sill.tourSkipped` and `Sill.tourVersion` (the upgrade, in Release and under
-  `-SillTourState saved` only), `TouchWatcher`, a recognizer on the window that counts
+  named space `duodeck.screen`, `TourStore` for `DuoDeck.tourSeen`,
+  `DuoDeck.tourSkipped` and `DuoDeck.tourVersion` (the upgrade, in Release and under
+  `-DuoDeckTourState saved` only), `TouchWatcher`, a recognizer on the window that counts
   every touch and takes none, and DEBUG `TourDebug`); StreamScreen runs it
   (targets, the rule's inputs, `tourFeatures`, the layer above the layouts and
   under the pairing overlay, Take the Tour from the Settings panel's last row),
   and MacMenuButton reports the Menus button as the target `menus`. The
   connect screen's tiles and groups (issue #116, PR #117): `ConnectionList`
-  (rows or tiles, `Sill.connectionStyle`, tiles by default since 2026-10-27
+  (rows or tiles, `DuoDeck.connectionStyle`, tiles by default since 2026-10-27
   (`defaultStyle`; a stored choice always wins); when a session's
   end keeps a picture, `takesPreview`: only with tiles, from the session's own
   window in front, for a saved Mac; the saved Mac a row stands for, `tileMac`:
@@ -7992,12 +7986,12 @@ good.
   `previewPixels`, 640 pixels wide at most, and `looksBlack`;
   `keepsDecodedPicture`; whether Disconnect asks the Mac for a keyframe
   first, `freshPicture`, every Mac whatever version it says; group names,
-  `Sill.macGroups`, and the sections' order; a superseded record's group; the
+  `DuoDeck.macGroups`, and the sections' order; a superseded record's group; the
   pictures' file names; pure, with KeyframeRecovery's spacing,
   `Tests/checks/connection-list`; pbxproj AF01/FF01). ConnectScreen draws them
   (the switch beside the title, the tiles, a saved Mac's Group menu and New
   Group…), StreamClient+Remote keeps them (`savePreview` with complete file
-  protection in Library/Caches/SillPreviews, `syncPreviews` at launch and at a
+  protection in Library/Caches/DuoDeckPreviews, `syncPreviews` at launch and at a
   change of style; only Remove Preview Picture and Forget delete a Mac's),
   and StreamClient takes the picture: the session's last keyframe with its
   parameter sets (`lastKeyframe`, on the network queue, one frame, dropped at
@@ -8005,7 +7999,7 @@ good.
   VTDecompressionSession of its own, off the main thread, 1 s at most;
   pbxproj AF02/FF02), never a snapshot of the screen, which a device draws
   black where the video is; Disconnect waits up to 300 ms for a fresh keyframe
-  first (kind 44, every Mac; one that skips it, Sill for Mac 0.5.1, costs that
+  first (kind 44, every Mac; one that skips it, DuoDeck Host 0.5.1, costs that
   pause, its picture the keyframe kept).
   `AudioDecoder` (AAC-ELD to a buffer per channel, one packet at a time;
   AudioToolbox only), `AudioPlayout` (the sound's timing; pure,
@@ -8015,10 +8009,10 @@ good.
   Mute; `macHasSound`, whether it shows): pbxproj AA01–AA04; the host's `audio-codec` check and
   the sound harness's device compile AudioDecoder too. The Settings panel (`HostSettingsPanel`)
   holds the sound's two switches: the Mac's group's Send Audio (for every device, with a "Beta"
-  tag) and Mute right under it; no bar has a Sound button (Noah, 2026-10-27).
+  tag) and Mute right under it; no bar has a Sound button (the maintainer, 2026-10-27).
   `Info-Debug.plist` is the Debug configuration's Info.plist: Info.plist's
-  keys, with `_silltest._tcp` beside `_sill._tcp` for the harness's
-  `-SillServiceType` (Release declares `_sill._tcp` alone).
+  keys, with `_duodecktest._tcp` beside `_duodeck._tcp` for the harness's
+  `-DuoDeckServiceType` (Release declares `_duodeck._tcp` alone).
   `PrivacyInfo.xcprivacy`, a resource of the target, is the privacy manifest:
   it declares UserDefaults (CA92.1), `systemUptime` (35F9.1) and the active
   keyboards (54BD.1: `UITextInputMode.activeInputModes`, which decides whether ⌃Space is
@@ -8030,13 +8024,13 @@ good.
 - `docs/BRIEF.md` — product decisions, competition, scope, risks.
 - `docs/DEVELOPMENT.md` — building, running and testing from source; the
   README's developer material until 2026-09-25, so a plan's "README" means a
-  section there: the toolchain, make-app.sh, Sill.app's menu and Quality, the
+  section there: the toolchain, make-app.sh, DuoDeck.app's menu and Quality, the
   CLI's flags, the iOS project, Permissions (the TCC reset), settings from a
   device, Direct Wireless, pairing at home (the cable, Require pairing, older
   builds, starting over), remote access (setup, troubleshooting, reset), the
   test tools in brief (Build and run below has them all), measuring latency,
   troubleshooting (slow, frozen, the encoder), releasing, known limitations.
-- `README.md` — the public front page: the site's lede, links to getsill.app
+- `README.md` — the public front page: the site's lede, links to duodeck.megawebs.com
   and its download, support, privacy and terms pages, the App Store badge
   (live since 2026-10-10), requirements, how it works, tips, building from
   source in brief,
@@ -8046,7 +8040,7 @@ good.
   `.github/FUNDING.yml` — the Sponsor button: GitHub Sponsors (a `ko_fi:`
   line joins it once there is a Ko-fi handle). Tip links live there, in the
   README's Tips and on the site, never in the iOS app. `SECURITY.md` — how to
-  report a vulnerability (support@getsill.app, never a public issue) and what
+  report a vulnerability (sami@samihalawa.com, never a public issue) and what
   is in scope. `.github/ISSUE_TEMPLATE/` — issue forms: a bug report, an idea,
   a question, no blank issue. `.gitignore` also leaves out signing keys,
   profiles, keychains and design/reel/.
@@ -8062,13 +8056,13 @@ good.
   pushed tag `v*`, or by hand with one; verify only (the tag, the checks,
   `make-app.sh` signed ad hoc, zipped, and `make-dmg.sh`'s image of it, ad hoc
   too, as two artifacts) unless the repository
-  variable `SILL_SIGN_IN_CI` is `true`, then, in the environment `release`
-  (only `v*` tags, Noah its required reviewer; its first step names a missing
+  variable `DUODECK_SIGN_IN_CI` is `true`, then, in the environment `release`
+  (only `v*` tags, the maintainer its required reviewer; its first step names a missing
   secret and refuses a run by hand not started from its tag; it checks out
   the run's own commit, `github.sha`, and stops when the tag no longer names
   it), the Developer
   ID .p12 into a temporary keychain, the notary key stored as a profile in it, the Developer ID
-  profile decoded from `SILL_PROVISION_PROFILE` into
+  profile decoded from `DUODECK_PROVISION_PROFILE` into
   `Packaging/embedded.provisionprofile` (since the nightlies), `release.sh
   --publish`, Apple's notary logs kept as an artifact (`include-hidden-files:
   true`: upload-artifact skips whatever is under a folder whose name starts
@@ -8078,20 +8072,20 @@ good.
   GitHub Actions". `testflight.yml`: by hand from main only (the environment
   `nightly`); `release-ios.sh
   --unsigned` without an App Store Connect key, `--sign-at-export` with one
-  (the secrets `SILL_TESTFLIGHT_KEY_ID`, `SILL_TESTFLIGHT_ISSUER_ID`,
-  `SILL_TESTFLIGHT_KEY_P8`, an Admin key: cloud signing, no certificate or
-  profile stored), and `--upload` too when the variable `SILL_TESTFLIGHT_IN_CI`
+  (the secrets `DUODECK_TESTFLIGHT_KEY_ID`, `DUODECK_TESTFLIGHT_ISSUER_ID`,
+  `DUODECK_TESTFLIGHT_KEY_P8`, an Admin key: cloud signing, no certificate or
+  profile stored), and `--upload` too when the variable `DUODECK_TESTFLIGHT_IN_CI`
   is `true` and the commit is on main's first-parent line (another branch's
   count can be a later nightly's), the build number the commit count
   (`--build-number`); the .ipa is
   the artifact for 14 days (docs/release-checklist.md, "TestFlight from GitHub
-  Actions"). `nightly.yml`: 09:17 UTC while the variable `SILL_NIGHTLY` is
+  Actions"). `nightly.yml`: 09:17 UTC while the variable `DUODECK_NIGHTLY` is
   `true`, and by hand (`verify_only`); decide (the skip rule against the
-  pre-release's sha, the date, the build number, the notes once), Sill for Mac
-  (`release.sh --nightly --publish` with `SILL_SIGN_IN_CI`, else ad hoc
-  artifacts), Sill for iPhone and iPad (`release-ios.sh --build-number`, the
-  upload with `SILL_TESTFLIGHT_IN_CI`, then `asc.swift distribute`: every
-  internal group, the public beta group only while `SILL_NIGHTLY_PUBLIC_BETA` is
+  pre-release's sha, the date, the build number, the notes once), DuoDeck Host
+  (`release.sh --nightly --publish` with `DUODECK_SIGN_IN_CI`, else ad hoc
+  artifacts), DuoDeck for iPhone and iPad (`release-ios.sh --build-number`, the
+  upload with `DUODECK_TESTFLIGHT_IN_CI`, then `asc.swift distribute`: every
+  internal group, the public beta group only while `DUODECK_NIGHTLY_PUBLIC_BETA` is
   `true`); only main builds: both jobs run in the environment `nightly` (only
   main, no reviewer), which holds the nine secrets, none of them a repository
   secret (docs/release-checklist.md, "Nightlies", "Secrets and variables").
@@ -8132,11 +8126,11 @@ good.
   `lock-policy` (the host's LockPolicy and StreamProtocol's LockedMac, with a copy of
   the coordinator's glue), `menu-state` (iOSClient's MacMenuState), `menus` (the host's MenuFormat and
   MenuPolicy, and MacMenu.swift's JSON), `message-reader`, `origin`,
-  `pairing-address`, `pairing-sharing` (Sill.app's `PairingWindowSharing`),
+  `pairing-address`, `pairing-sharing` (DuoDeck.app's `PairingWindowSharing`),
   `phone-portrait`, `pointer-control`, `pointer-presence`,
   `pointer-watch`, `policy` (with its `home.swift`), `protocol`,
-  `remote-rules` (with its `home.swift`), `settings-window` (Sill.app's
-  `SettingsWindowFit`), `stream-zoom` (iOSClient's StreamZoom), `test-host` (Sill.app's AppIdentity with
+  `remote-rules` (with its `home.swift`), `settings-window` (DuoDeck.app's
+  `SettingsWindowFit`), `stream-zoom` (iOSClient's StreamZoom), `test-host` (DuoDeck.app's AppIdentity with
   IdentityStorePlan), `text-composition` (iOSClient's TextComposition with
   StreamProtocol's Input.swift), `tour`, `update-policy`, `virtual-display-api`
   `SettingsWindowFit`), `stream-zoom` (iOSClient's StreamZoom), `text-composition` (iOSClient's TextComposition with
@@ -8162,7 +8156,7 @@ good.
   app, driven with synthesized touches (`TouchSynth`, private UIKit calls, test
   only, never in the app), every event logged; `run.sh [--rev REV] [--switch
   off] NAME` builds and runs it on a simulator of its own
-  (`SILL_TOUCHRIG_SIM`), `compare.py` judges a run against the surfaces
+  (`DUODECK_TOUCHRIG_SIM`), `compare.py` judges a run against the surfaces
   before, and a stroke made right after a gesture against the same stroke
   made fresh.
 - `Tests/duorig/` — TEST ONLY, private interfaces, simulator only: folds and
@@ -8187,111 +8181,111 @@ good.
 
 ```
 swift build -c release
-swift run -c release SillHost              # nothing streams until the iOS app picks a window
-swift run -c release SillHost Safari       # optional: preselect a matching window
-swift run -c release SillHost --synthetic  # Desktop streams a test pattern; no Screen Recording needed
-swift run -c release SillHost --encoder-selftest   # is the hardware encoder alive? 5 s, exits
-swift run -c release SillHost --virtual-display   # picked windows stream from their own HiDPI display (off by default in the CLI; on in Sill.app)
-swift run -c release SillHost --virtual-display-selftest   # create/destroy one display, report what sees it ([Hz] [WxH] after it: `60 800x830`)
-swift run -c release SillHost --direct-wireless   # also over peer-to-peer Wi-Fi (AWDL): devices without a shared network (off by default)
-swift run -c release SillHost --audio       # Send Audio (a beta) for this run: the streamed app's sound to devices that play it (with --synthetic, a test tone; off by default; a device's Settings panel turns it on or off too)
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 .build/release/SillHost --synthetic --audio   # the test tone on loopback; sillclient.py PORT 8 desktop --hello=0.6 --audio counts it
+swift run -c release DuoDeckHost              # nothing streams until the iOS app picks a window
+swift run -c release DuoDeckHost Safari       # optional: preselect a matching window
+swift run -c release DuoDeckHost --synthetic  # Desktop streams a test pattern; no Screen Recording needed
+swift run -c release DuoDeckHost --encoder-selftest   # is the hardware encoder alive? 5 s, exits
+swift run -c release DuoDeckHost --virtual-display   # picked windows stream from their own HiDPI display (off by default in the CLI; on in DuoDeck.app)
+swift run -c release DuoDeckHost --virtual-display-selftest   # create/destroy one display, report what sees it ([Hz] [WxH] after it: `60 800x830`)
+swift run -c release DuoDeckHost --direct-wireless   # also over peer-to-peer Wi-Fi (AWDL): devices without a shared network (off by default)
+swift run -c release DuoDeckHost --audio       # Send Audio (a beta) for this run: the streamed app's sound to devices that play it (with --synthetic, a test tone; off by default; a device's Settings panel turns it on or off too)
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 .build/release/DuoDeckHost --synthetic --audio   # the test tone on loopback; duodeckclient.py PORT 8 desktop --hello=0.6 --audio counts it
 Scripts/audio/run.sh                        # the encoder-free sound harness and its gates (~7 min; no encoder, capture, speaker or device)
-swift run -c release SillHost --remote      # the remote door for this run on any free port (--remote=PORT), a throwaway identity; the code and link print here
-swift run -c release SillHost --remote --internet   # also admit paired devices from outside this Mac's networks and VPNs
-swift run -c release SillHost --print-reachability  # the addresses a device would get away from home, then exit
-swift run -c release SillHost --pairing     # the home door speaks TLS, pairing required, a throwaway identity; the code and link print here (with --remote, one pairing for both doors)
-swift run -c release SillHost --print-cable # what the cable rule reads on each interface, and whether the console is unlocked; read-only, then exit
-swift run -c release SillHost --menu-selftest=TextEdit   # the menus a device would be sent for that app (a pid, or the start of its name), read once; read-only
-python3 Scripts/sillclient.py PORT 5 none --pair-ask --then-code=$T/code --identity=$T/a   # a device's ask at a TLS home door, then the code the host printed (saved in $T/code)
-python3 Scripts/sillclient.py PORT 8 desktop --set=bitrate=25000000@3 --expect=bitrate=25000000   # a device's settings change
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_STILL_AFTER=3 .build/release/SillHost --synthetic   # the Desktop still from 3 s on: a device's picture comes back only through its keyframe request
-python3 Scripts/sillclient.py PORT 8 desktop --keyframe@3   # kind 44: "Keyframe for …" on the host, and the summary's "keyframes at" shows the one it brought
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_STILL_AFTER=3 SILL_TEST_KEYFRAME_IGNORE=1 .build/release/SillHost --synthetic   # the first keyframe request ignored, as a Mac from before kind 44 ignores every one: the device asks again 4 s later
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_NO_SCREEN=1 SILL_TEST_DESKTOP_FAIL=2 .build/release/SillHost --synthetic   # the first 2 Desktop starts fail, as ScreenCaptureKit's did on 2026-10-28 (1: the host's one more try streams; 2: a device asks again 10 s later)
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_POINTER_PATH=$T/path .build/release/SillHost --synthetic   # a scripted pointer on the test pattern, on 127.0.0.1 alone, never the hardware encoder
-python3 Scripts/sillclient.py PORT 6 desktop --pointer --move=0.25,0.25@3   # each kind 26 as it arrives; input goes only to a --synthetic host
-SILL_TEST_INPUT_LOG=1 SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_POINTER_PATH=$T/path .build/release/SillHost --synthetic   # prints each event a dry run would post ("Test input: key 49 up (none)")
-python3 Scripts/sillclient.py PORT 3 desktop --input='{"key":{"hidUsage":44,"down":true,"modifiers":1048576}}@1' --input='{"key":{"hidUsage":44,"down":false,"modifiers":1048576}}@1.05' --tap=0.5,0.5@1.5   # an older device's Spotlight key, then a tap
-python3 Scripts/sillclient.py PORT 6 desktop --key=80,1.2@2   # ← held 1.2 s (pinging four a second, as a device): with the input log, "Test input: key 123 down (none)", repeats from 0.5 s on ("… repeat (none)", 30 a second on this Mac), then its up
-python3 Scripts/sillclient.py PORT 8 none --gesture=swipeUp@3 --gesture=swipeDown@4   # a synthetic host logs "Gesture from …: swipe up → Mission Control (shortcut 108: key 160, fn) (not posted: a test host)"
-SILL_TEST_LOOPBACK=1 SILL_TEST_HOTKEYS='108=off,173=off' .build/release/SillHost --synthetic   # TEST ONLY: the gestures read this table (over macOS 27's own; `defaults` alone) instead of this Mac's shortcuts
-swift run -c release SillHost --no-clipboard  # share nothing of the clipboard with devices (on by default, as in Sill.app)
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_PASTEBOARD=me.saffer.sill.test.x SILL_TEST_CLIPBOARD_LOG=1 .build/release/SillHost --synthetic   # the clipboard on a pasteboard of its own (never this Mac's), each decision printed with sizes
-SILL_TEST_NO_SCREEN=1 SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 .build/release/SillHost --synthetic   # TEST ONLY: ScreenCaptureKit never asked (no window list, no thumbnails), so a host an agent runs asks macOS for no screen recording
-SILL_TEST_FIREWALL=executable SILL_TEST_NO_SCREEN=1 SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 .build/release/SillHost --synthetic   # TEST ONLY: the macOS firewall's answers canned (executable|bundle|both|all|off|allowed|unreadable, or a file holding one, read at each check): "Firewall: the macOS firewall blocks Sill’s executable, …"
+swift run -c release DuoDeckHost --remote      # the remote door for this run on any free port (--remote=PORT), a throwaway identity; the code and link print here
+swift run -c release DuoDeckHost --remote --internet   # also admit paired devices from outside this Mac's networks and VPNs
+swift run -c release DuoDeckHost --print-reachability  # the addresses a device would get away from home, then exit
+swift run -c release DuoDeckHost --pairing     # the home door speaks TLS, pairing required, a throwaway identity; the code and link print here (with --remote, one pairing for both doors)
+swift run -c release DuoDeckHost --print-cable # what the cable rule reads on each interface, and whether the console is unlocked; read-only, then exit
+swift run -c release DuoDeckHost --menu-selftest=TextEdit   # the menus a device would be sent for that app (a pid, or the start of its name), read once; read-only
+python3 Scripts/duodeckclient.py PORT 5 none --pair-ask --then-code=$T/code --identity=$T/a   # a device's ask at a TLS home door, then the code the host printed (saved in $T/code)
+python3 Scripts/duodeckclient.py PORT 8 desktop --set=bitrate=25000000@3 --expect=bitrate=25000000   # a device's settings change
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_STILL_AFTER=3 .build/release/DuoDeckHost --synthetic   # the Desktop still from 3 s on: a device's picture comes back only through its keyframe request
+python3 Scripts/duodeckclient.py PORT 8 desktop --keyframe@3   # kind 44: "Keyframe for …" on the host, and the summary's "keyframes at" shows the one it brought
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_STILL_AFTER=3 DUODECK_TEST_KEYFRAME_IGNORE=1 .build/release/DuoDeckHost --synthetic   # the first keyframe request ignored, as a Mac from before kind 44 ignores every one: the device asks again 4 s later
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_NO_SCREEN=1 DUODECK_TEST_DESKTOP_FAIL=2 .build/release/DuoDeckHost --synthetic   # the first 2 Desktop starts fail, as ScreenCaptureKit's did on 2026-10-28 (1: the host's one more try streams; 2: a device asks again 10 s later)
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_POINTER_PATH=$T/path .build/release/DuoDeckHost --synthetic   # a scripted pointer on the test pattern, on 127.0.0.1 alone, never the hardware encoder
+python3 Scripts/duodeckclient.py PORT 6 desktop --pointer --move=0.25,0.25@3   # each kind 26 as it arrives; input goes only to a --synthetic host
+DUODECK_TEST_INPUT_LOG=1 DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_POINTER_PATH=$T/path .build/release/DuoDeckHost --synthetic   # prints each event a dry run would post ("Test input: key 49 up (none)")
+python3 Scripts/duodeckclient.py PORT 3 desktop --input='{"key":{"hidUsage":44,"down":true,"modifiers":1048576}}@1' --input='{"key":{"hidUsage":44,"down":false,"modifiers":1048576}}@1.05' --tap=0.5,0.5@1.5   # an older device's Spotlight key, then a tap
+python3 Scripts/duodeckclient.py PORT 6 desktop --key=80,1.2@2   # ← held 1.2 s (pinging four a second, as a device): with the input log, "Test input: key 123 down (none)", repeats from 0.5 s on ("… repeat (none)", 30 a second on this Mac), then its up
+python3 Scripts/duodeckclient.py PORT 8 none --gesture=swipeUp@3 --gesture=swipeDown@4   # a synthetic host logs "Gesture from …: swipe up → Mission Control (shortcut 108: key 160, fn) (not posted: a test host)"
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_HOTKEYS='108=off,173=off' .build/release/DuoDeckHost --synthetic   # TEST ONLY: the gestures read this table (over macOS 27's own; `defaults` alone) instead of this Mac's shortcuts
+swift run -c release DuoDeckHost --no-clipboard  # share nothing of the clipboard with devices (on by default, as in DuoDeck.app)
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_PASTEBOARD=com.agentsai.duodeck.test.x DUODECK_TEST_CLIPBOARD_LOG=1 .build/release/DuoDeckHost --synthetic   # the clipboard on a pasteboard of its own (never this Mac's), each decision printed with sizes
+DUODECK_TEST_NO_SCREEN=1 DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 .build/release/DuoDeckHost --synthetic   # TEST ONLY: ScreenCaptureKit never asked (no window list, no thumbnails), so a host an agent runs asks macOS for no screen recording
+DUODECK_TEST_FIREWALL=executable DUODECK_TEST_NO_SCREEN=1 DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 .build/release/DuoDeckHost --synthetic   # TEST ONLY: the macOS firewall's answers canned (executable|bundle|both|all|off|allowed|unreadable, or a file holding one, read at each check): "Firewall: the macOS firewall blocks DuoDeck’s executable, …"
 /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate; …/socketfilterfw --listapps; …/socketfilterfw --getappblocked PATH   # the firewall, read-only as any user; never --unblockapp, --add, --remove or --set* (they change it, with sudo)
-python3 Scripts/sillclient.py PORT 6 none --clipboard --copy=hello@2 --expect=clipboard=none   # subscribe, send text as a device's Paste does; each kind 32 printed
-SILL_TOUCHRIG_SIM='Sill touchrig' Tests/touchrig/run.sh new && Tests/touchrig/run.sh --rev origin/main base && Tests/touchrig/compare.py .build/touchrig/base.log .build/touchrig/new.log   # the surfaces under synthesized touches
+python3 Scripts/duodeckclient.py PORT 6 none --clipboard --copy=hello@2 --expect=clipboard=none   # subscribe, send text as a device's Paste does; each kind 32 printed
+DUODECK_TOUCHRIG_SIM='DuoDeck touchrig' Tests/touchrig/run.sh new && Tests/touchrig/run.sh --rev origin/main base && Tests/touchrig/compare.py .build/touchrig/base.log .build/touchrig/new.log   # the surfaces under synthesized touches
 Tests/checks/run-all.sh                 # every pure check, as CI runs them (~5 min; --mutants adds the mutants, well over an hour)
 Scripts/pacing/run.sh                   # remote pacing and the link's judge, this tree against origin/main, no encoder, all on loopback (~25 min; --full ~45; --list)
-SILL_TEST_LOOPBACK=1 SILL_TEST_SOFTWARE_ENCODER=1 SILL_TEST_NO_ROUTER=1 SILL_TEST_ORIGIN=vpn SILL_TEST_PATTERN=noise .build/release/SillHost --synthetic --remote   # an away session whose stream follows its quality
-Scripts/make-app.sh                     # .build/Sill.app, signed with the Apple Development identity (~2 s unchanged)
-Scripts/make-app.sh --install --open    # Noah: replace /Applications/Sill.app (a running one quits first), launch it
-SILL_UNIVERSAL=1 Scripts/make-app.sh    # .build/Sill.app for Apple silicon and Intel (arm64 and x86_64), as releases are since 0.6.0 (#62): twice the build time
-SILL_SIGN_IDENTITY='Developer ID Application: … (9B2KKVM937)' Scripts/make-app.sh --release   # M6
-SILL_SIGN_IDENTITY='Developer ID Application: … (9B2KKVM937)' SILL_NOTARY_PROFILE=sill-notary Scripts/release.sh [--dry-run]   # M6: the notarized download (docs/release-checklist.md)
-Scripts/release-ios.sh                  # the iOS app for App Store Connect: archive, export .build/ios/export/Sill.ipa, check it; uploads nothing
-Scripts/release-ios.sh --bump --upload  # Noah: the next build to TestFlight (docs/release-checklist.md, TestFlight; --privacy-report, --print-version)
-Scripts/make-dmg.sh --sign - .build/Sill.app .build/Sill.dmg   # the download's disk image of any build, ad hoc (release.sh makes the real one)
+DUODECK_TEST_LOOPBACK=1 DUODECK_TEST_SOFTWARE_ENCODER=1 DUODECK_TEST_NO_ROUTER=1 DUODECK_TEST_ORIGIN=vpn DUODECK_TEST_PATTERN=noise .build/release/DuoDeckHost --synthetic --remote   # an away session whose stream follows its quality
+Scripts/make-app.sh                     # .build/DuoDeck.app, signed with the Apple Development identity (~2 s unchanged)
+Scripts/make-app.sh --install --open    # the maintainer: replace /Applications/DuoDeck.app (a running one quits first), launch it
+DUODECK_UNIVERSAL=1 Scripts/make-app.sh    # .build/DuoDeck.app for Apple silicon and Intel (arm64 and x86_64), as releases are since 0.6.0 (#62): twice the build time
+DUODECK_SIGN_IDENTITY='Developer ID Application: … (U549N38BV6)' Scripts/make-app.sh --release   # M6
+DUODECK_SIGN_IDENTITY='Developer ID Application: … (U549N38BV6)' DUODECK_NOTARY_PROFILE=duodeck-notary Scripts/release.sh [--dry-run]   # M6: the notarized download (docs/release-checklist.md)
+Scripts/release-ios.sh                  # the iOS app for App Store Connect: archive, export .build/ios/export/DuoDeck.ipa, check it; uploads nothing
+Scripts/release-ios.sh --bump --upload  # the maintainer: the next build to TestFlight (docs/release-checklist.md, TestFlight; --privacy-report, --print-version)
+Scripts/make-dmg.sh --sign - .build/DuoDeck.app .build/DuoDeck.dmg   # the download's disk image of any build, ad hoc (release.sh makes the real one)
 python3 -m http.server 8000 --directory site   # the website at http://localhost:8000
-Scripts/encoder-check/run.sh            # the encoder checks that never touch an encoder (safe while Sill.app streams)
+Scripts/encoder-check/run.sh            # the encoder checks that never touch an encoder (safe while DuoDeck.app streams)
 Scripts/menu-check/run.sh               # the menus' reader and mirror against Scripts/menufixture.swift, no host, no encoder (needs Accessibility)
-Scripts/restore-probe/run.sh            # TEST ONLY: a window Sill sized goes back, against a window of its own (needs Accessibility, Screen Recording, an unlocked screen)
+Scripts/restore-probe/run.sh            # TEST ONLY: a window DuoDeck sized goes back, against a window of its own (needs Accessibility, Screen Recording, an unlocked screen)
 Tests/duorig/run.sh UDID pose book && Tests/duorig/run.sh UDID shot book book.png   # TEST ONLY: fold and photograph an iPhone Duo simulator (laptop, flat-portrait, flat-landscape, closed-upright, closed-side)
 Tests/keyrig/run.sh UDID keys 29,04,e3:down,1a,e3:up && Tests/keyrig/run.sh UDID point 'move 300,200|wheel -3'   # TEST ONLY: Esc, a and ⌘W from a hardware keyboard, then a wheel's notch, inside a simulator of your own
-SILL_TEST_ENCODER_RECYCLE=0 swift run -c release SillHost   # =0 keeps every hardware session, =1 replaces one in the slow state, as by default (A/B on the real Desktop: --synthetic moves every frame and never reaches the slow state)
+DUODECK_TEST_ENCODER_RECYCLE=0 swift run -c release DuoDeckHost   # =0 keeps every hardware session, =1 replaces one in the slow state, as by default (A/B on the real Desktop: --synthetic moves every frame and never reaches the slow state)
 Scripts/encoder-check/verify-hardware.sh harness   # USES THE HARDWARE ENCODER; skips each run while a device is connected
 ```
 Needs Xcode as the active developer directory with its license accepted; with
 Command Line Tools only, add `--build-system native`.
 First run prompts for Screen Recording: the CLI's belongs to Terminal (or
-whatever launched it), Sill.app's to Sill itself.
-Sill.app: the log is `~/Library/Logs/Sill/Sill.log` (`tail -F`, not `-f`: at
-10 MB it moves to Sill.1.log; Show Log… in the menu); settings are `defaults
-read me.saffer.sill.mac` (maxFPS, captureScale, bitrate, prioritizeSpeed,
+whatever launched it), DuoDeck.app's to DuoDeck itself.
+DuoDeck.app: the log is `~/Library/Logs/DuoDeck/DuoDeck.log` (`tail -F`, not `-f`: at
+10 MB it moves to DuoDeck.1.log; Show Log… in the menu); settings are `defaults
+read com.agentsai.duodeck.host` (maxFPS, captureScale, bitrate, prioritizeSpeed,
 virtualDisplay, directWireless, sendAudio, shareClipboard, updateCheck,
 showPairingWindowToScreenSharing; the update check keeps
 updateLastCheck, updateETag, updateLatestTag and updateLatestURL), and a launch
 argument such as `-maxFPS 60` or `-updateCheck 0` overrides one for one run. A device's change from its Settings panel is saved there too, like a
-menu click; the CLI keeps a device's change until SillHost quits. Test arguments for the bare binary (`.build/release/SillMenuBar`,
-defaults domain `SillMenuBar`; delete it after): `--synthetic` (test pattern,
+menu click; the CLI keeps a device's change until DuoDeckHost quits. Test arguments for the bare binary (`.build/release/DuoDeckMenuBar`,
+defaults domain `DuoDeckMenuBar`; delete it after): `--synthetic` (test pattern,
 off Bonjour; the port is in the "Status: Test Pattern Mode" line),
-`-SillLogFile <path>`, `-SillSetAfter '<s> key=value[,key=value][; <s> …]'`,
-`-SillQuitAfter <s>`, `-SillRenderPreviews <dir>` (panes, cards, glyphs,
+`-DuoDeckLogFile <path>`, `-DuoDeckSetAfter '<s> key=value[,key=value][; <s> …]'`,
+`-DuoDeckQuitAfter <s>`, `-DuoDeckRenderPreviews <dir>` (panes, cards, glyphs,
 menu.txt; no permission needed), and for the Settings window's height
-`-SillSettingsAfter '<s> <tab>|close|report|end|height=<points>[; …]'` (opens it,
+`-DuoDeckSettingsAfter '<s> <tab>|close|report|end|height=<points>[; …]'` (opens it,
 then prints its frame, the pane's whole height and how much shows),
-`-SillTestScreenHeight <points>` and `-SillSettingsShot <dir>`
+`-DuoDeckTestScreenHeight <points>` and `-DuoDeckSettingsShot <dir>`
 (docs/DEVELOPMENT.md, Test arguments for the bare app). The update check, in the bare binary (which
-has no version and never checks without these) and the app: `-SillUpdateFeed
+has no version and never checks without these) and the app: `-DuoDeckUpdateFeed
 http://127.0.0.1:P/latest` (a feed on this Mac only: 127.0.0.1, ::1 or
-localhost; `Scripts/sillfeed.py P` serves one; test pattern mode checks only
-such a feed), `-SillUpdateVersion 0.3.0`, `-SillUpdateNow 1` (one check at
-start, as Check Now), `-SillUpdateInterval <s>` (24 h become s seconds, the
-retry s/24), `-SillPrintMenuAfter <s>` (the status menu as it would open, and
-Settings › General's update line, in the log), `-SillSetAfter '<s>
-updateCheck=0'`. Never run a test against GitHub. To make Sill.app check again at
+localhost; `Scripts/duodeckfeed.py P` serves one; test pattern mode checks only
+such a feed), `-DuoDeckUpdateVersion 0.3.0`, `-DuoDeckUpdateNow 1` (one check at
+start, as Check Now), `-DuoDeckUpdateInterval <s>` (24 h become s seconds, the
+retry s/24), `-DuoDeckPrintMenuAfter <s>` (the status menu as it would open, and
+Settings › General's update line, in the log), `-DuoDeckSetAfter '<s>
+updateCheck=0'`. Never run a test against GitHub. To make DuoDeck.app check again at
 its next launch: `for k in updateLastCheck updateETag updateLatestTag
-updateLatestURL; do defaults delete me.saffer.sill.mac $k; done`. Render previews from
-`.build/Sill.app/Contents/MacOS/Sill` to see what Sill.app looks like: only the
+updateLatestURL; do defaults delete com.agentsai.duodeck.host $k; done`. Render previews from
+`.build/DuoDeck.app/Contents/MacOS/DuoDeck` to see what DuoDeck.app looks like: only the
 bundle's copy records the real SDK (make-app.sh sets it with vtool; see Current
 step), and the bare binary draws the pre-26 look. `--encoder-selftest` and
 `--virtual-display-selftest` work in the app too.
-iOS side: open `iOSClient/Sill.xcodeproj`, set your team, run on a real
+iOS side: open `iOSClient/DuoDeck.xcodeproj`, set your team, run on a real
 device on the same Wi-Fi (or with the Mac's Direct Wireless Connection on).
-AWDL, headless and without touching a running Sill.app: the synthetic hosts do
-not advertise, but `SILL_TEST_SERVICE_TYPE=_silltest._tcp` registers them as
-"Sill test ‹pid›" under that test type (never `_sill._tcp`, so no device sees
+AWDL, headless and without touching a running DuoDeck.app: the synthetic hosts do
+not advertise, but `DUODECK_TEST_SERVICE_TYPE=_duodecktest._tcp` registers them as
+"DuoDeck test ‹pid›" under that test type (never `_duodeck._tcp`, so no device sees
 them) with the listener's own peer-to-peer flag, and prints which one it got;
-`SILL_TEST_SWAP_FAIL=port|all` makes a replacement's same-port (and any-port)
-bind fail; `SILL_TEST_PEER_TO_PEER_INTERFACE=en0` counts a client scoped to that
+`DUODECK_TEST_SWAP_FAIL=port|all` makes a replacement's same-port (and any-port)
+bind fail; `DUODECK_TEST_PEER_TO_PEER_INTERFACE=en0` counts a client scoped to that
 interface as one on peer-to-peer Wi-Fi, so a test client on the Mac's own en0
 link-local address (`ifconfig en0`, `fe80::…%en0`; Python's socket takes it)
 stands in for a device on awdl0 when Direct Wireless turns off (a local
 connection to the Mac's own awdl0 address never became ready, so awdl0 cannot
 be tested headless); all three are honoured only by a host that does not
-advertise. `dns-sd -t 3 -includeAWDL -B _silltest._tcp local` lists a
+advertise. `dns-sd -t 3 -includeAWDL -B _duodecktest._tcp local` lists a
 registration that includes AWDL a second time on awdl0's index (`python3 -c
 'import socket; print(socket.if_nametoindex("awdl0"))'`, 16 here). dns-sd
 options go before the command: `dns-sd -R … -includeAWDL` registers a TXT
@@ -8303,45 +8297,45 @@ builtin, hence `/usr/bin/log`, and `process == "kernel"` keeps the log tool's
 own line out. Enable and disable lines ("Enabling AWDL due to Mdns") show only
 when nothing else holds AWDL. Keep AWDL-on tests under 20 s and on test types.
 Remote access, headless: TEST ONLY variables, honoured only by a host that
-does not advertise: `SILL_TEST_REMOTE_DIR=<dir>` (the identity and trust list
+does not advertise: `DUODECK_TEST_REMOTE_DIR=<dir>` (the identity and trust list
 in a 0700 directory instead of memory or the keychain; the bare app's
-`-SillPairAfter <s>` leaves `pairing.url` and `pairing.code` there, 0600, never
-printed), `SILL_TEST_PAIRING_TTL=<s>`, `SILL_TEST_BACKOFF_SECONDS=<s>` (the backoff a TLS door
+`-DuoDeckPairAfter <s>` leaves `pairing.url` and `pairing.code` there, 0600, never
+printed), `DUODECK_TEST_PAIRING_TTL=<s>`, `DUODECK_TEST_BACKOFF_SECONDS=<s>` (the backoff a TLS door
 gives an address whose connections waited unadmitted or were refused, five failures in a minute:
 a test client's `--pair-hold`s, refused handshakes or connections it keeps closing, from 127.0.0.1,
-meet it, "Home door backed off 127.0.0.1 for 300 s: …"), `SILL_TEST_ORIGIN=vpn|internet` (loopback
+meet it, "Home door backed off 127.0.0.1 for 300 s: …"), `DUODECK_TEST_ORIGIN=vpn|internet` (loopback
 counts as that origin),
-`SILL_TEST_REMOTE_ORIGIN=vpn|internet` (the same at the remote door alone, so
+`DUODECK_TEST_REMOTE_ORIGIN=vpn|internet` (the same at the remote door alone, so
 one loopback host serves a device away and one at home: away from home's
-H8 and S4) and `SILL_TEST_NO_ROUTER=1` (never ask the router; set it on every
+H8 and S4) and `DUODECK_TEST_NO_ROUTER=1` (never ask the router; set it on every
 headless host). Away from home and the link, headless (docs/remote-bundle-
-plan.md, PR B): `SILL_TEST_PATTERN=picture:<path>` gives a synthetic host a
+plan.md, PR B): `DUODECK_TEST_PATTERN=picture:<path>` gives a synthetic host a
 still picture for its Desktop (any image ImageIO reads, filling the frame:
-photographs of a device, docs/iphone-duo-plan.md); `SILL_TEST_PATTERN=noise`
+photographs of a device, docs/iphone-duo-plan.md); `DUODECK_TEST_PATTERN=noise`
 gives it a square of noise, so its stream follows the quality (on the software encoder about 14
 frames a second, 3.6 Mbit/s at Low and 10.6 at Balanced), for a test of the
-link through `sillrelay.py --rate-mbps 5`; `sillclient.py` prints `away=` and
+link through `duodeckrelay.py --rate-mbps 5`; `duodeckclient.py` prints `away=` and
 `link=` on each kind 16, and `--expect` knows `awayBitrate`,
 `awayCaptureScale`, `homeBitrate`, `homeCaptureScale`, `thisConnectionAway`,
 `awayRunning` and `linkState`.
 The Mac's pointer, headless: every synthetic host is a dry run (its input is
 counted as `in.dry`, never posted, and activates or raises nothing) and never
 reads the real pointer. TEST ONLY, honoured only by a synthetic host (anywhere else one
-line says it is ignored): `SILL_TEST_POINTER_PATH=<file>` is a scripted
+line says it is ignored): `DUODECK_TEST_POINTER_PATH=<file>` is a scripted
 pointer on the test pattern, lines `T X Y` (seconds since the stream's first
 sample, points in the 1512×949 pattern, outside allowed; `#` comments; at most
 10,000 steps and 1 MiB, a bad file refused whole with one line): the test
 pattern then has a pointer, a test client's input lands in the pattern's space
 and a dry-run pointer event moves the scripted pointer (the newer of it and a
-step wins); `SILL_TEST_NO_SCREEN=1` makes the window catalog leave ScreenCaptureKit alone (an empty
+step wins); `DUODECK_TEST_NO_SCREEN=1` makes the window catalog leave ScreenCaptureKit alone (an empty
 window list, no thumbnails, no display lookup), so a test host with a client connected asks
 macOS for no screen recording: every ScreenCaptureKit call counts against the responsible app's
 grant (Claude's, for a host an agent runs), and macOS reminds the person once a month and after
 every rebuilt binary; set it on every headless host whose test needs no real window.
-`SILL_TEST_SOFTWARE_ENCODER=1` starts on the software encoder, with
+`DUODECK_TEST_SOFTWARE_ENCODER=1` starts on the software encoder, with
 no launch probe and no re-check, so a test never touches the hardware encoder
 (60 fps at most: a 120 fps sampler test needs the hardware, and so the
-no-device check); `SILL_TEST_INPUT_LOG=1` prints each event the dry run would
+no-device check); `DUODECK_TEST_INPUT_LOG=1` prints each event the dry run would
 post, "Test input: key 49 down (command)" with the flags it was made with, and
 a pointer or scroll event with those the last keyboard event would have left
 in the HID state table, a button's with where it goes ("Test input: left mouse
@@ -8356,84 +8350,84 @@ where a device the Mac stops serving stops landing input ("Test input: iPad is
 no longer served: only the up of a key or a button it holds down goes from
 here on.", RevokedInput).
 A sleeping display, headless: a test host declares no user activity and counts
-`disp.wakeDry` where a real one would declare (`sillclient.py`'s connect, a tap,
+`disp.wakeDry` where a real one would declare (`duodeckclient.py`'s connect, a tap,
 a key; never a pick, nor a move right after a restart). TEST ONLY
-`SILL_TEST_USER_ACTIVE=remote`, taken by every real host and Sill.app too
-(`open --env SILL_TEST_USER_ACTIVE=remote /Applications/Sill.app`, Sill quit
+`DUODECK_TEST_USER_ACTIVE=remote`, taken by every real host and DuoDeck.app too
+(`open --env DUODECK_TEST_USER_ACTIVE=remote /Applications/DuoDeck.app`, DuoDeck quit
 first), declares `kIOPMUserActiveRemote` instead of Local; it acts on this Mac's
-display, so it is Noah's to try (docs/DEVELOPMENT.md, A sleeping display).
-The device floor, headless: `SILL_TEST_MIN_DEVICE_VERSION=1.2` raises the floor
+display, so it is the maintainer's to try (docs/DEVELOPMENT.md, A sleeping display).
+The device floor, headless: `DUODECK_TEST_MIN_DEVICE_VERSION=1.2` raises the floor
 of a host that does not advertise (a device below it, or one that sends no
 hello, gets kind 22 "update" and is closed; a value that does not parse is
-ignored with one line), and `SILL_TEST_GOODBYE='<JSON Goodbye>'` makes its
+ignored with one line), and `DUODECK_TEST_GOODBYE='<JSON Goodbye>'` makes its
 refusals send that payload instead (a reason the device does not know).
-Pairing at home, headless: `SillHost --synthetic --pairing` (the bare app's
-home door always speaks TLS, as Sill.app's does) with `SILL_TEST_REMOTE_DIR`,
-`SILL_TEST_NO_ROUTER=1`, `SILL_TEST_SOFTWARE_ENCODER=1` and
-`SILL_TEST_LOOPBACK=1`; the CLI prints its code and link, and again after each
+Pairing at home, headless: `DuoDeckHost --synthetic --pairing` (the bare app's
+home door always speaks TLS, as DuoDeck.app's does) with `DUODECK_TEST_REMOTE_DIR`,
+`DUODECK_TEST_NO_ROUTER=1`, `DUODECK_TEST_SOFTWARE_ENCODER=1` and
+`DUODECK_TEST_LOOPBACK=1`; the CLI prints its code and link, and again after each
 ask. The door and pairing hooks are TEST ONLY and honoured only by a test host
-(DoorPolicy.isTestHost: one that does not advertise and is not Sill.app's own
+(DoorPolicy.isTestHost: one that does not advertise and is not DuoDeck.app's own
 executable; anywhere else TestHooks prints one "ignored" line for each set),
-and so are the ones above (SILL_TEST_SERVICE_TYPE and the rest):
-`SILL_TEST_CABLE_INTERFACE=<if>` counts a client scoped to that interface as
+and so are the ones above (DUODECK_TEST_SERVICE_TYPE and the rest):
+`DUODECK_TEST_CABLE_INTERFACE=<if>` counts a client scoped to that interface as
 one on the cable to an "iPad" (serial TEST) and lets this Mac's own address
 there through, so a client at this Mac's link-local address on it
-(`sillclient.py --host=fe80::…%<if> --pair-ask=cable`) stands in for a device
-on the cable, and the simulator's `-SillCableTest 1` for the device's side
+(`duodeckclient.py --host=fe80::…%<if> --pair-ask=cable`) stands in for a device
+on the cable, and the simulator's `-DuoDeckCableTest 1` for the device's side
 (lo0's `fe80::1%lo0` keeps such a test on this Mac; it needs a listener there,
-which SILL_TEST_LOOPBACK's 127.0.0.1 alone is not); `SILL_TEST_LOCKED=1` makes
-this session's screen locked for the run, and `SILL_TEST_LOCKED_FILE=<path>`
+which DUODECK_TEST_LOOPBACK's 127.0.0.1 alone is not); `DUODECK_TEST_LOCKED=1` makes
+this session's screen locked for the run, and `DUODECK_TEST_LOCKED_FILE=<path>`
 read at each look (once a second while a device is connected): `1` the screen
 locked, `2` off console (another user), anything else nothing, so `echo 1 > $F`,
 `echo 2 > $F` and `echo 0 > $F` lock, switch and unlock a running test host
 (docs/locked-mac-plan.md: a black placeholder, no windows, apps, menus, gestures,
 sound, clipboard, pointer or cursor shape, input only from a paired session at a
 locked screen and from nobody off console, the unlock after a 2 s settle);
-`SILL_TEST_LOCK_NOTIFY=<me.saffer.sill.test.…>` reads the screen's lock state
+`DUODECK_TEST_LOCK_NOTIFY=<com.agentsai.duodeck.test.…>` reads the screen's lock state
 from a notify name of the test's own (set it with notify_set_state and
-notify_post: the CLI's immediate path), `SILL_TEST_LOCK_NOTE='<s> <name>; …'`
+notify_post: the CLI's immediate path), `DUODECK_TEST_LOCK_NOTE='<s> <name>; …'`
 delivers loginwindow's or NSWorkspace's notifications to SessionLock's handler on
 cue (nothing posted: never post those names, other apps hear them), and
-`SILL_TEST_LOCK_LOG=1` prints each look's witnesses; `sillclient.py`'s list line
+`DUODECK_TEST_LOCK_LOG=1` prints each look's witnesses; `duodeckclient.py`'s list line
 says `locked=1` and `offConsole=1`, `--dump=DIR` saves what arrived when with the
 parameter sets and keyframes, and `--raw7` and `--raw15` send a launch and a
 window's button; `Scripts/lock-check/live.py OUT [poll|start|notify|paired|all]` runs a
 test host through all of it and decodes the keyframes (`build.sh` first);
-`SILL_TEST_ASK_QUIET=<s>` shortens the 10 minutes of quiet
-after the Mac's Cancel or a stop; `SILL_TEST_ASK_FROM_THIS_MAC=1` skips the
+`DUODECK_TEST_ASK_QUIET=<s>` shortens the 10 minutes of quiet
+after the Mac's Cancel or a stop; `DUODECK_TEST_ASK_FROM_THIS_MAC=1` skips the
 ask rule's step for an ask from this Mac itself (answered `openOnMac` unless a
 window is open, and lighting no menu item), so a test client on this Mac opens
-windows; `SILL_TEST_REQUIRE_PAIRING=0` (the CLI's) turns Require pairing off
+windows; `DUODECK_TEST_REQUIRE_PAIRING=0` (the CLI's) turns Require pairing off
 at `--pairing`'s door for the run, so an unpaired device's session can be
-tried (`sillclient.py --tls --identity=DIR --pin=none`). The bare app takes
-`-requirePairing NO`, `-SillSetAfter '<s> requirePairing=0|1'`,
-`-SillCancelPairingAfter '<s>[; <s> …]'` (the window closed as its Cancel
-does), `-SillCableNoticeAfter <s>` (the cable notice for a sample device) and
-`-SillMenuAfter '<s>[; <s> …]'` (the status menu in the
-log, line by line). Sill.app itself ignores every `-Sill…After` hook,
-`-requirePairing` and `SILL_TEST_REMOTE_DIR` with one line each (any process
-can start it with arguments and its grants); `-SillRenderPreviews`,
-`-SillLogFile` and the encoder's variables still work there. Require pairing
+tried (`duodeckclient.py --tls --identity=DIR --pin=none`). The bare app takes
+`-requirePairing NO`, `-DuoDeckSetAfter '<s> requirePairing=0|1'`,
+`-DuoDeckCancelPairingAfter '<s>[; <s> …]'` (the window closed as its Cancel
+does), `-DuoDeckCableNoticeAfter <s>` (the cable notice for a sample device) and
+`-DuoDeckMenuAfter '<s>[; <s> …]'` (the status menu in the
+log, line by line). DuoDeck.app itself ignores every `-DuoDeck…After` hook,
+`-requirePairing` and `DUODECK_TEST_REMOTE_DIR` with one line each (any process
+can start it with arguments and its grants); `-DuoDeckRenderPreviews`,
+`-DuoDeckLogFile` and the encoder's variables still work there. Require pairing
 and the trust list live in the login keychain (service
-`me.saffer.sill.remote`, accounts `paired-devices` and `require-pairing`,
-beside the key "Sill Remote Access"), never in UserDefaults; Settings ›
+`com.agentsai.duodeck.remote`, accounts `paired-devices` and `require-pairing`,
+beside the key "DuoDeck Remote Access"), never in UserDefaults; Settings ›
 Devices' Remove forgets one device, and deleting those items makes this Mac
 new to every device. Two hosts under one Bonjour name (a Mac that took
 another's name, the security scan's finding 3): run each without
-SILL_TEST_SERVICE_TYPE (whose registration is "Sill test ‹pid›") and advertise
-it in turn with `dns-sd -i lo0 -R "Studio f3" _silltest._tcp local PORT
+DUODECK_TEST_SERVICE_TYPE (whose registration is "DuoDeck test ‹pid›") and advertise
+it in turn with `dns-sd -i lo0 -R "Studio f3" _duodecktest._tcp local PORT
 r=<16 base64url characters> p=0`, on lo0 alone (on every interface the
 simulator dials this Mac's other addresses first, which a loopback host never
-answers); the bare `SillMenuBar --synthetic -requirePairing NO`, under a name
-of its own and with `-SillLogFile`, is an open door.
+answers); the bare `DuoDeckMenuBar --synthetic -requirePairing NO`, under a name
+of its own and with `-DuoDeckLogFile`, is an open door.
 The Mac's menus, headless: `swiftc -O Scripts/menufixture.swift -o
 $T/menufixture -framework AppKit`, then `$T/menufixture serve $T/fixture.log
 60` (it exits by itself, 120 s at most, and can never take the front) and a
-synthetic host with `SILL_TEST_MENU_PID=<its pid>` (honoured only by a host
+synthetic host with `DUODECK_TEST_MENU_PID=<its pid>` (honoured only by a host
 that does not advertise; "Test menus: …" at start): the test pattern's menus
 are then the fixture's, read and pressed without activating it. `python3
-Scripts/sillclient.py PORT 20 desktop --menus --fetch=4@3 --press=4.0@5` (with
-SILL_TEST_MENU_PID in the client's environment too) prints each kind 24 on a
+Scripts/duodeckclient.py PORT 20 desktop --menus --fetch=4@3 --press=4.0@5` (with
+DUODECK_TEST_MENU_PID in the client's environment too) prints each kind 24 on a
 line, and `$T/menufixture label PID` what the last press set ("A"); `kill
 -HUP` inserts an item at the top of Probe in place (the ids below it move: the
 host's next read of a moved place moves the version), `-ALRM` gives Probe a
@@ -8441,46 +8435,46 @@ new menu, and `-USR1`/`-USR2` give Probe › Rebuilt one.
 `--menu-selftest=menufixture` reads it. Presses go only to the fixture, and a
 real app's menus are read only with `--menu-selftest=TextEdit`, never a bare
 `--menu-selftest` (the frontmost app); the plan's §10 has the gates.
-The bare app takes `-remoteAccess 1 -remotePort P`, `-SillSetAfter '3
-remotePort=P2'`, `-SillPairAfter <s>` and `-SillUnpairAfter <s>`; its
-`-SillRenderPreviews` adds the Remote Access pane's states and the pairing
-window's. A session through a shaped link: `python3 Scripts/sillrelay.py
+The bare app takes `-remoteAccess 1 -remotePort P`, `-DuoDeckSetAfter '3
+remotePort=P2'`, `-DuoDeckPairAfter <s>` and `-DuoDeckUnpairAfter <s>`; its
+`-DuoDeckRenderPreviews` adds the Remote Access pane's states and the pairing
+window's. A session through a shaped link: `python3 Scripts/duodeckrelay.py
 --listen 0 --to 127.0.0.1:P --delay-ms 150 --rate-mbps 2`, then
-`sillclient.py RELAYPORT 90 desktop --tls --identity=$T/a --stats` after
+`duodeckclient.py RELAYPORT 90 desktop --tls --identity=$T/a --stats` after
 `--pair-url=URL` once. Never let a test binary take a connection from another
-machine: the Application Firewall prompts. `SILL_TEST_LOOPBACK=1`, honoured only
+machine: the Application Firewall prompts. `DUODECK_TEST_LOOPBACK=1`, honoured only
 by a host that does not advertise, makes both doors of a test host listen on
 127.0.0.1 alone ("Test listener: loopback only …"; `lsof` lists
 `127.0.0.1:PORT`); a device on this Mac, the simulator included, and the test
 clients reach it by 127.0.0.1. Reset the app's remote settings with
 `for k in remoteAccess remotePort internetAccess remoteAddressName
-remoteDevicesSeen; do defaults delete me.saffer.sill.mac $k; done`.
+remoteDevicesSeen; do defaults delete com.agentsai.duodeck.host $k; done`.
 Debug harness (simulator; the iPhone Duo's from the iOS 27.1 runtime, folded
-by Tests/duorig): launch arguments `-SillLayout 951x669` (inner landscape) /
+by Tests/duorig): launch arguments `-DuoDeckLayout 951x669` (inner landscape) /
 `669x951` / `466x678` / `678x466` (the cover), each with the safe area its
-display gives Sill, the status bar's strip included but on the stream screen
-upright with `-SillHinge half` or `flat` (`-SillSafeArea T,L,B,R` sets
+display gives DuoDeck, the status bar's strip included but on the stream screen
+upright with `-DuoDeckHinge half` or `flat` (`-DuoDeckSafeArea T,L,B,R` sets
 another; the first guesses, `1000x710` / `710x1000` / `500x710` / `710x500`,
-have none), `-SillHinge
+have none), `-DuoDeckHinge
 closed|half|flat` (the hinge and a 40 pt fold across the middle of the longer
 side; without it the harness knows no hinge, even on the Duo's simulator),
-`-SillLive 1` (real client inside the frame), `-SillDrawer 1`,
-`-SillActive none|desktop|<windowID>` (mock), `-SillHUD 1` (diagnostics overlay),
-`-SillSettings 1` (the Settings panel open), `-SillMacMenu
+`-DuoDeckLive 1` (real client inside the frame), `-DuoDeckDrawer 1`,
+`-DuoDeckActive none|desktop|<windowID>` (mock), `-DuoDeckHUD 1` (diagnostics overlay),
+`-DuoDeckSettings 1` (the Settings panel open), `-DuoDeckMacMenu
 code|blender|long|stale|noaccess|none|slow|timeout|refuse` (the mock Mac's
-menus; `code` by default, VS Code's ten), `-SillMenusOpen 1` (the Menus
-pull-down opens after launch) or `-SillMenusOpen 'File/Open Recent'` (opens
-on that menu, each level fetched on the way), `-SillMenuPress 'File/Save'`
+menus; `code` by default, VS Code's ten), `-DuoDeckMenusOpen 1` (the Menus
+pull-down opens after launch) or `-DuoDeckMenusOpen 'File/Open Recent'` (opens
+on that menu, each level fetched on the way), `-DuoDeckMenuPress 'File/Save'`
 (chooses that item once the menus are in; both live too, but only on the test
-app's menus through a test host: `-SillConnect` to a loopback address, no host
+app's menus through a test host: `-DuoDeckConnect` to a loopback address, no host
 version, menufixture's top level; anything else prints "refused"),
-`-SillMenusAt <s>` and `-SillMenusCloseAfter <s>` (when the pull-down opens,
-and closes after it), and on an iPad `-SillMenuBarLayout perMenu|replace|one`,
-`-SillMenuDump 1` (the main menu's root after each build, on the console),
-`-SillMenuBuildTwice 1` and `-SillMenuNoView 1` (the insertion's guards),
-`-SillSecondWindow 1` (a second window 2 s after launch: the bar then gets
+`-DuoDeckMenusAt <s>` and `-DuoDeckMenusCloseAfter <s>` (when the pull-down opens,
+and closes after it), and on an iPad `-DuoDeckMenuBarLayout perMenu|replace|one`,
+`-DuoDeckMenuDump 1` (the main menu's root after each build, on the console),
+`-DuoDeckMenuBuildTwice 1` and `-DuoDeckMenuNoView 1` (the insertion's guards),
+`-DuoDeckSecondWindow 1` (a second window 2 s after launch: the bar then gets
 none of the Mac's menus; the console's "menus: …" and "menubar: …" lines say
-what happened), `-SillSettingsCase
+what happened), `-DuoDeckSettingsCase
 default|cli|software|custom|vdproblem|vdstream|legacy|pending|timeout|direct|
 directlink|nodirect|wired|noroute` (the mock Mac's settings; it answers a pick
 after 0.35 s; the readout's route is Wi-Fi except `directlink` Direct, `wired`
@@ -8488,129 +8482,129 @@ Wired, `noroute` none, and `remote`, `remoteinternet` and `remoteslow` none,
 where the route line says how), away from home's and the link's settings cases
 `away|awaymixed|awayhome|linkbehind|linkmixed|linklow|linkstalled` (the header's
 away line, the footnote, the callout; `linkstalled` shows none) and
-`-SillLinkLine behind` (the mock reports the link behind: the stream's line),
-the Mac's sound's `-SillSound on|muted` (the mock Mac sends it, Send Audio on:
+`-DuoDeckLinkLine behind` (the mock reports the link behind: the stream's line),
+the Mac's sound's `-DuoDeckSound on|muted` (the mock Mac sends it, Send Audio on:
 Mute off or on; the mock plays nothing) and settings cases
 `sound|soundoff|soundnote|nosound` (the Send Audio switch on, off, on with the
 Mac's note, or a Mac without sound: the switch off and disabled, "Update
-Sill…", no Mute; `default` is Send Audio off with Mute), `-SillSettingsScroll
+DuoDeck…", no Mute; `default` is Send Audio off with Mute), `-DuoDeckSettingsScroll
 sound|mute` (the panel at the Send Audio row, or at the Mute row under it), and in
-the normal app and under `-SillLive 1` `-SillSoundSink manual|device` (manual
+the normal app and under `-DuoDeckLive 1` `-DuoDeckSoundSink manual|device` (manual
 rendering, no output device: the simulator's default in every build; `device`
-plays through the Mac's speakers, never in a gate) with `-SillSoundVolume 0`,
-`-SillSoundToggle <s>[,<s>…]` (Mute flipped at those seconds),
-`-SillSoundSwitchAt <s>` (Mute on, then off a second later) and
-`-SillSettingsScript`'s `set sendAudio=1|0` (the device's Send Audio switch); the
+plays through the Mac's speakers, never in a gate) with `-DuoDeckSoundVolume 0`,
+`-DuoDeckSoundToggle <s>[,<s>…]` (Mute flipped at those seconds),
+`-DuoDeckSoundSwitchAt <s>` (Mute on, then off a second later) and
+`-DuoDeckSettingsScript`'s `set sendAudio=1|0` (the device's Send Audio switch); the
 console's "audio: …" lines say what happened (the format, the engine and its
 latencies, a line a second, each jump with its size and cause, and in manual
 rendering where each click of a synthetic host's test tone was heard),
-`-SillSettingsScript '<t> set K=V[,K=V] | suggestion | disconnect; …'` (a live
+`-DuoDeckSettingsScript '<t> set K=V[,K=V] | suggestion | disconnect; …'` (a live
 session to a synthetic host on loopback: the panel's controls, the link
-callout's button and Disconnect, t seconds after the first window list), `-SillMoveHomeTest to:HOST:PORT|refused|
-other:PORT` (with `-SillDialSaved 1`: the saved Mac listed as a network row a
+callout's button and Disconnect, t seconds after the first window list), `-DuoDeckMoveHomeTest to:HOST:PORT|refused|
+other:PORT` (with `-DuoDeckDialSaved 1`: the saved Mac listed as a network row a
 second into the remote session at a door that speaks TLS, so the move home
-runs against a synthetic `--remote --pairing` host with SILL_TEST_REMOTE_ORIGIN
-and SILL_TEST_REMOTE_DIR, dialed pinned to the saved Mac's key), `-SillDialSaved
+runs against a synthetic `--remote --pairing` host with DUODECK_TEST_REMOTE_ORIGIN
+and DUODECK_TEST_REMOTE_DIR, dialed pinned to the saved Mac's key), `-DuoDeckDialSaved
 remotely` (as Connect Remotely: never moves home),
-`-SillConnectCase looking|hint|nearby|methods|denied|update|notice` (the connect screen in a discovery
+`-DuoDeckConnectCase looking|hint|nearby|methods|denied|update|notice` (the connect screen in a discovery
 state; `methods` has a row ending in each word, none, and long names; `update` a
-Mac's refusal with "Update Sill in the App Store" when `-SillAppStoreURL
+Mac's refusal with "Update DuoDeck in the App Store" when `-DuoDeckAppStoreURL
 https://apps.apple.com/app/id000000000` gives it an address, `notice` a goodbye
 reason the device does not know; the mock never browses) and remote access's `remote|addmac|addcode|addcodeerror|
-pairing|remotedial|remotefail|camera|externalpair` (`-SillRemoteFailure
-vpnoff|timeout|timeoutip|refused|dns|wrongmac|revoked|notsill|gaveup|quit|removed|
+pairing|remotedial|remotefail|camera|externalpair` (`-DuoDeckRemoteFailure
+vpnoff|timeout|timeoutip|refused|dns|wrongmac|revoked|notduodeck|gaveup|quit|removed|
 remoteoff` picks remotefail's words), the settings cases `remote|remoteinternet|
-remoteslow|remotepair|remoteoff|noremote`, `-SillSettingsEnd 1` (the panel
-scrolled to its end), `-SillSettingsScroll gestures` (the panel scrolled to its
+remoteslow|remotepair|remoteoff|noremote`, `-DuoDeckSettingsEnd 1` (the panel
+scrolled to its end), `-DuoDeckSettingsScroll gestures` (the panel scrolled to its
 This iPad group; the mock Mac takes gestures in every case but `legacy`; `reverse`
 to its Reverse Scrolling switch; `hold` to its Hold to Show Window Controls stepper),
-`-Sill.trackpadGestures 0` (the device's Three-Finger Gestures off for one run,
-in the normal app too), `-Sill.reverseScroll 1` (its Reverse Scrolling on for one
-run, in the normal app too), `-Sill.thumbnailHold 0.3` (the thumbnails' hold at 0.3 s
+`-DuoDeck.trackpadGestures 0` (the device's Three-Finger Gestures off for one run,
+in the normal app too), `-DuoDeck.reverseScroll 1` (its Reverse Scrolling on for one
+run, in the normal app too), `-DuoDeck.thumbnailHold 0.3` (the thumbnails' hold at 0.3 s
 for one run, in the normal app too; the console's `thumbnails: hold 0.3 s` when a bar
-first reads it and at each change), `-Sill.largerPicture 1` (its Larger Picture on for one run,
-in effect while a window streams, as the mock does but with `-SillActive desktop|none`;
+first reads it and at each change), `-DuoDeck.largerPicture 1` (its Larger Picture on for one run,
+in effect while a window streams, as the mock does but with `-DuoDeckActive desktop|none`;
 the console's `larger picture: …` line says what the rule made of it;
-`-SillVideoSize WxH` the mock's frame, `-SillLargerPictureToggle <s>[,<s>…]` the
-switch at those seconds), `-SillVoiceOver 1` (that group as with VoiceOver on:
-its footnote says the rows do the gestures), `-SillScanOverlay 1` (Pair This
-iPad…'s overlay; `-SillOverlayLine asking|shown|openonmac|locked|noanswer` the
-line its ask's answer sets; under `-SillLive 1` it opens over the live session
+`-DuoDeckVideoSize WxH` the mock's frame, `-DuoDeckLargerPictureToggle <s>[,<s>…]` the
+switch at those seconds), `-DuoDeckVoiceOver 1` (that group as with VoiceOver on:
+its footnote says the rows do the gestures), `-DuoDeckScanOverlay 1` (Pair This
+iPad…'s overlay; `-DuoDeckOverlayLine asking|shown|openonmac|locked|noanswer` the
+line its ask's answer sets; under `-DuoDeckLive 1` it opens over the live session
 and asks), pairing at home's connect cases `homerows|homeasking|homecard|homecode|
 homecodeerror|homelocked|homeopenonmac|homerevoked|homecabledone|homeolder|
 pairingrequired` and settings cases `paired|pairedoff|openpair`, the connect
 case `asleep` (issue #69: a saved Mac's row listed, the reconnect's line after
-three dials of it that did not connect), `-SillBrowserFail N` (the normal app
-and `-SillLive 1`: each of the first N network browsers is reported failed with
+three dials of it that did not connect), `-DuoDeckBrowserFail N` (the normal app
+and `-DuoDeckLive 1`: each of the first N network browsers is reported failed with
 -65569, as iOS reports a suspended app's, half a second after it starts, so it
 is made again after 1, 2, 4… s; the console's "browser: …" lines, and the
-reconnect's "reconnect: …"), `-SillLayerFail <s>[,<s>…]` (the normal app and
-`-SillLive 1`: at each of these seconds after the launch's first picture a frame
+reconnect's "reconnect: …"), `-DuoDeckLayerFail <s>[,<s>…]` (the normal app and
+`-DuoDeckLive 1`: at each of these seconds after the launch's first picture a frame
 that cannot decode goes onto the display layer, so the picture's recovery runs
 for real, issue #101; the console's "display: …" and "keyframe: …" lines; against
-a host with SILL_TEST_STILL_AFTER the picture comes back only through the ask, and
-with SILL_TEST_KEYFRAME_IGNORE=<n> the first n asks go unanswered and are made
-again), `-SillKeyframeLost <n>` (with `-SillLayerFail`: the first n keyframes
+a host with DUODECK_TEST_STILL_AFTER the picture comes back only through the ask, and
+with DUODECK_TEST_KEYFRAME_IGNORE=<n> the first n asks go unanswered and are made
+again), `-DuoDeckKeyframeLost <n>` (with `-DuoDeckLayerFail`: the first n keyframes
 that end a wait are thrown away by the layer's flush, as though it still read
 failed, so the picture counts as back and lost again and the next ask waits a
 repeat's 4 s),
-`-SillPointer mac@X,Y|device@X,Y|hidden|pencil@X,Y` (the pointer sprite in one
+`-DuoDeckPointer mac@X,Y|device@X,Y|hidden|pencil@X,Y` (the pointer sprite in one
 of docs/pointer-visibility-plan.md's states over the mock's frame, which it
-draws as a dim rectangle; `-SillPencilPointer 1` is Q2's flip),
-`-SillClipboardChip 1` and `-SillClipboardNote sent|long|notsent` (the clipboard's
+draws as a dim rectangle; `-DuoDeckPencilPointer 1` is Q2's flip),
+`-DuoDeckClipboardChip 1` and `-DuoDeckClipboardNote sent|long|notsent` (the clipboard's
 chip and a Paste's note on the mock's stream, docs/clipboard-plan.md; the mock Mac
-shares its clipboard in every settings case but `legacy`; live, `-SillSettingsScript
+shares its clipboard in every settings case but `legacy`; live, `-DuoDeckSettingsScript
 '<t> paste TEXT'` sends TEXT as the Paste control hands it over, and
-`-SillSettingsCloseAt <s>` closes the panel `-SillSettings 1` opened),
-`-SillMacLocked 1|2|unlocking` (the mock Mac's screen locked, switched to another
+`-DuoDeckSettingsCloseAt <s>` closes the panel `-DuoDeckSettings 1` opened),
+`-DuoDeckMacLocked 1|2|unlocking` (the mock Mac's screen locked, switched to another
 user, or just unlocked: no windows, apps or clipboard, the cover over the stream,
 the drawer's and the panel header's line, docs/locked-mac-plan.md), and in
-the normal app and under `-SillLive 1` `-SillPairURL '<sill://pair…>'` (pair
+the normal app and under `-DuoDeckLive 1` `-DuoDeckPairURL '<duodeck://pair…>'` (pair
 at launch, no confirmation, at the link's own addresses only: a confirmed link
-tries the home rows first, which `-SillTapRow` and `-SillHomeLink` below reach),
-`-SillPairCode <12 digits> -SillPairAddress host:port`,
-`-SillDialSaved 1`, `-SillForgetMacs 1`, `-Sill.savedMacs '<JSON>'` (one run;
-`'[]'` empties), `-SillRemoteRoute vpn|internet` (a loopback session counts as
-that route), `-SillHelloVersion <v>` (the version the hello gives, against a
-host's floor), `-SillScreenFPS 120` (a 120 Hz screen) and `-SillDeviceKeySE 1`
+tries the home rows first, which `-DuoDeckTapRow` and `-DuoDeckHomeLink` below reach),
+`-DuoDeckPairCode <12 digits> -DuoDeckPairAddress host:port`,
+`-DuoDeckDialSaved 1`, `-DuoDeckForgetMacs 1`, `-DuoDeck.savedMacs '<JSON>'` (one run;
+`'[]'` empties), `-DuoDeckRemoteRoute vpn|internet` (a loopback session counts as
+that route), `-DuoDeckHelloVersion <v>` (the version the hello gives, against a
+host's floor), `-DuoDeckScreenFPS 120` (a 120 Hz screen) and `-DuoDeckDeviceKeySE 1`
 (a Secure Enclave device key, R0-a); for pairing at home (the normal app and
-`-SillLive 1`), `-SillServiceType _silltest._tcp` (the browsers look for the
-test type, so a test host registered with SILL_TEST_SERVICE_TYPE is a real
+`-DuoDeckLive 1`), `-DuoDeckServiceType _duodecktest._tcp` (the browsers look for the
+test type, so a test host registered with DUODECK_TEST_SERVICE_TYPE is a real
 row with its TXT record and no real Mac is; only the Debug build's
-Info-Debug.plist declares it), `-SillHomeDoor paired|open|plain` (what a
-`-SillConnect` address counts as, since an address has no TXT record:
+Info-Debug.plist declares it), `-DuoDeckHomeDoor paired|open|plain` (what a
+`-DuoDeckConnect` address counts as, since an address has no TXT record:
 `plain`, the default, dials it plainly as before; `paired` pins the one saved
-Mac, else asks; `open` an open door), `-SillCableTest 1` (this device's path
-counts as the cable), `-SillForgetHomeTLS 1` (forget which Macs were seen over
-TLS, to dial another branch's older Sill.app plainly), `-SillTapRow <name
-prefix>` (tap that row once it is listed), `-SillHomeCode <digits>` and
-`-SillHomeLink <sill://pair…>` (the home card's code or scan once the Mac
-answers `shown`), `-SillOverlayCode <digits>` (Pair This iPad…'s ask, then
-that code, on a TLS session at home) and `-SillNoAutoDesktop 1` (the device
+Mac, else asks; `open` an open door), `-DuoDeckCableTest 1` (this device's path
+counts as the cable), `-DuoDeckForgetHomeTLS 1` (forget which Macs were seen over
+TLS, to dial another branch's older DuoDeck.app plainly), `-DuoDeckTapRow <name
+prefix>` (tap that row once it is listed), `-DuoDeckHomeCode <digits>` and
+`-DuoDeckHomeLink <duodeck://pair…>` (the home card's code or scan once the Mac
+answers `shown`), `-DuoDeckOverlayCode <digits>` (Pair This iPad…'s ask, then
+that code, on a TLS session at home) and `-DuoDeckNoAutoDesktop 1` (the device
 never picks the Desktop by itself: a live gate streams nothing); `xcrun
-simctl openurl <udid> 'sill://pair…'` shows the link's confirmation after the
-system's "Open in Sill?". `-Sill.directWirelessMacs '("Mac mini")'` (seeds the
+simctl openurl <udid> 'duodeck://pair…'` shows the link's confirmation after the
+system's "Open in DuoDeck?". `-DuoDeck.directWirelessMacs '("Mac mini")'` (seeds the
 device's memory of Macs with Direct Wireless on for one run; `'()'` empties it),
-`-SillConnect 127.0.0.1:PORT`
+`-DuoDeckConnect 127.0.0.1:PORT`
 (connect by address, also in the normal app: the only way to reach the
-off-Bonjour synthetic hosts from the simulator), `-SillMoveTest
-1|refused|other:PORT|to:HOST:PORT` (with `-SillConnect`: that session counts as
+off-Bonjour synthetic hosts from the simulator), `-DuoDeckMoveTest
+1|refused|other:PORT|to:HOST:PORT` (with `-DuoDeckConnect`: that session counts as
 direct and a second later the same address, or its port 1, or its port PORT, or
 HOST:PORT, is listed as the Mac's network row, so the move to the network runs
 against a synthetic host; `other:` with a second synthetic host on PORT is
 another launch, refused at its first window list and not tried again, and with
-`-SillConnect` through a delay proxy to the first host's own PORT the fence
-waits out the proxy's round trip; `to:` reads HOST:PORT as `-SillConnect` does,
+`-DuoDeckConnect` through a delay proxy to the first host's own PORT the fence
+waits out the proxy's round trip; `to:` reads HOST:PORT as `-DuoDeckConnect` does,
 `[::1]:P` too, and this Mac's `fe80::…%en0` address from `127.0.0.1` shows the
 panel's route word change at the hand-over; the console's "discovery: …" and
 "session: …" lines, `xcrun simctl launch --console-pty`, say what happened),
-`-SillWiredTest HOST:PORT` (a wired dial's fallback under test:
-`-SillConnect`'s dial, a network row's and a move's go to HOST:PORT first,
-`192.0.2.1:9` giving way after 2.5 s and `127.0.0.1:1` at once), `-SillPathTest
-'<spec>'` (with `-SillConnect`: the session's Mac listed as a network row whose
+`-DuoDeckWiredTest HOST:PORT` (a wired dial's fallback under test:
+`-DuoDeckConnect`'s dial, a network row's and a move's go to HOST:PORT first,
+`192.0.2.1:9` giving way after 2.5 s and `127.0.0.1:1` at once), `-DuoDeckPathTest
+'<spec>'` (with `-DuoDeckConnect`: the session's Mac listed as a network row whose
 cable and Wi-Fi come and go on cue, so the session follows the best path for
 real; the spec is ContentView's contract, the console's "path: …" lines say
-what happened), `-SillInputScript '<t> <step>; …'` (with `-SillLive 1`: input
+what happened), `-DuoDeckInputScript '<t> <step>; …'` (with `-DuoDeckLive 1`: input
 with no finger, t seconds after the session's first window list: `down`, `pad
 DX,DY`, `lift` and `click` on the portrait pad, `padscroll DX,DY` two fingers
 scrolling it with their coast, `tap X,Y` on the stream at a frame fraction,
@@ -8623,24 +8617,24 @@ key row, `gesture NAME[,FINGERS]` a three-finger gesture through
 two-finger scroll with its coast, `wheel DX,DY` a wheel's plain deltas, `keyboard
 attach|detach` a hardware keyboard coming or going, `orient landscape|portrait`
 the scene turned (an iPhone's); the console's "input script: …" and "pointer: …" lines say what
-happened; it runs only when the session was dialled by `-SillConnect` to a
+happened; it runs only when the session was dialled by `-DuoDeckConnect` to a
 loopback address, `127.0.0.1:P`, `::1:P` or `localhost:P`, and the host's first
-window list has no version: Sill.app's always has, and would post the input to
+window list has no version: DuoDeck.app's always has, and would post the input to
 this Mac, so the console says "input script: refused: …" and nothing is sent;
 point it only at `--synthetic` hosts; `[::1]:P` works too: the argument domain
 drops a launch argument that starts with `[`, and StreamClient.init registers
-`-SillConnect`'s, `-SillWiredTest`'s and `-SillPairAddress`'s from the command
-line). The first-run tour, in the mock, under `-SillLive 1` and in
-the normal app: `-SillTourState fresh|landscape|done|skipped|saved` turns the
+`-DuoDeckConnect`'s, `-DuoDeckWiredTest`'s and `-DuoDeckPairAddress`'s from the command
+line). The first-run tour, in the mock, under `-DuoDeckLive 1` and in
+the normal app: `-DuoDeckTourState fresh|landscape|done|skipped|saved` turns the
 automatic tour on (a Debug build never shows it by itself otherwise; `saved`
-reads and writes `Sill.tourSeen`, `Sill.tourSkipped` and `Sill.tourVersion`,
+reads and writes `DuoDeck.tourSeen`, `DuoDeck.tourSkipped` and `DuoDeck.tourVersion`,
 an older memory cleared once as a Release build does, the others last one run
 and `landscape` the sideways steps; without `saved` no Debug build writes the
-version), `-SillTour touch|bar|sharing|settings|laptop` starts it at that step, and the
-stand-ins `-SillTourPress next@S|skip@S`, `-SillTourActivityAt S` (the app
-run's first session only), `-SillTakeTourAt S` (Settings, then its Take the
+version), `-DuoDeckTour touch|bar|sharing|settings|laptop` starts it at that step, and the
+stand-ins `-DuoDeckTourPress next@S|skip@S`, `-DuoDeckTourActivityAt S` (the app
+run's first session only), `-DuoDeckTakeTourAt S` (Settings, then its Take the
 Tour) and
-`-SillTourVoiceOver 1`; `-SillOrientation landscape|portrait` asks the normal
+`-DuoDeckTourVoiceOver 1`; `-DuoDeckOrientation landscape|portrait` asks the normal
 app's scene for that orientation (a phone simulator sideways with its real
 safe areas); the console's "tour: …" lines say what happened, a card's
 line gives its frame and tail, and "tour: card …" its rows (how many New) and
@@ -8654,33 +8648,33 @@ scaled down and laid out at its own size ("harness: 710x1000 drawn at 0.62");
 a phone's whole stream screen on that phone (440x894 on an 18 Pro Max, 402x812
 on an 18 Pro) reaches into the simulator's safe area and runs its trackpad past
 its bottom edge: photograph it on a larger simulator, or in the normal app.
-`-SillKeyboard 1` raises the software keyboard for real in a live session (the
-mock only lights the button), `-SillKeyboardToggle <s>[,<s>…]` toggles it at
+`-DuoDeckKeyboard 1` raises the software keyboard for real in a live session (the
+mock only lights the button), `-DuoDeckKeyboardToggle <s>[,<s>…]` toggles it at
 those seconds as the Keyboard button does, and in a live session (the normal
-app with `-SillConnect`, or `-SillLive 1`) `-SillDrawer 1`, `-SillSettings 1`
-and `-SillScaleOpen 1` open theirs 1.5 s after the stream starts
-(`-SillDrawerSearch <text>`: the open drawer searches with its field's keyboard
+app with `-DuoDeckConnect`, or `-DuoDeckLive 1`) `-DuoDeckDrawer 1`, `-DuoDeckSettings 1`
+and `-DuoDeckScaleOpen 1` open theirs 1.5 s after the stream starts
+(`-DuoDeckDrawerSearch <text>`: the open drawer searches with its field's keyboard
 up; the Aa ruler only while a window streams: over a synthetic host's Desktop
 Aa is dimmed and the console says the ruler stays closed;
-`-SillScaleScript '<s> <scale|off>[; …]'` sets Aa's value at those seconds as
+`-DuoDeckScaleScript '<s> <scale|off>[; …]'` sets Aa's value at those seconds as
 the ruler's release does, whatever streams, so a synthetic host's `[1s]` lines
 show `win.fitOff` for a scale then Off). The console
 prints `viewport: 386×241 pt, scale off, 60 fps` for each viewport sent, and on
 a phone upright `trackpad: …, vertical span …` and, once the keyboard has moved,
 `keyboard: up, 301 pt tall, its top at …; the key row ends 10 pt above it`.
-`-SillAXDump <s>` lists the stream screen's accessibility elements in the
+`-DuoDeckAXDump <s>` lists the stream screen's accessibility elements in the
 tree's order (VoiceOver's), on a private simulator once `xcrun simctl spawn
 UDID defaults write com.apple.Accessibility ApplicationAccessibilityEnabled
 -bool true`.
 A hardware keyboard (docs/hardware-keyboard-plan.md): a simulator's GameController
 always counts the simulator's own keyboard, so the stream's input view takes the
-keyboard by itself there (an empty input view: nothing drawn); `-SillHardwareKeyboard
+keyboard by itself there (an empty input view: nothing drawn); `-DuoDeckHardwareKeyboard
 1|0` says a keyboard is attached or not for the run instead. The console prints
 `keyboard: …` for what HardwareKeyboardPolicy does and `hwkey: usage 41 down via
 pressesBegan (none): to the Mac` (or `keyCommand`) for every hardware key the input
-view sees; `-SillKeyProbe 1` adds GameController's own view of each key,
-`-SillEscViaCommand 1` hands Esc on from pressesBegan so its key commands take it,
-and `-SillTurnAt <s>[,<s>…]` turns an iPhone's scene mid-session (iPadOS's windowing
+view sees; `-DuoDeckKeyProbe 1` adds GameController's own view of each key,
+`-DuoDeckEscViaCommand 1` hands Esc on from pressesBegan so its key commands take it,
+and `-DuoDeckTurnAt <s>[,<s>…]` turns an iPhone's scene mid-session (iPadOS's windowing
 refuses). `Tests/keyrig` presses real keys (and holds them, `wait:S`) and turns a
 wheel inside the simulator; after its keys UIKit there counts a hardware keyboard,
 so a fresh simulator is the one that shows the software keyboard. Each hardware
@@ -8688,49 +8682,49 @@ key's down line ends in who types its characters (`; the Mac types: en-US`, `;
 iPadOS types: zh-Hant`: KeyTyping), and the simulator takes another language's
 keyboards from `-AppleLanguages '(zh-Hant-TW, en-US)' -AppleLocale zh_TW` (or
 ja-JP, ru-RU…), not from its `AppleKeyboards` preference. A test host's Desktop takes input only with
-`SILL_TEST_POINTER_PATH` (else it has nowhere to land).
-`-SillIdiom pad` draws a screen taller than wide and narrower than 600 pt as
+`DUODECK_TEST_POINTER_PATH` (else it has nowhere to land).
+`-DuoDeckIdiom pad` draws a screen taller than wide and narrower than 600 pt as
 an iPad does (the compact halves) rather than as a phone, so an iPhone
 simulator photographs it (`phone` the other way round; the normal app too).
-`-SillInputTest 1`, with `-SillConnect` on this Mac's loopback: once, the
+`-DuoDeckInputTest 1`, with `-DuoDeckConnect` on this Mac's loopback: once, the
 portrait key row taps cmd, esc, shift and ctrl through its caps' action, then
 the trackpad checks that a touch at its centre lands on it, strokes, taps with
 the latched keys held and scrolls, through its own code, and in every layout
 the stream's input view sends Esc and ⇧Esc through its key command, a
 trackpad's scroll with its coast and a wheel's ("input test: …"); a
 synthetic host counts what it gets as `in.dry` and posts nothing, but a real
-host (Sill.app, SillHost without `--synthetic`) posts it on this Mac and the
+host (DuoDeck.app, DuoDeckHost without `--synthetic`) posts it on this Mac and the
 test does not look at which host it reached, so point it only at a synthetic
 host, or put a relay in front that reads the device's frames (the 14-byte
 header: kind, then the payload's length at bytes 10–13) and drops kind 8
-(`sillrelay.py` passes everything).
+(`duodeckrelay.py` passes everything).
 
 ## Compatibility floor
 
-The first public builds (Sill for iPhone and iPad from the App Store, Sill.app from GitHub) set it
-for good. Sill.app changes only when its user downloads a new version (its update check only points
+The first public builds (DuoDeck for iPhone and iPad from the App Store, DuoDeck.app from GitHub) set it
+for good. DuoDeck.app changes only when its user downloads a new version (its update check only points
 at one), and a device can stay on an old version (automatic updates off, an iOS the next version
 dropped). So every later host keeps serving devices from the first public build on, and every later
 device keeps working with Macs from the first public build on, or each says why
 (docs/update-notice-plan.md):
-- Kept as they are: the home door as Sill.app 1.0 ships it, TLS with pairing at home
-  (docs/home-pairing-plan.md, branch `home-pairing`; it ships before 1.0, Noah 2026-09-25), not
-  the plain-TCP `_sill._tcp` door, which only development builds and the CLI without `--pairing`
-  keep; the ALPNs `sill/1` and `sill-pair/1`, which every host offers for good at both doors
-  (`RemoteTLS.serverALPNs`: a later generation's `sill/2` only ever goes beside them); the 14-byte
+- Kept as they are: the home door as DuoDeck.app 1.0 ships it, TLS with pairing at home
+  (docs/home-pairing-plan.md, branch `home-pairing`; it ships before 1.0, the maintainer 2026-09-25), not
+  the plain-TCP `_duodeck._tcp` door, which only development builds and the CLI without `--pairing`
+  keep; the ALPNs `duodeck/1` and `duodeck-pair/1`, which every host offers for good at both doors
+  (`RemoteTLS.serverALPNs`: a later generation's `duodeck/2` only ever goes beside them); the 14-byte
   header; kinds 0–28, 32 and 44 and their payloads (HEVC with ParameterSets; the JSON of Switcher,
   Input, Viewport, HostSettings, Remote, Compatibility, Pointer, MacMenu, Gesture and Clipboard;
   44, a device's keyframe request after its picture was interrupted, empty, which a host from
   before skips; 29 to 31 and 33 to 42 stay free, pull request #66's, and 43 is the Mac's sound's,
-  below), inside `sill/1` at both doors (19 and 20 on their own `sill-pair/1` connection, the
+  below), inside `duodeck/1` at both doors (19 and 20 on their own `duodeck-pair/1` connection, the
   next bullet); the ping echo; a viewport (kind 9) within `ViewportBounds`, each side 1 to
   16384 points and a text scale 0.25 to 4 or none: every device build's is, a host from
   2026-10-29 on refuses any other whole (security scan, finding 4), so a later device keeps
   within them; a
-  kind 16 within 2 s of the first window list, one per connection since Sill for Mac 0.5.1 (away
+  kind 16 within 2 s of the first window list, one per connection since DuoDeck Host 0.5.1 (away
   from home, docs/remote-bundle-plan.md §4): its `settings` the pair that connection's controls
   set (the away quality for a device away), and its optional `away` (AwayQuality, from a host with
-  an identity: Sill.app, SillHost --remote or --pairing) and `link` (LinkReport, only while a link
+  an identity: DuoDeck.app, DuoDeckHost --remote or --pairing) and `link` (LinkReport, only while a link
   does not keep up; its `state` a string,
   which a device reads as keeping up when it does not know it); kind 22's `reason`, `message` and
   `reconnect`; the
@@ -8769,7 +8763,7 @@ device keeps working with Macs from the first public build on, or each says why
   one message.
 - Pairing as 1.0 does it (docs/home-pairing-plan.md §3): the Bonjour TXT keys `r` (the recognition
   tag) and `p` ("1" pairing required, "0" open, no `p` a plain door, any other value read as "1");
-  a `sill-pair/1` connection is exactly one kind 19, with no hello (the device gate judges sessions
+  a `duodeck-pair/1` connection is exactly one kind 19, with no hello (the device gate judges sessions
   only), and one kind 20, then the Mac closes it; kind 19's methods `qr`, `code` and, at the home
   door, `ask` and `cancel` (the remote door answers both `closed`), at `v` 1: a host answers any other `v`
   `closed` without counting a try, so a later method or proof format comes with a later `v`, never
@@ -8789,29 +8783,29 @@ device keeps working with Macs from the first public build on, or each says why
   before anything else. A device from 2026-09-25 on that receives it shows the host's message word
   for word, with its App Store link, and does not reconnect; older development builds cannot. At
   the TLS home door only devices from home pairing on receive it (Decided, below). Kind 22 reaches
-  a 1.0 device only inside a `sill/1` session, so such a host still completes that device's
-  `sill/1` handshake and reads its hello through the gate before refusing it: a host that stopped
-  offering `sill/1` would leave it a failed handshake (-9838), "disconnected" and a redial every
+  a 1.0 device only inside a `duodeck/1` session, so such a host still completes that device's
+  `duodeck/1` handshake and reads its hello through the gate before refusing it: a host that stopped
+  offering `duodeck/1` would leave it a failed handshake (-9838), "disconnected" and a redial every
   few seconds, for ever.
 - Every device says hello first (kind 23: its version, build, protocol and name), and every host's
-  window list gives its version and protocol (`hostVersion`, nil from SillHost and from Macs
+  window list gives its version and protocol (`hostVersion`, nil from DuoDeckHost and from Macs
   before 2026-09-25). A later device facing an older Mac tells what it lacks from these and from
-  which kinds and fields arrive, and says "Update Sill on ‹Mac›", as the Settings panel already
+  which kinds and fields arrive, and says "Update DuoDeck on ‹Mac›", as the Settings panel already
   does for a Mac without kind 16.
-- `SillProtocol.current` (1) rises only with a change an older peer cannot skip, and the floor
+- `DuoDeckProtocol.current` (1) rises only with a change an older peer cannot skip, and the floor
   rises with it.
-- Decided (Noah, 2026-09-25; the plan's open question 14): home pairing ships before 1.0, so the
-  floor is the TLS home door with pairing, and no 1.0 device speaks plain TCP to Sill.app.
+- Decided (the maintainer, 2026-09-25; the plan's open question 14): home pairing ships before 1.0, so the
+  floor is the TLS home door with pairing, and no 1.0 device speaks plain TCP to DuoDeck.app.
   Settled at the merge of main into `home-pairing` (2026-09-27, d11aa60; home pairing landed
   second): the hello goes first inside TLS at both doors, and the device gate runs in `Door`, once
   the key is admitted, one place for both TLS doors (`StreamServer.gate`; the CLI's plain door
   without `--pairing` runs it at `.ready`); what changed while it held a session (the key removed,
   Require pairing on, Remote Access or internet access off, the session limit, Direct Wireless
   off) is judged again by `DoorPolicy.afterGate`, with the goodbye and the line that change's own
-  close gives. 1.0's TLS home door is `SillProtocol` 1 with ALPN `sill/1`, as the remote door is:
+  close gives. 1.0's TLS home door is `DuoDeckProtocol` 1 with ALPN `duodeck/1`, as the remote door is:
   pairing on the home door is part of protocol 1, no longer an example of what raises it
   (Compatibility.swift, docs/update-notice-plan.md §3.2 and §4.6), and a later generation raises
-  both: `sill/2` is offered beside `sill/1` and `sill-pair/1`, never instead of them (the first
+  both: `duodeck/2` is offered beside `duodeck/1` and `duodeck-pair/1`, never instead of them (the first
   bullet). Builds from before home
   pairing dial plain TCP and say hello in plaintext: at the TLS door they get a failed handshake
   and EOF, never kind 22 "update", and redial. Only development and TestFlight builds are that
@@ -8829,7 +8823,7 @@ device keeps working with Macs from the first public build on, or each says why
 - Latency beats quality. Drop frames before queuing them.
 - Don't add features the current milestone doesn't need.
 
-## Decisions already made (don't relitigate without asking Noah)
+## Decisions already made (don't relitigate without asking the maintainer)
 
 - Free app, tip jar, open source. Not paid, not subscription.
 - iCloud auto-pairing (same Apple Account, Mac just appears) for milestone 5.
@@ -8838,9 +8832,9 @@ device keeps working with Macs from the first public build on, or each says why
 - License: Apache-2.0, LICENSE since PR #15, kept when the repository went
   public on 2026-09-26 (paid plan is gone, so no GPL/CLA needed).
 - v1 out of scope: hole punching, multi-window, layout customization. Audio is in scope since
-  2026-09-27 (Noah: "Audio: the plan is done and parked as a v2 feature by your earlier decision",
+  2026-09-27 (the maintainer: "Audio: the plan is done and parked as a v2 feature by your earlier decision",
   first in what he wanted worked on; docs/audio-plan.md, docs/BRIEF.md), and in, as a beta, since
-  2026-10-20 (Noah, about PR #94: "merge as beta support"): Send Audio, off by default. Since
-  2026-10-27 (Noah: "Sound should be a toggle in the settings menu") the Mac's menu and Settings and
+  2026-10-20 (the maintainer, about PR #94: "merge as beta support"): Send Audio, off by default. Since
+  2026-10-27 (the maintainer: "Sound should be a toggle in the settings menu") the Mac's menu and Settings and
   a device's Settings panel set it for every device, and each device's Mute is its own; no Sound
   button in the bar.

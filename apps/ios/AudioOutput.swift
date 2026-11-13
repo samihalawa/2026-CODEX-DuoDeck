@@ -6,7 +6,7 @@ import UIKit
 
 /// The Mac's sound on this device (docs/audio-plan.md §7.3, §7.4): kind 43's formats and packets in,
 /// through the playout model (AudioPlayout, which decides) and the decoder (AudioDecoder), onto an
-/// AVAudioPlayerNode → the main mixer → the output. Every line of Sill's runs on `queue`: the player
+/// AVAudioPlayerNode → the main mixer → the output. Every line of DuoDeck's runs on `queue`: the player
 /// node schedules, and the real-time code is Apple's (AVAudioSourceNode's real-time block is not for
 /// Swift, AVAudioSourceNode.h).
 ///
@@ -22,19 +22,19 @@ import UIKit
 /// change are handled here; headphones taken out mute the sound and say so (`onRouteMuted`), as a
 /// video app pauses.
 ///
-/// In the simulator, and in a DEBUG build asked with `-SillSoundSink manual`, the engine renders in
+/// In the simulator, and in a DEBUG build asked with `-DuoDeckSoundSink manual`, the engine renders in
 /// manual (offline) mode instead: it never opens an output device and never activates the session, so
 /// nothing can reach a speaker, the Mac's included. A timer on `queue` pulls what a real output would,
 /// as the clock goes, with a stand-in IO buffer (5 ms) and output latency (10 ms), and the console says
-/// where each click of the test tone was heard. DEBUG `-SillSoundVolume 0` sets the player's volume to
-/// 0 besides. (`-SillSoundSink device` in a DEBUG simulator build opens the output, for a person at
+/// where each click of the test tone was heard. DEBUG `-DuoDeckSoundVolume 0` sets the player's volume to
+/// 0 besides. (`-DuoDeckSoundSink device` in a DEBUG simulator build opens the output, for a person at
 /// the simulator who wants to hear it.)
 ///
 /// Threads: the client hands everything over from the network queue (formats, packets, frames,
 /// stamped there) and the main thread (mute, the session, the route); the player's completion handlers
 /// return buffers to the pool under its lock; the once-a-second stats are read under `statsLock`.
 final class AudioOutput {
-    let queue = DispatchQueue(label: "sill.audio", qos: .userInteractive)
+    let queue = DispatchQueue(label: "duodeck.audio", qos: .userInteractive)
 
     /// Headphones taken out (the route's old device unavailable): the client mutes and says so. Main thread.
     var onRouteMuted: (() -> Void)?
@@ -59,7 +59,7 @@ final class AudioOutput {
     private var activationBlocked = false
     private var lastPacketAt: Double?
     /// When this queue last finished starting or stopping an engine: a packet that came before then
-    /// waited for Sill, not the link, and the floor and the cover take when it came (rule 6).
+    /// waited for DuoDeck, not the link, and the floor and the cover take when it came (rule 6).
     private var engineBusyUntil = 0.0
     private var deadlineTimer: DispatchSourceTimer?
     private var secondTimer: DispatchSourceTimer?
@@ -617,11 +617,11 @@ private final class SoundEngine {
         stop()
     }
 
-    /// Which sink: the simulator never opens an output unless a DEBUG build asks (`-SillSoundSink
+    /// Which sink: the simulator never opens an output unless a DEBUG build asks (`-DuoDeckSoundSink
     /// device`); a device opens it unless a DEBUG build asks for `manual`.
     static var sinkFromLaunchArguments: Sink {
         #if DEBUG
-        switch UserDefaults.standard.string(forKey: "SillSoundSink") {
+        switch UserDefaults.standard.string(forKey: "DuoDeckSoundSink") {
         case "manual"?: return .manual
         case "device"?: return .device
         default: break
@@ -637,7 +637,7 @@ private final class SoundEngine {
     func start() -> Started {
         engine.attach(player)
         #if DEBUG
-        if let raw = UserDefaults.standard.string(forKey: "SillSoundVolume"), let v = Float(raw) { player.volume = v }
+        if let raw = UserDefaults.standard.string(forKey: "DuoDeckSoundVolume"), let v = Float(raw) { player.volume = v }
         #endif
         if manual {
             do {
@@ -834,7 +834,7 @@ private final class BufferPool {
 // MARK: - The test tone's clicks (DEBUG)
 
 /// Where each click of a synthetic host's test tone (a 4 ms 2 kHz burst at each whole second of the
-/// stamps' clock, Sources/SillHost/TestTone.swift) was heard, from what the manual rendering produced:
+/// stamps' clock, Sources/DuoDeckHost/TestTone.swift) was heard, from what the manual rendering produced:
 /// the console's "audio: click …" lines, the simulator gate's measure (docs/audio-plan.md S2).
 private struct ClickFinder {
     /// The parts scheduled lately: where on the player's timeline, how long, and the stamp of their

@@ -388,7 +388,7 @@ enum TextInputRules {
     }
 }
 
-/// Who types a hardware keyboard's characters (#162: Noah, 2026-10-29, on the iPad mini with a Bluetooth
+/// Who types a hardware keyboard's characters (#162: the maintainer, 2026-10-29, on the iPad mini with a Bluetooth
 /// keyboard and with the Mac's own through Universal Control, "hold p didnt work … When I held down e it
 /// showed the keyboard options for Spanish characters"): the Mac, which is sent them as keys, or iPadOS's
 /// text system, which types them into the stream's input view and hands over what it typed, sent as text.
@@ -406,7 +406,7 @@ enum KeyTyping: Equatable {
     /// An input method or dictation is composing (marked text): every key is its own until what it
     /// composes is chosen (the arrows move through its candidates, Return chooses, a shortcut goes to it).
     case composing
-    /// iPadOS's text system types the characters, as it did before: for a Mac that repeats no key (a Sill
+    /// iPadOS's text system types the characters, as it did before: for a Mac that repeats no key (a DuoDeck
     /// for Mac from before key repeat, whose window list says no `keyRepeat`), for a keyboard in another
     /// script than the Latin alphabet (Russian, Greek, Arabic, Hindi…: the keyboard chosen on the iPad says
     /// which script is meant, and the Mac's own layout would not give it), for one whose input method

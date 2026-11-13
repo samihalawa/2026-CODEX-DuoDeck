@@ -3,9 +3,9 @@
 SELF="$(cd "$(dirname "$0")" && pwd)"
 WT="$1"; OUT="$2"; T=$(mktemp -d)
 cp "$WT/Sources/StreamProtocol/"*.swift "$T/"
-sed '/^import StreamProtocol$/d' "${3:-$WT/Sources/SillHost/AddressList.swift}" > "$T/AddressList.swift"
-sed '/^import StreamProtocol$/d' "${4:-$WT/Sources/SillHost/PairingWindow.swift}" > "$T/PairingWindow.swift"
-cp "$WT/Sources/SillHost/OriginPolicy.swift" "$T/"
-sed '/^import StreamProtocol$/d' "$WT/Sources/SillHost/DoorPolicy.swift" > "$T/DoorPolicy.swift"   # AskLimits' quiet by an IPv6 /64
+sed '/^import StreamProtocol$/d' "${3:-$WT/Sources/DuoDeckHost/AddressList.swift}" > "$T/AddressList.swift"
+sed '/^import StreamProtocol$/d' "${4:-$WT/Sources/DuoDeckHost/PairingWindow.swift}" > "$T/PairingWindow.swift"
+cp "$WT/Sources/DuoDeckHost/OriginPolicy.swift" "$T/"
+sed '/^import StreamProtocol$/d' "$WT/Sources/DuoDeckHost/DoorPolicy.swift" > "$T/DoorPolicy.swift"   # AskLimits' quiet by an IPv6 /64
 cp "$SELF/main.swift" "$T/main.swift"
 swiftc -O "$T/"*.swift -o "$OUT" 2>&1 | grep -E "error" ; rm -rf "$T"

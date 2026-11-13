@@ -3,8 +3,8 @@
 on 127.0.0.1, for SECONDS. run.sh runs the gates; this is one of them.
 usage: run.py NAME SECONDS [host args...] -- [relay args...] -- [device args...]
 Env: DOOR=Home (default) or Remote, the host's door audiocheck dials (Remote adds --tls unless the host
-was given --plain-remote); RELAY=none (default), bottleneck (Scripts/pacing/bottleneck.py) or sillrelay
-(Scripts/sillrelay.py) on the path; HOSTENV="K=V;K=V" for the host's environment (SILL_TEST_AUDIO_*);
+was given --plain-remote); RELAY=none (default), bottleneck (Scripts/pacing/bottleneck.py) or duodeckrelay
+(Scripts/duodeckrelay.py) on the path; HOSTENV="K=V;K=V" for the host's environment (DUODECK_TEST_AUDIO_*);
 AUDIO_RUNS, where NAME.host.txt, NAME.relay.txt and NAME.device.txt go (default .build/audio/runs).
 Every process is started in its own session and killed by PID at the end: none is left running. The
 host's CPU (ps, once a second) goes to NAME.cpu.txt."""
@@ -74,7 +74,7 @@ try:
     relay = os.environ.get("RELAY", "none")
     if relay != "none":
         relay_py = {"bottleneck": os.path.join(ROOT, "Scripts", "pacing", "bottleneck.py"),
-                    "sillrelay": os.path.join(ROOT, "Scripts", "sillrelay.py")}[relay]
+                    "duodeckrelay": os.path.join(ROOT, "Scripts", "duodeckrelay.py")}[relay]
         relay_out = open(path("relay.txt"), "w")
         r = start([sys.executable, relay_py, "--listen", "0", "--to", f"127.0.0.1:{port}"] + relay_args,
                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

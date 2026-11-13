@@ -2,7 +2,7 @@ import Foundation
 
 /// When the device asks the Mac for a keyframe after its picture was interrupted (issue #101): the
 /// display layer failed, could not decode a frame, or needs a flush before it decodes again (iOS
-/// sets that when Sill goes to the background). HEVCDisplayView flushes the layer and waits for a
+/// sets that when DuoDeck goes to the background). HEVCDisplayView flushes the layer and waits for a
 /// keyframe, and a still window on the Mac sends none, so the device asks for one (kind 44,
 /// `keyframeRequest`), which the Mac answers by encoding its last frame again. Never a pick of the
 /// source again: that restarts every device's stream and, in regular mode, raises the window.
@@ -13,18 +13,18 @@ import Foundation
 ///   the next ask is a repeat's.
 /// - An ask whose keyframe has not come within `wait` (`answerWait`: 4 s, or four of the worst
 ///   round trips) is owed again, as a repeat: a Mac from before kind 44 skips it, and a keyframe can
-///   be lost. So a picture never waits for good while Sill stays active, and a Mac that never
+///   be lost. So a picture never waits for good while DuoDeck stays active, and a Mac that never
 ///   answers is asked again after 4, 8 and 16 s, then every 32 s, which costs it nothing.
-/// - Only while Sill is active and something streams: an interruption seen in the background is
+/// - Only while DuoDeck is active and something streams: an interruption seen in the background is
 ///   asked for on the way back, and a trip to the background owes an ask that was out again (a
 ///   keyframe that comes meanwhile is lost to it).
 /// - At least `spacing` (2 s) after the last ask, whatever interrupted the picture; an ask the
 ///   spacing holds back is owed until then (`askAt`).
 /// - Repeats wait longer, so a decoder that cannot keep up never costs every device a keyframe
-///   every 2 s: a picture that fails again within `calm` (10 s) of its keyframe, Sill active
+///   every 2 s: a picture that fails again within `calm` (10 s) of its keyframe, DuoDeck active
 ///   throughout, or an ask that went unanswered, doubles the spacing (4, 8, 16, then 32 s at most).
 ///   A picture back for `calm`, or a trip to the background, starts the spacing at 2 s again; a
-///   keyframe that comes while Sill is away never makes the next interruption a repeat (iOS may not
+///   keyframe that comes while DuoDeck is away never makes the next interruption a repeat (iOS may not
 ///   decode it there).
 ///
 /// Pure: the client feeds it the view's events and the clock (`ProcessInfo.systemUptime`, seconds).
@@ -47,7 +47,7 @@ struct KeyframeRecovery {
     }
 
     enum Decision: Equatable {
-        /// Nothing to ask: no interruption, Sill not active, or nothing streams.
+        /// Nothing to ask: no interruption, DuoDeck not active, or nothing streams.
         case nothing
         /// Ask now (`consider` has counted the ask).
         case askNow
@@ -60,9 +60,9 @@ struct KeyframeRecovery {
     /// The picture was lost and no keyframe has been shown since.
     private(set) var open = false
     /// An ask is out for this interruption, waiting for its keyframe (since the interruption opened,
-    /// since Sill last came back to it, or since the last ask went unanswered).
+    /// since DuoDeck last came back to it, or since the last ask went unanswered).
     private(set) var asked = false
-    /// Asks in a row that did not bring the picture back for good, with Sill in the foreground
+    /// Asks in a row that did not bring the picture back for good, with DuoDeck in the foreground
     /// throughout: an interruption less than `calm` after the picture came back, or an ask
     /// unanswered within its wait. Each doubles the spacing.
     private(set) var repeats = 0
@@ -70,7 +70,7 @@ struct KeyframeRecovery {
     private(set) var lastAsk: TimeInterval?
     /// When the picture last came back after an interruption.
     private var backAt: TimeInterval?
-    /// Sill left the foreground since the picture last came back while it was active: the next
+    /// DuoDeck left the foreground since the picture last came back while it was active: the next
     /// interruption is the background's, never a repeat.
     private var wentAway = false
 
@@ -90,8 +90,8 @@ struct KeyframeRecovery {
         }
     }
 
-    /// A keyframe ended the wait: the picture is back. `active`: Sill is active. A keyframe that comes
-    /// while Sill is away is the background's: the trip away still counts, so the next interruption
+    /// A keyframe ended the wait: the picture is back. `active`: DuoDeck is active. A keyframe that comes
+    /// while DuoDeck is away is the background's: the trip away still counts, so the next interruption
     /// is not a repeat (iOS may refuse to decode that keyframe, or throw it away at its next flush).
     mutating func pictureBack(now: TimeInterval, active: Bool) {
         guard open else { return }
@@ -100,16 +100,16 @@ struct KeyframeRecovery {
         if active { wentAway = false }
     }
 
-    /// Sill is no longer active (another app, the background, Control Center). An ask that was out is
-    /// owed again: its keyframe may come while Sill is away, and be lost to it. And the spacing starts
-    /// at 2 s again: what held asks back was the picture failing while Sill was in front.
+    /// DuoDeck is no longer active (another app, the background, Control Center). An ask that was out is
+    /// owed again: its keyframe may come while DuoDeck is away, and be lost to it. And the spacing starts
+    /// at 2 s again: what held asks back was the picture failing while DuoDeck was in front.
     mutating func leftForeground() {
         wentAway = true
         asked = false
         repeats = 0
     }
 
-    /// Whether to ask now. Counts the ask when it says `askNow`. `active`: Sill is the active app;
+    /// Whether to ask now. Counts the ask when it says `askNow`. `active`: DuoDeck is the active app;
     /// `streaming`: the session streams a source; `wait`: how long an ask waits for its keyframe
     /// (`answerWait`).
     mutating func consider(now: TimeInterval, active: Bool, streaming: Bool, wait: TimeInterval) -> Decision {

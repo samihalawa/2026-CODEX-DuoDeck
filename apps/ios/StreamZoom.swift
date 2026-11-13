@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-/// Pinch to zoom on the stream picture (issue #65; Noah's decisions of 2026-10-19 and 2026-10-20): two
+/// Pinch to zoom on the stream picture (issue #65; the maintainer's decisions of 2026-10-19 and 2026-10-20): two
 /// fingers on the picture zoom it from 1× to 5×, centred on the pinch (the midpoint between the
 /// fingers) as a photo in Photos is, and move it with that midpoint; no slider, and the Mac's pointer
 /// is not involved (no zoom about the cursor, no view following it). A slight pinch out leaves the

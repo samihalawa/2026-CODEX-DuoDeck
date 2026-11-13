@@ -4,7 +4,7 @@ SP = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(SP, "..", "..", ".."))   # the repository
 OUT = os.path.join(ROOT, ".build", "checks", "firewall")     # the mutants' sources and binaries
 os.makedirs(OUT, exist_ok=True)
-SRC = os.path.join(ROOT, "Sources/SillHost/FirewallRule.swift")
+SRC = os.path.join(ROOT, "Sources/DuoDeckHost/FirewallRule.swift")
 orig = open(SRC).read()
 MUTANTS = {
     # The paths a rule may name
@@ -77,7 +77,7 @@ MUTANTS = {
     # words
     "W1 no sudo": ('(["sudo", tool] + paths', '([tool] + paths'),
     "W2 the bundle's first": ("let paths = [executable, bundle].compactMap { $0 }", "let paths = [bundle, executable].compactMap { $0 }"),
-    "W3 the bundle called the executable": ("case (nil, .some(let name)): return name", "case (nil, .some): return \"Sill’s executable\""),
+    "W3 the bundle called the executable": ("case (nil, .some(let name)): return name", "case (nil, .some): return \"DuoDeck’s executable\""),
     "W4 a path unquoted": ('paths.flatMap { ["--unblockapp", shellQuoted($0)] }', 'paths.flatMap { ["--unblockapp", $0] }'),
     "W5 block all without the way out": ('connect. \\(blockAllPlace)"', 'connect."'),
     "W6 a line for every check": ("            guard old != new else { return nil }\n", ""),
@@ -110,7 +110,7 @@ for name, (old, new) in MUTANTS.items():
         print(f"MISSED {name}: pattern found {orig.count(old)} times"); continue
     path = os.path.join(OUT, "mutant.swift")
     open(path, "w").write(orig.replace(old, new))
-    b = subprocess.run(["swiftc", "-O", "-package-name", "sill", path, os.path.join(SP, "main.swift"), "-o", os.path.join(OUT, "mutant")],
+    b = subprocess.run(["swiftc", "-O", "-package-name", "duodeck", path, os.path.join(SP, "main.swift"), "-o", os.path.join(OUT, "mutant")],
                        capture_output=True, text=True)
     if b.returncode != 0:
         print(f"MISSED {name}: DOES NOT COMPILE\n{b.stderr[:600]}"); continue

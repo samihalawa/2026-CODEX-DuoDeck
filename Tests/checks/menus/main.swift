@@ -1,7 +1,7 @@
 import Foundation
 // H3 (menus), docs/menu-bar-plan.md §10: the wire's kinds 24, 25 and 27 and their JSON
 // (Sources/StreamProtocol/MacMenu.swift). Compiled with Sources/StreamProtocol as one module
-// (build.sh), with -package-name sill.
+// (build.sh), with -package-name duodeck.
 var failures = 0, checks = 0
 func check(_ ok: Bool, _ what: @autoclosure () -> String, line: Int = #line) {
     checks += 1

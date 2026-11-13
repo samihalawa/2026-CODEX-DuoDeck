@@ -4,7 +4,7 @@ import Foundation
 /// are played, and where each goes on the player's timeline, so that the sound is never ahead of the
 /// picture and trails it by as little as its own path allows. Pure (Foundation only): the
 /// `audio-playout` check runs it on a simulated clock, the harness's device (Scripts/audiocheck.swift)
-/// on real arrivals, and AudioOutput on `sill.audio`, doing what it says.
+/// on real arrivals, and AudioOutput on `duodeck.audio`, doing what it says.
 ///
 /// Clocks. Device times are seconds of the monotonic clock (CACurrentMediaTime, the clock whose ticks
 /// AVAudioTime's hostTime counts). Stamps are the Mac's wall clock (seconds since 1970, the header's).
@@ -15,7 +15,7 @@ import Foundation
 /// The rules, the plan's numbers:
 /// 1. The floor is the smallest (arrival − stamp) of the packets of the last 10 s, kept in 1 s
 ///    buckets, a packet's arrival being when the playout takes it (`packet`), or when it came for one
-///    that waited behind Sill's own engine starting or stopping (rule 6). With no packet for 10 s it
+///    that waited behind DuoDeck's own engine starting or stopping (rule 6). With no packet for 10 s it
 ///    keeps its last value.
 /// 2. The need is what a packet needs between arriving and being heard: the jitter cover (the largest
 ///    arrival − stamp − floor of the last 10 s; 40 ms at home and 150 ms away until the session's
@@ -403,7 +403,7 @@ struct AudioPlayout {
     /// One packet of kind 43's type 2, with its own stamp (the message's + its place × F ÷ rate), taken
     /// `now`. Its (arrival − stamp) is taken now too, not when the network queue read it: what the
     /// packet in hand waits for is the next packet reaching the playout (rule 10), so the hop between
-    /// the two queues is part of what the cover must cover. But a packet that waited behind Sill's own
+    /// the two queues is part of what the cover must cover. But a packet that waited behind DuoDeck's own
     /// engine starting or stopping gives `arrival`, when it came: that wait is not the link's, and the
     /// floor and the cover take `arrival`, the late test and the placement `now` (rule 6).
     mutating func packet(epoch: Int, seq: UInt32, stamp: Double, segmentStart: Bool, arrival came: Double? = nil,

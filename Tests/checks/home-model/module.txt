@@ -2,7 +2,7 @@
 Sources/StreamProtocol/*.swift
 iOSClient/DiscoveryPolicy.swift
 iOSClient/SavedMacs.swift
-Sources/SillHost/PairingWindow.swift
-Sources/SillHost/OriginPolicy.swift
-Sources/SillHost/DoorPolicy.swift
+Sources/DuoDeckHost/PairingWindow.swift
+Sources/DuoDeckHost/OriginPolicy.swift
+Sources/DuoDeckHost/DoorPolicy.swift
 iOSClient/GoodbyePolicy.swift

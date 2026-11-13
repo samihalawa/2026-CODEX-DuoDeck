@@ -13,7 +13,7 @@ import Foundation
 /// there a nil scale leaves the window alone again.
 ///
 /// Aa sizes a window, never the Desktop (the host ignores a viewport's scale for it), so it can be
-/// used only while a window streams (`selectable`; Noah, 2026-10-29): elsewhere every bar dims it.
+/// used only while a window streams (`selectable`; the maintainer, 2026-10-29): elsewhere every bar dims it.
 ///
 /// Pure: the control (StreamScreen's `TextScaleControl`) and the host both ask here.
 public enum TextScale {
@@ -79,7 +79,7 @@ public enum TextScale {
     /// macOS, off for the session after a problem, or a staging that failed), and there Off is back; a
     /// window still staged after the setting went off keeps 1× until its restart. Otherwise (nothing
     /// or the Desktop streams, whose running stream says nothing of a window, or the Mac has not said)
-    /// the setting as the device knows it: not while it is on, where the next window goes on Sill's
+    /// the setting as the device knows it: not while it is on, where the next window goes on DuoDeck's
     /// display; offered while it is off, and before the Mac said (an older Mac, or the state not in
     /// yet), where no scale leaves the window alone in regular mode.
     public static func offersOff(virtualDisplay: Bool?, streaming source: StreamSource = .none,
@@ -90,7 +90,7 @@ public enum TextScale {
 
     /// Whether Aa can be used while `source` streams: only a window's. The Mac sizes a window to the
     /// device's panel at Aa's scale; it ignores the scale for the Desktop, and with nothing streaming
-    /// there is nothing to size. Noah, 2026-10-29: "it should not be selectable while you are in
+    /// there is nothing to size. the maintainer, 2026-10-29: "it should not be selectable while you are in
     /// desktop mode, misleading". Elsewhere every bar dims Aa, its ruler never opens and VoiceOver hears
     /// `unavailableHint`; the scale it shows stays, for the next window.
     public static func selectable(streaming source: StreamSource) -> Bool {

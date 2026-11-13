@@ -6,7 +6,7 @@ import StreamProtocol
 
 // Remote access on the device (docs/remote-access-plan.md §7): pairing, saved Macs, remote dials,
 // the session gate (a remote session is connected at its first window list), kinds 18, 20 and 22,
-// the reconnect order after a loss, and sill://pair links. Main thread unless a function says
+// the reconnect order after a loss, and duodeck://pair links. Main thread unless a function says
 // otherwise; the stored state lives in StreamClient.swift.
 
 /// Pairing as the Add a Mac card and the overlay show it.
@@ -34,7 +34,7 @@ enum PairingProblem: Equatable {
     case expired
     case proofFailed(String)
     case nothingAnswered(String)
-    case notSill(String)
+    case notDuoDeck(String)
     case localNetwork(String)
     case notALink
     case noKey(String)
@@ -57,7 +57,7 @@ enum PairingProblem: Equatable {
 
     var field: Field {
         switch self {
-        case .address, .zone, .nothingAnswered, .notSill, .localNetwork: return .address
+        case .address, .zone, .nothingAnswered, .notDuoDeck, .localNetwork: return .address
         case .codeLength, .codeTypo, .wrongCode, .expired, .stopped, .homeStopped, .homeExpired, .homeClosed: return .code
         case .notPairing, .proofFailed, .notALink, .noKey, .homeProofFailed, .homeNoAnswer, .proofFailedOverStream, .noAnswerOverStream,
              .macSaid:
@@ -81,7 +81,7 @@ enum PairingProblem: Equatable {
         case .proofFailed(let host):
             return "Pairing didn’t finish: the Mac at \(host) couldn’t show it knows the code. Pair from the same network as your Mac, or scan the code instead."
         case .nothingAnswered(let host): return "Nothing answered at \(host). Check the address, and that DuoDeck is open on your Mac."
-        case .notSill(let host): return "Something answered at \(host), but it isn’t DuoDeck, or its DuoDeck is too old to pair."
+        case .notDuoDeck(let host): return "Something answered at \(host), but it isn’t DuoDeck, or its DuoDeck is too old to pair."
         case .localNetwork(let host): return "To reach \(host), allow Local Network for DuoDeck in Settings."
         case .notALink: return "That’s not a DuoDeck code."
         case .noKey(let reason): return "This \(StreamClient.deviceWord) couldn’t make its key (\(reason))."
@@ -123,7 +123,7 @@ enum RemoteCopy {
                                                         : "This \(device) can’t look up \(host)."
         case .localNetwork:
             return "To reach \(at), allow Local Network for DuoDeck in Settings."
-        case .notSill:
+        case .notDuoDeck:
             return "Something answered at \(at), but it isn’t DuoDeck. Your home’s internet address may have changed."
         case .noAnswer:
             if let c = candidate, c.kind == MacAddress.internet, !c.isName {
@@ -163,7 +163,7 @@ extension StreamClient {
         SavedMacs.displayNames(savedMacs)[macID] ?? savedMac(macID)?.name ?? "Mac"
     }
 
-    /// Writes the list, except in a DEBUG run seeded with `-Sill.savedMacs` (for that run alone), and
+    /// Writes the list, except in a DEBUG run seeded with `-DuoDeck.savedMacs` (for that run alone), and
     /// shows it.
     func persistSavedMacs() {
         storeSavedMacs()
@@ -215,7 +215,7 @@ extension StreamClient {
         }
     }
 
-    /// The connect screen's arrangement (`Sill.connectionStyle`, which ConnectScreen's switch and a saved
+    /// The connect screen's arrangement (`DuoDeck.connectionStyle`, which ConnectScreen's switch and a saved
     /// Mac's menu set; tiles while nothing is stored, ConnectionList.defaultStyle): pictures are taken
     /// only with tiles (ConnectionList.takesPreview), and shown only with tiles (`syncPreviews`).
     var connectionStyle: ConnectionList.Style {
@@ -226,11 +226,11 @@ extension StreamClient {
     /// session ends.
     private static var previewsDirectory: URL? {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("SillPreviews", isDirectory: true)
+            .appendingPathComponent("DuoDeckPreviews", isDirectory: true)
     }
 
     /// At launch, and whenever the connect screen's style may have changed (its switch, a saved Mac's
-    /// menu, another Sill window: ConnectScreen): with tiles each saved Mac's kept picture shows, read
+    /// menu, another DuoDeck window: ConnectScreen): with tiles each saved Mac's kept picture shows, read
     /// from its file; with the list none shows and every file stays, so switching back to tiles shows them
     /// at once (ConnectionList.previewPlan). The files of Macs no longer saved go either way. Nothing when
     /// `style` is the one the shown pictures already follow, so a connect screen that comes back keeps
@@ -263,7 +263,7 @@ extension StreamClient {
     /// A session's end with tiles on, once its last keyframe is decoded (`tearDown`, `takePreview`): the
     /// tile shows it at once (`macPreviews`, published, so a connect screen already showing picks it
     /// up) and its JPEG is written. The file has complete protection: unreadable while the device is
-    /// locked. Sill reads it only at launch and when tiles come back, and writes it only for a session
+    /// locked. DuoDeck reads it only at launch and when tiles come back, and writes it only for a session
     /// that ended in a window in front, a second at most later, so all happen while the device is unlocked.
     func savePreview(_ image: UIImage, for macID: String) {
         guard let name = ConnectionList.previewFileName(for: macID) else { return }
@@ -310,23 +310,23 @@ extension StreamClient {
 
     /// At launch: saved Macs without this device's key (a restore from a backup: the key is
     /// ThisDeviceOnly) are useless, and cleared, but only when the Keychain says the key is not
-    /// there (DeviceIdentity.knownMissing). DEBUG: `-SillForgetMacs 1` clears them and the key;
-    /// `-SillForgetHomeTLS 1` clears what this device learned of their home doors (`homeTLS`), so it
-    /// dials an older DuoDeck.app plainly again (docs/home-pairing-plan.md §3.4); `-SillPairURL`,
-    /// `-SillPairCode` with `-SillPairAddress`, and `-SillDialSaved 1` start a pairing or a remote
-    /// dial as Add a Mac… and a Remote row would, without the link's confirmation: `-SillPairURL`
+    /// there (DeviceIdentity.knownMissing). DEBUG: `-DuoDeckForgetMacs 1` clears them and the key;
+    /// `-DuoDeckForgetHomeTLS 1` clears what this device learned of their home doors (`homeTLS`), so it
+    /// dials an older DuoDeck.app plainly again (docs/home-pairing-plan.md §3.4); `-DuoDeckPairURL`,
+    /// `-DuoDeckPairCode` with `-DuoDeckPairAddress`, and `-DuoDeckDialSaved 1` start a pairing or a remote
+    /// dial as Add a Mac… and a Remote row would, without the link's confirmation: `-DuoDeckPairURL`
     /// pairs at the link's own addresses only, where a confirmed link tries the home rows first
-    /// (`confirmPendingLink`); `-SillDialSaved remotely` dials the first saved Mac as Connect
+    /// (`confirmPendingLink`); `-DuoDeckDialSaved remotely` dials the first saved Mac as Connect
     /// Remotely does (a session that never moves home).
     func startRemote() {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "SillForgetMacs") {
+        if UserDefaults.standard.bool(forKey: "DuoDeckForgetMacs") {
             savedMacs = []
             DeviceIdentity.forget()
             persistSavedMacs()
             print("remote: saved Macs and the device key forgotten")
         }
-        if UserDefaults.standard.bool(forKey: "SillForgetHomeTLS") {
+        if UserDefaults.standard.bool(forKey: "DuoDeckForgetHomeTLS") {
             savedMacs = SavedMacs.forgettingHomeTLS(savedMacs)
             persistSavedMacs()
             print("home: homeTLS forgotten on every saved Mac")
@@ -338,14 +338,14 @@ extension StreamClient {
         }
         #if DEBUG
         let d = UserDefaults.standard
-        if let url = d.string(forKey: "SillPairURL") {
+        if let url = d.string(forKey: "DuoDeckPairURL") {
             if case .success(let link) = PairLink.parse(url) { pair(link: link, overlay: false) } else { pairing = .failed(.notALink) }
-        } else if let code = d.string(forKey: "SillPairCode"), let address = d.string(forKey: "SillPairAddress") {
+        } else if let code = d.string(forKey: "DuoDeckPairCode"), let address = d.string(forKey: "DuoDeckPairAddress") {
             pairTyped(code: code, address: address, overlay: false)
-        } else if d.string(forKey: "SillDialSaved") == "remotely", let first = savedMacs.first {
+        } else if d.string(forKey: "DuoDeckDialSaved") == "remotely", let first = savedMacs.first {
             // As Connect Remotely dials it: a session that never moves home (S5).
             dialSaved(first.macID, why: .connectRemotely)
-        } else if d.bool(forKey: "SillDialSaved"), let first = savedMacs.first {
+        } else if d.bool(forKey: "DuoDeckDialSaved"), let first = savedMacs.first {
             dialSaved(first.macID, why: .launchArgument)
         }
         #endif
@@ -397,7 +397,7 @@ extension StreamClient {
     // MARK: Remote dials
 
     /// Dials a saved Mac at its saved addresses (§7.5). A tap on its Remote row, Connect Remotely
-    /// on its network row, the session after a pairing, the automatic reconnect, `-SillDialSaved`.
+    /// on its network row, the session after a pairing, the automatic reconnect, `-DuoDeckDialSaved`.
     func dialSaved(_ macID: String, why: DialReason) {
         guard let mac = savedMac(macID), let pin = mac.fingerprintData else { return }
         let name = displayName(macID)
@@ -467,11 +467,11 @@ extension StreamClient {
     }
 
     #if DEBUG
-    /// `-SillRemoteRoute vpn|internet`: a remote session to a test host on loopback counts as one
+    /// `-DuoDeckRemoteRoute vpn|internet`: a remote session to a test host on loopback counts as one
     /// through Tailscale or over the internet, so the simulator can check the 60 fps request and
     /// the slow-link callout (S8).
     static var testRoute: RemoteRoute? {
-        switch UserDefaults.standard.string(forKey: "SillRemoteRoute") {
+        switch UserDefaults.standard.string(forKey: "DuoDeckRemoteRoute") {
         case "vpn": return .vpn("Tailscale")
         case "internet": return .internet
         default: return nil
@@ -700,8 +700,8 @@ extension StreamClient {
     /// carried on by one (StreamClient.rescue) and stays connected until it takes over, or until it
     /// fails and the session's end brings the reconnect here. After goodbye `quit`, a row listed
     /// since before the loss is the registration that is going (it outlives the goodbye by about a
-    /// second): it is left alone for DiscoveryPolicy.quitWait, and the words "‹Mac› quit Sill…"
-    /// stay meanwhile; the row listed again (Sill is back), or still listed after that, is taken as
+    /// second): it is left alone for DiscoveryPolicy.quitWait, and the words "‹Mac› quit DuoDeck…"
+    /// stay meanwhile; the row listed again (DuoDeck is back), or still listed after that, is taken as
     /// above.
     @discardableResult
     func reconnectIfListed() -> Bool {
@@ -730,7 +730,7 @@ extension StreamClient {
         if let mac = choice.take, mac.endpoint != nil {
             // The row's door decides whether the reconnect dials it at all (DiscoveryPolicy.homeDial,
             // never an ask): a Mac that removed this device, or an unsaved one that requires
-            // pairing, waits for a tap, and one whose Sill is too old for this build is not dialed.
+            // pairing, waits for a tap, and one whose DuoDeck is too old for this build is not dialed.
             // An unsaved one on an open door is dialed pinned to the key its lost session saw
             // (DiscoveryPolicy.reconnectTrust): another key ends the reconnect (homeSessionEnded); a
             // plain door after that session is not dialed (a DEBUG build's), and the reconnect looks on.
@@ -786,7 +786,7 @@ extension StreamClient {
                 status = line
                 return true
             }
-            if decision == .updateSill { status = DiscoveryPolicy.updateSillStatus(mac: mac.name) }
+            if decision == .updateDuoDeck { status = DiscoveryPolicy.updateDuoDeckStatus(mac: mac.name) }
             #if DEBUG
             // A plain door under the name after a session that saw a key over TLS: never dialed by the
             // reconnect (DiscoveryPolicy.reconnectTrust, the review of #255), which looks on; a tap dials it.
@@ -918,10 +918,10 @@ extension StreamClient {
         return ParsedAddress(host: pick.host, port: pick.port, kind: pick.isIPv6 ? .ipv6 : (pick.isName ? .name : .ipv4)).text
     }
 
-    /// A sill://pair link from outside the app: shown for confirmation, never acted on by itself (a
+    /// A duodeck://pair link from outside the app: shown for confirmation, never acted on by itself (a
     /// poster or a message could otherwise add a look-alike "Mac" that collects keystrokes).
     func handleOpenURL(_ url: URL) {
-        guard url.scheme?.lowercased() == "sill" else { return }
+        guard url.scheme?.lowercased() == "duodeck" else { return }
         switch PairLink.parse(url.absoluteString) {
         case .success(let link):
             pendingLink = link
@@ -1072,7 +1072,7 @@ extension StreamClient {
                     // Nothing listening (Remote Access off and no pairing window), or a door that
                     // turned the pairing away in its handshake.
                     self.pairing = .failed(.notPairing(macName ?? "The Mac at \(host)"))
-                case .notSill, .wrongMac: self.pairing = .failed(.notSill(host))
+                case .notDuoDeck, .wrongMac: self.pairing = .failed(.notDuoDeck(host))
                 case .localNetwork: self.pairing = .failed(.localNetwork(host))
                 default: self.pairing = .failed(.nothingAnswered(host))
                 }

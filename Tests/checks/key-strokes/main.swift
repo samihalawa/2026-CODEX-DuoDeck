@@ -1,7 +1,7 @@
 import Foundation
 
 // The Mac's modifier keys after a device's keys (CLAUDE.md, "The stuck command after Spotlight"):
-// KeyStrokes (Sources/SillHost), the keyboard events InputInjector posts for a device's keys, put
+// KeyStrokes (Sources/DuoDeckHost), the keyboard events InputInjector posts for a device's keys, put
 // through a model of InputInjector's glue and of the Mac's HID state table.
 //
 // The model KeyStrokes is written against (inferred: nothing may be posted while this is built): the
@@ -20,8 +20,8 @@ import Foundation
 // on a Mac as the model says none ever is. And input with nowhere to land (DroppedInput) is dropped
 // but for the up of a key or a button the Mac has down, so neither stays down there.
 //
-// Compiled with Sources/StreamProtocol and Sources/SillHost/KeyStrokes.swift as one module
-// (-package-name sill), as build.sh does.
+// Compiled with Sources/StreamProtocol and Sources/DuoDeckHost/KeyStrokes.swift as one module
+// (-package-name duodeck), as build.sh does.
 
 var failures = 0, checks = 0
 func check(_ ok: Bool, _ what: @autoclosure () -> String, line: Int = #line) {
@@ -1673,7 +1673,7 @@ print("random: \(runs) sessions, \(events) events posted; checks reported in \(r
 // key's flags exactly as the device sent them), which a device must keep working with (CLAUDE.md,
 // "Compatibility floor"): on both, nothing is left held.
 
-/// A Mac from before this fix (Sill.app 0.3.x, SillHost before 2026-09-27): each key event carries
+/// A Mac from before this fix (DuoDeck.app 0.3.x, DuoDeckHost before 2026-09-27): each key event carries
 /// exactly the device's modifiers; text goes out with none; a device leaving lets go of nothing.
 struct OldMac {
     var table: UInt64 = 0
@@ -2252,7 +2252,7 @@ check(ForwardedKeys.characterUsages == characterKeys,
       "the character keys: the letters, the digits, Return, Delete, Tab, Space, - = [ ] \\ ; ' ` , . / and Shift's two: "
         + "\(ForwardedKeys.characterUsages.sorted().map { String($0, radix: 16) })")
 check(characterKeys.allSatisfy { KeyStrokes.virtualKeys[$0] != nil },
-      "every character key is a key every Sill for Mac answers to (none is dropped by a Mac from before)")
+      "every character key is a key every DuoDeck Host answers to (none is dropped by a Mac from before)")
 check(characterKeys.allSatisfy { ForwardedKeys.goesAsKey($0, modifiers: 0, typing: .keys)
                                  && ForwardedKeys.goesAsKey($0, modifiers: shift | capsLock, typing: .keys) },
       "while the Mac types: every character key as a key, with shift or caps lock too")
@@ -2265,7 +2265,7 @@ check(ForwardedKeys.keyUsages.allSatisfy { u in [KeyTyping.keys, .text, .composi
 check(characterKeys.allSatisfy { u in [KeyTyping.keys, .text].allSatisfy { ForwardedKeys.goesAsKey(u, modifiers: command, typing: $0)
                                                                          && ForwardedKeys.goesAsKey(u, modifiers: option, typing: $0) } },
       "a character key with ⌘ or ⌥: a shortcut, as a key whoever types")
-// Caps Lock, the keypad, the ISO keyboards' Non-US # and \ and the international keys: no Sill for Mac
+// Caps Lock, the keypad, the ISO keyboards' Non-US # and \ and the international keys: no DuoDeck Host
 // before has a key for the last three (KeyStrokes.virtualKeys), and Caps Lock is the iPad's own state.
 let textAlways: [UInt16] = [uCapsLock, 0x32, 0x64, 0x53, 0x54, 0x58, 0x59, 0x62, 0x63, 0x67, 0x85, 0x87, 0x89]
 check(!textAlways.contains { ForwardedKeys.goesAsKey($0, modifiers: 0, typing: .keys) || ForwardedKeys.goesAsKey($0, modifiers: shift, typing: .keys) },
@@ -2285,7 +2285,7 @@ func onBothMacs(_ events: [InputEvent], _ what: String, line: Int = #line) -> [M
     return posted
 }
 
-// A held P, the reported key (Noah, 2026-10-29: "hold p didnt work"): its down goes at the press and its
+// A held P, the reported key (the maintainer, 2026-10-29: "hold p didnt work"): its down goes at the press and its
 // up at the release, so the Mac repeats it between them (KeyRepeat); the text system never sees it.
 do {
     var kb = Keyboard(); kb.typing = .keys
@@ -2504,7 +2504,7 @@ do {
     let cancelled = c.press(uLShift) + c.press(uP) + c.cancel(uP) + c.cancel(uLShift)
     check(cancelled == [key(uLShift, true, shift), key(uP, true, shift), key(uP, false, shift), key(uLShift, false, 0)], "⇧P cancelled: \(cancelled)")
 }
-// A key no Sill for Mac has (the keypad's 1) stays the text system's while the Mac types.
+// A key no DuoDeck Host has (the keypad's 1) stays the text system's while the Mac types.
 do {
     var kb = Keyboard(); kb.typing = .keys
     check(kb.press(0x59) + kb.release(0x59) == [.text("x")], "the keypad's 1 while the Mac types: the text system's")

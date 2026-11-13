@@ -1,8 +1,8 @@
 # Product brief — Mac window streaming for iPhone Duo and iPad
 
-Last updated 2026-09-22. Owner: Noah.
+Last updated 2026-09-22. Owner: the maintainer.
 
-This is the brief as of 2026-09-22; the README says what Sill does today.
+This is the brief as of 2026-09-22; the README says what DuoDeck does today.
 
 ## The idea
 
@@ -70,9 +70,7 @@ never span the Duo crease in half-folded posture.
 
 ## Name
 
-Sill. A window sill: the ledge a window sits on. Chosen 2026-09-22 over
-Casement, Folio, Nomos; checked the App Store for collisions (only a small
-unrelated "Sill." social app).
+DuoDeck.
 
 ## Scope
 
@@ -86,13 +84,13 @@ In: single-window capture + HEVC; touch/keyboard/Pencil input; live-preview
 bar; full-desktop button; Duo inner + outer layouts; iCloud pairing + add by
 address.
 Out: hole punching, multi-window, layout customization, AV1. Audio moved in on
-2026-09-27 (Noah: "Audio: the plan is done and parked as a v2 feature by your
+2026-09-27 (the maintainer: "Audio: the plan is done and parked as a v2 feature by your
 earlier decision", first in what he wanted worked on): the sound of what
-streams (Send Audio: off by default until 2026-10-27, on by default in Sill.app
-since, Noah: "Send Audio should be on by default, and mute should be off by
+streams (Send Audio: off by default until 2026-10-27, on by default in DuoDeck.app
+since, the maintainer: "Send Audio should be on by default, and mute should be off by
 default"; the CLI's `--audio` still opts in), per docs/audio-plan.md. In, as a beta,
-since 2026-10-20 (Noah, about PR #94: "merge as beta support"): Send Audio says
-beta until the plan's device tests pass. Since 2026-10-27 (Noah: "Sound should be
+since 2026-10-20 (the maintainer, about PR #94: "merge as beta support"): Send Audio says
+beta until the plan's device tests pass. Since 2026-10-27 (the maintainer: "Sound should be
 a toggle in the settings menu") a device's Settings panel turns it on and off for
 every device, and mutes it for itself; no Sound button in the bar.
 
@@ -121,4 +119,4 @@ Costs: $99/yr developer account, domain, optionally a Duo for testing.
 
 ## Open questions
 
-- Hours per week Noah can really commit.
+- Hours per week the maintainer can really commit.

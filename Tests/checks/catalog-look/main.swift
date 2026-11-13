@@ -1,6 +1,6 @@
-// CatalogLook (Sources/SillHost/CatalogLook.swift) on its own: whether a capture may be built from the
+// CatalogLook (Sources/DuoDeckHost/CatalogLook.swift) on its own: whether a capture may be built from the
 // catalog's last look at the windows and displays, or the catalog looks again first, and the Desktop's
-// one more try after a start that failed (the black screen of 2026-10-28: Sill.app 36.5 hours with no
+// one more try after a start that failed (the black screen of 2026-10-28: DuoDeck.app 36.5 hours with no
 // device, its last look's display 21 gone, the dock's displays back as 53 and 52, the Desktop built on
 // 21's SCDisplay and refused by ScreenCaptureKit, "The stream is nil").
 //
@@ -42,7 +42,7 @@ check(abs(L.seconds(.nanoseconds(1)) - 1e-9) < 1e-15, "seconds: a nanosecond")
 // MARK: 2026-10-28
 
 // The catalog's last look was from 10-27 05:42, display 21; at 18:15:43 on 10-28 macOS had 53 and 52
-// active (and Sill's own virtual displays 54 and 55 only while a window is staged).
+// active (and DuoDeck's own virtual displays 54 and 55 only while a window is staged).
 let spell = 36.5 * 3600
 eq(look(age: spell, display: 21, now: [53, 52]), .displayGone(21), "2026-10-28: display 21 is gone: looked at again")
 eq(look(age: spell, display: 53, now: [53, 52]), .old(spell), "2026-10-28: even had 21 stayed 53, a look 36.5 h old is looked at again")

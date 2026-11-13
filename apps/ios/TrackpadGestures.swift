@@ -64,7 +64,7 @@ struct TrackpadGestures {
         case gesture(Gesture, fingers: Int)
     }
 
-    // The tunables, in the surface's points and seconds (Noah's P1 and P3 tune them on glass).
+    // The tunables, in the surface's points and seconds (the maintainer's P1 and P3 tune them on glass).
     /// The three fingers that arm a stroke land within this of each other…
     var chordWindow: TimeInterval = 0.15
     /// …before any finger has moved this far from where it landed (which also keeps a stroke from

@@ -4,9 +4,9 @@ import os, subprocess, sys, tempfile
 WT = sys.argv[1]
 HERE = os.path.dirname(os.path.abspath(__file__))
 FILES = {
-    "AudioEncoder.swift": "Sources/SillHost/AudioEncoder.swift",
-    "AudioPacketizer.swift": "Sources/SillHost/AudioPacketizer.swift",
-    "TestTone.swift": "Sources/SillHost/TestTone.swift",
+    "AudioEncoder.swift": "Sources/DuoDeckHost/AudioEncoder.swift",
+    "AudioPacketizer.swift": "Sources/DuoDeckHost/AudioPacketizer.swift",
+    "TestTone.swift": "Sources/DuoDeckHost/TestTone.swift",
     "AudioDecoder.swift": "iOSClient/AudioDecoder.swift",
 }
 MUTANTS = [

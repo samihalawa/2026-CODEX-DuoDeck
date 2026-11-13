@@ -33,7 +33,7 @@ Use short, literal labels. A shortcut that cycles windows says Next Window. Plac
 Canonical repository: samihalawa/2026-CODEX-DuoDeck.
 Canonical checkout: /Users/samihalawa/git/PROJECTS_ON_PROCESS/2026-CODEX-DuoDeck.
 
-Preserve unrelated working changes. Keep one canonical source per platform; root Sources and iOSClient symlinks are compatibility paths. Maintain Apache 2.0 attribution and upstream copyright notices. Internal protocol and engine names may remain where compatibility requires them.
+Preserve unrelated working changes. Keep one canonical source per platform; root Sources and iOSClient symlinks are compatibility paths. Keep the LICENSE and NOTICE files unchanged.
 
 The current implementation comprises apps/ios, apps/macos and apps/web, plus packages/stream-protocol. Android, Windows, a sandboxed Mac App Store client, account services and paid entitlements remain planned work. The privileged Mac host is distributed separately from any future Mac App Store client. Source presence does not establish public availability.
 

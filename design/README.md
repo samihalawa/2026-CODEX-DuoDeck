@@ -16,6 +16,6 @@ See docs/PRODUCT_BRIEF.md for the product journeys, copy direction and current r
 
 ## Historical material
 
-The older ipad-*.jpg files in screenshots are retained upstream assets. They are not DuoDeck release screenshots or evidence of current live behavior. Current QA captures and renderer fixtures live under ignored .build/orchestration during release validation. Store capture provenance belongs beside the current images in store/screenshots/ios/en-US/README.md.
+Current QA captures and renderer fixtures live under ignored .build/orchestration during release validation. Store capture provenance belongs beside the current images in store/screenshots/ios/en-US/README.md.
 
 The website also exports a 32px favicon and a 180px Apple touch icon from the same PNG to avoid fetching the full app artwork for small browser icons.
