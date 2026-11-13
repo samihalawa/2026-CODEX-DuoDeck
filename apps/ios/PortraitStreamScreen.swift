@@ -85,7 +85,7 @@ private struct DuoDeckShortcut: Identifiable {
 }
 
 private enum DuoDeckShortcutPreset: String, CaseIterable, Identifiable {
-    case editing, browser, windows, developer
+    case editing, browser, windows, developer, presenting
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -93,6 +93,7 @@ private enum DuoDeckShortcutPreset: String, CaseIterable, Identifiable {
         case .browser: return "Browsing"
         case .windows: return "Windows"
         case .developer: return "Code"
+        case .presenting: return "Presenting"
         }
     }
     var shortcuts: [DuoDeckShortcut] {
@@ -127,6 +128,15 @@ private enum DuoDeckShortcutPreset: String, CaseIterable, Identifiable {
                 shortcut("Overview", "square.grid.2x2", "\u{2191}", .control),
                 shortcut("Space Left", "chevron.left", "\u{2190}", .control),
                 shortcut("Space Right", "chevron.right", "\u{2192}", .control)
+            ]
+        case .presenting:
+            return [
+                shortcut("Next slide", "chevron.right", "→", []),
+                shortcut("Previous slide", "chevron.left", "←", []),
+                shortcut("Start slideshow", "play.rectangle", "p", [.command, .option]),
+                shortcut("Black screen", "rectangle.fill", "b", []),
+                shortcut("White screen", "rectangle", "w", []),
+                shortcut("Exit slideshow", "escape", "\u{1B}", [])
             ]
         case .developer:
             return [
@@ -1308,6 +1318,7 @@ struct DuoDeckShortcutsMenu: View {
     @Binding var latched: KeyModifiers
     @AppStorage("DuoDeck.shortcutPreset") private var preset = "editing"
     @AppStorage("DuoDeck.haptics") private var haptics = true
+    @State private var controlDecksOpen = false
 
     var body: some View {
         let group = DuoDeckShortcutPreset(rawValue: preset) ?? .editing
@@ -1325,6 +1336,12 @@ struct DuoDeckShortcutsMenu: View {
                 }
             }
             Divider()
+            Button {
+                latched = []
+                controlDecksOpen = true
+            } label: {
+                Label("My control decks", systemImage: "square.grid.2x2")
+            }
             Button { client.select(.desktop) } label: {
                 Label("Show Desktop", systemImage: "desktopcomputer")
             }
@@ -1332,11 +1349,16 @@ struct DuoDeckShortcutsMenu: View {
             StreamControlLabel(title: "Shortcuts", symbol: "command")
         }
         .accessibilityLabel("Mac shortcuts")
+        .sheet(isPresented: $controlDecksOpen) {
+            DuoDeckControlDecksView(client: client)
+        }
     }
 
     fileprivate static func send(_ shortcut: DuoDeckShortcut, client: StreamClient, haptics: Bool) {
         let hid: UInt16?
         switch shortcut.key {
+        case "\u{1B}": hid = HIDKey.escape
+        case "↓": hid = HIDKey.downArrow
         case "↑": hid = HIDKey.upArrow
         case "←": hid = HIDKey.leftArrow
         case "→": hid = HIDKey.rightArrow
@@ -1386,5 +1408,271 @@ struct DuoDeckGestureGuide: View {
         } icon: {
             Image(systemName: symbol).foregroundStyle(Palette.accent)
         }
+    }
+}
+
+// MARK: - Personal control decks
+
+/// A deck contains ordinary Mac key chords. It reuses the same paired input path as the keyboard,
+/// with each modifier released after a command. Decks live on this device between connections.
+private struct DuoDeckPersonalControl: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var title = "New command"
+    var key = "a"
+    var modifierBits = KeyModifiers.command.rawValue
+
+    static let keys = Array("abcdefghijklmnopqrstuvwxyz0123456789-=[]\\;'`,./").map(String.init)
+        + ["Space", "Return", "Tab", "Escape", "↑", "↓", "←", "→"]
+
+    var character: Character? {
+        switch key {
+        case "Space": return " "
+        case "Return": return "\n"
+        case "Tab": return "\t"
+        case "Escape": return "\u{1B}"
+        default: return key.count == 1 ? key.first : nil
+        }
+    }
+
+    var shortcut: DuoDeckShortcut? {
+        guard Self.keys.contains(key), let character else { return nil }
+        return DuoDeckShortcut(title: title, symbol: "command", key: character,
+                               modifiers: KeyModifiers(rawValue: modifierBits & Self.allowedModifiers))
+    }
+
+    static var allowedModifiers: UInt64 {
+        let flags: KeyModifiers = [.command, .option, .control, .shift]
+        return flags.rawValue
+    }
+
+    var displayTitle: String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? chordLabel : trimmed
+    }
+
+    var chordLabel: String {
+        let modifiers = KeyModifiers(rawValue: modifierBits)
+        return (modifiers.contains(.control) ? "⌃" : "")
+            + (modifiers.contains(.option) ? "⌥" : "")
+            + (modifiers.contains(.shift) ? "⇧" : "")
+            + (modifiers.contains(.command) ? "⌘" : "") + key.uppercased()
+    }
+}
+
+private struct DuoDeckPersonalDeck: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var name = "My controls"
+    var controls: [DuoDeckPersonalControl] = []
+
+    var displayName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "My controls" : trimmed
+    }
+
+    static let initial = [DuoDeckPersonalDeck(
+        id: UUID(uuidString: "E39270D0-4DE2-450F-9A20-73C499C30A80")!,
+        name: "Everyday Mac", controls: [
+            DuoDeckPersonalControl(title: "Copy", key: "c"),
+            DuoDeckPersonalControl(title: "Paste", key: "v"),
+            DuoDeckPersonalControl(title: "Undo", key: "z"),
+            DuoDeckPersonalControl(title: "Save", key: "s"),
+            DuoDeckPersonalControl(title: "Find", key: "f"),
+            DuoDeckPersonalControl(title: "Switch apps", key: "Tab")
+        ])]
+}
+
+struct DuoDeckControlDecksView: View {
+    @ObservedObject var client: StreamClient
+    var standalone = true
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("DuoDeck.personalControlDecks.v1") private var savedDecks = ""
+    @AppStorage("DuoDeck.haptics") private var haptics = true
+    @AppStorage("DuoDeck.selectedControlDeck.v1") private var selectedID = ""
+    @State private var editingID: UUID?
+
+    private var decks: [DuoDeckPersonalDeck] {
+        guard let data = savedDecks.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([DuoDeckPersonalDeck].self, from: data),
+              !decoded.isEmpty else { return DuoDeckPersonalDeck.initial }
+        return decoded
+    }
+
+    private var selected: DuoDeckPersonalDeck {
+        decks.first(where: { $0.id.uuidString == selectedID }) ?? decks[0]
+    }
+
+    var body: some View {
+        Group {
+            if standalone {
+                NavigationStack { board }
+            } else {
+                board
+            }
+        }
+        .tint(Palette.accent)
+        .sheet(isPresented: Binding(get: { editingID != nil }, set: { if !$0 { editingID = nil } })) {
+            if let id = editingID {
+                DuoDeckControlDeckEditor(deck: Binding(
+                    get: { decks.first(where: { $0.id == id }) ?? selected },
+                    set: { changed in save(decks.map { $0.id == id ? changed : $0 }) }))
+            }
+        }
+    }
+
+    private var board: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Picker("Control deck", selection: Binding(
+                    get: { selected.id.uuidString }, set: { selectedID = $0 })) {
+                    ForEach(decks) { Text($0.displayName).tag($0.id.uuidString) }
+                }
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Label(client.macName.isEmpty ? "Your connected Mac" : client.macName, systemImage: "desktopcomputer")
+                    .foregroundStyle(.secondary)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 135), spacing: 12)], spacing: 12) {
+                    ForEach(selected.controls) { control in
+                        Button {
+                            guard let shortcut = control.shortcut else { return }
+                            DuoDeckShortcutsMenu.send(shortcut, client: client, haptics: haptics)
+                        } label: {
+                            VStack(spacing: 10) {
+                                Text(control.displayTitle).font(.headline).multilineTextAlignment(.center)
+                                Text(control.chordLabel).font(.body.monospaced()).foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 92)
+                            .padding(8)
+                            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(control.shortcut == nil || !canSend)
+                        .accessibilityLabel("\(control.displayTitle), \(control.chordLabel)")
+                    }
+                }
+                if selected.controls.isEmpty {
+                    Text("Choose Edit to add the commands you use in your Mac apps.")
+                        .foregroundStyle(.secondary)
+                }
+                if !canSend {
+                    Label("Reconnect to your Mac to send commands.", systemImage: "network.slash")
+                        .foregroundStyle(.secondary)
+                }
+                Text("Keep the target Mac app in front. Commands use that app’s keyboard shortcuts. Your decks are saved on this device and work with every paired Mac.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .padding()
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("My control decks")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button("Edit this deck", systemImage: "pencil") { editingID = selected.id }
+                    Button("Add deck", systemImage: "plus") {
+                        let deck = DuoDeckPersonalDeck(name: "My controls \(decks.count + 1)")
+                        save(decks + [deck])
+                        selectedID = deck.id.uuidString
+                        editingID = deck.id
+                    }
+                    .disabled(decks.count >= 8)
+                    if decks.count > 1 {
+                        Button("Delete this deck", systemImage: "trash", role: .destructive) {
+                            save(decks.filter { $0.id != selected.id })
+                            selectedID = ""
+                        }
+                    }
+                } label: { Label("Edit", systemImage: "pencil") }
+            }
+            if standalone {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+        }
+    }
+
+    private var canSend: Bool { client.lockWhy == nil && client.connected }
+
+    private func save(_ decks: [DuoDeckPersonalDeck]) {
+        guard let data = try? JSONEncoder().encode(decks), let value = String(data: data, encoding: .utf8) else { return }
+        savedDecks = value
+    }
+}
+
+private struct DuoDeckControlDeckEditor: View {
+    @Binding var deck: DuoDeckPersonalDeck
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Deck name") {
+                    TextField("Name", text: $deck.name)
+                        .onChange(of: deck.name) { _, name in
+                            if name.count > 48 { deck.name = String(name.prefix(48)) }
+                        }
+                }
+                Section {
+                    ForEach($deck.controls) { $control in
+                        NavigationLink {
+                            controlEditor($control)
+                        } label: {
+                            LabeledContent(control.displayTitle, value: control.chordLabel)
+                        }
+                    }
+                    .onDelete { deck.controls.remove(atOffsets: $0) }
+                    .onMove { deck.controls.move(fromOffsets: $0, toOffset: $1) }
+                    Button("Add command", systemImage: "plus") { deck.controls.append(DuoDeckPersonalControl()) }
+                        .disabled(deck.controls.count >= 24)
+                } header: {
+                    Text("Commands")
+                } footer: {
+                    Text("Add up to 24 commands. Use Edit to move or remove them. Changes save immediately.")
+                }
+            }
+            .navigationTitle("Edit control deck")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) { EditButton() }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+        }
+    }
+
+    private func controlEditor(_ control: Binding<DuoDeckPersonalControl>) -> some View {
+        Form {
+            Section("Command name") {
+                TextField("Name", text: control.title)
+                    .onChange(of: control.wrappedValue.title) { _, title in
+                        if title.count > 40 { control.wrappedValue.title = String(title.prefix(40)) }
+                    }
+            }
+            Section("Mac key") {
+                Picker("Key", selection: control.key) {
+                    ForEach(DuoDeckPersonalControl.keys, id: \.self) { Text($0.uppercased()).tag($0) }
+                }
+            }
+            Section("Modifiers") {
+                modifier("Command ⌘", .command, control)
+                modifier("Option ⌥", .option, control)
+                modifier("Control ⌃", .control, control)
+                modifier("Shift ⇧", .shift, control)
+            }
+            Section {
+                Text("Choose the unshifted key and modifiers shown in your Mac app’s menu. The shortcut is sent to the Mac app currently in front.")
+            }
+        }
+        .navigationTitle("Edit command")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func modifier(_ title: String, _ flag: KeyModifiers,
+                          _ control: Binding<DuoDeckPersonalControl>) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { control.wrappedValue.modifierBits & flag.rawValue != 0 },
+            set: { enabled in
+                if enabled { control.wrappedValue.modifierBits |= flag.rawValue }
+                else { control.wrappedValue.modifierBits &= ~flag.rawValue }
+            }))
     }
 }

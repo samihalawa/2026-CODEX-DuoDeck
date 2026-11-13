@@ -89,6 +89,11 @@ struct HostSettingsPanel: View {
                 }
                 Section {
                     NavigationLink {
+                        DuoDeckControlDecksView(client: client, standalone: false)
+                    } label: {
+                        Label("My control decks", systemImage: "square.grid.2x2")
+                    }
+                    NavigationLink {
                         DuoDeckControlsSettings(standalone: false)
                     } label: {
                         Label("Trackpad", systemImage: "rectangle.and.hand.point.up.left")
@@ -272,6 +277,12 @@ struct HostSettingsPanel: View {
                 Link("Get DuoDeck for Mac", destination: SillLinks.download)
                 Link("Support", destination: SillLinks.support)
                 Link("Privacy policy", destination: SillLinks.privacy)
+            }
+            Section("Open source") {
+                Text("DuoDeck includes the Sill streaming and remote-input engine, originally developed by Saffsanity under Apache License 2.0.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Link("Sill source and attribution", destination: URL(string: "https://github.com/Saffsanity/sill")!)
+                Link("DuoDeck license", destination: URL(string: "https://github.com/samihalawa/2026-CODEX-DuoDeck/blob/main/LICENSE")!)
             }
         }
         .navigationTitle("Help")
