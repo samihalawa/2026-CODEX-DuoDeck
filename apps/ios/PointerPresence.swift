@@ -48,6 +48,9 @@ struct PointerPresence: Equatable {
     var origin: Origin = .none
     /// The laptop layout: inner or outer portrait.
     var portrait = false
+    /// The iPhone Duo's back screen is a trackpad (BackScreen.swift): its arrow shows in every layout.
+    var backPad = false
+    private var padArrow: Bool { portrait || backPad }
     /// Something streams (`client.active != .none`).
     var streaming = false
     /// Q2: the Pencil draws no pointer, hovering or touching (the request, by its letter). True draws
@@ -73,7 +76,7 @@ struct PointerPresence: Equatable {
         case .here:
             switch origin {
             case .trackpad:
-                guard portrait else { return nil }
+                guard padArrow else { return nil }
                 if let ends = lingerEnds, now > ends { return nil }
                 return own
             case .pencil:
@@ -87,7 +90,7 @@ struct PointerPresence: Equatable {
     /// When the linger hides the trackpad's pointer, for the one timer that re-renders then; nil
     /// while there is nothing to hide (no linger, a finger down, or the sprite not the pad's).
     var lingerEnds: Double? {
-        guard let linger = trackpadLinger, streaming, control == .here, origin == .trackpad, portrait,
+        guard let linger = trackpadLinger, streaming, control == .here, origin == .trackpad, padArrow,
               let lifted = trackpadLiftedAt else { return nil }
         return lifted + linger
     }

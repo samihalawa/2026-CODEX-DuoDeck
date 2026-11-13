@@ -40,6 +40,8 @@ struct ContentView: View {
             }
         }
         .tint(Palette.accent)
+        // The iPhone Duo's back screen: off, a copy of the Mac, or a trackpad behind the device.
+        .modifier(BackScreenHost(client: client))
         // Tells MacMenuHub which window shows this session: the iPad's menu bar shows its menus while
         // it is the app's one window.
         .background(WindowSessionObserver(client: client))
@@ -1103,6 +1105,7 @@ struct ConnectScreen: View {
             NavigationStack {
                 macList
                     .navigationTitle("Macs")
+                    .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button(action: unfold) {
@@ -1187,78 +1190,139 @@ struct ConnectScreen: View {
     }
 
     private var macList: some View {
-        List {
-            if client.macs.isEmpty && searchingAtLaunch {
-                Section {
-                    HStack(spacing: 12) {
-                        ProgressView()
-                        Text("Looking for your Macs…").foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 120)
-                    .listRowBackground(Color.clear)
-                }
-                .transition(.opacity)
-            } else if client.macs.isEmpty {
-                Section {
-                    ContentUnavailableView {
-                        Label("No Macs found", systemImage: "laptopcomputer.slash")
-                    } description: {
-                        Text("Open DuoDeck on your Mac on the same Wi‑Fi, or connect with a USB cable. On this iPhone's hotspot, use the cable or turn on Direct in DuoDeck on your Mac.")
-                    } actions: {
-                        Button("Add Mac", action: unfold)
-                            .buttonStyle(.borderedProminent)
-                        if !client.searchingNearby {
-                            Button("Search nearby") { client.searchNearby() }
-                        }
-                    }
-                    .listRowBackground(Color.clear)
-                }
-                .transition(.opacity)
-            } else {
-                let sections = ConnectionList.sections(
-                    for: client.macs,
-                    macID: { ConnectionList.tileMac(macID: $0.macID, savedByName: $0.savedByName) },
-                    groups: client.macGroups)
-                ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
-                    Section(section.title ?? "Available Macs") {
-                        ForEach(section.items) { mac in
-                            macRow(mac)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                hero
+                if client.macs.isEmpty && searchingAtLaunch {
+                    LookingCard()
+                        .transition(.opacity)
+                } else if client.macs.isEmpty {
+                    emptyStage
+                        .transition(.opacity)
+                } else {
+                    let sections = ConnectionList.sections(
+                        for: client.macs,
+                        macID: { ConnectionList.tileMac(macID: $0.macID, savedByName: $0.savedByName) },
+                        groups: client.macGroups)
+                    ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(section.title ?? "Available Macs")
+                                .font(.footnote.weight(.semibold))
+                                .textCase(.uppercase)
+                                .foregroundStyle(.secondary)
+                                .padding(.leading, 4)
+                            ForEach(section.items) { mac in
+                                macRow(mac)
+                            }
                         }
                     }
                 }
-            }
-            if !client.status.isEmpty,
-               client.status != StreamClient.lookingOnNetwork,
-               client.status != StreamClient.lookingNearby {
-                Section {
-                    Text(client.status)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let notice = client.notice, notice.storeLink,
-                       notice.text == client.status, let url = DuoDeckLinks.appStore {
-                        Link("Update DuoDeck", destination: url)
+                if !client.status.isEmpty,
+                   client.status != StreamClient.lookingOnNetwork,
+                   client.status != StreamClient.lookingNearby {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(client.status, systemImage: "info.circle")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let notice = client.notice, notice.storeLink,
+                           notice.text == client.status, let url = DuoDeckLinks.appStore {
+                            Link("Update DuoDeck", destination: url).font(.subheadline.weight(.semibold))
+                        }
                     }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Palette.bar, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                if duoEnvironment.hinge != .unknown { DuoFeatureStrip() }
+                quickActions
             }
-            Section {
-                NavigationLink {
-                    setupHelp
-                } label: {
-                    Label("Set up your Mac", systemImage: "questionmark.circle")
-                }
-                Link(destination: DuoDeckLinks.download) {
-                    Label("Get DuoDeck Host", systemImage: "arrow.down.circle")
-                }
-            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .frame(maxWidth: 680)
+            .frame(maxWidth: .infinity)
         }
-        .listStyle(.insetGrouped)
-        .listSectionSpacing(.compact)
+        .scrollBounceBehavior(.basedOnSize)
+        .background(Palette.canvas)
         .animation(.snappy(duration: 0.3), value: client.macs.map(\.id))
         .animation(.snappy(duration: 0.3), value: searchingAtLaunch)
         .task {
             try? await Task.sleep(for: .seconds(DiscoveryPolicy.networkFirst))
             searchingAtLaunch = false
+        }
+    }
+
+    /// The state in large type, as DuoDeck Host's home shows it on the Mac.
+    private var hero: some View {
+        let ready = client.macs.contains { !$0.looking }
+        return HStack(alignment: .center, spacing: 16) {
+            DuoDeckMark(size: 58)
+                .shadow(color: Palette.accent.opacity(0.35), radius: 14, y: 6)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(client.macs.isEmpty ? (searchingAtLaunch ? "Looking…" : "Add your Mac") : (ready ? "Ready" : "Your Macs"))
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .contentTransition(.opacity)
+                HStack(spacing: 7) {
+                    Circle().fill(ready ? Color.green : Color.secondary.opacity(0.5)).frame(width: 8, height: 8)
+                    Text(client.macs.isEmpty ? "No Mac nearby yet"
+                         : "\(client.macs.count) Mac\(client.macs.count == 1 ? "" : "s") · tap to control")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 4)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var emptyStage: some View {
+        VStack(spacing: 18) {
+            MacIllustration(active: false)
+                .frame(width: 150, height: 100)
+            VStack(spacing: 6) {
+                Text("No Macs found").font(.title3.weight(.semibold))
+                Text("Open DuoDeck Host on your Mac on the same Wi‑Fi, or connect with a USB cable. On this iPhone's hotspot, use the cable or turn on Direct in DuoDeck Host.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            HStack(spacing: 10) {
+                Button(action: unfold) { Label("Add Mac", systemImage: "qrcode.viewfinder").frame(maxWidth: .infinity) }
+                    .buttonStyle(.borderedProminent)
+                if !client.searchingNearby {
+                    Button { client.searchNearby() } label: {
+                        Label("Search nearby", systemImage: "dot.radiowaves.left.and.right").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .controlSize(.large)
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity)
+        .background(Palette.bar, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+    }
+
+    private var quickActions: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Get started")
+                .font(.footnote.weight(.semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+            HStack(spacing: 12) {
+                Button(action: unfold) {
+                    ActionTile(symbol: "qrcode.viewfinder", title: "Add Mac", detail: "Scan its code")
+                }
+                NavigationLink { setupHelp } label: {
+                    ActionTile(symbol: "checklist", title: "Set up", detail: "Three steps")
+                }
+                Link(destination: DuoDeckLinks.download) {
+                    ActionTile(symbol: "arrow.down.circle", title: "Mac app", detail: "DuoDeck Host")
+                }
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -1326,18 +1390,20 @@ struct ConnectScreen: View {
 
     private func macRow(_ mac: FoundMac) -> some View {
         Button { client.connect(to: mac) } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "laptopcomputer")
-                    .font(.title2)
-                    .foregroundStyle(mac.looking ? Color.secondary : Color.accentColor)
-                    .symbolEffect(.pulse, isActive: mac.looking)
-                    .frame(width: 36)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(mac.name).font(.body.weight(.medium)).foregroundStyle(.primary)
+            HStack(spacing: 16) {
+                MacIllustration(active: !mac.looking)
+                    .frame(width: 92, height: 64)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(mac.name)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
                     if let word = mac.word {
                         HStack(spacing: 6) {
                             if !mac.looking && mac.route != .remote {
                                 Circle().fill(.green).frame(width: 7, height: 7)
+                            } else if mac.route == .remote {
+                                Image(systemName: "globe").font(.caption2)
                             }
                             Text(word).font(.subheadline).foregroundStyle(.secondary)
                                 .contentTransition(.opacity)
@@ -1348,15 +1414,21 @@ struct ConnectScreen: View {
                 if asking(mac) {
                     ProgressView()
                 } else {
-                    Image(systemName: "chevron.right")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                    Image(systemName: "play.fill")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(Palette.onAccent)
+                        .frame(width: 34, height: 34)
+                        .background(mac.looking ? Color.secondary.opacity(0.4) : Palette.accent, in: Circle())
                 }
             }
-            .frame(minHeight: 48)
-            .contentShape(Rectangle())
+            .padding(14)
+            .frame(minHeight: 92)
+            .background(Palette.bar, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(mac.looking ? Palette.separator : Palette.accent.opacity(0.35), lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScale())
         .accessibilityLabel(rowLabel(mac))
         .accessibilityHint(rowHint(mac))
         .contextMenu { menu(for: mac) }
@@ -1428,5 +1500,125 @@ struct ConnectScreen: View {
     private func cancelPairing() {
         client.cancelPendingLink()
         fold()
+    }
+}
+
+// MARK: - Connect screen pieces
+
+/// A small drawn Mac with its picture lit while it is reachable.
+struct MacIllustration: View {
+    var active: Bool
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            VStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: h * 0.08, style: .continuous)
+                    .fill(Color(white: 0.12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: h * 0.05, style: .continuous)
+                            .fill(active
+                                  ? AnyShapeStyle(LinearGradient(colors: [Palette.accent, Palette.accent.opacity(0.45), .blue.opacity(0.55)],
+                                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                                  : AnyShapeStyle(Color(white: 0.25)))
+                            .overlay(alignment: .topLeading) {
+                                RoundedRectangle(cornerRadius: 2).fill(.white.opacity(active ? 0.75 : 0.2))
+                                    .frame(width: w * 0.32, height: h * 0.22)
+                                    .padding(h * 0.08)
+                            }
+                            .padding(h * 0.05)
+                    )
+                    .frame(width: w * 0.86, height: h * 0.78)
+                UnevenRoundedRectangle(topLeadingRadius: 1, bottomLeadingRadius: h * 0.08,
+                                       bottomTrailingRadius: h * 0.08, topTrailingRadius: 1, style: .continuous)
+                    .fill(Color(white: 0.6))
+                    .frame(width: w, height: h * 0.1)
+            }
+            .frame(width: w, height: h)
+            .shadow(color: active ? Palette.accent.opacity(0.3) : .clear, radius: 10, y: 4)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// While the network's first seconds pass.
+struct LookingCard: View {
+    @State private var pulse = false
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle().stroke(Palette.accent.opacity(0.25), lineWidth: 2)
+                    .scaleEffect(pulse ? 1.25 : 0.8).opacity(pulse ? 0 : 1)
+                Image(systemName: "laptopcomputer").font(.title2).foregroundStyle(Palette.accent)
+            }
+            .frame(width: 56, height: 56)
+            Text("Looking for your Macs…").font(.headline).foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+        }
+        .padding(18)
+        .background(Palette.bar, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .onAppear { withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) { pulse = true } }
+    }
+}
+
+struct ActionTile: View {
+    let symbol: String
+    let title: String
+    let detail: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.title2)
+                .foregroundStyle(Palette.accent)
+                .frame(width: 44, height: 44)
+                .background(Palette.accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .background(Palette.bar, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+}
+
+/// What the iPhone Duo adds, shown visually on the connect screen.
+struct DuoFeatureStrip: View {
+    @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Back screen")
+                .font(.footnote.weight(.semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+            HStack(spacing: 10) {
+                ForEach(BackScreenMode.allCases) { mode in
+                    let on = backScreen == mode.rawValue
+                    Button { backScreen = mode.rawValue } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: mode.symbol).font(.title3)
+                            Text(mode.title).font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                        }
+                        .foregroundStyle(on ? Palette.onAccent : Palette.text)
+                        .frame(maxWidth: .infinity, minHeight: 72)
+                        .background(on ? AnyShapeStyle(Palette.accent) : AnyShapeStyle(Palette.bar),
+                                    in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    }
+                    .buttonStyle(PressScale())
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+        }
+    }
+}
+
+/// A light press: the card sinks a little under the finger.
+struct PressScale: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
     }
 }

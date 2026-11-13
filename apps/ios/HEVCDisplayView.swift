@@ -40,6 +40,46 @@ final class HEVCDisplayView: UIView {
     private var readiness = PictureReadiness()
     private var renderingObservation: NSKeyValueObservation?
 
+    // MARK: The back screen's copy (BackScreen.swift)
+
+    /// The iPhone Duo's back screen showing the picture too: every frame this layer gets goes there as
+    /// well, from the next keyframe on. Set on main, read on `renderQueue`.
+    private let mirrorLock = NSLock()
+    private var mirrorLayer: AVSampleBufferDisplayLayer?
+    private var mirrorWaits = true
+
+    func attachMirror(_ layer: AVSampleBufferDisplayLayer?) {
+        mirrorLock.lock()
+        mirrorLayer = layer
+        mirrorWaits = true
+        mirrorLock.unlock()
+        // A still Mac window sends no keyframe by itself: ask for one so the copy starts at once.
+        guard layer != nil else { return }
+        renderQueue?.async { [weak self] in self?.onNeedsKeyframe?() }
+    }
+
+    private func mirror(_ sample: CMSampleBuffer, isKeyframe: Bool) {
+        mirrorLock.lock()
+        defer { mirrorLock.unlock() }
+        guard let layer = mirrorLayer else { return }
+        if layer.status == .failed || layer.requiresFlushToResumeDecoding {
+            layer.flush()
+            mirrorWaits = true
+        }
+        if mirrorWaits {
+            guard isKeyframe else { return }
+            mirrorWaits = false
+        }
+        layer.enqueue(sample)
+    }
+
+    private func flushMirror() {
+        mirrorLock.lock()
+        mirrorLayer?.flushAndRemoveImage()
+        mirrorWaits = true
+        mirrorLock.unlock()
+    }
+
     /// A new attempt cannot stamp the previous displayed image with its generation.
     /// Generation and image invalidation are one render-queue operation.
     func setRecoveryGeneration(_ generation: UInt64) {
@@ -50,6 +90,7 @@ final class HEVCDisplayView: UIView {
         readiness.invalidate(generation: generation, at: CACurrentMediaTime())
         waitingForKeyframe = true
         displayLayer.flushAndRemoveImage()
+        flushMirror()
         if #available(iOS 17.4, *) {
             if !displayLayer.isReadyForDisplay {
                 _ = readiness.observed(ready: false, at: CACurrentMediaTime())
@@ -460,6 +501,7 @@ final class HEVCDisplayView: UIView {
         waitingForKeyframe = false
         if isKeyframe { readiness.enqueuedKeyframe(at: CACurrentMediaTime()) }
         displayLayer.enqueue(sample)
+        mirror(sample, isKeyframe: isKeyframe)
         if resuming {
             #if DEBUG
             if let at = interruptedAt {

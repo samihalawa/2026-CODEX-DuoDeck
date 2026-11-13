@@ -4092,6 +4092,13 @@ final class StreamClient: ObservableObject {
         renderPointer()   // a rotation: the trackpad's arrow goes in landscape and comes back in portrait
     }
 
+    /// The Duo's back screen is a trackpad (BackScreen.swift): its arrow shows in every layout. Main thread.
+    func setBackPad(_ on: Bool) {
+        guard presence.backPad != on else { return }
+        presence.backPad = on
+        renderPointer()
+    }
+
     /// How many fingers are on the portrait pad; only Q1's flip reads it. Main thread.
     func trackpadFingers(_ n: Int) {
         presence.fingers(n, now: ProcessInfo.processInfo.systemUptime)

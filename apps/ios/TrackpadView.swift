@@ -113,6 +113,18 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     var verticalSpan: CGFloat?
     /// `verticalSpan`, or the pad's height.
     private var ySpan: CGFloat { verticalSpan.flatMap { $0 > 0 ? $0 : nil } ?? bounds.height }
+    /// The back screen's pad (BackScreen.swift): a finger's motion turned into the holder's directions
+    /// before it moves anything, mirrored left to right because the finger is behind the device, and
+    /// rotated while the back screen keeps another orientation than the front. Identity on the front.
+    var axis: CGAffineTransform = .identity
+    /// What motion is measured against once `axis` has turned it: the front picture's width across and
+    /// its height down, in the back pad's points. nil keeps the pad's own width and `ySpan`.
+    var axisSpan: CGSize? = nil
+    private var xMeasure: CGFloat { axisSpan.flatMap { $0.width > 0 ? $0.width : nil } ?? bounds.width }
+    private var yMeasure: CGFloat { axisSpan.flatMap { $0.height > 0 ? $0.height : nil } ?? ySpan }
+    private func turned(_ dx: CGFloat, _ dy: CGFloat) -> CGPoint {
+        axis.isIdentity ? CGPoint(x: dx, y: dy) : CGPoint(x: dx, y: dy).applying(axis)
+    }
     /// A three- or four-finger gesture the pad decided, for the Mac (`StreamClient.sendGesture`,
     /// which checks this device's switch and the Mac's `gestures`, and shows the Desktop first while
     /// a window streams). True when it went, which the light tick follows.
@@ -255,7 +267,8 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     private func moveCursor(dx: CGFloat, dy: CGFloat) {
         guard bounds.width > 0, bounds.height > 0 else { return }
         catchUp()
-        pad.move(dx: Double(dx / bounds.width * travel), dy: Double(dy / ySpan * travel))
+        let d = turned(dx, dy)
+        pad.move(dx: Double(d.x / xMeasure * travel), dy: Double(d.y / yMeasure * travel))
         // The sprite first, since it is the feedback the finger is waiting for; then the Mac, whose
         // cursor still has to follow for clicks to land there. No rate limit needed here:
         // sendInput coalesces moves to one every 8 ms.
@@ -400,8 +413,9 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     private func scroll(dx: CGFloat, dy: CGFloat) {
         guard bounds.width > 0, bounds.height > 0 else { return }
         catchUp()
+        let d = turned(dx, dy)
         send(.scroll(x: cursor.x, y: cursor.y,
-                     dx: dx / bounds.width * scrollFactor, dy: dy / ySpan * scrollFactor))
+                     dx: d.x / xMeasure * scrollFactor, dy: d.y / yMeasure * scrollFactor))
     }
 
     /// Closes the gesture and, given a lift-off velocity fast enough to be a flick, coasts. The
@@ -412,7 +426,8 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         scrolling = false
         let at = cursor
         send(.scrollGesture(.ended, x: at.x, y: at.y))
-        guard let velocity else { return }
+        guard let raw = velocity else { return }
+        let velocity = turned(raw.x, raw.y)
         // Begin and end capture the send closure rather than self, so the end still goes out if
         // this view is torn down mid-coast.
         let send = self.send
@@ -423,7 +438,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
                 // Converted to frame fractions exactly as live two-finger deltas are.
                 guard let self, self.bounds.width > 0, self.bounds.height > 0 else { return }
                 self.send(.scroll(x: at.x, y: at.y,
-                                  dx: step.x / self.bounds.width, dy: step.y / self.ySpan))
+                                  dx: step.x / self.xMeasure, dy: step.y / self.yMeasure))
             },
             onEnd: { send(.scrollGesture(.momentumEnded, x: at.x, y: at.y)) })
     }
@@ -513,7 +528,17 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// The stroke's gesture, decided as one of its three fingers lifts: to the Mac, with a light tick
     /// when it went (an iPhone's; an iPad has no Taptic Engine). A latched modifier stays latched: a
     /// gesture is not a keystroke.
-    private func gestureDecided(_ gesture: TrackpadGestures.Gesture, fingers: Int) {
+    private func gestureDecided(_ decided: TrackpadGestures.Gesture, fingers: Int) {
+        var gesture = decided
+        if !axis.isIdentity, let v = decided.direction {
+            // A swipe on the back screen goes the way the holder feels it, as the pointer does.
+            let d = turned(v.dx, v.dy)
+            gesture = TrackpadGestures.Gesture.allCases.max { a, b in
+                let da = a.direction.map { $0.dx * d.x + $0.dy * d.y } ?? -.infinity
+                let db = b.direction.map { $0.dx * d.x + $0.dy * d.y } ?? -.infinity
+                return da < db
+            } ?? decided
+        }
         if sendGesture(gesture, fingers), hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.7) }
     }
 
