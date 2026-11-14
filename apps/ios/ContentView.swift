@@ -35,7 +35,6 @@ struct ContentView: View {
             Palette.canvas.ignoresSafeArea()
             if client.connected {
                 StreamScreen(client: client)
-                BackCalibrationCard()
             } else {
                 ConnectScreen(client: client)
             }
