@@ -78,6 +78,9 @@ final class BackScreenCamera: @unchecked Sendable {
     static let shared = BackScreenCamera()
 
     private let session = AVCaptureSession()
+    /// A preview layer on the session, never shown: as in DuoMagic, it gives the session a video
+    /// connection, which is what makes iOS count the app as capturing and present the accessory.
+    private lazy var preview: AVCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer(sessionWithNoConnection: session)
     private let queue = DispatchQueue(label: "DuoDeck.backScreen.camera")
     private var configured = false
     private var wanted = false
@@ -90,7 +93,14 @@ final class BackScreenCamera: @unchecked Sendable {
             return
         }
         Task {
-            guard await AVCaptureDevice.requestAccess(for: .video) else { return }
+            guard await AVCaptureDevice.requestAccess(for: .video) else {
+                print("backscreen: camera access denied")
+                return
+            }
+            await MainActor.run {
+                self.preview.session = self.session
+                self.preview.videoGravity = .resizeAspectFill
+            }
             queue.async { self.start() }
         }
     }
@@ -115,6 +125,7 @@ final class BackScreenCamera: @unchecked Sendable {
             }
         }
         if !session.isRunning { session.startRunning() }
+        print("backscreen: camera \(session.isRunning ? "running" : "not running") · multitasking \(session.isMultitaskingCameraAccessEnabled) · inputs \(session.inputs.count)")
     }
 }
 
@@ -131,13 +142,14 @@ struct BackScreenHost: ViewModifier {
     /// Open on the inner screen with a Mac connected and a mode chosen. Folded shut, DuoDeck itself is
     /// on the outer screen, so nothing is presented there.
     private var wanted: Bool {
-        client.connected && mode != .off && phase == .active
+        mode != .off && phase != .background
             && (duo.hinge == .partiallyOpen || duo.hinge == .fullyOpen)
     }
 
     func body(content: Content) -> some View {
         presented(content)
             .onChange(of: wanted, initial: true) { _, on in
+                print("backscreen: wanted \(on) (mode \(mode.rawValue), hinge \(duo.hinge.rawValue), connected \(client.connected))")
                 BackScreenCamera.shared.set(running: on)
                 if !on { client.setBackPad(false) }
             }
@@ -149,6 +161,7 @@ struct BackScreenHost: ViewModifier {
                 CameraCaptureAccessory {
                     BackScreenSurface(client: client)
                 }
+                .onAvailabilityChange { available in print("backscreen: accessory available \(available)") }
             }
         } else {
             content
@@ -170,9 +183,9 @@ struct BackScreenSurface: View {
     var body: some View {
         ZStack {
             Color.black
-            switch mode {
+            switch client.connected ? mode : .off {
             case .off:
-                EmptyView()
+                if mode != .off { idle }
             case .mirror:
                 BackMirror(client: client)
             case .trackpad:
@@ -184,6 +197,16 @@ struct BackScreenSurface: View {
         .preferredColorScheme(.dark)
         .onChange(of: mode == .trackpad && client.connected, initial: true) { _, on in client.setBackPad(on) }
         .onDisappear { client.setBackPad(false) }
+    }
+
+    /// Before a Mac is connected: the mark, so the screen is plainly DuoDeck's.
+    private var idle: some View {
+        VStack(spacing: 14) {
+            DuoDeckMark(size: 72)
+            Text("DuoDeck").font(.system(.title2, design: .rounded, weight: .bold)).foregroundStyle(.white)
+            Text("Connect to your Mac to use this screen").font(.footnote).foregroundStyle(.white.opacity(0.6))
+        }
+        .padding(24)
     }
 
     /// Faint, so the pad reads as a surface without lighting the room behind the holder.
