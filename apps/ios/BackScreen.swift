@@ -188,8 +188,8 @@ struct BackScreenSurface: View {
                 BackPad(client: client, speed: CGFloat(speed), zoom: true)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
+        // The Mac's picture, the pad and the words lay out in what the case leaves; the backdrops fill
+        // the whole screen.
         .modifier(ShiftLeftEdgeInset())
         .background(Color.black)
         .ignoresSafeArea()
@@ -214,6 +214,7 @@ struct BackScreenSurface: View {
     private var zoomBackdrop: some View {
         ZStack {
             LinearGradient(colors: [Palette.accent.opacity(0.18), .black], startPoint: .bottom, endPoint: .top)
+                .ignoresSafeArea()
             TimelineView(.animation(minimumInterval: 1 / 30)) { _ in
                 let scale = client.pictureZoom?.zoom.scale ?? 1
                 let level = (scale - 1) / (StreamZoom.maxScale - 1)
@@ -250,12 +251,14 @@ struct BackScreenSurface: View {
     private var padBackdrop: some View {
         ZStack {
             LinearGradient(colors: [Palette.accent.opacity(0.22), .black], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
             TimelineView(.animation(minimumInterval: 1 / 30)) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
                 RadialGradient(colors: [Palette.accent.opacity(0.28 + 0.12 * sin(t * 1.1)), .clear],
                                center: UnitPoint(x: 0.5 + 0.25 * cos(t * 0.35), y: 0.45 + 0.2 * sin(t * 0.27)),
                                startRadius: 0, endRadius: 360)
                     .blendMode(.plusLighter)
+                    .ignoresSafeArea()
             }
             VStack(spacing: 14) {
                 DuoDeckMark(size: 64).opacity(0.55)
@@ -792,9 +795,9 @@ struct SessionViewBarLabel: View {
 // MARK: - Shift Left Edge
 
 /// Shift Left Edge, as iOS names it: a case that wraps the hinge covers a strip along the outer
-/// display's left edge (its left as seen held upright). iOS's own switch does not move an app's
-/// outer-screen content, so the app keeps its content off that strip itself, on whichever side of
-/// the turned screen the strip is now.
+/// display's left edge (its left as seen held upright, the panel's own left). iOS's own switch does
+/// not move an app's outer-screen content, so the app keeps its content off that strip itself, on
+/// whichever side of the turned screen the strip is now.
 enum ShiftLeftEdge {
     static let key = "DuoDeck.shiftLeftEdge"
     static let widthKey = "DuoDeck.shiftLeftEdgeWidth"
@@ -802,51 +805,52 @@ enum ShiftLeftEdge {
     static let widths: ClosedRange<Double> = 8...80
 }
 
-/// Keeps the content off the covered strip; the strip stays black. While the width changes, a
-/// glowing line marks the content's new edge so it can be matched to the case.
+/// The strip a case covers, handed down so content inside a hosting controller can lay out around it.
+struct CoveredStrip: Equatable {
+    var edge: Edge = .leading
+    var inset: CGFloat = 0
+}
+
+extension EnvironmentValues {
+    @Entry var coveredStrip = CoveredStrip()
+}
+
+
+/// The covered strip becomes safe area, the way iOS treats a camera housing: backgrounds that ignore
+/// the safe area still fill the whole screen (under the case too, no black margins), while text,
+/// pictures and controls lay out in what shows, centred on it. While the width changes, a glowing
+/// line marks where the case's edge should sit, so the width can be matched to the case.
 struct ShiftLeftEdgeInset: ViewModifier {
     @AppStorage(ShiftLeftEdge.key) private var on = false
     @AppStorage(ShiftLeftEdge.widthKey) private var width = ShiftLeftEdge.defaultWidth
-    @State private var orientation: UIInterfaceOrientation = .portrait
+    /// Where the panel's own left edge is in this screen's coordinates as it is turned now.
+    @State private var edge: Edge = .leading
     @State private var guide = false
     @State private var guideToken = 0
-
-    /// The physical left edge, where it is in this screen's own coordinates as it is turned now.
-    /// The outer panel sits upside down in the body, so its scene reports a half turn from how it is
-    /// held: upright it says portraitUpsideDown (on the iPhone Duo the plain mapping put the strip on
-    /// the right, by the camera, and its framebuffer shows upright content turned over). The covered
-    /// edge is the panel's own right, wherever that lands as the phone turns.
-    private var edge: Edge {
-        switch orientation {
-        case .portraitUpsideDown: return .leading
-        case .landscapeLeft: return .bottom
-        case .landscapeRight: return .top
-        default: return .trailing
-        }
-    }
 
     func body(content: Content) -> some View {
         let inset = on ? CGFloat(width) : 0
         content
-            .padding(Edge.Set(edge), inset)
+            .safeAreaPadding(Edge.Set(edge), inset)
+            .environment(\.coveredStrip, CoveredStrip(edge: edge, inset: inset))
             .overlay(alignment: alignment) {
-                if on && guide {
-                    let line = Color(red: 196 / 255, green: 181 / 255, blue: 253 / 255)
-                    Rectangle()
-                        .fill(line)
-                        .frame(width: edge == .leading || edge == .trailing ? 3 : nil,
-                               height: edge == .top || edge == .bottom ? 3 : nil)
-                        .shadow(color: line, radius: 10)
-                        .padding(Edge.Set(edge), inset)
-                        .transition(.opacity)
-                        .allowsHitTesting(false)
-                }
+            if on && guide {
+                let line = Color(red: 196 / 255, green: 181 / 255, blue: 253 / 255)
+                Rectangle()
+                    .fill(line)
+                    .frame(width: edge == .leading || edge == .trailing ? 3 : nil,
+                           height: edge == .top || edge == .bottom ? 3 : nil)
+                    .shadow(color: line, radius: 10)
+                    .padding(Edge.Set(edge), inset)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
             }
-            .background { ShiftLeftEdgeProbe(orientation: $orientation) }
-            .animation(.easeOut(duration: 0.2), value: inset)
-            .animation(.easeOut(duration: 0.2), value: edge)
-            .onChange(of: width) { _, _ in flashGuide() }
-            .onChange(of: on) { _, now in if now { flashGuide() } }
+        }
+        .background { ShiftLeftEdgeProbe(edge: $edge) }
+        .animation(.easeOut(duration: 0.2), value: inset)
+        .animation(.easeOut(duration: 0.2), value: edge)
+        .onChange(of: width) { _, _ in flashGuide() }
+        .onChange(of: on) { _, now in if now { flashGuide() } }
     }
 
     private var alignment: Alignment {
@@ -869,10 +873,13 @@ struct ShiftLeftEdgeInset: ViewModifier {
     }
 }
 
-/// Reads how the screen it is on is turned: on layout, on joining a window, and after every turn
-/// (a half turn changes no size, so layout alone would miss it).
+/// Finds the panel's own left edge in this view's coordinates: the side whose middle lies furthest
+/// left in the screen's fixed (unturned) coordinate space. Read from the screen itself rather than
+/// from the reported interface orientation, so it holds in every pose: upright, upside down, either
+/// side, book or L shape. Read on layout, on joining a window, and after every turn (a half turn
+/// changes no size, so layout alone would miss it).
 private struct ShiftLeftEdgeProbe: UIViewRepresentable {
-    @Binding var orientation: UIInterfaceOrientation
+    @Binding var edge: Edge
 
     func makeUIView(context: Context) -> ProbeView {
         let view = ProbeView()
@@ -883,13 +890,13 @@ private struct ShiftLeftEdgeProbe: UIViewRepresentable {
 
     func updateUIView(_ view: ProbeView, context: Context) { view.onChange = report }
 
-    private func report(_ now: UIInterfaceOrientation) {
-        guard now != .unknown, now != orientation else { return }
-        orientation = now
+    private func report(_ now: Edge) {
+        guard now != edge else { return }
+        edge = now
     }
 
     final class ProbeView: UIView {
-        var onChange: (UIInterfaceOrientation) -> Void = { _ in }
+        var onChange: (Edge) -> Void = { _ in }
         private var observing = false
 
         override func didMoveToWindow() {
@@ -915,12 +922,19 @@ private struct ShiftLeftEdgeProbe: UIViewRepresentable {
         }
 
         private func read() {
-            guard let scene = window?.windowScene else { return }
-            let now = scene.effectiveGeometry.interfaceOrientation
+            guard let screen = window?.windowScene?.screen, bounds.width > 0, bounds.height > 0 else { return }
+            let fixed = screen.fixedCoordinateSpace
+            let sides: [(Edge, CGPoint)] = [
+                (.leading, CGPoint(x: bounds.minX, y: bounds.midY)),
+                (.trailing, CGPoint(x: bounds.maxX, y: bounds.midY)),
+                (.top, CGPoint(x: bounds.midX, y: bounds.minY)),
+                (.bottom, CGPoint(x: bounds.midX, y: bounds.maxY)),
+            ]
+            guard let left = sides.min(by: { convert($0.1, to: fixed).x < convert($1.1, to: fixed).x })?.0 else { return }
             #if DEBUG
-            print("shiftLeftEdge: scene orientation \(now.rawValue), bounds \(Int(bounds.width))x\(Int(bounds.height))")
+            print("shiftLeftEdge: panel left is \(left), scene orientation \(window?.windowScene?.effectiveGeometry.interfaceOrientation.rawValue ?? -1), bounds \(Int(bounds.width))x\(Int(bounds.height))")
             #endif
-            DispatchQueue.main.async { [weak self] in self?.onChange(now) }
+            DispatchQueue.main.async { [weak self] in self?.onChange(left) }
         }
     }
 }
