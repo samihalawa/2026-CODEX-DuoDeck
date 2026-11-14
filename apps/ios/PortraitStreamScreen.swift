@@ -1214,6 +1214,7 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.haptics") private var haptics = true
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
     @AppStorage(PointerSize.key) private var pointerSize = PointerSize.fallback.rawValue
+    @Environment(\.duoEnvironment) private var duo
     @State private var resetConfirmation = false
 
     var body: some View {
@@ -1254,6 +1255,15 @@ struct DuoDeckControlsSettings: View {
                 Toggle("Haptic feedback", isOn: $haptics)
             } footer: {
                 Text("Trackpad size applies when held upright. Pointer speed applies to every on-screen trackpad.")
+            }
+            if duo.hinge != .unknown {
+                Section {
+                    ShiftLeftEdgeControls()
+                } header: {
+                    Text("Outer display")
+                } footer: {
+                    Text("Moves content when you are using a case that partially covers the left edge of the outer display of your iPhone.")
+                }
             }
             Section {
                 NavigationLink {
@@ -1310,6 +1320,8 @@ struct DuoDeckControlsSettings: View {
                 haptics = true
                 backScreen = BackScreenMode.off.rawValue
                 pointerSize = PointerSize.fallback.rawValue
+                UserDefaults.standard.removeObject(forKey: ShiftLeftEdge.key)
+                UserDefaults.standard.removeObject(forKey: ShiftLeftEdge.widthKey)
             }
             Button("Cancel", role: .cancel) {}
         } message: {

@@ -165,7 +165,6 @@ struct BackScreenSurface: View {
 
     var body: some View {
         ZStack {
-            Color.black
             switch client.connected ? mode : .off {
             case .off:
                 if mode != .off { idle }
@@ -189,6 +188,10 @@ struct BackScreenSurface: View {
                 BackPad(client: client, speed: CGFloat(speed), zoom: true)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .modifier(ShiftLeftEdgeInset())
+        .background(Color.black)
         .ignoresSafeArea()
         .preferredColorScheme(.dark)
         .onChange(of: mode == .trackpad && client.connected, initial: true) { _, on in
@@ -783,5 +786,156 @@ struct SessionViewBarLabel: View {
         .frame(width: width, height: height)
         .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Palette.control))
         .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+}
+
+// MARK: - Shift Left Edge
+
+/// Shift Left Edge, as iOS names it: a case that wraps the hinge covers a strip along the outer
+/// display's left edge (its left as seen held upright). iOS's own switch does not move an app's
+/// outer-screen content, so the app keeps its content off that strip itself, on whichever side of
+/// the turned screen the strip is now.
+enum ShiftLeftEdge {
+    static let key = "DuoDeck.shiftLeftEdge"
+    static let widthKey = "DuoDeck.shiftLeftEdgeWidth"
+    static let defaultWidth = 28.0
+    static let widths: ClosedRange<Double> = 8...80
+}
+
+/// Keeps the content off the covered strip; the strip stays black. While the width changes, a
+/// glowing line marks the content's new edge so it can be matched to the case.
+struct ShiftLeftEdgeInset: ViewModifier {
+    @AppStorage(ShiftLeftEdge.key) private var on = false
+    @AppStorage(ShiftLeftEdge.widthKey) private var width = ShiftLeftEdge.defaultWidth
+    @State private var orientation: UIInterfaceOrientation = .portrait
+    @State private var guide = false
+    @State private var guideToken = 0
+
+    /// The physical left edge, where it is in this screen's own coordinates as it is turned now.
+    private var edge: Edge {
+        switch orientation {
+        case .portraitUpsideDown: return .trailing
+        case .landscapeLeft: return .top
+        case .landscapeRight: return .bottom
+        default: return .leading
+        }
+    }
+
+    func body(content: Content) -> some View {
+        let inset = on ? CGFloat(width) : 0
+        content
+            .padding(Edge.Set(edge), inset)
+            .overlay(alignment: alignment) {
+                if on && guide {
+                    let line = Color(red: 196 / 255, green: 181 / 255, blue: 253 / 255)
+                    Rectangle()
+                        .fill(line)
+                        .frame(width: edge == .leading || edge == .trailing ? 3 : nil,
+                               height: edge == .top || edge == .bottom ? 3 : nil)
+                        .shadow(color: line, radius: 10)
+                        .padding(Edge.Set(edge), inset)
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
+            }
+            .background { ShiftLeftEdgeProbe(orientation: $orientation) }
+            .animation(.easeOut(duration: 0.2), value: inset)
+            .animation(.easeOut(duration: 0.2), value: edge)
+            .onChange(of: width) { _, _ in flashGuide() }
+            .onChange(of: on) { _, now in if now { flashGuide() } }
+    }
+
+    private var alignment: Alignment {
+        switch edge {
+        case .leading: return .leading
+        case .trailing: return .trailing
+        case .top: return .top
+        case .bottom: return .bottom
+        }
+    }
+
+    private func flashGuide() {
+        guideToken += 1
+        let token = guideToken
+        withAnimation(.easeOut(duration: 0.15)) { guide = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            guard token == guideToken else { return }
+            withAnimation(.easeOut(duration: 0.5)) { guide = false }
+        }
+    }
+}
+
+/// Reads how the screen it is on is turned: on layout, on joining a window, and after every turn
+/// (a half turn changes no size, so layout alone would miss it).
+private struct ShiftLeftEdgeProbe: UIViewRepresentable {
+    @Binding var orientation: UIInterfaceOrientation
+
+    func makeUIView(context: Context) -> ProbeView {
+        let view = ProbeView()
+        view.isUserInteractionEnabled = false
+        view.onChange = report
+        return view
+    }
+
+    func updateUIView(_ view: ProbeView, context: Context) { view.onChange = report }
+
+    private func report(_ now: UIInterfaceOrientation) {
+        guard now != .unknown, now != orientation else { return }
+        orientation = now
+    }
+
+    final class ProbeView: UIView {
+        var onChange: (UIInterfaceOrientation) -> Void = { _ in }
+        private var observing = false
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window != nil, !observing {
+                observing = true
+                UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+                NotificationCenter.default.addObserver(self, selector: #selector(turned),
+                                                       name: UIDevice.orientationDidChangeNotification, object: nil)
+            }
+            read()
+        }
+
+        @objc private func turned() {
+            read()
+            // The scene finishes turning a moment after the device reports it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.read() }
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            read()
+        }
+
+        private func read() {
+            guard let scene = window?.windowScene else { return }
+            let now = scene.effectiveGeometry.interfaceOrientation
+            DispatchQueue.main.async { [weak self] in self?.onChange(now) }
+        }
+    }
+}
+
+/// The switch and its width, worded as iOS words its own.
+struct ShiftLeftEdgeControls: View {
+    @AppStorage(ShiftLeftEdge.key) private var on = false
+    @AppStorage(ShiftLeftEdge.widthKey) private var width = ShiftLeftEdge.defaultWidth
+
+    var body: some View {
+        Toggle("Shift Left Edge", isOn: $on)
+        if on {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Covered width")
+                    Spacer()
+                    Text("\(Int(width)) pt").monospacedDigit().foregroundStyle(.secondary)
+                }
+                Slider(value: $width, in: ShiftLeftEdge.widths, step: 2)
+                    .accessibilityLabel(Text("Covered width"))
+                    .accessibilityValue(Text("\(Int(width)) points"))
+            }
+        }
     }
 }
