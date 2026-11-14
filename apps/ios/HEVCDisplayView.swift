@@ -47,6 +47,19 @@ final class HEVCDisplayView: UIView {
     private let mirrorLock = NSLock()
     private var mirrorLayer: AVSampleBufferDisplayLayer?
     private var mirrorWaits = true
+    private var mirrorAskedAt: CFTimeInterval = 0
+    /// Asks the Mac for a keyframe for the back screen's copy alone (`StreamClient`).
+    var onMirrorNeedsKeyframe: (() -> Void)?
+
+    private func askMirrorKeyframe() {
+        let now = CACurrentMediaTime()
+        guard now - mirrorAskedAt > 1.5 else { return }
+        mirrorAskedAt = now
+        DispatchQueue.main.async { [weak self] in self?.onMirrorNeedsKeyframe?() }
+    }
+    #if DEBUG
+    private var mirrorFrames = 0
+    #endif
 
     func attachMirror(_ layer: AVSampleBufferDisplayLayer?) {
         mirrorLock.lock()
@@ -54,20 +67,34 @@ final class HEVCDisplayView: UIView {
         mirrorWaits = true
         mirrorLock.unlock()
         // A still Mac window sends no keyframe by itself: ask for one so the copy starts at once.
+        #if DEBUG
+        print("backscreen: mirror \(layer == nil ? "detached" : "attached"), render queue \(renderQueue == nil ? "missing" : "set")")
+        #endif
         guard layer != nil else { return }
-        renderQueue?.async { [weak self] in self?.onNeedsKeyframe?() }
+        // A still Mac window sends no keyframe by itself, so the copy asks for its own. Never through
+        // `onNeedsKeyframe`: that one says the front's picture was interrupted.
+        mirrorAskedAt = 0
+        askMirrorKeyframe()
     }
 
     private func mirror(_ sample: CMSampleBuffer, isKeyframe: Bool) {
         mirrorLock.lock()
         defer { mirrorLock.unlock() }
         guard let layer = mirrorLayer else { return }
+        #if DEBUG
+        mirrorFrames += 1
+        if mirrorFrames % 120 == 1 {
+            print("backscreen: mirror frame \(mirrorFrames) keyframe \(isKeyframe) waits \(mirrorWaits) status \(layer.status.rawValue) error \(layer.error.map { "\($0)" } ?? "none") bounds \(layer.bounds.size)")
+        }
+        #endif
         if layer.status == .failed || layer.requiresFlushToResumeDecoding {
             layer.flush()
             mirrorWaits = true
+            askMirrorKeyframe()
         }
         if mirrorWaits {
-            guard isKeyframe else { return }
+            // Still waiting while frames go by: ask again, at most every 1.5 s.
+            guard isKeyframe else { askMirrorKeyframe(); return }
             mirrorWaits = false
         }
         layer.enqueue(sample)

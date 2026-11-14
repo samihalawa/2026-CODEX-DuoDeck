@@ -520,6 +520,10 @@ final class StreamClient: ObservableObject {
                 self.considerKeyframeAsk()
             }
         }
+        view.onMirrorNeedsKeyframe = { [weak self] in
+            guard let self, self.connected else { return }
+            self.send(.keyframeRequest, payload: Data())
+        }
         view.onPictureBack = { [weak self] in
             guard let self else { return }
             let generation = self.renderGeneration
