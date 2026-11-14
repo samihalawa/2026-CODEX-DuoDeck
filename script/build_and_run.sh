@@ -24,12 +24,17 @@ if [ -n "${DUODECK_BUILD_NUMBER:-}" ]; then /usr/libexec/PlistBuddy -c "Set :CFB
 cp LICENSE NOTICE "$stage/Contents/Resources/"
 icon_resources="$(bash script/build_icons.sh)"
 cp "$icon_resources/Assets.car" "$icon_resources/AppIcon.icns" "$stage/Contents/Resources/"
+# DUODECK_SIGN_KEYCHAIN: sign from that keychain file without adding it to the search list.
+sign_keychain="${DUODECK_SIGN_KEYCHAIN:-}"
+kc=()
+[ -z "$sign_keychain" ] || kc=(--keychain "$sign_keychain")
+identities() { security find-identity -v -p codesigning ${sign_keychain:+"$sign_keychain"}; }
 identity="${DUODECK_SIGN_ID:-}"
 if [ -z "$identity" ]; then
-  identity="$(security find-identity -v -p codesigning | awk '/Developer ID Application: Agents AI Ltd/ && !/REVOKED/ {print $2; exit}')"
+  identity="$(identities | awk '/Developer ID Application: Agents AI Ltd/ && !/REVOKED/ {print $2; exit}')"
 fi
 if [ -z "$identity" ]; then
-  identity="$(security find-identity -v -p codesigning | awk '/Apple Development:/ && !/REVOKED/ {print $2; exit}')"
+  identity="$(identities | awk '/Apple Development:/ && !/REVOKED/ {print $2; exit}')"
 fi
 test -n "$identity" || { echo "No valid signing identity found." >&2; exit 1; }
 # macOS keys Screen Recording and Accessibility to the bundle ID plus the signing certificate.
@@ -37,7 +42,7 @@ test -n "$identity" || { echo "No valid signing identity found." >&2; exit 1; }
 # app's identity: launching it once ties those permissions to the wrong certificate, and the
 # installed DuoDeck Host then reports them missing while System Settings shows them on.
 bundle_id="com.agentsai.duodeck.host"
-if security find-identity -v -p codesigning | grep -F "$identity" | grep -q "Developer ID Application: Agents AI Ltd"; then
+if identities | grep -F "$identity" | grep -q "Developer ID Application: Agents AI Ltd"; then
   developer_id=1
 else
   developer_id=0
@@ -54,7 +59,7 @@ esac
 # This privileged companion is distributed outside the Mac App Store. It uses
 # the login keychain unless it holds its own provisioned access-group entitlement.
 # Never reuse upstream's restricted team/keychain entitlements.
-codesign --force --options runtime --timestamp --sign "$identity" "$stage"
+codesign --force --options runtime --timestamp ${kc[@]+"${kc[@]}"} --sign "$identity" "$stage"
 codesign --verify --strict --verbose=2 "$stage"
 [ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$stage/Contents/Info.plist")" = "$bundle_id" ]
 rm -rf "$app"
@@ -106,7 +111,7 @@ case "$mode" in
     ln -s /Applications "$dmgroot/Applications"
     cp LICENSE NOTICE "$dmgroot/"
     hdiutil create -volname "DuoDeck Host" -srcfolder "$dmgroot" -ov -format UDZO "dist/DuoDeck-Host-macOS.dmg" >/dev/null
-    codesign --force --timestamp --sign "$identity" dist/DuoDeck-Host-macOS.dmg
+    codesign --force --timestamp ${kc[@]+"${kc[@]}"} --sign "$identity" dist/DuoDeck-Host-macOS.dmg
     echo "DMG=dist/DuoDeck-Host-macOS.dmg"
     ;;
 esac
