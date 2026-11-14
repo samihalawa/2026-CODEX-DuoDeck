@@ -175,6 +175,8 @@ struct BackScreenSurface: View {
                         DuoDeckMark(size: 22)
                         Text(client.macName.isEmpty ? "Your Mac" : client.macName)
                             .font(.footnote.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
                             .foregroundStyle(.white.opacity(0.7))
                     }
                     .padding(.bottom, 28)
@@ -207,6 +209,9 @@ struct BackScreenSurface: View {
             Text("DuoDeck").font(.system(.title2, design: .rounded, weight: .bold)).foregroundStyle(.white)
             Text("Connect to your Mac to use this screen").font(.footnote).foregroundStyle(.white.opacity(0.6))
         }
+        // Never cut: a long word or name shrinks to fit what shows.
+        .minimumScaleFactor(0.6)
+        .multilineTextAlignment(.center)
         .padding(24)
     }
 
@@ -241,6 +246,9 @@ struct BackScreenSurface: View {
                         .foregroundStyle(.white.opacity(0.35))
                         .multilineTextAlignment(.center)
                 }
+                // Never cut: a long word or name shrinks to fit what shows.
+                .minimumScaleFactor(0.6)
+                .multilineTextAlignment(.center)
                 .padding(24)
             }
         }
@@ -270,6 +278,9 @@ struct BackScreenSurface: View {
                     .foregroundStyle(.white.opacity(0.35))
                     .multilineTextAlignment(.center)
             }
+            // Never cut: a long word or name shrinks to fit what shows.
+            .minimumScaleFactor(0.6)
+            .multilineTextAlignment(.center)
             .padding(24)
         }
         .allowsHitTesting(false)
