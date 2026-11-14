@@ -1597,12 +1597,8 @@ private struct TopBar: View {
                 .tourTarget(.keyboard)
 
             SessionViewMenu(client: client, textScale: $textScale) {
-                VStack(spacing: metrics.buttonSpacing) {
-                    Image(systemName: "eye").font(.system(size: 22)).foregroundStyle(Palette.text)
-                    Text("View").font(.system(size: 11, weight: .medium)).foregroundStyle(Palette.barLabel)
-                }
-                .frame(width: metrics.buttonWidth, height: metrics.buttonHeight)
-                .contentShape(Rectangle())
+                SessionViewBarLabel(width: metrics.buttonWidth, height: metrics.buttonHeight,
+                                    spacing: metrics.buttonSpacing)
             }
             .opacity(scaleOpen ? 0 : 1)
             .allowsHitTesting(!scaleOpen)

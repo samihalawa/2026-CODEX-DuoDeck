@@ -478,9 +478,9 @@ struct PortraitStreamScreen: View {
     /// Keyboard button (it is in the key row) but with the Aa control, whose ruler opens centred on
     /// it; the strip's end and the Desktop button fade while it is open. `width`: the bar's row.
     private func windowBar(width: CGFloat) -> some View {
-        // Apps, Menus, Aa, Desktop, Settings, and the strip: Menus only where the row holds it and
-        // still a whole thumbnail (not in a 320 pt Slide Over).
-        let menusFit = MacMenuButton.fits(width: width, buttons: 5, buttonWidth: metrics.buttonWidth, gap: 12,
+        // Apps, Menus, Aa, View, Desktop, Settings, and the strip: Menus only where the row holds it
+        // and still a whole thumbnail (not in a 320 pt Slide Over).
+        let menusFit = MacMenuButton.fits(width: width, buttons: 6, buttonWidth: metrics.buttonWidth, gap: 12,
                                           thumbWidth: metrics.thumbWidth)
         return HStack(spacing: 12) {
             appsButton()
@@ -504,6 +504,14 @@ struct PortraitStreamScreen: View {
                              radius: metrics.buttonRadius, pointsPerStep: 36,
                              offered: client.textScaleOffersOff, available: client.textScaleSelectable)
                 .tourTarget(.textSize)
+
+            SessionViewMenu(client: client, textScale: $textScale) {
+                SessionViewBarLabel(width: metrics.buttonWidth, height: metrics.buttonHeight,
+                                    radius: metrics.buttonRadius, iconSize: metrics.buttonIcon,
+                                    spacing: metrics.buttonSpacing)
+            }
+            .opacity(scaleOpen ? 0 : 1)
+            .allowsHitTesting(!scaleOpen)
 
             desktopButton()
                 .opacity(scaleOpen ? 0 : 1)
@@ -629,6 +637,14 @@ struct PortraitStreamScreen: View {
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)
                 .tourTarget(.keyboard)
+
+            SessionViewMenu(client: client, textScale: $textScale) {
+                SessionViewBarLabel(width: width, height: layout.row1.height,
+                                    radius: metrics.buttonRadius, iconSize: metrics.buttonIcon,
+                                    iconBox: PortraitMetrics.phoneIconBox, spacing: metrics.buttonSpacing)
+            }
+            .opacity(scaleOpen ? 0 : 1)
+            .allowsHitTesting(!scaleOpen)
 
             desktopButton(width: width)
                 .opacity(scaleOpen ? 0 : 1)

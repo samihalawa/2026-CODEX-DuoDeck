@@ -758,3 +758,30 @@ final class BackZoomDriver: NSObject {
         lastSet = model.zoom
     }
 }
+
+/// The View menu's face in the bars of bar buttons: a bar button's tile, icon and caption.
+struct SessionViewBarLabel: View {
+    let width: CGFloat
+    let height: CGFloat
+    var radius: CGFloat = 16
+    var iconSize: CGFloat = 22
+    var iconBox: CGFloat? = nil
+    var spacing: CGFloat = 4
+
+    var body: some View {
+        VStack(spacing: spacing) {
+            Image(systemName: "eye")
+                .font(.system(size: iconSize))
+                .foregroundStyle(Palette.text)
+                .frame(height: iconBox)
+            Text("View")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Palette.barLabel)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(width: width, height: height)
+        .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Palette.control))
+        .contentShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+}

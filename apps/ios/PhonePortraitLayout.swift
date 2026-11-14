@@ -101,7 +101,7 @@ struct PhonePortraitLayout: Equatable {
     static let minButtonWidth: CGFloat = 44
 
     /// Row 1, in the landscape bar's order.
-    enum Button: Int, CaseIterable { case apps, textSize, keyboard, desktop, settings }
+    enum Button: Int, CaseIterable { case apps, textSize, keyboard, view, desktop, settings }
     /// Row 3's caps: esc, tab, ctrl, opt, cmd, shift.
     static let capCount = 6
 
@@ -190,7 +190,7 @@ struct PhonePortraitLayout: Equatable {
         let largerHeight = footprint.map { max(0, (height - $0 - Self.largerFixedHeight).rounded(.down)) }
         picture = CGRect(x: Self.margin, y: Self.margin, width: pictureWidth, height: largerHeight ?? pictureHeight)
 
-        // Row 1: five equal buttons across the row, `gap` apart, centred in their band.
+        // Row 1: six equal buttons across the row, `gap` apart, centred in their band.
         let rowWidth = max(0, width - 2 * Self.side)
         row1 = CGRect(x: Self.side, y: picture.maxY + Self.margin + Self.underPicture + Self.band,
                       width: rowWidth, height: Self.buttonHeight)
