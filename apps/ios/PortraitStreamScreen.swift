@@ -1194,7 +1194,6 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.shortcutsVisible") private var shortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var haptics = true
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
-    @AppStorage(BackScreenMode.naturalKey) private var backNatural = true
     @Environment(\.duoEnvironment) private var duo
     @State private var resetConfirmation = false
 
@@ -1241,9 +1240,6 @@ struct DuoDeckControlsSettings: View {
                 Section {
                     Picker("Back screen", selection: $backScreen) {
                         ForEach(BackScreenMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0.rawValue) }
-                    }
-                    if backScreen == BackScreenMode.trackpad.rawValue {
-                        Toggle("Move as felt from the front", isOn: $backNatural)
                     }
                 } header: {
                     Text("iPhone Duo")
@@ -1305,7 +1301,6 @@ struct DuoDeckControlsSettings: View {
                 shortcutsVisible = false
                 haptics = true
                 backScreen = BackScreenMode.off.rawValue
-                backNatural = true
             }
             Button("Cancel", role: .cancel) {}
         } message: {

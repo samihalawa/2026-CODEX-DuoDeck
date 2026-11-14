@@ -19,7 +19,6 @@ enum BackScreenMode: String, CaseIterable, Identifiable {
     case off, mirror, trackpad
 
     static let key = "DuoDeck.backScreen"
-    static let naturalKey = "DuoDeck.backPadNatural"
 
     var id: String { rawValue }
 
@@ -157,7 +156,6 @@ struct BackScreenHost: ViewModifier {
 struct BackScreenSurface: View {
     @ObservedObject var client: StreamClient
     @AppStorage(BackScreenMode.key) private var raw = BackScreenMode.off.rawValue
-    @AppStorage(BackScreenMode.naturalKey) private var natural = true
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
     @AppStorage("DuoDeck.haptics") private var haptics = true
 
@@ -183,7 +181,7 @@ struct BackScreenSurface: View {
                 BackMirror(client: client)
             case .trackpad:
                 padBackdrop
-                BackPad(client: client, natural: natural, speed: CGFloat(speed))
+                BackPad(client: client, speed: CGFloat(speed))
             }
         }
         .ignoresSafeArea()
@@ -271,7 +269,6 @@ final class BackMirrorView: UIView {
 
 private struct BackPad: UIViewRepresentable {
     let client: StreamClient
-    let natural: Bool
     let speed: CGFloat
 
     func makeUIView(context: Context) -> BackPadView {
@@ -284,7 +281,6 @@ private struct BackPad: UIViewRepresentable {
 
     private func configure(_ view: BackPadView) {
         let client = self.client
-        view.natural = natural
         let pad = view.pad
         pad.send = { client.sendInput($0) }
         pad.setPointer = { client.setOwnPointer($0, from: .trackpad) }
@@ -300,11 +296,13 @@ private struct BackPad: UIViewRepresentable {
 /// Holds the pad, keeps its mapping current as either screen turns, and draws the glow under fingers.
 final class BackPadView: UIView, UIGestureRecognizerDelegate {
     let pad = TrackpadSurface(frame: .zero)
-    var natural = true
     private var lastKey = ""
     private let glow = CALayer()
     private let watcher = BackTouchWatcher()
     private var lastSpark: [ObjectIdentifier: CGPoint] = [:]
+    #if DEBUG
+    private var strokeStart: [ObjectIdentifier: CGPoint] = [:]
+    #endif
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -344,7 +342,7 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
 
     private func refreshAxis() {
         guard bounds.width > 0 else { return }
-        let key = "\(bounds.size) \(natural)"
+        let key = "\(bounds.size)"
         guard key != lastKey else { return }
         lastKey = key
         // Both screens turn with gravity, each the right way up for whoever looks at it (measured on
@@ -352,7 +350,7 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
         // quarter turn over because its panel sits sideways in the body, and both reach all four).
         // So in their own coordinates the back is always the front seen from behind: left and right
         // swap, up stays up — upright, upside down, either side, book or L shape alike.
-        pad.axis = natural ? CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: 0, ty: 0) : .identity
+        pad.axis = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
         // One measure for both axes and every orientation: the back panel's short side, so the same
         // finger travel moves the pointer as far however the phone is held.
         let along = min(bounds.width, bounds.height)
@@ -366,6 +364,9 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
         let p = touch.location(in: self)
         switch phase {
         case .began:
+            #if DEBUG
+            strokeStart[id] = p
+            #endif
             lastSpark[id] = p
             ring(at: p)
             dot(at: p, size: 46, life: 0.7)
@@ -380,6 +381,12 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
             }
             lastSpark[id] = p
         default:
+            #if DEBUG
+            if let start = strokeStart[id] {
+                print("backscreen: stroke on the back \(Int(p.x - start.x)),\(Int(p.y - start.y)) in \(Int(bounds.width))×\(Int(bounds.height)) → pointer \(Int(start.x - p.x)),\(Int(p.y - start.y))")
+            }
+            strokeStart[id] = nil
+            #endif
             lastSpark[id] = nil
             dot(at: p, size: 60, life: 0.5)
         }
