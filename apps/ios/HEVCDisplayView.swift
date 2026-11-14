@@ -169,6 +169,9 @@ final class HEVCDisplayView: UIView {
     /// Main-thread copy of the frame size the layer draws. `apply` runs on the network queue and
     /// hops here with it; `clear` zeroes it. Zero hides the sprite: there is no frame to point into.
     private var pointerVideoSize: CGSize = .zero
+    /// The pointer drawn bigger than the Mac's own (PointerSize, from the session's View menu), about
+    /// its hotspot, so the tip stays on the point.
+    private var pointerScale: CGFloat = 1 { didSet { placeCursor() } }
     /// The picture's zoom (StreamZoom; ZoomedStreamView scales this whole view by it): the sprite is
     /// drawn at the zoomed place by that, and at its own size by the inverse scale about its hotspot,
     /// as iPadOS's pointer and the Mac's own stay their size over a zoomed picture.
@@ -207,6 +210,15 @@ final class HEVCDisplayView: UIView {
         displayLayer.videoGravity = .resizeAspect
         layer.addSublayer(cursorLayer)
         observeLayer()
+        pointerScale = PointerSize.current.scale
+        layerObservers.append(NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    let scale = PointerSize.current.scale
+                    if scale != self.pointerScale { self.pointerScale = scale }
+                }
+            })
     }
     required init?(coder: NSCoder) { fatalError() }
     deinit { layerObservers.forEach(NotificationCenter.default.removeObserver) }
@@ -379,7 +391,8 @@ final class HEVCDisplayView: UIView {
         cursorLayer.position = CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height)
         // About the anchor, which is the hotspot: the tip stays on the point.
         let unscale = 1 / max(StreamZoom.minScale, zoom.scale)
-        cursorLayer.setAffineTransform(zoom.isZoomed ? CGAffineTransform(scaleX: unscale, y: unscale) : .identity)
+        let size = (zoom.isZoomed ? unscale : 1) * pointerScale
+        cursorLayer.setAffineTransform(size == 1 ? .identity : CGAffineTransform(scaleX: size, y: size))
         cursorLayer.isHidden = false
     }
 

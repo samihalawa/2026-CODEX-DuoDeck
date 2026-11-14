@@ -1234,7 +1234,6 @@ struct ConnectScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Palette.bar, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                if duoEnvironment.hinge != .unknown { DuoFeatureStrip() }
                 quickActions
             }
             .padding(.horizontal, 20)
@@ -1580,37 +1579,6 @@ struct ActionTile: View {
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
         .background(Palette.bar, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-}
-
-/// What the iPhone Duo adds, shown visually on the connect screen.
-struct DuoFeatureStrip: View {
-    @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Back screen")
-                .font(.footnote.weight(.semibold))
-                .textCase(.uppercase)
-                .foregroundStyle(.secondary)
-                .padding(.leading, 4)
-            HStack(spacing: 10) {
-                ForEach(BackScreenMode.allCases) { mode in
-                    let on = backScreen == mode.rawValue
-                    Button { backScreen = mode.rawValue } label: {
-                        VStack(spacing: 8) {
-                            Image(systemName: mode.symbol).font(.title3)
-                            Text(mode.title).font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.8)
-                        }
-                        .foregroundStyle(on ? Palette.onAccent : Palette.text)
-                        .frame(maxWidth: .infinity, minHeight: 72)
-                        .background(on ? AnyShapeStyle(Palette.accent) : AnyShapeStyle(Palette.bar),
-                                    in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    }
-                    .buttonStyle(PressScale())
-                    .accessibilityAddTraits(on ? .isSelected : [])
-                }
-            }
-        }
     }
 }
 

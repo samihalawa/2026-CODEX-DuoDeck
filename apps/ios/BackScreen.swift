@@ -16,7 +16,7 @@ import StreamProtocol
 
 /// What the back screen does during a session.
 enum BackScreenMode: String, CaseIterable, Identifiable {
-    case off, mirror, trackpad
+    case off, mirror, trackpad, zoom
 
     static let key = "DuoDeck.backScreen"
 
@@ -27,6 +27,7 @@ enum BackScreenMode: String, CaseIterable, Identifiable {
         case .off: return "Off"
         case .mirror: return "Mirror Mac"
         case .trackpad: return "Trackpad"
+        case .zoom: return "Zoom"
         }
     }
 
@@ -35,6 +36,7 @@ enum BackScreenMode: String, CaseIterable, Identifiable {
         case .off: return "rectangle.slash"
         case .mirror: return "rectangle.on.rectangle"
         case .trackpad: return "rectangle.and.hand.point.up.left"
+        case .zoom: return "plus.magnifyingglass"
         }
     }
 
@@ -181,7 +183,10 @@ struct BackScreenSurface: View {
                 BackMirror(client: client)
             case .trackpad:
                 padBackdrop
-                BackPad(client: client, speed: CGFloat(speed))
+                BackPad(client: client, speed: CGFloat(speed), zoom: false)
+            case .zoom:
+                zoomBackdrop
+                BackPad(client: client, speed: CGFloat(speed), zoom: true)
             }
         }
         .ignoresSafeArea()
@@ -200,6 +205,42 @@ struct BackScreenSurface: View {
             Text("Connect to your Mac to use this screen").font(.footnote).foregroundStyle(.white.opacity(0.6))
         }
         .padding(24)
+    }
+
+    /// The zoom dial: how far in the front picture is, live, and how to drive it.
+    private var zoomBackdrop: some View {
+        ZStack {
+            LinearGradient(colors: [Palette.accent.opacity(0.18), .black], startPoint: .bottom, endPoint: .top)
+            TimelineView(.animation(minimumInterval: 1 / 30)) { _ in
+                let scale = client.pictureZoom?.zoom.scale ?? 1
+                let level = (scale - 1) / (StreamZoom.maxScale - 1)
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .stroke(.white.opacity(0.12), lineWidth: 10)
+                        Circle()
+                            .trim(from: 0, to: max(0.02, level))
+                            .stroke(Palette.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .shadow(color: Palette.accent.opacity(0.9), radius: 14)
+                        Text(String(format: "%.1f×", scale))
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    .frame(width: 132, height: 132)
+                    Text("Slide up to zoom in · down to zoom out")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.55))
+                    Text("Pinch works too · Double-tap for the whole screen\nThe zoom follows the pointer you move on the front")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.35))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(24)
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     /// Faint, so the pad reads as a surface without lighting the room behind the holder.
@@ -270,6 +311,8 @@ final class BackMirrorView: UIView {
 private struct BackPad: UIViewRepresentable {
     let client: StreamClient
     let speed: CGFloat
+    /// Zoom: the back drives the front picture's zoom instead of the pointer (BackZoomDriver).
+    let zoom: Bool
 
     func makeUIView(context: Context) -> BackPadView {
         let view = BackPadView()
@@ -289,8 +332,11 @@ private struct BackPad: UIViewRepresentable {
         pad.latchedModifiers = []
         pad.travel = min(2.3, max(0.65, speed))
         pad.sendGesture = { client.sendGesture($0, fingers: $1) }
+        view.setZoom(zoom ? client : nil)
         view.setNeedsLayout()
     }
+
+    static func dismantleUIView(_ view: BackPadView, coordinator: ()) { view.setZoom(nil) }
 }
 
 /// Holds the pad, keeps its mapping current as either screen turns, and draws the glow under fingers.
@@ -316,7 +362,16 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
         watcher.delaysTouchesEnded = false
         watcher.delegate = self
         watcher.onTouch = { [weak self] touch, phase in self?.spark(touch, phase) }
-        pad.addGestureRecognizer(watcher)
+        // On this view, not the pad: it sees the pad's touches and, in Zoom, the dial's.
+        addGestureRecognizer(watcher)
+        zoomPinch.delegate = self
+        zoomPan.delegate = self
+        zoomPan.maximumNumberOfTouches = 1
+        zoomReset.numberOfTapsRequired = 2
+        for g in [zoomPinch, zoomPan, zoomReset] as [UIGestureRecognizer] {
+            g.isEnabled = false
+            addGestureRecognizer(g)
+        }
         NotificationCenter.default.addObserver(self, selector: #selector(turned),
                                                name: UIDevice.orientationDidChangeNotification, object: nil)
     }
@@ -326,6 +381,66 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
     func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 
     @objc private func turned() { lastKey = ""; setNeedsLayout() }
+
+    // MARK: Zoom
+
+    private lazy var zoomPinch = UIPinchGestureRecognizer(target: self, action: #selector(pinched))
+    private lazy var zoomPan = UIPanGestureRecognizer(target: self, action: #selector(slid))
+    private lazy var zoomReset = UITapGestureRecognizer(target: self, action: #selector(wholePicture))
+    private var driver: BackZoomDriver?
+    private var zoomFrom: CGFloat = 1
+    private let detent = UISelectionFeedbackGenerator()
+    private var lastWhole = 1
+
+    /// A client: the back is the front picture's zoom dial; nil: the trackpad (and the zoom, if this
+    /// view had it, goes back to the whole picture).
+    func setZoom(_ client: StreamClient?) {
+        let on = client != nil
+        pad.isHidden = on
+        pad.isUserInteractionEnabled = !on
+        [zoomPinch, zoomPan, zoomReset].forEach { $0.isEnabled = on }
+        if let client {
+            if driver == nil || driver?.client !== client {
+                driver?.stop(reset: false)
+                driver = BackZoomDriver(client: client)
+                driver?.start()
+            }
+        } else if let driver {
+            driver.stop(reset: true)
+            self.driver = nil
+        }
+    }
+
+    @objc private func pinched(_ g: UIPinchGestureRecognizer) {
+        guard let driver else { return }
+        switch g.state {
+        case .began: zoomFrom = driver.target
+        case .changed: steer(zoomFrom * g.scale)
+        default: break
+        }
+    }
+
+    /// One finger, up and down: a dial. Up is in (up stays up on the back), a 240 pt slide is e×.
+    @objc private func slid(_ g: UIPanGestureRecognizer) {
+        guard let driver else { return }
+        switch g.state {
+        case .began: zoomFrom = driver.target
+        case .changed: steer(zoomFrom * exp(-g.translation(in: self).y / 240))
+        default: break
+        }
+    }
+
+    @objc private func wholePicture() { steer(1) }
+
+    private func steer(_ scale: CGFloat) {
+        guard let driver else { return }
+        driver.setTarget(scale)
+        let whole = Int(driver.target.rounded(.down))
+        if whole != lastWhole {
+            lastWhole = whole
+            if UserDefaults.standard.object(forKey: "DuoDeck.haptics") as? Bool ?? true { detent.selectionChanged() }
+        }
+    }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -471,4 +586,175 @@ private final class BackTouchWatcher: UIGestureRecognizer {
         state = .failed
     }
     override func reset() {}
+}
+
+// MARK: - The session's View menu
+
+/// How big the Mac's pointer is drawn on this device (HEVCDisplayView), about its tip.
+enum PointerSize: String, CaseIterable, Identifiable {
+    case normal, large, huge
+
+    static let key = "DuoDeck.pointerSize"
+    /// Large: on a phone the Mac's own arrow is a speck, so a session starts with it bigger.
+    static let fallback = PointerSize.large
+    static var current: PointerSize {
+        PointerSize(rawValue: UserDefaults.standard.string(forKey: key) ?? "") ?? fallback
+    }
+
+    var id: String { rawValue }
+    var scale: CGFloat {
+        switch self {
+        case .normal: return 1
+        case .large: return 1.8
+        case .huge: return 2.6
+        }
+    }
+    var title: String {
+        switch self {
+        case .normal: return "Normal"
+        case .large: return "Large"
+        case .huge: return "Extra large"
+        }
+    }
+}
+
+/// The session's live view options, beside Keyboard and Shortcuts rather than in Settings: the back
+/// screen (iPhone Duo), the pointer's size, the window's text size (bigger text means a smaller Mac
+/// window, as Aa) and the stream's resolution (Standard is lighter and quicker than Retina).
+struct SessionViewMenu<Label: View>: View {
+    @ObservedObject var client: StreamClient
+    @Binding var textScale: Double?
+    let label: () -> Label
+    @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
+    @AppStorage(PointerSize.key) private var pointer = PointerSize.fallback.rawValue
+    @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
+    @Environment(\.duoEnvironment) private var duo
+    /// Settings keeps the fine slider; these are its usual stops.
+    private static var speeds: [(title: String, value: Double)] { [
+        ("Slow", 0.85), ("Normal", 1.25), ("Fast", 1.7), ("Fastest", 2.2)] }
+
+    init(client: StreamClient, textScale: Binding<Double?>, @ViewBuilder label: @escaping () -> Label) {
+        self.client = client
+        _textScale = textScale
+        self.label = label
+    }
+
+    var body: some View {
+        Menu {
+            if duo.hinge != .unknown {
+                Picker(selection: $backScreen) {
+                    ForEach(BackScreenMode.allCases) { SwiftUI.Label($0.title, systemImage: $0.symbol).tag($0.rawValue) }
+                } label: {
+                    SwiftUI.Label("Back screen", systemImage: "iphone.gen3")
+                }
+                .pickerStyle(.menu)
+            }
+            Picker(selection: $pointer) {
+                ForEach(PointerSize.allCases) { Text($0.title).tag($0.rawValue) }
+            } label: {
+                SwiftUI.Label("Pointer size", systemImage: "cursorarrow")
+            }
+            .pickerStyle(.menu)
+            Picker(selection: Binding(
+                get: { Self.speeds.min(by: { abs($0.value - speed) < abs($1.value - speed) })?.value ?? 1.25 },
+                set: { speed = $0 })) {
+                ForEach(Self.speeds, id: \.value) { Text($0.title).tag($0.value) }
+            } label: {
+                SwiftUI.Label("Pointer speed", systemImage: "gauge.with.dots.needle.67percent")
+            }
+            .pickerStyle(.menu)
+            if client.textScaleSelectable {
+                let offered = client.textScaleOffersOff
+                Picker(selection: Binding(
+                    get: { TextScale.position(of: textScale, offered: offered) },
+                    set: { textScale = TextScale.scale(at: $0) })) {
+                    ForEach(TextScale.detents(offered: offered), id: \.self) { Text(TextScale.title(at: $0)).tag($0) }
+                } label: {
+                    SwiftUI.Label("Text size", systemImage: "textformat.size")
+                }
+                .pickerStyle(.menu)
+            }
+            if let shown = client.settings.displayed {
+                Picker(selection: Binding(
+                    get: { shown.captureScale >= 1.5 ? 2.0 : 1.0 },
+                    set: { client.changeSettings(HostSettingsChange(captureScale: $0)) })) {
+                    Text("Retina (sharpest)").tag(2.0)
+                    Text("Standard (lighter, faster)").tag(1.0)
+                } label: {
+                    SwiftUI.Label("Resolution", systemImage: "display")
+                }
+                .pickerStyle(.menu)
+            }
+        } label: {
+            label()
+        }
+        .accessibilityLabel("View options")
+    }
+}
+
+// MARK: - Zoom from the back
+
+/// Eases the front picture's zoom (StreamClient.pictureZoom) toward the back's dial and keeps the
+/// pointer in its middle, every frame, so zooming in, out and aiming are one smooth motion while the
+/// front's trackpad and picture keep driving the Mac. A pinch on the front wins: its scale becomes the
+/// dial's.
+@MainActor
+final class BackZoomDriver: NSObject {
+    weak var client: StreamClient?
+    private(set) var target: CGFloat = 1
+    private var link: CADisplayLink?
+    private var lastSet: StreamZoom?
+
+    init(client: StreamClient) {
+        self.client = client
+        super.init()
+        target = client.pictureZoom?.zoom.scale ?? 1
+    }
+
+    func setTarget(_ scale: CGFloat) {
+        target = min(StreamZoom.maxScale, max(StreamZoom.minScale, scale))
+    }
+
+    func start() {
+        guard link == nil else { return }
+        let link = CADisplayLink(target: self, selector: #selector(tick))
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 120, preferred: 120)
+        link.add(to: .main, forMode: .common)
+        self.link = link
+    }
+
+    func stop(reset: Bool) {
+        link?.invalidate()
+        link = nil
+        if reset { client?.pictureZoom?.reset() }
+    }
+
+    @objc private func tick(_ link: CADisplayLink) {
+        guard let client, let model = client.pictureZoom else { return }
+        var z = model.zoom
+        if let lastSet, lastSet != z { target = z.scale }       // the front pinched
+        let pane = z.pane
+        guard pane.width > 0, pane.height > 0 else { return }
+        let dt = max(1 / 240, min(1 / 20, link.targetTimestamp - link.timestamp))
+        let ease = 1 - exp(-dt * 14)
+        let follow = 1 - exp(-dt * 9)
+        let scale = abs(target - z.scale) < 0.0005 ? target : z.scale + (target - z.scale) * ease
+        let mid = CGPoint(x: pane.width / 2, y: pane.height / 2)
+        var want = CGSize(width: z.offset.width * scale / max(1, z.scale),
+                          height: z.offset.height * scale / max(1, z.scale))
+        if let p = client.shownPointer, client.videoSize.width > 0 {
+            let r = HEVCDisplayView.videoRect(in: CGRect(origin: .zero, size: pane), videoSize: client.videoSize)
+            let at = CGPoint(x: r.minX + p.x * r.width, y: r.minY + p.y * r.height)
+            want = CGSize(width: -(at.x - mid.x) * scale, height: -(at.y - mid.y) * scale)
+        }
+        let offset = CGSize(width: z.offset.width + (want.width - z.offset.width) * follow,
+                            height: z.offset.height + (want.height - z.offset.height) * follow)
+        if target <= StreamZoom.minScale + 0.001 && scale < StreamZoom.minScale + 0.004 {
+            z.reset()
+        } else {
+            z.aim(scale: scale, offset: offset, in: pane)
+        }
+        model.set(z)
+        lastSet = model.zoom
+    }
 }

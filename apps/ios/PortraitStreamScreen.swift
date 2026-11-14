@@ -391,6 +391,9 @@ struct PortraitStreamScreen: View {
             .accessibilityLabel(keyboardShown ? "Hide the keyboard" : "Show the keyboard")
             .tourTarget(.keyboard)
             DuoDeckShortcutsMenu(client: client, latched: $latched)
+            SessionViewMenu(client: client, textScale: $textScale) {
+                StreamControlLabel(title: "View", symbol: "eye")
+            }
             Button {
                 setSettings(!settingsOpen, true)
             } label: {
@@ -1194,7 +1197,7 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.shortcutsVisible") private var shortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var haptics = true
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
-    @Environment(\.duoEnvironment) private var duo
+    @AppStorage(PointerSize.key) private var pointerSize = PointerSize.fallback.rawValue
     @State private var resetConfirmation = false
 
     var body: some View {
@@ -1235,17 +1238,6 @@ struct DuoDeckControlsSettings: View {
                 Toggle("Haptic feedback", isOn: $haptics)
             } footer: {
                 Text("Trackpad size applies when held upright. Pointer speed applies to every on-screen trackpad.")
-            }
-            if duo.hinge != .unknown {
-                Section {
-                    Picker("Back screen", selection: $backScreen) {
-                        ForEach(BackScreenMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0.rawValue) }
-                    }
-                } header: {
-                    Text("iPhone Duo")
-                } footer: {
-                    Text("Mirror shows your Mac to people facing you. Trackpad turns the back screen into a full trackpad for your fingers behind the phone, in every pose. The camera runs only to keep the back screen on; nothing is recorded.")
-                }
             }
             Section {
                 NavigationLink {
@@ -1301,6 +1293,7 @@ struct DuoDeckControlsSettings: View {
                 shortcutsVisible = false
                 haptics = true
                 backScreen = BackScreenMode.off.rawValue
+                pointerSize = PointerSize.fallback.rawValue
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -1332,22 +1325,11 @@ struct DuoDeckShortcutsMenu: View {
     @Binding var latched: KeyModifiers
     @AppStorage("DuoDeck.shortcutPreset") private var preset = "editing"
     @AppStorage("DuoDeck.haptics") private var haptics = true
-    @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
-    @Environment(\.duoEnvironment) private var duo
     @State private var controlDecksOpen = false
 
     var body: some View {
         let group = DuoDeckShortcutPreset(rawValue: preset) ?? .editing
         Menu {
-            if duo.hinge != .unknown {
-                Picker(selection: $backScreen) {
-                    ForEach(BackScreenMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0.rawValue) }
-                } label: {
-                    Label("Back screen", systemImage: "iphone.gen3")
-                }
-                .pickerStyle(.menu)
-                Divider()
-            }
             Picker("Shortcut group", selection: $preset) {
                 ForEach(DuoDeckShortcutPreset.allCases) { Text($0.title).tag($0.rawValue) }
             }

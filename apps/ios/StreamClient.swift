@@ -359,6 +359,11 @@ final class StreamClient: ObservableObject {
     /// Where the sprite's tip goes, a fraction of the video frame, or nil to hide it: the display
     /// view's `setPointer`, set by `StreamView.wirePointer`. Up to 120 times a second. Main thread.
     var onPointerChange: ((CGPoint?) -> Void)?
+    /// Where the pointer last showed, as a fraction of the frame: what the back screen's zoom keeps in
+    /// the middle (BackZoomDriver). Main thread.
+    private(set) var shownPointer: CGPoint?
+    /// The stream screen's picture zoom, for the back screen's zoom to drive. Main thread.
+    weak var pictureZoom: StreamZoomModel?
     /// Something that may move the Mac's caret is about to go to the Mac: a click or a key going down
     /// (TextInputRules.movesCaret), whichever view sent it, a pick, a launch, a window's button, a menu
     /// item or a gesture. Called before it is queued, so what the stream screen's input view sends of a
@@ -4058,7 +4063,9 @@ final class StreamClient: ObservableObject {
     func renderPointer() {
         presence.follow(pointerFeed.current)
         let now = ProcessInfo.processInfo.systemUptime
-        onPointerChange?(presence.sprite(now: now))
+        let sprite = presence.sprite(now: now)
+        if sprite != nil { shownPointer = sprite }
+        onPointerChange?(sprite)
         // Q1's flip: one re-render when the trackpad's pointer is due to go. Never while the linger
         // is off (its end is then nil), and never again once that time has passed.
         lingerRender?.cancel()

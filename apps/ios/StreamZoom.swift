@@ -67,6 +67,23 @@ struct StreamZoom: Equatable, Sendable {
         )
     }
 
+    /// Straight to a scale and an offset (the back screen's zoom: BackZoomDriver), kept to 1×–5× and
+    /// inside the pane's edges as a pinch is.
+    mutating func aim(scale wanted: CGFloat, offset wantedOffset: CGSize, in size: CGSize) {
+        guard size.width > 0, size.height > 0, wanted.isFinite else { return }
+        pane = size
+        let next = min(Self.maxScale, max(Self.minScale, wanted))
+        if next <= Self.minScale + 0.001 {
+            reset()
+            return
+        }
+        let maxX = size.width * (next - 1) / 2
+        let maxY = size.height * (next - 1) / 2
+        scale = next
+        offset = CGSize(width: min(maxX, max(-maxX, wantedOffset.width)),
+                        height: min(maxY, max(-maxY, wantedOffset.height)))
+    }
+
     /// The stroke that zoomed is over: a picture left within `wholeBelow` of the whole is the whole one.
     mutating func settle() {
         if scale < Self.wholeBelow { reset() }

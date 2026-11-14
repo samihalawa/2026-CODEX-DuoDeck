@@ -432,6 +432,7 @@ struct StreamScreen: View {
         .onChange(of: panelSize) { _, _ in sendViewport(after: 0.25) }
         // Same wait for Aa: cycling from Off to 0.8× passes three sizes nobody wants the Mac to try.
         .onChange(of: textScale) { _, _ in sendViewport(after: 0.25) }
+        .onAppear { client.pictureZoom = zoom }
         // The stream rate follows the panel (`StreamClient.wantedFPS`): re-send when Low Power Mode
         // toggles or the screen's mode changes. Both notifications can arrive off the main thread.
         .onReceive(NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange).receive(on: RunLoop.main)) { _ in
@@ -1209,9 +1210,9 @@ struct StreamScreen: View {
                    keyboardShown: $keyboardShown,
                    textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
                    settingsOpen: settingsOpen,
-                   // Apps, Menus, Aa, Keyboard, Desktop, Settings, and the strip. The Mac's sound has no
+                   // Apps, Menus, Aa, Keyboard, View, Desktop, Settings, and the strip. The Mac's sound has no
                    // button: Send Audio and Mute are the Settings panel's switches (the maintainer, 2026-10-27).
-                   menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 6, buttonWidth: bar.buttonWidth,
+                   menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 7, buttonWidth: bar.buttonWidth,
                                                 gap: bar.gap, thumbWidth: bar.thumbWidth),
                    toggleKeyboard: { overlay.toggleKeyboard() },
                    setSettings: { setSettings($0, restoreKeyboard: $1) },
@@ -1529,6 +1530,10 @@ private struct TopBar: View {
                     .tourTarget(.keyboard)
                     DuoDeckShortcutsMenu(client: client, latched: $latched)
                         .frame(width: 82)
+                    SessionViewMenu(client: client, textScale: $textScale) {
+                        StreamControlLabel(title: "View", symbol: "eye")
+                    }
+                    .frame(width: 64)
                     Button { setSettings(!settingsOpen, true) } label: {
                         StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
                     }
@@ -1590,6 +1595,17 @@ private struct TopBar: View {
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)
                 .tourTarget(.keyboard)
+
+            SessionViewMenu(client: client, textScale: $textScale) {
+                VStack(spacing: metrics.buttonSpacing) {
+                    Image(systemName: "eye").font(.system(size: 22)).foregroundStyle(Palette.text)
+                    Text("View").font(.system(size: 11, weight: .medium)).foregroundStyle(Palette.barLabel)
+                }
+                .frame(width: metrics.buttonWidth, height: metrics.buttonHeight)
+                .contentShape(Rectangle())
+            }
+            .opacity(scaleOpen ? 0 : 1)
+            .allowsHitTesting(!scaleOpen)
 
             button(open: client.active == .desktop, symbol: "desktopcomputer", label: "Desktop",
                    accessibilityLabel: "Show the full Mac desktop",
