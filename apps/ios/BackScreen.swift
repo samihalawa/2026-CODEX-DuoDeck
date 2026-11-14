@@ -94,7 +94,9 @@ final class BackScreenCamera: @unchecked Sendable {
         }
         Task {
             guard await AVCaptureDevice.requestAccess(for: .video) else {
+                #if DEBUG
                 print("backscreen: camera access denied")
+                #endif
                 return
             }
             await MainActor.run {
@@ -125,7 +127,9 @@ final class BackScreenCamera: @unchecked Sendable {
             }
         }
         if !session.isRunning { session.startRunning() }
+        #if DEBUG
         print("backscreen: camera \(session.isRunning ? "running" : "not running") · multitasking \(session.isMultitaskingCameraAccessEnabled) · inputs \(session.inputs.count)")
+        #endif
     }
 }
 
@@ -142,14 +146,16 @@ struct BackScreenHost: ViewModifier {
     /// Open on the inner screen with a Mac connected and a mode chosen. Folded shut, DuoDeck itself is
     /// on the outer screen, so nothing is presented there.
     private var wanted: Bool {
-        mode != .off && phase != .background
+        client.connected && mode != .off && phase != .background
             && (duo.hinge == .partiallyOpen || duo.hinge == .fullyOpen)
     }
 
     func body(content: Content) -> some View {
         presented(content)
             .onChange(of: wanted, initial: true) { _, on in
+                #if DEBUG
                 print("backscreen: wanted \(on) (mode \(mode.rawValue), hinge \(duo.hinge.rawValue), connected \(client.connected))")
+                #endif
                 BackScreenCamera.shared.set(running: on)
                 if !on { client.setBackPad(false) }
             }
@@ -161,7 +167,11 @@ struct BackScreenHost: ViewModifier {
                 CameraCaptureAccessory {
                     BackScreenSurface(client: client)
                 }
-                .onAvailabilityChange { available in print("backscreen: accessory available \(available)") }
+                .onAvailabilityChange { available in
+                    #if DEBUG
+                    print("backscreen: accessory available \(available)")
+                    #endif
+                }
             }
         } else {
             content
@@ -187,6 +197,16 @@ struct BackScreenSurface: View {
             case .off:
                 if mode != .off { idle }
             case .mirror:
+                VStack(spacing: 8) {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        DuoDeckMark(size: 22)
+                        Text(client.macName.isEmpty ? "Your Mac" : client.macName)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                    .padding(.bottom, 28)
+                }
                 BackMirror(client: client)
             case .trackpad:
                 padBackdrop
@@ -195,7 +215,11 @@ struct BackScreenSurface: View {
         }
         .ignoresSafeArea()
         .preferredColorScheme(.dark)
-        .onChange(of: mode == .trackpad && client.connected, initial: true) { _, on in client.setBackPad(on) }
+        .onChange(of: mode == .trackpad && client.connected, initial: true) { _, on in
+            client.setBackPad(on)
+            // The first time, learn how this back screen sits (two strokes); later on request.
+            if on, !BackCalibration.calibrated, !BackCalibration.shared.active { BackCalibration.shared.start() }
+        }
         .onDisappear { client.setBackPad(false) }
     }
 
@@ -259,7 +283,7 @@ final class BackMirrorView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .black
+        backgroundColor = .clear
         displayLayer.videoGravity = .resizeAspect
         isUserInteractionEnabled = false
     }
@@ -311,22 +335,17 @@ private struct BackPad: UIViewRepresentable {
 /// sit against the front's when you look at the front: the back's native x runs the other way (it is
 /// seen from behind), its y the same way (`panelToFront`).
 enum BackPadMapping {
-    static let panelToFront = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+    @MainActor static var panelToFront: CGAffineTransform { BackCalibration.matrix }
 
     /// The linear map from a delta in `back` to a delta in `front`, or nil when UIKit cannot tell the
     /// two screens apart.
-    static func axis(back: UIView, front: UIWindow?) -> CGAffineTransform? {
+    @MainActor static func axis(back: UIView, front: UIWindow?) -> CGAffineTransform? {
         guard let backWindow = back.window, let front else { return nil }
         let backScreen = backWindow.windowScene?.screen ?? backWindow.screen
         let frontScreen = front.windowScene?.screen ?? front.screen
         guard backScreen !== frontScreen else { return nil }
         let backFixed = backScreen.fixedCoordinateSpace
         let frontFixed = frontScreen.fixedCoordinateSpace
-        func vector(_ v: CGPoint, from a: UICoordinateSpace, to b: UICoordinateSpace) -> CGPoint {
-            let o = a.convert(CGPoint.zero, to: b)
-            let p = a.convert(v, to: b)
-            return CGPoint(x: p.x - o.x, y: p.y - o.y)
-        }
         func map(_ v: CGPoint) -> CGPoint {
             let panel = vector(v, from: back, to: backFixed)
             let device = panel.applying(panelToFront)
@@ -335,6 +354,21 @@ enum BackPadMapping {
         let ex = map(CGPoint(x: 1, y: 0)), ey = map(CGPoint(x: 0, y: 1))
         func unit(_ v: CGFloat) -> CGFloat { abs(v) < 0.5 ? 0 : (v > 0 ? 1 : -1) }
         return CGAffineTransform(a: unit(ex.x), b: unit(ex.y), c: unit(ey.x), d: unit(ey.y), tx: 0, ty: 0)
+    }
+}
+
+extension BackPadMapping {
+    static func vector(_ v: CGPoint, from a: UICoordinateSpace, to b: UICoordinateSpace) -> CGPoint {
+        let o = a.convert(CGPoint.zero, to: b)
+        let p = a.convert(v, to: b)
+        return CGPoint(x: p.x - o.x, y: p.y - o.y)
+    }
+
+    /// `v` in `view`'s screen's fixed axes.
+    static func fixed(_ v: CGPoint, in view: UIView) -> CGPoint? {
+        guard let window = view.window else { return nil }
+        let screen = window.windowScene?.screen ?? window.screen
+        return vector(v, from: view, to: screen.fixedCoordinateSpace)
     }
 }
 
@@ -363,6 +397,8 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
         pad.addGestureRecognizer(watcher)
         NotificationCenter.default.addObserver(self, selector: #selector(turned),
                                                name: UIDevice.orientationDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(turned),
+                                               name: BackCalibration.changed, object: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
@@ -402,11 +438,14 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
             axis = BackPadGeometry.axis(inner: orientation, backBounds: bounds.size, natural: true).0
             source = "shape"
         }
-        // The extent of the back pad along the direction that becomes the front's x.
-        let along = axis.a != 0 ? bounds.width : bounds.height
+        // One measure for both axes and every orientation: the back panel's short side. A centimetre
+        // of finger travel then moves the pointer the same distance however the phone is held.
+        let along = min(bounds.width, bounds.height)
         pad.axis = axis
         pad.axisSpan = CGSize(width: along, height: along / 1.6)
+        #if DEBUG
         print("backscreen: pad \(Int(bounds.width))×\(Int(bounds.height)) front \(orientation.rawValue) back \(backOrientation?.rawValue ?? -1) device \(UIDevice.current.orientation.rawValue) axis [\(axis.a) \(axis.b) \(axis.c) \(axis.d)] from \(source)")
+        #endif
     }
 
     // MARK: Glow
@@ -421,6 +460,8 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
             ring(at: p)
             dot(at: p, size: 46, life: 0.7)
         case .moved:
+            let previous = touch.previousLocation(in: self)
+            feedCalibration(CGPoint(x: p.x - previous.x, y: p.y - previous.y))
             let last = lastSpark[id] ?? p
             let distance = hypot(p.x - last.x, p.y - last.y)
             guard distance > 5 else { return }
@@ -434,6 +475,17 @@ final class BackPadView: UIView, UIGestureRecognizerDelegate {
             lastSpark[id] = nil
             dot(at: p, size: 60, life: 0.5)
         }
+    }
+
+    /// A stroke behind the phone while calibration asks for one, in both panels' fixed axes.
+    private func feedCalibration(_ delta: CGPoint) {
+        let calibration = BackCalibration.shared
+        guard calibration.active, let front = innerWindow(),
+              let panel = BackPadMapping.fixed(delta, in: self) else { return }
+        let asked = calibration.step == .right ? CGPoint(x: 1, y: 0) : CGPoint(x: 0, y: -1)
+        let frontScreen = front.windowScene?.screen ?? front.screen
+        let expected = BackPadMapping.vector(asked, from: front, to: frontScreen.fixedCoordinateSpace)
+        calibration.feed(panel: panel, front: expected)
     }
 
     private static let tint = UIColor(red: 196 / 255, green: 181 / 255, blue: 253 / 255, alpha: 1)
@@ -515,4 +567,150 @@ private final class BackTouchWatcher: UIGestureRecognizer {
         state = .failed
     }
     override func reset() {}
+}
+
+// MARK: - Calibration
+
+/// How the back panel's own axes sit against the front panel's, learned from two strokes behind the
+/// phone (right, then up) and kept. UIKit gives each screen's fixed axes; only this relation between
+/// the two panels is hardware, so it is measured once instead of assumed.
+@MainActor
+final class BackCalibration: ObservableObject {
+    static let shared = BackCalibration()
+    static let key = "DuoDeck.backPanelMatrix"
+    static let changed = Notification.Name("DuoDeck.backPanelChanged")
+
+    enum Step: Equatable { case idle, right, up, done }
+    @Published private(set) var step: Step = .idle
+    @Published private(set) var progress: CGFloat = 0
+
+    private var accumulated = CGPoint.zero
+    private var first: (panelAxis: Int, frontAxis: Int, sign: Int)?
+    private let haptic = UINotificationFeedbackGenerator()
+
+    /// a, b, c, d: front.x = a·p.x + c·p.y, front.y = b·p.x + d·p.y. Default: x mirrored, y kept.
+    static var matrix: CGAffineTransform {
+        guard let m = UserDefaults.standard.array(forKey: key) as? [Int], m.count == 4 else {
+            return CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+        }
+        return CGAffineTransform(a: CGFloat(m[0]), b: CGFloat(m[1]), c: CGFloat(m[2]), d: CGFloat(m[3]), tx: 0, ty: 0)
+    }
+
+    static var calibrated: Bool { UserDefaults.standard.array(forKey: key) != nil }
+
+    var active: Bool { step == .right || step == .up }
+
+    func start() {
+        accumulated = .zero
+        progress = 0
+        first = nil
+        step = .right
+        haptic.prepare()
+    }
+
+    func cancel() { step = .idle }
+
+    /// One finger moved `panel` points behind the phone (the back panel's fixed axes); `front` is the
+    /// direction asked for, in the front panel's fixed axes.
+    func feed(panel: CGPoint, front: CGPoint) {
+        guard active else { return }
+        accumulated.x += panel.x
+        accumulated.y += panel.y
+        let length = hypot(accumulated.x, accumulated.y)
+        progress = min(1, length / 160)
+        guard length >= 160 else { return }
+        let panelAxis = abs(accumulated.x) >= abs(accumulated.y) ? 0 : 1
+        let panelValue = panelAxis == 0 ? accumulated.x : accumulated.y
+        let frontAxis = abs(front.x) >= abs(front.y) ? 0 : 1
+        let frontValue = frontAxis == 0 ? front.x : front.y
+        let sign = (panelValue > 0) == (frontValue > 0) ? 1 : -1
+        accumulated = .zero
+        progress = 0
+        if step == .right {
+            first = (panelAxis, frontAxis, sign)
+            step = .up
+            haptic.notificationOccurred(.success)
+            return
+        }
+        guard let f = first, f.panelAxis != panelAxis, f.frontAxis != frontAxis else {
+            // Both strokes went along the same axis: start over.
+            first = nil
+            step = .right
+            haptic.notificationOccurred(.warning)
+            return
+        }
+        var m = [0, 0, 0, 0]
+        func put(_ panelAxis: Int, _ frontAxis: Int, _ sign: Int) {
+            m[frontAxis == 0 ? (panelAxis == 0 ? 0 : 2) : (panelAxis == 0 ? 1 : 3)] = sign
+        }
+        put(f.panelAxis, f.frontAxis, f.sign)
+        put(panelAxis, frontAxis, sign)
+        UserDefaults.standard.set(m, forKey: Self.key)
+        NotificationCenter.default.post(name: Self.changed, object: nil)
+        haptic.notificationOccurred(.success)
+        step = .done
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.4))
+            if self.step == .done { self.step = .idle }
+        }
+    }
+}
+
+/// The front's half of calibration: what to do, with an arrow that points the way.
+struct BackCalibrationCard: View {
+    @ObservedObject var calibration = BackCalibration.shared
+
+    var body: some View {
+        if calibration.step != .idle {
+            ZStack {
+                Color.black.opacity(0.55).ignoresSafeArea()
+                VStack(spacing: 18) {
+                    Image(systemName: symbol)
+                        .font(.system(size: 64, weight: .bold))
+                        .foregroundStyle(Palette.accent)
+                        .symbolEffect(.pulse, isActive: calibration.active)
+                        .contentTransition(.symbolEffect(.replace))
+                    Text(title)
+                        .font(.title3.weight(.semibold))
+                        .multilineTextAlignment(.center)
+                    Text(detail)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    if calibration.active {
+                        ProgressView(value: calibration.progress).tint(Palette.accent).frame(maxWidth: 220)
+                        Button("Cancel") { calibration.cancel() }.buttonStyle(.bordered)
+                    }
+                }
+                .padding(28)
+                .frame(maxWidth: 360)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .padding(24)
+            }
+            .transition(.opacity)
+        }
+    }
+
+    private var symbol: String {
+        switch calibration.step {
+        case .right: return "arrow.right"
+        case .up: return "arrow.up"
+        default: return "checkmark.circle.fill"
+        }
+    }
+
+    private var title: String {
+        switch calibration.step {
+        case .right: return "Behind the phone, slide one finger to the right"
+        case .up: return "Now slide it up"
+        default: return "Back trackpad ready"
+        }
+    }
+
+    private var detail: String {
+        switch calibration.step {
+        case .right, .up: return "Right and up as you see this screen. This teaches DuoDeck how your back screen sits, once."
+        default: return "It moves the way you feel it, in every pose."
+        }
+    }
 }

@@ -1244,6 +1244,7 @@ struct DuoDeckControlsSettings: View {
                     }
                     if backScreen == BackScreenMode.trackpad.rawValue {
                         Toggle("Move as felt from the front", isOn: $backNatural)
+                        Button("Calibrate back trackpad") { BackCalibration.shared.start() }
                     }
                 } header: {
                     Text("iPhone Duo")
@@ -1351,6 +1352,11 @@ struct DuoDeckShortcutsMenu: View {
                     Label("Back screen", systemImage: "iphone.gen3")
                 }
                 .pickerStyle(.menu)
+                if backScreen == BackScreenMode.trackpad.rawValue {
+                    Button { BackCalibration.shared.start() } label: {
+                        Label("Calibrate back trackpad", systemImage: "scope")
+                    }
+                }
                 Divider()
             }
             Picker("Shortcut group", selection: $preset) {
