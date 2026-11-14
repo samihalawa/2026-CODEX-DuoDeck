@@ -213,6 +213,13 @@ struct BackScreenSurface: View {
     private var padBackdrop: some View {
         ZStack {
             LinearGradient(colors: [Palette.accent.opacity(0.22), .black], startPoint: .top, endPoint: .bottom)
+            TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                let t = context.date.timeIntervalSinceReferenceDate
+                RadialGradient(colors: [Palette.accent.opacity(0.28 + 0.12 * sin(t * 1.1)), .clear],
+                               center: UnitPoint(x: 0.5 + 0.25 * cos(t * 0.35), y: 0.45 + 0.2 * sin(t * 0.27)),
+                               startRadius: 0, endRadius: 360)
+                    .blendMode(.plusLighter)
+            }
             VStack(spacing: 14) {
                 DuoDeckMark(size: 64).opacity(0.55)
                 Text("Trackpad")
@@ -283,7 +290,7 @@ private struct BackPad: UIViewRepresentable {
     private func configure(_ view: BackPadView) {
         let client = self.client
         view.natural = natural
-        view.inner = { client.displayView.window?.windowScene?.effectiveGeometry.interfaceOrientation ?? .portrait }
+        view.innerWindow = { client.displayView.window }
         let pad = view.pad
         pad.send = { client.sendInput($0) }
         pad.setPointer = { client.setOwnPointer($0, from: .trackpad) }
@@ -296,35 +303,216 @@ private struct BackPad: UIViewRepresentable {
     }
 }
 
-/// Holds the pad and keeps its mapping current as either screen turns.
-final class BackPadView: UIView {
+/// How the back screen's and the front's coordinates relate, from what UIKit says of each screen.
+///
+/// Each view converts its own directions into its screen's fixed coordinate space (the panel's own,
+/// upright-native axes, which never turn), so every one of the four ways the phone is held is
+/// accounted for by UIKit itself. The one hardware constant left is how the back panel's native axes
+/// sit against the front's when you look at the front: the back's native x runs the other way (it is
+/// seen from behind), its y the same way (`panelToFront`).
+enum BackPadMapping {
+    static let panelToFront = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+
+    /// The linear map from a delta in `back` to a delta in `front`, or nil when UIKit cannot tell the
+    /// two screens apart.
+    static func axis(back: UIView, front: UIWindow?) -> CGAffineTransform? {
+        guard let backWindow = back.window, let front else { return nil }
+        let backScreen = backWindow.windowScene?.screen ?? backWindow.screen
+        let frontScreen = front.windowScene?.screen ?? front.screen
+        guard backScreen !== frontScreen else { return nil }
+        let backFixed = backScreen.fixedCoordinateSpace
+        let frontFixed = frontScreen.fixedCoordinateSpace
+        func vector(_ v: CGPoint, from a: UICoordinateSpace, to b: UICoordinateSpace) -> CGPoint {
+            let o = a.convert(CGPoint.zero, to: b)
+            let p = a.convert(v, to: b)
+            return CGPoint(x: p.x - o.x, y: p.y - o.y)
+        }
+        func map(_ v: CGPoint) -> CGPoint {
+            let panel = vector(v, from: back, to: backFixed)
+            let device = panel.applying(panelToFront)
+            return vector(device, from: frontFixed, to: front)
+        }
+        let ex = map(CGPoint(x: 1, y: 0)), ey = map(CGPoint(x: 0, y: 1))
+        func unit(_ v: CGFloat) -> CGFloat { abs(v) < 0.5 ? 0 : (v > 0 ? 1 : -1) }
+        return CGAffineTransform(a: unit(ex.x), b: unit(ex.y), c: unit(ey.x), d: unit(ey.y), tx: 0, ty: 0)
+    }
+}
+
+/// Holds the pad, keeps its mapping current as either screen turns, and draws the glow under fingers.
+final class BackPadView: UIView, UIGestureRecognizerDelegate {
     let pad = TrackpadSurface(frame: .zero)
     var natural = true
-    var inner: () -> UIInterfaceOrientation = { .portrait }
+    var innerWindow: () -> UIWindow? = { nil }
     private var lastKey = ""
+    private let glow = CALayer()
+    private let watcher = BackTouchWatcher()
+    private var lastSpark: [ObjectIdentifier: CGPoint] = [:]
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         pad.backgroundColor = .clear
+        isMultipleTouchEnabled = true
+        layer.addSublayer(glow)
         addSubview(pad)
+        watcher.cancelsTouchesInView = false
+        watcher.delaysTouchesBegan = false
+        watcher.delaysTouchesEnded = false
+        watcher.delegate = self
+        watcher.onTouch = { [weak self] touch, phase in self?.spark(touch, phase) }
+        pad.addGestureRecognizer(watcher)
         NotificationCenter.default.addObserver(self, selector: #selector(turned),
                                                name: UIDevice.orientationDidChangeNotification, object: nil)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    @objc private func turned() { setNeedsLayout() }
+    func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+    @objc private func turned() { lastKey = ""; setNeedsLayout() }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        lastKey = ""
+        setNeedsLayout()
+    }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         pad.frame = bounds
-        let orientation = inner()
-        let key = "\(orientation.rawValue) \(bounds.size) \(natural)"
-        guard key != lastKey else { return }
-        lastKey = key
-        let (axis, span) = BackPadGeometry.axis(inner: orientation, backBounds: bounds.size, natural: natural)
-        pad.axis = axis
-        pad.axisSpan = span
+        glow.frame = bounds
+        refreshAxis()
     }
+
+    private func refreshAxis() {
+        let front = innerWindow()
+        let orientation = front?.windowScene?.effectiveGeometry.interfaceOrientation ?? .portrait
+        let backOrientation = window?.windowScene?.effectiveGeometry.interfaceOrientation
+        let key = "\(orientation.rawValue) \(backOrientation?.rawValue ?? -1) \(bounds.size) \(natural)"
+        guard key != lastKey, bounds.width > 0 else { return }
+        lastKey = key
+        var axis: CGAffineTransform
+        var source = "screens"
+        if !natural {
+            axis = .identity
+            source = "raw"
+        } else if let measured = BackPadMapping.axis(back: self, front: front) {
+            axis = measured
+        } else {
+            axis = BackPadGeometry.axis(inner: orientation, backBounds: bounds.size, natural: true).0
+            source = "shape"
+        }
+        // The extent of the back pad along the direction that becomes the front's x.
+        let along = axis.a != 0 ? bounds.width : bounds.height
+        pad.axis = axis
+        pad.axisSpan = CGSize(width: along, height: along / 1.6)
+        print("backscreen: pad \(Int(bounds.width))×\(Int(bounds.height)) front \(orientation.rawValue) back \(backOrientation?.rawValue ?? -1) device \(UIDevice.current.orientation.rawValue) axis [\(axis.a) \(axis.b) \(axis.c) \(axis.d)] from \(source)")
+    }
+
+    // MARK: Glow
+
+    private func spark(_ touch: UITouch, _ phase: UITouch.Phase) {
+        if phase == .began { refreshAxis() }
+        let id = ObjectIdentifier(touch)
+        let p = touch.location(in: self)
+        switch phase {
+        case .began:
+            lastSpark[id] = p
+            ring(at: p)
+            dot(at: p, size: 46, life: 0.7)
+        case .moved:
+            let last = lastSpark[id] ?? p
+            let distance = hypot(p.x - last.x, p.y - last.y)
+            guard distance > 5 else { return }
+            let steps = min(6, Int(distance / 8) + 1)
+            for i in 1...steps {
+                let t = CGFloat(i) / CGFloat(steps)
+                dot(at: CGPoint(x: last.x + (p.x - last.x) * t, y: last.y + (p.y - last.y) * t), size: 30, life: 0.55)
+            }
+            lastSpark[id] = p
+        default:
+            lastSpark[id] = nil
+            dot(at: p, size: 60, life: 0.5)
+        }
+    }
+
+    private static let tint = UIColor(red: 196 / 255, green: 181 / 255, blue: 253 / 255, alpha: 1)
+
+    private func dot(at p: CGPoint, size: CGFloat, life: CFTimeInterval) {
+        let d = CALayer()
+        d.bounds = CGRect(x: 0, y: 0, width: size, height: size)
+        d.position = p
+        d.cornerRadius = size / 2
+        d.backgroundColor = Self.tint.withAlphaComponent(0.85).cgColor
+        d.shadowColor = Self.tint.cgColor
+        d.shadowRadius = size * 0.6
+        d.shadowOpacity = 1
+        d.shadowOffset = .zero
+        glow.addSublayer(d)
+        animateOut(d, life: life, to: 0.15)
+    }
+
+    private func ring(at p: CGPoint) {
+        let r = CAShapeLayer()
+        r.path = UIBezierPath(ovalIn: CGRect(x: -40, y: -40, width: 80, height: 80)).cgPath
+        r.position = p
+        r.fillColor = UIColor.clear.cgColor
+        r.strokeColor = Self.tint.cgColor
+        r.lineWidth = 3
+        r.shadowColor = Self.tint.cgColor
+        r.shadowRadius = 12
+        r.shadowOpacity = 1
+        r.shadowOffset = .zero
+        glow.addSublayer(r)
+        let grow = CABasicAnimation(keyPath: "transform.scale")
+        grow.fromValue = 0.3
+        grow.toValue = 1.6
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 1
+        fade.toValue = 0
+        let group = CAAnimationGroup()
+        group.animations = [grow, fade]
+        group.duration = 0.6
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        r.opacity = 0
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { r.removeFromSuperlayer() }
+        r.add(group, forKey: "ring")
+        CATransaction.commit()
+    }
+
+    private func animateOut(_ layer: CALayer, life: CFTimeInterval, to scale: CGFloat) {
+        let shrink = CABasicAnimation(keyPath: "transform.scale")
+        shrink.fromValue = 1
+        shrink.toValue = scale
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 1
+        fade.toValue = 0
+        let group = CAAnimationGroup()
+        group.animations = [shrink, fade]
+        group.duration = life
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        layer.opacity = 0
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { layer.removeFromSuperlayer() }
+        layer.add(group, forKey: "fade")
+        CATransaction.commit()
+    }
+}
+
+/// Watches every touch on the pad and takes none.
+private final class BackTouchWatcher: UIGestureRecognizer {
+    var onTouch: (UITouch, UITouch.Phase) -> Void = { _, _ in }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) { touches.forEach { onTouch($0, .began) } }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) { touches.forEach { onTouch($0, .moved) } }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        touches.forEach { onTouch($0, .ended) }
+        if event.allTouches?.allSatisfy({ $0.phase == .ended || $0.phase == .cancelled }) ?? true { state = .failed }
+    }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        touches.forEach { onTouch($0, .cancelled) }
+        state = .failed
+    }
+    override func reset() {}
 }
