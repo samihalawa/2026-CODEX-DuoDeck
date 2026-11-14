@@ -812,12 +812,16 @@ struct ShiftLeftEdgeInset: ViewModifier {
     @State private var guideToken = 0
 
     /// The physical left edge, where it is in this screen's own coordinates as it is turned now.
+    /// The outer panel sits upside down in the body, so its scene reports a half turn from how it is
+    /// held: upright it says portraitUpsideDown (on the iPhone Duo the plain mapping put the strip on
+    /// the right, by the camera, and its framebuffer shows upright content turned over). The covered
+    /// edge is the panel's own right, wherever that lands as the phone turns.
     private var edge: Edge {
         switch orientation {
-        case .portraitUpsideDown: return .trailing
-        case .landscapeLeft: return .top
-        case .landscapeRight: return .bottom
-        default: return .leading
+        case .portraitUpsideDown: return .leading
+        case .landscapeLeft: return .bottom
+        case .landscapeRight: return .top
+        default: return .trailing
         }
     }
 
@@ -913,6 +917,9 @@ private struct ShiftLeftEdgeProbe: UIViewRepresentable {
         private func read() {
             guard let scene = window?.windowScene else { return }
             let now = scene.effectiveGeometry.interfaceOrientation
+            #if DEBUG
+            print("shiftLeftEdge: scene orientation \(now.rawValue), bounds \(Int(bounds.width))x\(Int(bounds.height))")
+            #endif
             DispatchQueue.main.async { [weak self] in self?.onChange(now) }
         }
     }
