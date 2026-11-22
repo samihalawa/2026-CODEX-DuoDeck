@@ -1580,22 +1580,29 @@ private struct TopBar: View {
                         Spacer(minLength: 12)
                         Button {
                             setSettings(false, false)
+                            client.select(.desktop)
+                        } label: {
+                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
+                        }
+                        .frame(width: 64)
+                        Button {
+                            setSettings(false, false)
                             toggleKeyboard()
                         } label: {
                             StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
                         }
-                        .frame(width: 78)
+                        .frame(width: 72)
                         .tourTarget(.keyboard)
                         DuoDeckShortcutsMenu(client: client, latched: $latched)
-                            .frame(width: 78)
+                            .frame(width: 72)
                         SessionViewMenu(client: client, textScale: $textScale) {
                             StreamControlLabel(title: "View", symbol: "eye")
                         }
-                        .frame(width: 64)
+                        .frame(width: 58)
                         Button { setSettings(!settingsOpen, true) } label: {
                             StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
                         }
-                        .frame(width: 72)
+                        .frame(width: 68)
                         .tourTarget(.settings)
                     }
                     .buttonStyle(.plain)
@@ -1603,38 +1610,45 @@ private struct TopBar: View {
                     .padding(.horizontal, metrics.padding)
                     .background(Palette.bar.ignoresSafeArea(edges: .top))
                 } else {
-                    HStack(spacing: 16) {
+                    HStack(spacing: 12) {
                         Text(client.macName.isEmpty ? "Mac" : client.macName)
                             .font(.headline)
                             .lineLimit(1)
                             .truncationMode(.middle)
-                        Spacer(minLength: 12)
+                        Spacer(minLength: 8)
                         Button {
                             setSettings(false, false)
                             drawerOpen.toggle()
                         } label: {
                             StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
                         }
-                        .frame(width: 76)
+                        .frame(width: 68)
                         .tourTarget(.apps)
+                        Button {
+                            setSettings(false, false)
+                            client.select(.desktop)
+                        } label: {
+                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
+                        }
+                        .frame(width: 68)
                         Button {
                             setSettings(false, false)
                             toggleKeyboard()
                         } label: {
                             StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
                         }
-                        .frame(width: 82)
+                        .frame(width: 76)
                         .tourTarget(.keyboard)
                         DuoDeckShortcutsMenu(client: client, latched: $latched)
-                            .frame(width: 82)
+                            .frame(width: 76)
                         SessionViewMenu(client: client, textScale: $textScale) {
                             StreamControlLabel(title: "View", symbol: "eye")
                         }
-                        .frame(width: 64)
+                        .frame(width: 60)
                         Button { setSettings(!settingsOpen, true) } label: {
                             StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
                         }
-                        .frame(width: 76)
+                        .frame(width: 68)
                         .tourTarget(.settings)
                     }
                     .buttonStyle(.plain)

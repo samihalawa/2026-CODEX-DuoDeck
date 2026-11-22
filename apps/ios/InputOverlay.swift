@@ -414,6 +414,9 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         if isPad {
             padAdoptAnchor()
             setOwnPointer(pad.cursor, .trackpad)
+            if window != nil, videoSize != .zero {
+                send(.pointer(.move, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+            }
         } else {
             setOwnPointer(nil, .none)
         }

@@ -1938,6 +1938,9 @@ package final class StreamCoordinator {
                 catalog.preferredDisplayID = nil
             }
         } else if config.displayMode != previousDisplayMode || (config.displayMode != nil && config.displayMode?.hasPrefix("vertical:") == true && source == .desktop) {
+            if config.displayMode != previousDisplayMode, config.displayMode != nil, virtualDisplay, source != .desktop {
+                source = .desktop
+            }
             displayChanged = await displayResolution.apply(modeID: config.displayMode, viewport: viewport)
             catalog.preferredDisplayID = displayResolution.captureDisplayID
             catalog.preferMainDisplay = virtualDisplay && catalog.preferredDisplayID == nil

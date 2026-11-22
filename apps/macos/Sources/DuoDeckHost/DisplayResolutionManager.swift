@@ -56,7 +56,7 @@ final class DisplayResolutionManager {
     }
 
     private func resolvePhysicalDisplay() -> CGDirectDisplayID? {
-        if let pid = physicalDisplayID, CGDisplayIsActive(pid) != 0 || CGDisplayCopyDisplayMode(pid) != nil {
+        if let pid = physicalDisplayID, CGDisplayIsOnline(pid) != 0 || CGDisplayCopyDisplayMode(pid) != nil {
             return pid
         }
         let main = CGMainDisplayID()
@@ -66,7 +66,8 @@ final class DisplayResolutionManager {
         }
         var count: UInt32 = 0
         var ids = [CGDirectDisplayID](repeating: 0, count: 16)
-        guard CGGetActiveDisplayList(16, &ids, &count) == .success else { return nil }
+        // Use online displays so mirrored physical displays remain discoverable while vertical mirror is active.
+        guard CGGetOnlineDisplayList(16, &ids, &count) == .success else { return nil }
         let found = ids.prefix(Int(count)).first { id in
             id != 0 && !Self.isMirrorVirtualDisplay(id) && CGDisplayVendorNumber(id) != 0x5111
         }
@@ -170,7 +171,7 @@ final class DisplayResolutionManager {
         if appliedModeID == target && !mirrorActive {
             return false
         }
-        return applyPhysicalResolution(modeID: target, physicalID: pid)
+        return await applyPhysicalResolution(modeID: target, physicalID: pid)
     }
 
     /// Synchronously unmirrors any vertical display and restores the original physical resolution.
@@ -220,7 +221,7 @@ final class DisplayResolutionManager {
         return (756, 1344)
     }
 
-    private func applyPhysicalResolution(modeID: String, physicalID: CGDirectDisplayID) -> Bool {
+    private func applyPhysicalResolution(modeID: String, physicalID: CGDirectDisplayID) async -> Bool {
         let dims = modeID.split(separator: "x")
         guard dims.count == 2, let w = Int(dims[0]), let h = Int(dims[1]) else { return false }
 
@@ -250,6 +251,15 @@ final class DisplayResolutionManager {
         mirrorActive = false
         activeVerticalSize = nil
         appliedModeID = modeID
+        let deadline = Date().addingTimeInterval(1.5)
+        while Date() < deadline {
+            if let cur = CGDisplayCopyDisplayMode(physicalID),
+               cur.width == w, cur.height == h,
+               CGDisplayMirrorsDisplay(physicalID) == kCGNullDirectDisplay {
+                break
+            }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
         print("Display switched to \(w) × \(h)\(chosen.pixelWidth > chosen.width ? " (HiDPI)" : "").")
         return true
     }
@@ -307,6 +317,15 @@ final class DisplayResolutionManager {
             mirrorActive = true
             appliedModeID = modeID
             activeVerticalSize = size
+            let mirrorDeadline = Date().addingTimeInterval(1.0)
+            while Date() < mirrorDeadline {
+                if CGDisplayMirrorsDisplay(physicalID) == vd.displayID,
+                   Int(CGDisplayBounds(vd.displayID).width) == size.width,
+                   Int(CGDisplayBounds(vd.displayID).height) == size.height {
+                    break
+                }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
             print("Display verticalized to \(size.width) × \(size.height) (mirroring display \(physicalID) → \(vd.displayID)).")
             return true
         } catch {
