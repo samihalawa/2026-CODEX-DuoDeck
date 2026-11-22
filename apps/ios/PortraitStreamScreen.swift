@@ -47,35 +47,6 @@ enum HIDKey {
 
 // MARK: - DuoDeck control surface
 
-enum DuoDeckPadMode: String, CaseIterable, Identifiable {
-    case compact, balanced, full
-
-    var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .compact: return "Small"
-        case .balanced: return "Medium"
-        case .full: return "Full"
-        }
-    }
-
-    var widthFraction: CGFloat {
-        switch self {
-        case .compact: return 0.70
-        case .balanced: return 0.85
-        case .full: return 1
-        }
-    }
-
-    var heightFraction: CGFloat {
-        switch self {
-        case .compact: return 0.67
-        case .balanced: return 0.88
-        case .full: return 1
-        }
-    }
-}
-
 private struct DuoDeckShortcut: Identifiable {
     let title: String
     let symbol: String
@@ -247,13 +218,15 @@ struct PortraitStreamScreen: View {
     @ObservedObject var client: StreamClient
     var metrics: PortraitMetrics = .regular
     /// Shared by the compact phone deck and the half-folded control surface.
-    @AppStorage("DuoDeck.trackpadLayout") private var duoDeckLayout = "balanced"
     @AppStorage("DuoDeck.shortcutPreset") private var duoDeckShortcutPreset = "editing"
     @AppStorage("DuoDeck.pointerSensitivity") private var duoDeckPointerSensitivity = 1.25
     @AppStorage("DuoDeck.focusMode") private var duoDeckFocusMode = true
     @AppStorage("DuoDeck.shortcutsVisible") private var duoDeckShortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var duoDeckHaptics = true
     @AppStorage("DuoDeck.screenTrackingMode") private var screenTrackingRaw = ScreenTrackingMode.direct.rawValue
+    @AppStorage("DuoDeck.portraitSplitOffset") private var savedSplitOffset: Double = 0
+    @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
+    @GestureState private var splitDragDelta: CGFloat = 0
     @State private var controlsSettingsOpen = false
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
@@ -321,20 +294,45 @@ struct PortraitStreamScreen: View {
     private func halves(_ size: CGSize) -> some View {
         // At the middle, as before; on the Duo (iOS 27.1) at the fold's real band half-folded, and
         // open flat at the picture's own shape (docs/iphone-duo-plan.md, (b1) and (b2)).
-        let split = DuoPosture.portraitSplit(size, duoFold, aspect: client.duoPaneAspect(textScale: textScale),
-                                             controls: metrics.controlsHeight)
-        let half = split.picture
+        // Interactive split offset allows fluid sliding during Mac display realignments when unlocked
+        // and not physically constrained to a hinge crease.
+        let base = DuoPosture.portraitSplit(size, duoFold, aspect: client.duoPaneAspect(textScale: textScale),
+                                            controls: metrics.controlsHeight)
+        let canSlide = duoFold == nil && !lockViewportSize
+        let dividerHeight: CGFloat = canSlide ? 18 : max(0, base.controls - base.picture)
+        let minPicture: CGFloat = 150
+        let maxPicture = max(minPicture, size.height - dividerHeight - metrics.controlsHeight - 72)
+        let defaultPicture = canSlide ? min(base.picture, maxPicture) : base.picture
+        let rawHalf = defaultPicture + (canSlide ? CGFloat(savedSplitOffset) + splitDragDelta : 0)
+        let half = min(max(rawHalf, minPicture), maxPicture).rounded()
+        let controlsHeight = max(metrics.controlsHeight, size.height - half - dividerHeight)
         return ZStack(alignment: .topLeading) {
             Color.black
 
-            VStack(spacing: split.controls - half) {
-                picturePane(measured: true).padding(8).frame(height: half)
+            VStack(spacing: 0) {
+                picturePane(measured: true)
+                    .padding(8)
+                    .frame(height: half)
+                    .animation(.spring(response: 0.36, dampingFraction: 0.86), value: client.videoSize)
+                    .animation(.spring(response: 0.36, dampingFraction: 0.86), value: client.active)
+                    .animation(.spring(response: 0.32, dampingFraction: 0.88), value: savedSplitOffset)
+
+                if canSlide {
+                    splitDivider(minPicture: minPicture, maxPicture: maxPicture, basePicture: defaultPicture)
+                        .frame(height: dividerHeight)
+                } else {
+                    Spacer().frame(height: dividerHeight)
+                }
+
                 // Ordinary iPads and narrow iPad windows use the same configurable deck.
                 // The fold still decides the split above; it does not gate control preferences.
                 controls(width: size.width, duoDeck: true)
-                    .frame(height: size.height - split.controls)
+                    .frame(height: controlsHeight)
                     .background(Palette.canvas)
+                    .animation(.spring(response: 0.36, dampingFraction: 0.86), value: client.videoSize)
+                    .animation(.spring(response: 0.36, dampingFraction: 0.86), value: client.active)
             }
+            .animation(splitDragDelta == 0 ? .spring(response: 0.36, dampingFraction: 0.86) : nil, value: half)
 
             // Same order as landscape: the dim goes over the stream so a tap with the drawer
             // open closes the drawer instead of clicking the Mac. It covers both halves.
@@ -347,6 +345,39 @@ struct PortraitStreamScreen: View {
             // and never reaches the Mac.
 
         }
+    }
+
+    private func splitDivider(minPicture: CGFloat, maxPicture: CGFloat, basePicture: CGFloat) -> some View {
+        ZStack {
+            UnevenRoundedRectangle(topLeadingRadius: 14, bottomLeadingRadius: 0,
+                                   bottomTrailingRadius: 0, topTrailingRadius: 14, style: .continuous)
+                .fill(Palette.canvas)
+            Capsule(style: .continuous)
+                .fill(Color.primary.opacity(splitDragDelta != 0 ? 0.5 : 0.24))
+                .frame(width: splitDragDelta != 0 ? 54 : 40, height: 4.5)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color.black)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 2)
+                .updating($splitDragDelta) { value, state, _ in
+                    state = value.translation.height
+                }
+                .onEnded { value in
+                    let target = min(max(basePicture + CGFloat(savedSplitOffset) + value.translation.height, minPicture), maxPicture)
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                        savedSplitOffset = Double(target - basePicture)
+                    }
+                }
+        )
+        .onTapGesture(count: 2) {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                savedSplitOffset = 0
+            }
+        }
+        .accessibilityLabel("Resize split")
+        .accessibilityHint("Drag up or down to resize the Mac screen and trackpad, or double-tap to reset")
     }
 
     private func controls(width: CGFloat, duoDeck: Bool) -> some View {
@@ -370,15 +401,18 @@ struct PortraitStreamScreen: View {
         .padding(.bottom, metrics.padBottom)
     }
 
-    /// The common actions stay visible; the Mac's detailed controls are available in Settings.
+    /// The common actions stay visible; horizontally scrollable when the keyboard or narrow
+    /// widths crowd the bar, with Keyboard keeping its consistent placement next to command actions.
+    @ViewBuilder
     private var duoDeckCompactBar: some View {
-        HStack(spacing: 8) {
+        let content = HStack(spacing: 8) {
             Button {
                 setSettings(false, false)
                 drawerOpen.toggle()
             } label: {
                 StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
             }
+            .frame(minWidth: keyboardShown ? 58 : nil)
             .accessibilityLabel("Open apps and windows")
             .tourTarget(.apps)
             Button {
@@ -389,26 +423,77 @@ struct PortraitStreamScreen: View {
                                    symbol: keyboardShown ? "keyboard.chevron.compact.down" : "keyboard",
                                    selected: keyboardShown)
             }
+            .frame(minWidth: keyboardShown ? 62 : nil)
             .accessibilityLabel(keyboardShown ? "Hide the keyboard" : "Show the keyboard")
             .tourTarget(.keyboard)
+            if keyboardShown {
+                ForEach(["esc", "tab", "ctrl", "opt", "cmd"], id: \.self) { label in
+                    quickCommandChip(label)
+                }
+            }
             DuoDeckShortcutsMenu(client: client, latched: $latched)
+                .frame(minWidth: keyboardShown ? 64 : nil)
             SessionViewMenu(client: client, textScale: $textScale) {
                 StreamControlLabel(title: "View", symbol: "eye")
             }
+            .frame(minWidth: keyboardShown ? 54 : nil)
             Button {
                 setSettings(!settingsOpen, true)
             } label: {
                 StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
             }
+            .frame(minWidth: keyboardShown ? 58 : nil)
             .tourTarget(.settings)
         }
         .buttonStyle(.plain)
         .frame(height: metrics.phone ? PhonePortraitLayout.buttonHeight : metrics.barHeight)
+
+        if keyboardShown {
+            ScrollView(.horizontal, showsIndicators: false) {
+                content
+            }
+        } else {
+            content
+        }
+    }
+
+    @ViewBuilder
+    private func quickCommandChip(_ label: String) -> some View {
+        let on: Bool = {
+            switch label {
+            case "ctrl": return latched.contains(.control)
+            case "opt": return latched.contains(.option)
+            case "cmd": return latched.contains(.command)
+            default: return false
+            }
+        }()
+        Button {
+            switch label {
+            case "esc":
+                KeyChord.press(HIDKey.escape, with: latched).forEach { client.sendFromKeyRow($0) }
+                latched = []
+            case "tab":
+                KeyChord.press(HIDKey.tab, with: latched).forEach { client.sendFromKeyRow($0) }
+                latched = []
+            case "ctrl": latched.formSymmetricDifference(.control)
+            case "opt": latched.formSymmetricDifference(.option)
+            case "cmd": latched.formSymmetricDifference(.command)
+            default: break
+            }
+        } label: {
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(on ? Palette.accent : Palette.text)
+                .padding(.horizontal, 12)
+                .frame(height: 36)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(on ? Palette.controlOpen : Palette.control))
+        }
+        .buttonStyle(.plain)
     }
 
     private func duoDeckSurface(width: CGFloat, verticalSpan: CGFloat? = nil) -> some View {
-        let mode = DuoDeckPadMode(rawValue: duoDeckLayout) ?? .balanced
-        return VStack(spacing: 8) {
+        VStack(spacing: 8) {
             HStack(spacing: 12) {
                 Text(client.macName.isEmpty ? "Trackpad" : client.macName)
                     .font(.subheadline.weight(.medium))
@@ -416,26 +501,26 @@ struct PortraitStreamScreen: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 8)
-                Menu {
-                    Picker("Trackpad size", selection: $duoDeckLayout) {
-                        ForEach(DuoDeckPadMode.allCases) { item in
-                            Text(item.title).tag(item.rawValue)
-                        }
+                Button {
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.85)) {
+                        duoDeckShortcutsVisible.toggle()
                     }
-                    Divider()
-                    Toggle("Show shortcut row", isOn: $duoDeckShortcutsVisible)
                 } label: {
-                    HStack(spacing: 4) {
-                        Text("Trackpad: \(mode.title)")
-                        Image(systemName: "chevron.down").font(.caption2.weight(.semibold))
+                    HStack(spacing: 5) {
+                        Image(systemName: duoDeckShortcutsVisible ? "command.square.fill" : "command.square")
+                            .font(.caption.weight(.semibold))
+                        Text("Shortcuts")
+                            .font(.caption.weight(.semibold))
                     }
-                    .font(.subheadline)
-                    .foregroundStyle(Palette.accent)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
+                    .foregroundStyle(duoDeckShortcutsVisible ? Palette.accent : .secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(duoDeckShortcutsVisible ? Palette.accent.opacity(0.14) : Palette.control))
                 }
-                .accessibilityLabel("Trackpad size")
-                .accessibilityValue(mode.title)
+                .buttonStyle(.plain)
+                .frame(minHeight: 36)
+                .contentShape(Rectangle())
+                .accessibilityLabel(duoDeckShortcutsVisible ? "Hide shortcuts bar" : "Show shortcuts bar")
             }
             if metrics.phone && keyboardShown {
                 keyRow(.phone).frame(height: PhonePortraitLayout.capHeight)
@@ -443,20 +528,16 @@ struct PortraitStreamScreen: View {
             if duoDeckShortcutsVisible && !keyboardShown {
                 shortcutRow
             }
-            GeometryReader { area in
-                trackpad(verticalSpan: verticalSpan, sensitivity: CGFloat(duoDeckPointerSensitivity))
-                    .frame(width: max(0, area.size.width * mode.widthFraction),
-                           height: max(0, area.size.height * mode.heightFraction))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .accessibilityLabel("Mac trackpad")
-            }
+            trackpad(verticalSpan: verticalSpan, sensitivity: CGFloat(duoDeckPointerSensitivity))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityLabel("Mac trackpad")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var shortcutRow: some View {
         let group = DuoDeckShortcutPreset(rawValue: duoDeckShortcutPreset) ?? .editing
-        return ScrollView(.horizontal) {
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(group.shortcuts) { shortcut in
                     Button {
@@ -464,15 +545,17 @@ struct PortraitStreamScreen: View {
                         latched = []
                     } label: {
                         Label(shortcut.title, systemImage: shortcut.symbol)
-                            .font(.subheadline)
-                            .frame(minHeight: 32)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Palette.text)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 36)
+                            .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Palette.control))
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
                 }
             }
         }
-        .scrollIndicators(.hidden)
-        .frame(height: 48)
+        .frame(height: 44)
     }
 
     /// The same Apps button and thumbnails as landscape, at the board's tighter size, with no
@@ -1019,7 +1102,6 @@ private struct KeyRow: View {
         .arrow("chevron.down", HIDKey.downArrow, "Down arrow"),
         .arrow("chevron.up", HIDKey.upArrow, "Up arrow"),
         .arrow("chevron.right", HIDKey.rightArrow, "Right arrow"),
-        .keyboard,
         .spotlight,
     ]
 
@@ -1033,9 +1115,9 @@ private struct KeyRow: View {
         }
     }
 
-    /// One row, or the compact halves' split: the six that name a key, then the four arrows, the
-    /// keyboard and Spotlight. The break falls where the row changes job, not merely where it runs
-    /// out of width.
+    /// One row, or the compact halves' split: the six command/modifier caps first, then arrows +
+    /// optional Spotlight, with the Keyboard toggle pinned consistently at the trailing boundary of
+    /// `.full` (never shifting inward when Spotlight appears/disappears).
     private var rows: [[Key]] {
         guard metrics.splitKeys else { return [shown] }
         return [Array(shown.prefix(6)), Array(shown.dropFirst(6))]
@@ -1047,6 +1129,14 @@ private struct KeyRow: View {
                 HStack(spacing: metrics.keyGap) {
                     ForEach(rows[row].indices, id: \.self) { index in
                         key(rows[row][index])
+                    }
+                    if keys == .full && row == rows.count - 1 {
+                        Rectangle()
+                            .fill(Palette.text.opacity(0.14))
+                            .frame(width: 1, height: max(18, metrics.capHeight - 16))
+                            .padding(.horizontal, 2)
+                        key(.keyboard)
+                            .frame(width: max(46, metrics.capHeight + 6))
                     }
                 }
                 .frame(height: metrics.capHeight)
@@ -1210,7 +1300,6 @@ private struct KeyRow: View {
 struct DuoDeckControlsSettings: View {
     var standalone = true
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("DuoDeck.trackpadLayout") private var layout = "balanced"
     @AppStorage("DuoDeck.shortcutPreset") private var preset = "editing"
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
     @AppStorage("DuoDeck.focusMode") private var focusMode = true
@@ -1218,6 +1307,9 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.haptics") private var haptics = true
     @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
     @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
+    @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
+    @AppStorage("DuoDeck.topBarAutoHide") private var topBarAutoHide = false
+    @AppStorage("DuoDeck.transparentTopBar") private var transparentTopBar = true
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
     @AppStorage(PointerSize.key) private var pointerSize = PointerSize.fallback.rawValue
     @Environment(\.duoEnvironment) private var duo
@@ -1251,9 +1343,9 @@ struct DuoDeckControlsSettings: View {
                     Text("Split with controls").tag(false)
                     Text("Full screen").tag(true)
                 }
-                Picker("Trackpad size", selection: $layout) {
-                    ForEach(DuoDeckPadMode.allCases) { Text($0.title).tag($0.rawValue) }
-                }
+                Toggle("Lock display & window size", isOn: $lockViewportSize)
+                Toggle("Transparent top bar", isOn: $transparentTopBar)
+                Toggle("Auto-hide top bar", isOn: $topBarAutoHide)
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("Pointer speed")
@@ -1325,7 +1417,7 @@ struct DuoDeckControlsSettings: View {
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("Reset control preferences?", isPresented: $resetConfirmation, titleVisibility: .visible) {
             Button("Reset Controls", role: .destructive) {
-                layout = "balanced"
+                UserDefaults.standard.removeObject(forKey: "DuoDeck.portraitSplitOffset")
                 preset = "editing"
                 speed = 1.25
                 focusMode = true
@@ -1333,6 +1425,9 @@ struct DuoDeckControlsSettings: View {
                 haptics = true
                 trackingRaw = ScreenTrackingMode.direct.rawValue
                 portraitFullScreen = false
+                lockViewportSize = false
+                topBarAutoHide = false
+                transparentTopBar = true
                 backScreen = BackScreenMode.off.rawValue
                 pointerSize = PointerSize.fallback.rawValue
                 UserDefaults.standard.removeObject(forKey: ShiftLeftEdge.key)

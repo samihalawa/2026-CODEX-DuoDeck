@@ -638,6 +638,20 @@ enum PointerSize: String, CaseIterable, Identifiable {
 /// The session's live view options, beside Keyboard and Shortcuts rather than in Settings: the back
 /// screen (iPhone Duo), the pointer's size, the window's text size (bigger text means a smaller Mac
 /// window, as Aa) and the stream's resolution (Standard is lighter and quicker than Retina).
+enum TopBarSizeMode: String, CaseIterable, Identifiable {
+    case automatic, compact, regular
+    static let key = "DuoDeck.topBarSize"
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .automatic: return "Auto-resize"
+        case .compact: return "Compact"
+        case .regular: return "Standard"
+        }
+    }
+}
+
 struct SessionViewMenu<Label: View>: View {
     @ObservedObject var client: StreamClient
     @Binding var textScale: Double?
@@ -646,8 +660,11 @@ struct SessionViewMenu<Label: View>: View {
     @AppStorage(PointerSize.key) private var pointer = PointerSize.fallback.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
     @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
-    @AppStorage("DuoDeck.trackpadLayout") private var padSizeRaw = DuoDeckPadMode.balanced.rawValue
     @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
+    @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
+    @AppStorage("DuoDeck.topBarAutoHide") private var topBarAutoHide = false
+    @AppStorage("DuoDeck.transparentTopBar") private var transparentTopBar = true
+    @AppStorage(TopBarSizeMode.key) private var topBarSizeRaw = TopBarSizeMode.automatic.rawValue
     @Environment(\.duoEnvironment) private var duo
     /// Settings keeps the fine slider; these are its usual stops.
     private static var speeds: [(title: String, value: Double)] { [
@@ -677,12 +694,6 @@ struct SessionViewMenu<Label: View>: View {
                 SwiftUI.Label("Tracking mode", systemImage: (ScreenTrackingMode(rawValue: trackingRaw) ?? .direct).systemImage)
             }
             .pickerStyle(.menu)
-            Picker(selection: $padSizeRaw) {
-                ForEach(DuoDeckPadMode.allCases) { Text($0.title).tag($0.rawValue) }
-            } label: {
-                SwiftUI.Label("Trackpad size", systemImage: "rectangle.and.hand.point.up.left")
-            }
-            .pickerStyle(.menu)
             Picker(selection: $portraitFullScreen) {
                 SwiftUI.Label("Split with controls", systemImage: "rectangle.split.1x2").tag(false)
                 SwiftUI.Label("Full screen", systemImage: "rectangle.portrait.inset.filled").tag(true)
@@ -690,6 +701,20 @@ struct SessionViewMenu<Label: View>: View {
                 SwiftUI.Label("Portrait layout", systemImage: portraitFullScreen ? "rectangle.portrait.inset.filled" : "rectangle.split.1x2")
             }
             .pickerStyle(.menu)
+            Divider()
+            Toggle(isOn: $lockViewportSize) {
+                SwiftUI.Label("Lock window size", systemImage: lockViewportSize ? "lock.fill" : "lock.open")
+            }
+            Menu {
+                Picker("Bar size", selection: $topBarSizeRaw) {
+                    ForEach(TopBarSizeMode.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                Toggle("Transparent bar", isOn: $transparentTopBar)
+                Toggle("Auto-hide bar", isOn: $topBarAutoHide)
+            } label: {
+                SwiftUI.Label("Top bar", systemImage: "menubar.rectangle")
+            }
+            Divider()
             Picker(selection: $pointer) {
                 ForEach(PointerSize.allCases) { Text($0.title).tag($0.rawValue) }
             } label: {

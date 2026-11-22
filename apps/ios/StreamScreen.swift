@@ -206,6 +206,13 @@ struct StreamScreen: View {
     @AppStorage("DuoDeck.screenTrackingMode") private var screenTrackingRaw = ScreenTrackingMode.direct.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var pointerSensitivity = 1.25
     @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
+    @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
+    @AppStorage("DuoDeck.topBarAutoHide") private var topBarAutoHide = false
+    @AppStorage("DuoDeck.transparentTopBar") private var transparentTopBar = true
+    @AppStorage(TopBarSizeMode.key) private var topBarSizeRaw = TopBarSizeMode.automatic.rawValue
+    @State private var topBarRevealed = true
+    @State private var topBarInteractionToken = 0
+    @State private var hasSentViewport = false
     /// Larger Picture as it was in effect when the Settings panel opened (`largerPictureNow`), which
     /// the arrangement keeps until the panel closes; nil while it is closed. The panel hangs under row
     /// 1, which the arrangement moves by the picture's growth (157 pt on an 18 Pro Max), so a change
@@ -529,20 +536,24 @@ struct StreamScreen: View {
 
     /// Tells the host the panel size and text scale, now or after `delay` seconds. A newer call
     /// replaces a pending one, so a burst of changes sends only the last. Nothing goes out until the
-    /// panel has been measured, or while disconnected.
+    /// panel has been measured, or while disconnected. When size locking is enabled after the initial
+    /// handshake, automatic resize viewports (from keyboard, split drag, or bar changes) are suppressed.
     private func sendViewport(after delay: Double = 0) {
+        if lockViewportSize && hasSentViewport { return }
         pendingViewport?.cancel()
         pendingViewport = Task { @MainActor in
             if delay > 0 {
                 try? await Task.sleep(for: .seconds(delay))
                 if Task.isCancelled { return }
             }
+            if lockViewportSize && hasSentViewport { return }
             guard client.connected, panelSize.width > 0, panelSize.height > 0 else { return }
             let fps = StreamClient.wantedFPS(remote: client.awayCapsFrameRate)
             #if DEBUG
             print("viewport: \(Self.points(panelSize.width))×\(Self.points(panelSize.height)) pt, scale "
                   + (textScale.map { TextScaleControl.label($0) } ?? "off") + ", \(fps) fps")
             #endif
+            hasSentViewport = true
             client.sendViewport(Viewport(width: Double(panelSize.width),
                                          height: Double(panelSize.height),
                                          scale: textScale,
@@ -1219,22 +1230,111 @@ struct StreamScreen: View {
 
     private func landscape(bar plain: BarMetrics, width: CGFloat, fold: FoldInfo) -> some View {
         // The book pose (docs/iphone-duo-plan.md, (a)): nothing on the fold's band; elsewhere as before.
-        let (bar, stripWidth) = plain.clearing(fold, width: width)
-        return VStack(spacing: 0) {
-            TopBar(client: client, metrics: bar, stripWidth: stripWidth, drawerOpen: $drawerOpen,
-                   keyboardShown: $keyboardShown,
-                   textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
-                   settingsOpen: settingsOpen,
-                   // Apps, Menus, Aa, Keyboard, View, Desktop, Settings, and the strip. The Mac's sound has no
-                   // button: Send Audio and Mute are the Settings panel's switches (the maintainer, 2026-10-27).
-                   menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 7, buttonWidth: bar.buttonWidth,
-                                                gap: bar.gap, thumbWidth: bar.thumbWidth),
-                   narrowWidth: width < 560,
-                   toggleKeyboard: { overlay.toggleKeyboard() },
-                   setSettings: { setSettings($0, restoreKeyboard: $1) },
-                   menusOpened: menusOpened, menusClosed: menusClosed, forceFullControls: tourOnScreen)
-            contentArea(bar: bar)
+        let sizeMode = TopBarSizeMode(rawValue: topBarSizeRaw) ?? .automatic
+        let adaptiveBar = plain.adapted(mode: sizeMode, keyboardShown: keyboardShown, narrowWidth: width < 640)
+        let (bar, stripWidth) = adaptiveBar.clearing(fold, width: width)
+        let keepBarOpen = drawerOpen || settingsOpen || scaleOpen || keyboardShown || windowMenu != nil || tourOnScreen
+        let barVisible = !topBarAutoHide || topBarRevealed || keepBarOpen
+        let autoHideKey = "\(topBarAutoHide)-\(topBarRevealed)-\(topBarInteractionToken)-\(keepBarOpen)"
+
+        return ZStack(alignment: .top) {
+            if transparentTopBar {
+                // Atmospheric layout: the stream fills full-screen behind the frosted top bar so
+                // live desktop colors glow subtly through it while keeping the visual footprint minimal.
+                contentArea(bar: bar)
+                    .padding(.top, 0)
+            } else {
+                VStack(spacing: 0) {
+                    if barVisible { Spacer().frame(height: bar.height) }
+                    contentArea(bar: bar)
+                }
+            }
+
+            if barVisible {
+                TopBar(client: client, metrics: bar, stripWidth: stripWidth, drawerOpen: $drawerOpen,
+                       keyboardShown: $keyboardShown,
+                       textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
+                       lockViewportSize: $lockViewportSize,
+                       settingsOpen: settingsOpen,
+                       // Apps, Menus, Aa, Keyboard, View, Desktop, Settings, and the strip.
+                       menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 7, buttonWidth: bar.buttonWidth,
+                                                    gap: bar.gap, thumbWidth: bar.thumbWidth),
+                       narrowWidth: width < 560,
+                       transparentTopBar: transparentTopBar,
+                       toggleKeyboard: {
+                           topBarInteractionToken += 1
+                           overlay.toggleKeyboard()
+                       },
+                       setSettings: {
+                           topBarInteractionToken += 1
+                           setSettings($0, restoreKeyboard: $1)
+                       },
+                       menusOpened: {
+                           topBarInteractionToken += 1
+                           menusOpened()
+                       },
+                       menusClosed: menusClosed,
+                       onInteract: { topBarInteractionToken += 1 },
+                       forceFullControls: tourOnScreen)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            } else {
+                topBarRevealPill(width: width, fold: fold)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
+        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: barVisible)
+        .animation(.spring(response: 0.32, dampingFraction: 0.86), value: bar.height)
+        .onChange(of: lockViewportSize) { _, locked in
+            if !locked { sendViewport() }
+        }
+        .onChange(of: topBarAutoHide) { _, enabled in
+            topBarRevealed = true
+            if enabled { topBarInteractionToken += 1 }
+        }
+        .task(id: autoHideKey) {
+            guard topBarAutoHide, topBarRevealed, !keepBarOpen else { return }
+            try? await Task.sleep(for: .seconds(3.5))
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                topBarRevealed = false
+            }
+        }
+    }
+
+    private func topBarRevealPill(width: CGFloat, fold: FoldInfo) -> some View {
+        let leading = DuoPosture.leadingPage(fold)
+        return HStack {
+            Button {
+                topBarInteractionToken += 1
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                    topBarRevealed = true
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                    Text(client.macName.isEmpty ? "Controls" : client.macName)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                    if lockViewportSize {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Palette.accent)
+                    }
+                }
+                .foregroundStyle(.white.opacity(0.92))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial, in: Capsule(style: .continuous))
+                .overlay(Capsule(style: .continuous).strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75))
+                .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Show top controls bar")
+        }
+        .frame(width: leading ?? width)
+        .frame(maxWidth: .infinity, alignment: leading != nil ? .topLeading : .top)
+        .padding(.top, 6)
     }
 
     /// `largerKeyboard`: Larger Picture's keyboard on a phone (see `body`), nil otherwise.
@@ -1494,6 +1594,48 @@ struct BarMetrics {
                                     thumbWidth: 92, thumbHeight: 58, thumbRadius: 9,
                                     thumbSpacing: 14, thumbPad: 10, thumbFade: 0.88,
                                     showsTextSize: true, settingsWidth: 340)
+
+    /// Condensed bar metrics used dynamically during software keyboard activation, narrow widths,
+    /// or when the user chooses Compact bar sizing in View -> Top bar.
+    var condensed: BarMetrics {
+        BarMetrics(height: 56, padding: 12, gap: 8,
+                   buttonWidth: 52, buttonHeight: 44, buttonSpacing: 2,
+                   thumbWidth: 74, thumbHeight: 42, thumbRadius: 8,
+                   thumbSpacing: 10, thumbPad: 6, thumbFade: 0.88,
+                   showsTextSize: showsTextSize, settingsWidth: settingsWidth)
+    }
+
+    func adapted(mode: TopBarSizeMode, keyboardShown: Bool, narrowWidth: Bool) -> BarMetrics {
+        switch mode {
+        case .compact: return condensed
+        case .regular: return self
+        case .automatic: return (keyboardShown || narrowWidth) ? condensed : self
+        }
+    }
+}
+
+/// Atmospheric translucent backdrop for top bars, keeping icons and labels crisp in both light and dark modes.
+private struct TopBarBackdrop: View {
+    let transparent: Bool
+
+    var body: some View {
+        Group {
+            if transparent {
+                ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    Color.black.opacity(0.42)
+                }
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.14))
+                        .frame(height: 0.5)
+                }
+            } else {
+                Palette.bar
+            }
+        }
+        .ignoresSafeArea(edges: .top)
+    }
 }
 
 private struct TopBar: View {
@@ -1508,10 +1650,12 @@ private struct TopBar: View {
     @Binding var scaleOpen: Bool
     @Binding var windowMenu: UInt32?
     @Binding var latched: KeyModifiers
+    @Binding var lockViewportSize: Bool
     let settingsOpen: Bool
     /// Whether the bar holds the Menus button and still a whole thumbnail (`MacMenuButton.fits`).
     let menusFit: Bool
     var narrowWidth = false
+    var transparentTopBar = true
     let toggleKeyboard: () -> Void
     /// Opens or closes the Settings panel; the second argument says whether closing puts the
     /// keyboard back (see `StreamScreen.setSettings`).
@@ -1519,158 +1663,234 @@ private struct TopBar: View {
     /// The Menus pull-down opened and went (see `StreamScreen.menusOpened`).
     let menusOpened: () -> Void
     let menusClosed: () -> Void
+    var onInteract: () -> Void = {}
 
     var forceFullControls = false
     @AppStorage("DuoDeck.focusMode") private var focusMode = true
+    @Environment(\.colorScheme) private var systemColorScheme
 
     var body: some View {
         Group {
             if focusMode && !forceFullControls {
-                if narrowWidth {
-                    HStack(spacing: 4) {
-                        Button {
-                            setSettings(false, false)
-                            drawerOpen.toggle()
-                        } label: {
-                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
-                        }
-                        .tourTarget(.apps)
-                        Button {
-                            setSettings(false, false)
-                            client.select(.desktop)
-                        } label: {
-                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
-                        }
-                        Button {
-                            setSettings(false, false)
-                            toggleKeyboard()
-                        } label: {
-                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
-                        }
-                        .tourTarget(.keyboard)
-                        DuoDeckShortcutsMenu(client: client, latched: $latched)
-                        SessionViewMenu(client: client, textScale: $textScale) {
-                            StreamControlLabel(title: "View", symbol: "eye")
-                        }
-                        Button { setSettings(!settingsOpen, true) } label: {
-                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
-                        }
-                        .tourTarget(.settings)
-                    }
-                    .buttonStyle(.plain)
-                    .frame(height: metrics.height)
-                    .padding(.horizontal, 10)
-                    .background(Palette.bar.ignoresSafeArea(edges: .top))
+                if narrowWidth || keyboardShown {
+                    scrollableFocusBar
                 } else if stripWidth != nil {
                     // Book pose: keep Apps + Mac name on the left page and the remaining actions on the
                     // right page so nothing straddles the vertical fold.
                     HStack(spacing: metrics.gap) {
-                        Button {
-                            setSettings(false, false)
-                            drawerOpen.toggle()
-                        } label: {
-                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
-                        }
-                        .frame(width: 72)
-                        .tourTarget(.apps)
-                        Text(client.macName.isEmpty ? "Mac" : client.macName)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        appsActionButton
+                            .frame(width: 72)
+                        macTitleBadge
                         Spacer(minLength: 12)
-                        Button {
-                            setSettings(false, false)
-                            client.select(.desktop)
-                        } label: {
-                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
-                        }
-                        .frame(width: 64)
-                        Button {
-                            setSettings(false, false)
-                            toggleKeyboard()
-                        } label: {
-                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
-                        }
-                        .frame(width: 72)
-                        .tourTarget(.keyboard)
+                        if lockViewportSize { lockChip }
+                        keyboardActionButton
+                            .frame(width: 72)
                         DuoDeckShortcutsMenu(client: client, latched: $latched)
                             .frame(width: 72)
-                        SessionViewMenu(client: client, textScale: $textScale) {
-                            StreamControlLabel(title: "View", symbol: "eye")
-                        }
-                        .frame(width: 58)
-                        Button { setSettings(!settingsOpen, true) } label: {
-                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
-                        }
-                        .frame(width: 68)
-                        .tourTarget(.settings)
+                        viewMenuButton
+                            .frame(width: 58)
+                        desktopActionButton
+                            .frame(width: 64)
+                        settingsActionButton
+                            .frame(width: 68)
                     }
                     .buttonStyle(.plain)
                     .frame(height: metrics.height)
                     .padding(.horizontal, metrics.padding)
-                    .background(Palette.bar.ignoresSafeArea(edges: .top))
+                    .background(TopBarBackdrop(transparent: transparentTopBar))
                 } else {
                     HStack(spacing: 12) {
-                        Text(client.macName.isEmpty ? "Mac" : client.macName)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        macTitleBadge
+                        if lockViewportSize { lockChip }
                         Spacer(minLength: 8)
-                        Button {
-                            setSettings(false, false)
-                            drawerOpen.toggle()
-                        } label: {
-                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
-                        }
-                        .frame(width: 68)
-                        .tourTarget(.apps)
-                        Button {
-                            setSettings(false, false)
-                            client.select(.desktop)
-                        } label: {
-                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
-                        }
-                        .frame(width: 68)
-                        Button {
-                            setSettings(false, false)
-                            toggleKeyboard()
-                        } label: {
-                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
-                        }
-                        .frame(width: 76)
-                        .tourTarget(.keyboard)
+                        appsActionButton
+                            .frame(width: 68)
+                        keyboardActionButton
+                            .frame(width: 76)
                         DuoDeckShortcutsMenu(client: client, latched: $latched)
                             .frame(width: 76)
-                        SessionViewMenu(client: client, textScale: $textScale) {
-                            StreamControlLabel(title: "View", symbol: "eye")
-                        }
-                        .frame(width: 60)
-                        Button { setSettings(!settingsOpen, true) } label: {
-                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
-                        }
-                        .frame(width: 68)
-                        .tourTarget(.settings)
+                        viewMenuButton
+                            .frame(width: 60)
+                        desktopActionButton
+                            .frame(width: 68)
+                        settingsActionButton
+                            .frame(width: 68)
                     }
                     .buttonStyle(.plain)
                     .frame(height: metrics.height)
                     .padding(.horizontal, metrics.padding)
-                    .background(Palette.bar.ignoresSafeArea(edges: .top))
+                    .background(TopBarBackdrop(transparent: transparentTopBar))
                 }
             } else {
                 fullBar
             }
         }
+        .environment(\.colorScheme, transparentTopBar ? .dark : systemColorScheme)
+    }
+
+    /// Horizontally scrollable controls + standardized Keyboard & command keys strip when the
+    /// keyboard is active or width is constrained.
+    private var scrollableFocusBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                if !narrowWidth && stripWidth == nil {
+                    macTitleBadge
+                        .padding(.trailing, 4)
+                }
+                if lockViewportSize { lockChip }
+                appsActionButton
+                    .frame(minWidth: 54)
+                keyboardActionButton
+                    .frame(minWidth: 62)
+                if keyboardShown {
+                    HStack(spacing: 6) {
+                        quickCommandCap("esc")
+                        quickCommandCap("tab")
+                        quickCommandCap("ctrl")
+                        quickCommandCap("opt")
+                        quickCommandCap("cmd")
+                        quickCommandCap("shift")
+                    }
+                    .padding(.horizontal, 4)
+                }
+                DuoDeckShortcutsMenu(client: client, latched: $latched)
+                    .frame(minWidth: 64)
+                viewMenuButton
+                    .frame(minWidth: 52)
+                desktopActionButton
+                    .frame(minWidth: 58)
+                settingsActionButton
+                    .frame(minWidth: 58)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .frame(minHeight: metrics.height)
+        }
+        .frame(height: metrics.height)
+        .background(TopBarBackdrop(transparent: transparentTopBar))
+    }
+
+    private var macTitleBadge: some View {
+        Text(client.macName.isEmpty ? "Mac" : client.macName)
+            .font(.headline)
+            .lineLimit(1)
+            .truncationMode(.middle)
+    }
+
+    private var lockChip: some View {
+        Button {
+            onInteract()
+            lockViewportSize.toggle()
+        } label: {
+            Label("Locked", systemImage: "lock.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Palette.accent)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(Capsule(style: .continuous).fill(Palette.accent.opacity(0.16)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Window size locked. Tap to unlock")
+    }
+
+    private var appsActionButton: some View {
+        Button {
+            onInteract()
+            setSettings(false, false)
+            drawerOpen.toggle()
+        } label: {
+            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+        }
+        .tourTarget(.apps)
+    }
+
+    private var desktopActionButton: some View {
+        Button {
+            onInteract()
+            setSettings(false, false)
+            client.select(.desktop)
+        } label: {
+            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
+        }
+    }
+
+    private var keyboardActionButton: some View {
+        Button {
+            onInteract()
+            setSettings(false, false)
+            toggleKeyboard()
+        } label: {
+            StreamControlLabel(title: "Keyboard",
+                               symbol: keyboardShown ? "keyboard.chevron.compact.down" : "keyboard",
+                               selected: keyboardShown)
+        }
+        .tourTarget(.keyboard)
+    }
+
+    private var viewMenuButton: some View {
+        SessionViewMenu(client: client, textScale: $textScale) {
+            StreamControlLabel(title: "View", symbol: "eye")
+        }
+    }
+
+    private var settingsActionButton: some View {
+        Button {
+            onInteract()
+            setSettings(!settingsOpen, true)
+        } label: {
+            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
+        }
+        .tourTarget(.settings)
+    }
+
+    @ViewBuilder
+    private func quickCommandCap(_ label: String) -> some View {
+        let on: Bool = {
+            switch label {
+            case "ctrl": return latched.contains(.control)
+            case "opt": return latched.contains(.option)
+            case "cmd": return latched.contains(.command)
+            case "shift": return latched.contains(.shift)
+            default: return false
+            }
+        }()
+        Button {
+            onInteract()
+            switch label {
+            case "esc":
+                KeyChord.press(HIDKey.escape, with: latched).forEach { client.sendFromKeyRow($0) }
+                latched = []
+            case "tab":
+                KeyChord.press(HIDKey.tab, with: latched).forEach { client.sendFromKeyRow($0) }
+                latched = []
+            case "ctrl": latched.formSymmetricDifference(.control)
+            case "opt": latched.formSymmetricDifference(.option)
+            case "cmd": latched.formSymmetricDifference(.command)
+            case "shift": latched.formSymmetricDifference(.shift)
+            default: break
+            }
+        } label: {
+            Text(label)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(on ? Palette.accent : Palette.text)
+                .padding(.horizontal, 11)
+                .frame(height: max(38, metrics.buttonHeight - 4))
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(on ? Palette.controlOpen : Palette.control))
+        }
+        .buttonStyle(.plain)
     }
 
     private var fullBar: some View {
         let btnW: CGFloat = narrowWidth ? 44 : metrics.buttonWidth
         let barGap: CGFloat = narrowWidth ? 4 : metrics.gap
         let barPad: CGFloat = narrowWidth ? 8 : metrics.padding
-        return HStack(spacing: barGap) {
+        let row = HStack(spacing: barGap) {
             button(open: drawerOpen, symbol: "magnifyingglass", label: "Apps",
                    width: btnW,
                    accessibilityLabel: drawerOpen ? "Close the app list" : "Open the app list",
                    action: {
+                       onInteract()
                        setSettings(false, false)
                        withAnimation(.easeOut(duration: 0.18)) { drawerOpen.toggle() }
                    })
@@ -1680,7 +1900,7 @@ private struct TopBar: View {
                         pad: metrics.thumbPad, fade: metrics.thumbFade, menuFor: $windowMenu)
                 .opacity(scaleOpen ? 0.2 : 1)      // the ruler is centred on Aa and reaches over the strip's end
                 .allowsHitTesting(!scaleOpen)
-                .frame(width: stripWidth)
+                .frame(width: stripWidth ?? (keyboardShown ? 220 : nil))
                 .tourTarget(.strip, inset: WindowStrip.tourBand(pad: metrics.thumbPad))
             // The book pose: the fold's band, and nothing on it, between the strip and the buttons.
             if stripWidth != nil { Spacer(minLength: 0) }
@@ -1708,10 +1928,23 @@ private struct TopBar: View {
             button(open: keyboardShown, symbol: "keyboard", label: "Keyboard",
                    width: btnW,
                    accessibilityLabel: keyboardShown ? "Hide the keyboard" : "Show the keyboard",
-                   action: { setSettings(false, false); toggleKeyboard() })
+                   action: { onInteract(); setSettings(false, false); toggleKeyboard() })
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)
                 .tourTarget(.keyboard)
+
+            if keyboardShown {
+                HStack(spacing: 5) {
+                    quickCommandCap("esc")
+                    quickCommandCap("tab")
+                    quickCommandCap("ctrl")
+                    quickCommandCap("opt")
+                    quickCommandCap("cmd")
+                    quickCommandCap("shift")
+                }
+                .opacity(scaleOpen ? 0 : 1)
+                .allowsHitTesting(!scaleOpen)
+            }
 
             SessionViewMenu(client: client, textScale: $textScale) {
                 SessionViewBarLabel(width: btnW, height: metrics.buttonHeight,
@@ -1723,7 +1956,7 @@ private struct TopBar: View {
             button(open: client.active == .desktop, symbol: "desktopcomputer", label: "Desktop",
                    width: btnW,
                    accessibilityLabel: "Show the full Mac desktop",
-                   action: { client.select(.desktop) })
+                   action: { onInteract(); client.select(.desktop) })
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)
 
@@ -1731,17 +1964,27 @@ private struct TopBar: View {
             button(open: settingsOpen, symbol: "gearshape", label: "Settings",
                    width: btnW,
                    accessibilityLabel: settingsOpen ? "Close settings" : "Settings for \(client.macName.isEmpty ? "the Mac" : client.macName)",
-                   action: { setSettings(!settingsOpen, true) })
+                   action: { onInteract(); setSettings(!settingsOpen, true) })
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)
                 .tourTarget(.settings)
         }
+        return Group {
+            if keyboardShown {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    row
+                        .padding(.horizontal, barPad)
+                }
+            } else {
+                row
+                    .padding(.horizontal, barPad)
+            }
+        }
         .animation(.easeOut(duration: 0.16), value: scaleOpen)
         .animation(.easeOut(duration: 0.18), value: client.menus.hasMenus)
         .frame(height: metrics.height)
-        .padding(.horizontal, barPad)
-        // The bar's colour runs to the screen edge; its contents stay inside the safe area.
-        .background(Palette.bar.ignoresSafeArea(edges: .top))
+        // Atmospheric translucent or opaque bar surface extends under the top safe area.
+        .background(TopBarBackdrop(transparent: transparentTopBar))
     }
 
     private func button(open: Bool, symbol: String, label: String, width: CGFloat? = nil, accessibilityLabel: String,
@@ -2353,25 +2596,40 @@ private struct WindowThumbnail: View {
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(width: width, height: height)
+                .clipped()
         } else {
-            VStack(spacing: 0) {
-                Palette.thumbTitleBar.frame(height: 9)
-                Palette.thumbBody
+            ZStack {
+                LinearGradient(
+                    colors: [Palette.thumbBody.opacity(0.75), Palette.thumbTitleBar.opacity(0.62)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                VStack(spacing: 0) {
+                    Palette.thumbTitleBar.opacity(0.85).frame(height: 9)
+                    Spacer(minLength: 0)
+                    AppIcon(image: icon, name: window.appName, size: max(18, height * 0.34),
+                            radius: 5, fontSize: 10)
+                        .opacity(0.45)
+                    Spacer(minLength: 0)
+                }
             }
+            .background(.ultraThinMaterial)
+            .frame(width: width, height: height)
         }
     }
 
-    /// The app icon, with a 2 pt bar-coloured ring around it so it cuts through the thumbnail's
-    /// edge and its halo instead of sitting on top of them.
+    /// The app icon with a translucent frosted cutout border so it blends naturally on both
+    /// atmospheric transparent bars and standard bars without opaque rectangular artifacts.
     private var appBadge: some View {
         let corner = (badge * 0.29).rounded()      // 7 at 24 pt, 6 at 22
         return AppIcon(image: icon, name: window.appName, size: badge, radius: corner,
                        fontSize: (badge * 0.42).rounded())
-            .background {
-                RoundedRectangle(cornerRadius: corner + 2, style: .continuous)
-                    .fill(Palette.bar)
-                    .frame(width: badge + 4, height: badge + 4)
-            }
+            .padding(2)
+            .background(.ultraThinMaterial,
+                        in: RoundedRectangle(cornerRadius: corner + 2, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: corner + 2, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.75))
     }
 }
 
@@ -2665,3 +2923,13 @@ extension PhonePortraitLayout.Streaming {
         }
     }
 }
+
+#if DEBUG
+#Preview("Stream · Atmospheric Landscape") {
+    StreamScreen(client: MockCatalog.client())
+}
+
+#Preview("Stream · Keyboard Active") {
+    StreamScreen(client: MockCatalog.client(), keyboardShown: true)
+}
+#endif
