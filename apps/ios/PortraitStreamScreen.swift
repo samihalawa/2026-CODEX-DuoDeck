@@ -1434,6 +1434,8 @@ struct DuoDeckGestureGuide: View {
                 gesture("Switch apps", detail: "Choose Apps, then select an app or window.", symbol: "square.grid.2x2")
                 gesture("Type", detail: "Open Keyboard or use a connected keyboard.", symbol: "keyboard")
                 gesture("Zoom the picture", detail: "Pinch the live picture. Move it with two fingers while zoomed.", symbol: "arrow.up.left.and.arrow.down.right")
+                gesture("Invisible screen trackpad", detail: "Switch View → Tracking mode to Trackpad to steer the cursor directly on the full-screen canvas while pinching still zooms.", symbol: "rectangle.and.hand.point.up.left")
+                gesture("Portrait full screen & Mac display", detail: "Switch View → Portrait layout to Full screen and choose Mac display resolutions or Vertical desktop to fill tall screens.", symbol: "rectangle.portrait.on.rectangle.portrait")
             }
             Section("Three-finger gestures") {
                 gesture("Mission Control", detail: "Swipe up.", symbol: "rectangle.3.group")

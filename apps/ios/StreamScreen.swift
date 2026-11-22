@@ -1561,6 +1561,47 @@ private struct TopBar: View {
                     .frame(height: metrics.height)
                     .padding(.horizontal, 10)
                     .background(Palette.bar.ignoresSafeArea(edges: .top))
+                } else if stripWidth != nil {
+                    // Book pose: keep Apps + Mac name on the left page and the remaining actions on the
+                    // right page so nothing straddles the vertical fold.
+                    HStack(spacing: metrics.gap) {
+                        Button {
+                            setSettings(false, false)
+                            drawerOpen.toggle()
+                        } label: {
+                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+                        }
+                        .frame(width: 72)
+                        .tourTarget(.apps)
+                        Text(client.macName.isEmpty ? "Mac" : client.macName)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer(minLength: 12)
+                        Button {
+                            setSettings(false, false)
+                            toggleKeyboard()
+                        } label: {
+                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
+                        }
+                        .frame(width: 78)
+                        .tourTarget(.keyboard)
+                        DuoDeckShortcutsMenu(client: client, latched: $latched)
+                            .frame(width: 78)
+                        SessionViewMenu(client: client, textScale: $textScale) {
+                            StreamControlLabel(title: "View", symbol: "eye")
+                        }
+                        .frame(width: 64)
+                        Button { setSettings(!settingsOpen, true) } label: {
+                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
+                        }
+                        .frame(width: 72)
+                        .tourTarget(.settings)
+                    }
+                    .buttonStyle(.plain)
+                    .frame(height: metrics.height)
+                    .padding(.horizontal, metrics.padding)
+                    .background(Palette.bar.ignoresSafeArea(edges: .top))
                 } else {
                     HStack(spacing: 16) {
                         Text(client.macName.isEmpty ? "Mac" : client.macName)

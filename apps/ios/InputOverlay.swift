@@ -465,8 +465,29 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         padCatchUp()
         let travel = max(trackpadSensitivity, 0.3) / max(1, zoom.scale)
         pad.move(dx: Double(dx / xSpan * travel), dy: Double(dy / ySpan * travel))
+        followTrackpadCursorIfZoomed(in: rect)
         setOwnPointer(pad.cursor, .trackpad)
         send(.pointer(.move, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+    }
+
+    private func followTrackpadCursorIfZoomed(in rect: CGRect) {
+        var z = zoom
+        guard z.isZoomed, bounds.width > 0, bounds.height > 0, rect.width > 0, rect.height > 0 else { return }
+        let at1x = CGPoint(x: rect.minX + pad.cursor.x * rect.width, y: rect.minY + pad.cursor.y * rect.height)
+        let onScreen = z.zoomedPoint(at1x, in: bounds.size)
+        let marginX = min(40, bounds.width * 0.12)
+        let marginY = min(40, bounds.height * 0.12)
+        var shiftX: CGFloat = 0
+        var shiftY: CGFloat = 0
+        if onScreen.x < marginX { shiftX = marginX - onScreen.x }
+        else if onScreen.x > bounds.width - marginX { shiftX = (bounds.width - marginX) - onScreen.x }
+        if onScreen.y < marginY { shiftY = marginY - onScreen.y }
+        else if onScreen.y > bounds.height - marginY { shiftY = (bounds.height - marginY) - onScreen.y }
+        guard shiftX != 0 || shiftY != 0 else { return }
+        z.aim(scale: z.scale,
+              offset: CGSize(width: z.offset.width + shiftX, height: z.offset.height + shiftY),
+              in: bounds.size)
+        zoom = z
     }
 
     private func trackpadClick(down: PointerAction, up: PointerAction) {
