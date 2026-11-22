@@ -59,6 +59,11 @@ package final class StreamCoordinator {
     private var pipelineHasFrame = false
     /// `--synthetic`: the Desktop source streams a test pattern instead of the screen.
     let synthetic: Bool
+    let displayResolution: DisplayResolutionManager
+    package var onDisplayModeReset: (@MainActor () -> Void)?
+    package var displayResolutionOptions: [DisplayResolutionOption] {
+        displayResolution.options(virtualDisplaySupported: appKitLoop)
+    }
     let syntheticCapture = SyntheticCapture()
     /// A locked Mac's placeholder (LockPolicy): a black still, no ScreenCaptureKit.
     let stillCapture = StillCapture()
@@ -387,6 +392,7 @@ package final class StreamCoordinator {
         if !appKitLoop { config.virtualDisplay = false }
         self.config = config
         self.synthetic = synthetic
+        self.displayResolution = DisplayResolutionManager(hardwareEnabled: !synthetic)
         self.appKitLoop = appKitLoop
         self.hostVersion = hostVersion
         let env = ProcessInfo.processInfo.environment
@@ -615,7 +621,22 @@ package final class StreamCoordinator {
                 // On the software encoder, the hardware is checked only while someone watches.
                 if count == 0 { self.stopRecheck() } else { self.devicesPresent(firstArrived: wasEmpty) }
                 // With nobody left, no window comes back at the unlock (LockPolicy.Restore).
-                if count == 0 { self.restore.devicesLeft() }
+                if count == 0 {
+                    self.restore.devicesLeft()
+                    self.catalog.preferredDisplayID = nil
+                    let restoredDisplay = self.displayResolution.restoreSync()
+                    if self.pendingConfig?.displayMode != nil || self.config.displayMode != nil {
+                        self.pendingConfig?.displayMode = nil
+                        self.config.displayMode = nil
+                        self.onDisplayModeReset?()
+                    }
+                    if restoredDisplay {
+                        Task { @MainActor in
+                            await self.catalog.refreshWindows()
+                            self.publishSettings()
+                        }
+                    }
+                }
                 if count > 0 {
                     self.deselectWhenSettled = false
                 } else if self.switching {
@@ -914,7 +935,20 @@ package final class StreamCoordinator {
         // A flip still waiting for its viewport stays out of a settings change that needs no restart;
         // a restart takes it anyway (select's commit).
         let away = flipWait == nil ? awayWanted : awayRunning
-        guard restartNeeded(for: new, away: away) else { pendingConfig = nil; adopt(new, away: away); return }
+        guard restartNeeded(for: new, away: away) else {
+            let displayChanged = new.displayMode != config.displayMode
+            pendingConfig = nil
+            adopt(new, away: away)
+            if displayChanged {
+                if await displayResolution.apply(modeID: new.displayMode, viewport: viewport) {
+                    catalog.preferredDisplayID = displayResolution.captureDisplayID
+                    catalog.preferMainDisplay = virtualDisplay && catalog.preferredDisplayID == nil
+                    await catalog.refreshWindows()
+                }
+                publishSettings()
+            }
+            return
+        }
         // A restart, not a pick. Turning the virtual display off still brings the staged window
         // forward as it comes home: select's commit decides that, from the value it actually takes.
         await select(active)   // committed inside select
@@ -977,6 +1011,7 @@ package final class StreamCoordinator {
         if newFPS != fps || newScale != captureScale { return true }
         if pair.bitrate != bitrate || new.prioritizeSpeed != config.prioritizeSpeed { return true }
         if new.virtualDisplay != config.virtualDisplay, case .window = active { return true }
+        if new.displayMode != config.displayMode { return true }
         return false
     }
 
@@ -996,7 +1031,7 @@ package final class StreamCoordinator {
             || old.requirePairing != next.requirePairing {
             remote?.apply(next)
         }
-        catalog.preferMainDisplay = next.virtualDisplay   // the Desktop source must never capture the virtual display
+        catalog.preferMainDisplay = next.virtualDisplay && catalog.preferredDisplayID == nil   // the Desktop source must never capture the virtual stage display
         if old.virtualDisplay && !next.virtualDisplay {
             stage.release()        // idempotent: select has already sent a staged window home
             status.update { $0.lastStageFailure = nil }
@@ -1281,6 +1316,17 @@ package final class StreamCoordinator {
             // The streamed window went back to its own size: the stream restarts at it now, as after a
             // fit (`applyViewportToActiveWindow`), not at the catalog's next look up to 2 s later.
             if restored { await catalog.refreshWindows() }
+            if target.displayMode == "vertical:auto",
+               await displayResolution.apply(modeID: "vertical:auto", viewport: v) {
+                catalog.preferredDisplayID = displayResolution.captureDisplayID
+                catalog.preferMainDisplay = virtualDisplay && catalog.preferredDisplayID == nil
+                await catalog.refreshWindows()
+                if active != .none {
+                    await select(active)
+                    if flipWaited { await applyPending() }
+                    return
+                }
+            }
             await applyViewportToActiveWindow()
             if flipWaited { await applyPending() }
         case .pairingWanted:
@@ -1332,7 +1378,8 @@ package final class StreamCoordinator {
             // its key on the trust list as the Mac's status has it now (`sessionPaired`).
             let (ok, refused) = DeviceSettings.accepted(change, virtualDisplayAvailable: appKitLoop,
                                                         fromRemote: routes[id].map { $0.isRemote } ?? true,
-                                                        paired: sessionPaired(id))
+                                                        paired: sessionPaired(id),
+                                                        acceptedDisplayModes: displayResolution.acceptedIDs(virtualDisplaySupported: appKitLoop))
             if !refused.isEmpty { print("Settings from \(who) refused: \(refused.joined(separator: ", "))") }
             if !ok.isEmpty, !shuttingDown {
                 let before = target
@@ -1864,6 +1911,8 @@ package final class StreamCoordinator {
         // included (a newer value replaces the one that started it during the awaits above), and
         // a restart raises nothing on its own.
         var cameHome = false
+        var displayChanged = false
+        let previousDisplayMode = config.displayMode
         if let first = pendingConfig {
             if config.virtualDisplay && !first.virtualDisplay {
                 // The virtual display block below is skipped once the flag reads off: send the
@@ -1881,6 +1930,17 @@ package final class StreamCoordinator {
         } else if awayWanted != awayRunning {
             // Home or away changed (a device joined or left): the pipeline takes the other pair.
             adopt(config, away: awayWanted)
+        }
+        if source == .none {
+            // Do not keep display configuration altered while idle with no source? Keep if user explicitly tested on Mac unless count == 0.
+            if catalog.clientCount == 0 {
+                displayChanged = displayResolution.restoreSync()
+                catalog.preferredDisplayID = nil
+            }
+        } else if config.displayMode != previousDisplayMode || (config.displayMode != nil && config.displayMode?.hasPrefix("vertical:") == true && source == .desktop) {
+            displayChanged = await displayResolution.apply(modeID: config.displayMode, viewport: viewport)
+            catalog.preferredDisplayID = displayResolution.captureDisplayID
+            catalog.preferMainDisplay = virtualDisplay && catalog.preferredDisplayID == nil
         }
         fps = effectiveFPS             // the devices' panel rate (highest), or 60 before any has said
         // The devices' links: judged afresh when the stream comes back at another quality or not at
@@ -1911,7 +1971,7 @@ package final class StreamCoordinator {
         // looked at again first. The Desktop reads its display after this and after its own await.
         let lookBefore = (display: catalog.display?.displayID, age: catalog.lookAge)
         if source != .none, !(synthetic && source == .desktop) {
-            if refreshCatalog { await catalog.refreshWindows() } else { await lookAgainIfStale() }
+            if refreshCatalog || displayChanged { await catalog.refreshWindows() } else { await lookAgainIfStale() }
             guard !shuttingDown else { active = .none; broadcastList(); return }
         }
 
@@ -2920,6 +2980,7 @@ package final class StreamCoordinator {
         audio.shutdown()   // "Audio stopped: DuoDeck is quitting."
         restoreFits(keeping: nil)
         stage.release()
+        displayResolution.restoreSync()
     }
 
     /// The CLI's default path at a signal (HostShutdown.installKeyRelease), just before it dies of it:
@@ -2929,6 +2990,7 @@ package final class StreamCoordinator {
     package func releaseKeysForExit() {
         injector.releaseAll()
         restoreFits(keeping: nil)
+        displayResolution.restoreSync()
     }
 
     // MARK: A window DuoDeck sized goes back (WindowRestore, issue #57)
@@ -3483,7 +3545,8 @@ package final class StreamCoordinator {
                                  away: away,
                                  link: link,
                                  audioNote: t.sendAudio ? s.audio?.note : nil,
-                                 sessionPaired: sessionPaired(id))
+                                 sessionPaired: sessionPaired(id),
+                                 displayModes: displayResolution.options(virtualDisplaySupported: appKitLoop))
     }
 
     /// Whether connection `id`'s key is on this Mac's trust list now, as the status snapshot lists it

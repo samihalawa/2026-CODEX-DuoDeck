@@ -673,7 +673,7 @@ private final class FingerCounter: UIGestureRecognizer {
 /// It also records whether a second finger landed while it was tracking. What UIKit's long press
 /// does with a touch beyond `numberOfTouchesRequired` (adopt it, ignore it, end) is not specified,
 /// so the count is taken here, from the view's own touches, before the superclass sees the new one.
-private final class FingerTracker: UILongPressGestureRecognizer {
+final class FingerTracker: UILongPressGestureRecognizer {
     private(set) var sawSecondFinger = false
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {

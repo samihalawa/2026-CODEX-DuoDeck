@@ -50,7 +50,9 @@ struct PointerPresence: Equatable {
     var portrait = false
     /// The iPhone Duo's back screen is a trackpad (BackScreen.swift): its arrow shows in every layout.
     var backPad = false
-    private var padArrow: Bool { portrait || backPad }
+    /// Screen canvas acts as an invisible trackpad (Tracking mode: Trackpad): its arrow shows in every layout.
+    var screenTrackpad = false
+    private var padArrow: Bool { portrait || backPad || screenTrackpad }
     /// Something streams (`client.active != .none`).
     var streaming = false
     /// Q2: the Pencil draws no pointer, hovering or touching (the request, by its letter). True draws

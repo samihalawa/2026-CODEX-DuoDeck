@@ -67,11 +67,14 @@ package struct HostConfig: Equatable, Sendable {
     /// shared field: the maintainer, 2026-10-27, docs/audio-plan.md's Q8 as revised); each device mutes it for
     /// itself alone, and that never reaches the Mac.
     package var sendAudio: Bool
+    /// Session-only host display resolution or vertical mirror identifier (`nil` = Mac default).
+    package var displayMode: String?
 
     /// Every knob is required, so the compiler finds each place that builds one when a knob is added.
     package init(maxFPS: Int, captureScale: CGFloat, bitrate: Int, awayBitrate: Int, awayCaptureScale: CGFloat,
                  prioritizeSpeed: Bool, virtualDisplay: Bool, directWireless: Bool, remoteAccess: Bool, remotePort: Int,
-                 internetAccess: Bool, requirePairing: Bool, shareClipboard: Bool, sendAudio: Bool) {
+                 internetAccess: Bool, requirePairing: Bool, shareClipboard: Bool, sendAudio: Bool,
+                 displayMode: String? = nil) {
         self.maxFPS = maxFPS
         self.captureScale = captureScale
         self.bitrate = bitrate
@@ -86,6 +89,7 @@ package struct HostConfig: Equatable, Sendable {
         self.requirePairing = requirePairing
         self.shareClipboard = shareClipboard
         self.sendAudio = sendAudio
+        self.displayMode = (displayMode == "native" || displayMode?.isEmpty == true) ? nil : displayMode
     }
 
     /// The spike's knobs, formerly the `let`s at the top of the CLI's main.swift: the CLI's values, and
@@ -134,6 +138,7 @@ package struct HostConfig: Equatable, Sendable {
         c.awayCaptureScale = awayCaptureScale >= 1.5 ? 2 : 1
         c.awayBitrate = min(max(awayBitrate, 1_000_000), 200_000_000)
         if remotePort != 0 && !(1024...65535).contains(remotePort) { c.remotePort = Self.defaultRemotePort }
+        if c.displayMode == "native" || c.displayMode?.isEmpty == true { c.displayMode = nil }
         return c
     }
 
@@ -160,6 +165,7 @@ package struct HostConfig: Equatable, Sendable {
         if requirePairing != new.requirePairing { parts.append("require pairing \(onOff(requirePairing)) → \(onOff(new.requirePairing))") }
         if shareClipboard != new.shareClipboard { parts.append("share clipboard \(onOff(shareClipboard)) → \(onOff(new.shareClipboard))") }
         if sendAudio != new.sendAudio { parts.append("send audio \(onOff(sendAudio)) → \(onOff(new.sendAudio))") }
+        if displayMode != new.displayMode { parts.append("display \(displayMode ?? "default") → \(new.displayMode ?? "default")") }
         return parts.isEmpty ? "no change" : parts.joined(separator: ", ")
     }
 

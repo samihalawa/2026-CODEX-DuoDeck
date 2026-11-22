@@ -645,6 +645,9 @@ struct SessionViewMenu<Label: View>: View {
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
     @AppStorage(PointerSize.key) private var pointer = PointerSize.fallback.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
+    @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
+    @AppStorage("DuoDeck.trackpadLayout") private var padSizeRaw = DuoDeckPadMode.balanced.rawValue
+    @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
     @Environment(\.duoEnvironment) private var duo
     /// Settings keeps the fine slider; these are its usual stops.
     private static var speeds: [(title: String, value: Double)] { [
@@ -666,6 +669,27 @@ struct SessionViewMenu<Label: View>: View {
                 }
                 .pickerStyle(.menu)
             }
+            Picker(selection: $trackingRaw) {
+                ForEach(ScreenTrackingMode.allCases) { mode in
+                    SwiftUI.Label(mode.title, systemImage: mode.systemImage).tag(mode.rawValue)
+                }
+            } label: {
+                SwiftUI.Label("Tracking mode", systemImage: (ScreenTrackingMode(rawValue: trackingRaw) ?? .direct).systemImage)
+            }
+            .pickerStyle(.menu)
+            Picker(selection: $padSizeRaw) {
+                ForEach(DuoDeckPadMode.allCases) { Text($0.title).tag($0.rawValue) }
+            } label: {
+                SwiftUI.Label("Trackpad size", systemImage: "rectangle.and.hand.point.up.left")
+            }
+            .pickerStyle(.menu)
+            Picker(selection: $portraitFullScreen) {
+                SwiftUI.Label("Split with controls", systemImage: "rectangle.split.1x2").tag(false)
+                SwiftUI.Label("Full screen", systemImage: "rectangle.portrait.inset.filled").tag(true)
+            } label: {
+                SwiftUI.Label("Portrait layout", systemImage: portraitFullScreen ? "rectangle.portrait.inset.filled" : "rectangle.split.1x2")
+            }
+            .pickerStyle(.menu)
             Picker(selection: $pointer) {
                 ForEach(PointerSize.allCases) { Text($0.title).tag($0.rawValue) }
             } label: {
@@ -701,6 +725,24 @@ struct SessionViewMenu<Label: View>: View {
                     SwiftUI.Label("Resolution", systemImage: "display")
                 }
                 .pickerStyle(.menu)
+                if let modes = client.settings.host?.displayModes, !modes.isEmpty {
+                    Picker(selection: Binding(
+                        get: { shown.displayMode ?? "native" },
+                        set: { client.changeSettings(HostSettingsChange(displayMode: $0)) })) {
+                        ForEach(modes) { opt in
+                            if let detail = opt.detail, !detail.isEmpty {
+                                Text("\(opt.label) (\(detail))").tag(opt.id)
+                            } else {
+                                Text(opt.label).tag(opt.id)
+                            }
+                        }
+                    } label: {
+                        SwiftUI.Label("Mac display", systemImage: (shown.displayMode?.hasPrefix("vertical:") == true)
+                                      ? "rectangle.portrait.on.rectangle.portrait"
+                                      : "menubar.dock.rectangle")
+                    }
+                    .pickerStyle(.menu)
+                }
             }
         } label: {
             label()

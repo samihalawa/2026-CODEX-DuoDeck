@@ -5,9 +5,9 @@ import Foundation
 import StreamProtocol
 #endif
 
-/// One of the seven settings a device can change on the Mac.
+/// One of the settings a device can change on the Mac.
 enum SettingsField: CaseIterable, Hashable {
-    case maxFPS, bitrate, captureScale, prioritizeSpeed, virtualDisplay, directWireless, sendAudio
+    case maxFPS, bitrate, captureScale, prioritizeSpeed, virtualDisplay, directWireless, sendAudio, displayMode
 }
 
 extension HostSettingsState {
@@ -30,6 +30,7 @@ extension HostSettingsChange {
         if virtualDisplay != nil { f.append(.virtualDisplay) }
         if directWireless != nil { f.append(.directWireless) }
         if sendAudio != nil { f.append(.sendAudio) }
+        if displayMode != nil { f.append(.displayMode) }
         return f
     }
 
@@ -43,6 +44,7 @@ extension HostSettingsChange {
         case .virtualDisplay: HostSettingsChange(virtualDisplay: virtualDisplay)
         case .directWireless: HostSettingsChange(directWireless: directWireless)
         case .sendAudio: HostSettingsChange(sendAudio: sendAudio)
+        case .displayMode: HostSettingsChange(displayMode: displayMode)
         }
     }
 
@@ -53,7 +55,8 @@ extension HostSettingsChange {
                            prioritizeSpeed: other.prioritizeSpeed ?? prioritizeSpeed,
                            virtualDisplay: other.virtualDisplay ?? virtualDisplay,
                            directWireless: other.directWireless ?? directWireless,
-                           sendAudio: other.sendAudio ?? sendAudio)
+                           sendAudio: other.sendAudio ?? sendAudio,
+                           displayMode: other.displayMode ?? displayMode)
     }
 }
 
@@ -115,6 +118,7 @@ struct SettingsLedger: Equatable {
             // Rule 9: applied(to:) would set the field anyway, and a nil differs from any value.
             if field == .directWireless, shown.directWireless == nil { continue }
             if field == .sendAudio, shown.sendAudio == nil { continue }
+            if field == .displayMode, shown.displayMode == nil { continue }
             // Rule 10: the Mac would refuse it.
             if field == .directWireless, host?.takesDirectWireless == false { continue }
             let single = change.only(field)

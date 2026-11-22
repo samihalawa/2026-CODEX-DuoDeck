@@ -16,6 +16,38 @@ import StreamProtocol
 /// only a key input, so an input method's composition and dictation reach the Mac (#138,
 /// `TextComposition`), in whichever keyboards and dictation languages the person set up in iOS
 /// Settings; Scribble never writes into it, as the Pencil is the Mac's mouse here.
+/// How touches over the live Mac picture itself are interpreted.
+enum ScreenTrackingMode: String, CaseIterable, Identifiable {
+    /// Touching the screen clicks directly where your finger lands; drag scrolls.
+    case direct
+    /// Touching anywhere on the screen steers the Mac cursor like a full-screen invisible trackpad;
+    /// two fingers pinch to zoom or pan to scroll.
+    case trackpad
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .direct: "Direct Touch"
+        case .trackpad: "Trackpad"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .direct: "Direct"
+        case .trackpad: "Trackpad"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .direct: "hand.point.up.left"
+        case .trackpad: "rectangle.and.hand.point.up.left"
+        }
+    }
+}
+
 final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// Pixel size of the streamed frame. Zero until the host's parameter sets arrive; input is
     /// ignored until then, since there is nothing on screen to aim at.
@@ -127,6 +159,30 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// The finger pan opened the Mac's scroll (its stroke was the Mac's when it began): its steps and its
     /// end go out. A pan whose stroke the picture took sends nothing at all.
     private var fingerScroll = false
+    /// How finger touches on the picture behave (Direct Touch vs full-screen invisible Trackpad).
+    var trackingMode: ScreenTrackingMode = .direct {
+        didSet {
+            guard trackingMode != oldValue else { return }
+            updateTrackingModeState()
+        }
+    }
+    /// Pointer travel multiplier in `.trackpad` mode (shared with the portrait trackpad setting).
+    var trackpadSensitivity: CGFloat = 1.0
+    /// Current anchor and reseed generation from `StreamClient.pointerFeedState`.
+    var pointerFeed: () -> (anchor: CGPoint?, reseeds: Int) = { (nil, 0) }
+    private var pad = PadCursor()
+    private let tracker = FingerTracker()
+    private weak var twoFingerTap: UITapGestureRecognizer?
+    private static let trackSlop: CGFloat = 2
+    private var trackLast: CGPoint = .zero
+    private var trackLive = false
+    private var trackSuspended = false
+    private var trackpadDragging = false
+    private var padHeldModifiers: KeyModifiers = []
+    private let clickHaptic = UIImpactFeedbackGenerator(style: .rigid)
+    private var hapticsEnabled: Bool {
+        UserDefaults.standard.object(forKey: "DuoDeck.haptics") as? Bool ?? true
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -153,9 +209,27 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
         longPress.minimumPressDuration = 0.45
         longPress.allowedTouchTypes = directOnly
+        longPress.delegate = self
         addGestureRecognizer(longPress)
 
-        // One or two fingers scroll; the Mac gets the content delta, not a drag.
+        let twoTap = UITapGestureRecognizer(target: self, action: #selector(handleTwoFingerTap))
+        twoTap.numberOfTapsRequired = 1
+        twoTap.numberOfTouchesRequired = 2
+        twoTap.allowedTouchTypes = directOnly
+        twoTap.isEnabled = false
+        addGestureRecognizer(twoTap)
+        twoFingerTap = twoTap
+
+        tracker.addTarget(self, action: #selector(handleTrack))
+        tracker.minimumPressDuration = 0
+        tracker.allowableMovement = .greatestFiniteMagnitude
+        tracker.allowedTouchTypes = directOnly
+        tracker.cancelsTouchesInView = false
+        tracker.delegate = self
+        tracker.isEnabled = false
+        addGestureRecognizer(tracker)
+
+        // One or two fingers scroll in Direct mode; two fingers scroll in Trackpad mode so one finger steers the cursor.
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
         pan.minimumNumberOfTouches = 1
         pan.maximumNumberOfTouches = 2
@@ -191,6 +265,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         // are the picture's (StreamZoom.Stroke, from the same touches): no recognizer of their own, so
         // nothing of theirs can begin, end or scroll the Mac behind the rule's back.
         scrollPan = pan
+        strokes.holding = { [weak self] in self?.trackpadDragging ?? false }
         strokes.onSilenced = { [weak self] in self?.strokeSilenced() }
         strokes.onGesture = { [weak self] gesture, fingers in _ = self?.sendGesture(gesture, fingers) }
         strokes.onTouch = { [weak self] touch in self?.zoomTouch(touch) }
@@ -260,7 +335,16 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// wherever the last event left it, and hover state (menus, tooltips) follows it.
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         guard !strokes.silent else { return }
+        if trackingMode == .trackpad {
+            trackpadClick(down: .leftDown, up: .leftUp)
+            return
+        }
         tap(at: gesture.location(in: self))
+    }
+
+    @objc private func handleTwoFingerTap(_ gesture: UITapGestureRecognizer) {
+        guard trackingMode == .trackpad, !strokes.silent else { return }
+        trackpadClick(down: .rightDown, up: .rightUp)
     }
 
     /// A finger's tap at `point`, in this view: the pointer goes there, then clicks. What is being
@@ -275,10 +359,35 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         sendPointer(.leftUp, at: point, clamped: false)
     }
 
-    /// Long press: the right button, since there is no second finger to spare for it. What is composed
-    /// goes, and what was typed is forgotten, only past the letterbox's guard, as for a tap.
+    /// Long press: in Direct Touch mode, sends a right-click at the finger. In invisible Trackpad mode,
+    /// holds the left button down so the finger can drag windows or selections across the screen.
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard !strokes.silent else { return }
+        if trackingMode == .trackpad {
+            switch gesture.state {
+            case .began:
+                guard videoSize != .zero else { return }
+                trackpadDragging = true
+                if hapticsEnabled { clickHaptic.impactOccurred(intensity: 1.0) }
+                padCatchUp()
+                setOwnPointer(pad.cursor, .trackpad)
+                forgetTyped()
+                pressKeyRowModifiers()
+                send(.pointer(.leftDown, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+            case .ended, .cancelled, .failed:
+                guard trackpadDragging else { return }
+                trackpadDragging = false
+                if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.5) }
+                padCatchUp()
+                setOwnPointer(pad.cursor, .trackpad)
+                send(.pointer(.leftUp, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+                releaseKeyRowModifiers()
+                consumeLatch()
+            default:
+                break
+            }
+            return
+        }
         guard gesture.state == .began else { return }
         setOwnPointer(nil, .none)
         let point = gesture.location(in: self)
@@ -286,6 +395,101 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         forgetTyped()
         sendPointer(.rightDown, at: point, clamped: false)
         sendPointer(.rightUp, at: point, clamped: false)
+    }
+
+    // MARK: - Screen trackpad helpers
+
+    private func updateTrackingModeState() {
+        let isPad = trackingMode == .trackpad
+        scrollPan?.minimumNumberOfTouches = isPad ? 2 : 1
+        tracker.isEnabled = isPad
+        twoFingerTap?.isEnabled = isPad
+        trackSuspended = false
+        trackLive = false
+        if trackpadDragging {
+            trackpadDragging = false
+            send(.pointer(.leftUp, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+            releaseKeyRowModifiers()
+        }
+        if isPad {
+            padAdoptAnchor()
+            setOwnPointer(pad.cursor, .trackpad)
+        } else {
+            setOwnPointer(nil, .none)
+        }
+    }
+
+    private func padAdoptAnchor() {
+        let f = pointerFeed()
+        pad.adopt(anchor: f.anchor, reseeds: f.reseeds)
+    }
+
+    private func padCatchUp() {
+        let f = pointerFeed()
+        pad.catchUp(anchor: f.anchor, reseeds: f.reseeds)
+    }
+
+    private var trackerDriving: Bool {
+        trackingMode == .trackpad
+            && (tracker.state == .began || tracker.state == .changed)
+            && !tracker.sawSecondFinger && !trackSuspended
+    }
+
+    @objc private func handleTrack() {
+        guard trackingMode == .trackpad, !strokes.silent else { return }
+        switch tracker.state {
+        case .began:
+            trackSuspended = false
+            trackLive = false
+            trackLast = tracker.location(in: self)
+        case .changed:
+            guard trackerDriving else { return }
+            let location = tracker.location(in: self)
+            if !trackLive {
+                let d = hypot(location.x - trackLast.x, location.y - trackLast.y)
+                guard d >= Self.trackSlop else { return }
+                trackLive = true
+            }
+            moveTrackpadCursor(dx: location.x - trackLast.x, dy: location.y - trackLast.y)
+            trackLast = location
+        default:
+            break
+        }
+    }
+
+    private func moveTrackpadCursor(dx: CGFloat, dy: CGFloat) {
+        let rect = videoRect
+        let xSpan = rect.width > 0 ? rect.width : bounds.width
+        let ySpan = rect.height > 0 ? rect.height : bounds.height
+        guard xSpan > 0, ySpan > 0 else { return }
+        padCatchUp()
+        let travel = max(trackpadSensitivity, 0.3) / max(1, zoom.scale)
+        pad.move(dx: Double(dx / xSpan * travel), dy: Double(dy / ySpan * travel))
+        setOwnPointer(pad.cursor, .trackpad)
+        send(.pointer(.move, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+    }
+
+    private func trackpadClick(down: PointerAction, up: PointerAction) {
+        guard videoSize != .zero else { return }
+        if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.8) }
+        padCatchUp()
+        setOwnPointer(pad.cursor, .trackpad)
+        forgetTyped()
+        pressKeyRowModifiers()
+        send(.pointer(down, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+        send(.pointer(up, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+        releaseKeyRowModifiers()
+        consumeLatch()
+    }
+
+    private func pressKeyRowModifiers() {
+        padHeldModifiers = latchedModifiers
+        KeyChord.modifiersDown(padHeldModifiers).forEach(send)
+    }
+
+    private func releaseKeyRowModifiers() {
+        KeyChord.modifiersUp(padHeldModifiers).forEach(send)
+        padHeldModifiers = []
     }
 
     /// Finger pan: scrolling, not dragging, shaped like a Mac trackpad gesture so the Mac
@@ -302,10 +506,20 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         if gesture.state == .began {
             zoomStroke.panBegan()
             fingerScroll = zoomStroke.scrollsMac
+            if trackingMode == .trackpad, fingerScroll {
+                trackSuspended = true
+                padCatchUp()
+            }
         }
         guard fingerScroll else { return }
         if gesture.state == .ended || gesture.state == .cancelled { fingerScroll = false }
-        scroll(gesture, .finger)
+        if trackingMode == .trackpad {
+            let at = pad.cursor
+            setOwnPointer(at, .trackpad)
+            scroll(gesture, .finger, fixedNormalized: (Double(at.x), Double(at.y)), preservePointer: true)
+        } else {
+            scroll(gesture, .finger)
+        }
     }
 
     /// Every direct touch on the picture, from the stroke observer: who the stroke belongs to, and while
@@ -358,11 +572,13 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         }
     }
 
-    private func scroll(_ gesture: UIPanGestureRecognizer, _ source: ScrollSource) {
+    private func scroll(_ gesture: UIPanGestureRecognizer, _ source: ScrollSource,
+                        fixedNormalized: (x: Double, y: Double)? = nil,
+                        preservePointer: Bool = false) {
         let velocity = gesture.state == .ended ? gesture.velocity(in: self) : .zero
         guard source != .finger else {
             scroll(gesture.state, at: gesture.location(in: self), translation: gesture.translation(in: self),
-                   velocity: velocity, from: source)
+                   velocity: velocity, from: source, fixedNormalized: fixedNormalized, preservePointer: preservePointer)
             return
         }
         // The iPad's trackpad or a wheel: no finger moves, and the pan's location runs on with its
@@ -392,16 +608,18 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// Every scroll on the picture, finger, trackpad or wheel: `state`, where it is (the finger, or the
     /// pointer), its translation since it began and, at its end, its velocity (points per second).
     func scroll(_ state: UIGestureRecognizer.State, at location: CGPoint, translation: CGPoint,
-                velocity: CGPoint, from source: ScrollSource) {
+                velocity: CGPoint, from source: ScrollSource,
+                fixedNormalized: (x: Double, y: Double)? = nil,
+                preservePointer: Bool = false) {
         switch state {
         case .began:
-            setOwnPointer(nil, .none)
+            if !preservePointer { setOwnPointer(nil, .none) }
             lastPanTranslation = .zero
             // A new pan while the last flick is still coasting ends the coast first, so the Mac
             // sees momentumEnded before this gesture's began. (touchesBegan has usually done it.)
             momentum.stop()
             scrollFactor = ScrollDirection.factor(source.direction, reversed: StreamClient.reverseScrollOn)
-            guard let p = normalized(location, clamped: true) else { return }
+            guard let p = fixedNormalized ?? normalized(location, clamped: true) else { return }
             if source.phased {
                 send(.scrollGesture(.began, x: p.x, y: p.y))
                 scrollGestureOpen = true
@@ -410,17 +628,17 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
             // translation, and a wheel's single notch has no change after it (measured in the iOS 27
             // simulator: began at 3 pt, ended 0.2 s later at 3 pt): sent here. A finger's pan begins
             // once it has moved, and its first change carries that, as always.
-            if source != .finger { scrolled(to: translation, at: location) }
+            if source != .finger { scrolled(to: translation, at: location, fixedNormalized: fixedNormalized) }
         case .changed:
-            scrolled(to: translation, at: location)
+            scrolled(to: translation, at: location, fixedNormalized: fixedNormalized)
         case .ended, .cancelled:
             // What a trackpad's or a wheel's last event moved, if its change never came.
-            if source != .finger, state == .ended { scrolled(to: translation, at: location) }
+            if source != .finger, state == .ended { scrolled(to: translation, at: location, fixedNormalized: fixedNormalized) }
             lastPanTranslation = .zero
             // A wheel never opened a gesture: nothing to close, and no coast.
             guard scrollGestureOpen else { return }
             scrollGestureOpen = false
-            let p = normalized(location, clamped: true) ?? (x: 0.5, y: 0.5)
+            let p = fixedNormalized ?? normalized(location, clamped: true) ?? (x: 0.5, y: 0.5)
             send(.scrollGesture(.ended, x: p.x, y: p.y))
             // Only a real lift coasts. A cancel means the system took the touch (an alert, a
             // system gesture), and flinging the Mac's content then would be a surprise.
@@ -432,7 +650,8 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
 
     /// The scroll from the last translation sent to `translation`, as fractions of the picture, at
     /// `location`: nothing when it has not moved, or before there is a picture.
-    private func scrolled(to translation: CGPoint, at location: CGPoint) {
+    private func scrolled(to translation: CGPoint, at location: CGPoint,
+                          fixedNormalized: (x: Double, y: Double)? = nil) {
         let rect = videoRect
         guard rect.width > 0, rect.height > 0 else { return }
         let rawDelta = CGPoint(x: translation.x - lastPanTranslation.x, y: translation.y - lastPanTranslation.y)
@@ -440,7 +659,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         let dx = scaled.x / rect.width
         let dy = scaled.y / rect.height
         lastPanTranslation = translation
-        guard dx != 0 || dy != 0, let p = normalized(location, clamped: true) else { return }
+        guard dx != 0 || dy != 0, let p = fixedNormalized ?? normalized(location, clamped: true) else { return }
         send(.scroll(x: p.x, y: p.y, dx: Double(dx) * scrollFactor, dy: Double(dy) * scrollFactor))
     }
 
@@ -466,6 +685,9 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// fingers scroll.
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        if trackingMode == .trackpad && (gestureRecognizer === tracker || other === tracker) {
+            return true
+        }
         let scrolls = [trackpadScroll, wheelScroll].compactMap { $0 }
         return (scrolls.contains { $0 === gestureRecognizer } && other === hover)
             || (scrolls.contains { $0 === other } && gestureRecognizer === hover)
@@ -509,10 +731,25 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        if window == nil { momentum.stop(); releaseForwardedKeys(); commitComposition("left its window") }
+        if window == nil {
+            momentum.stop(); releaseForwardedKeys(); commitComposition("left its window")
+            if trackpadDragging {
+                trackpadDragging = false
+                send(.pointer(.leftUp, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
+                releaseKeyRowModifiers()
+            }
+        }
         // A session's start, a rotation's other layout, a reconnect's new screen: the proxy takes the
         // keyboard for a hardware keyboard (on the next turn, once this view is settled in the window).
-        if window != nil { keyboardProxy?.joined(self) } else { keyboardProxy?.left(self) }
+        if window != nil {
+            keyboardProxy?.joined(self)
+            if trackingMode == .trackpad {
+                padAdoptAnchor()
+                setOwnPointer(pad.cursor, .trackpad)
+            }
+        } else {
+            keyboardProxy?.left(self)
+        }
         #if DEBUG
         if window != nil {
             InputScript.overlay = self
@@ -671,9 +908,19 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     private var pointerButtonIsSecondary = false
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        // Any new touch stops a coasting flick, the way touching a moving list does on iOS (and
-        // before the Pencil clicks on content that is still sliding).
-        momentum.stop()
+        // Any new touch stops a coasting flick in Direct mode (or 2+ fingers in Trackpad mode).
+        let directDown = event?.touches(for: self)?
+            .filter { $0.type == .direct && $0.phase != .ended && $0.phase != .cancelled }.count ?? 0
+        if trackingMode == .direct || directDown >= 2 || Self.pointerTouch(in: touches) != nil {
+            momentum.stop()
+        }
+        if trackingMode == .trackpad,
+           let first = touches.first, first.type == .direct {
+            if directDown == touches.filter({ $0.type == .direct }).count {
+                padAdoptAnchor()
+            }
+            clickHaptic.prepare()
+        }
         guard let touch = Self.pointerTouch(in: touches) else {
             super.touchesBegan(touches, with: event); return
         }
@@ -1553,6 +1800,9 @@ struct InputOverlay: UIViewRepresentable {
     /// view.
     var readZoom: (() -> StreamZoom)? = nil
     var writeZoom: ((StreamZoom) -> Void)? = nil
+    var trackingMode: ScreenTrackingMode = .direct
+    var trackpadSensitivity: CGFloat = 1.0
+    var pointerFeed: () -> (anchor: CGPoint?, reseeds: Int) = { (nil, 0) }
 
     func makeUIView(context: Context) -> InputOverlayView {
         let view = InputOverlayView(frame: .zero)
@@ -1570,6 +1820,9 @@ struct InputOverlay: UIViewRepresentable {
         uiView.macRepeatsKeys = macRepeatsKeys
         uiView.readZoom = readZoom
         uiView.writeZoom = writeZoom
+        uiView.pointerFeed = pointerFeed
+        uiView.trackpadSensitivity = trackpadSensitivity
+        uiView.trackingMode = trackingMode
         // Called straight from a UIKit text-input callback, never from inside a SwiftUI update,
         // so writing the binding here needs no hop.
         uiView.onModifiersConsumed = onModifiersConsumed

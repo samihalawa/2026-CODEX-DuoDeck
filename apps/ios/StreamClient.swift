@@ -4110,6 +4110,13 @@ final class StreamClient: ObservableObject {
         renderPointer()
     }
 
+    /// Screen canvas acts as an invisible trackpad (Tracking mode): its arrow shows in every layout. Main thread.
+    func setScreenTrackpad(_ on: Bool) {
+        guard presence.screenTrackpad != on else { return }
+        presence.screenTrackpad = on
+        renderPointer()
+    }
+
     /// How many fingers are on the portrait pad; only Q1's flip reads it. Main thread.
     func trackpadFingers(_ n: Int) {
         presence.fingers(n, now: ProcessInfo.processInfo.systemUptime)

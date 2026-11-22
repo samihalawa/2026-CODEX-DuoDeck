@@ -178,6 +178,29 @@ struct HostSettingsPanel: View {
                     Text("Smooth uses less bandwidth. Crisp shows more text detail."
                          + (offersLargerPicture ? " Larger picture hides window thumbnails while a window streams. Use Apps to switch windows; the layout changes when Settings closes." : ""))
                 }
+                if let modes = state.displayModes, !modes.isEmpty {
+                    Section {
+                        Picker(selection: binding(shown.displayMode ?? "native") { HostSettingsChange(displayMode: $0) }) {
+                            ForEach(modes) { opt in
+                                if let detail = opt.detail, !detail.isEmpty {
+                                    Text("\(opt.label) (\(detail))").tag(opt.id)
+                                } else {
+                                    Text(opt.label).tag(opt.id)
+                                }
+                            }
+                        } label: {
+                            RowTitle(title: "Mac display", since: client.settings.pendingSince(.displayMode))
+                        }
+                        .pickerStyle(.menu)
+                        if (shown.displayMode ?? "native") != "native" {
+                            Button("Restore Mac default") {
+                                client.changeSettings(HostSettingsChange(displayMode: "native"))
+                            }
+                        }
+                    } footer: {
+                        Text("Switches \(mac)’s resolution or verticalizes the whole desktop for this session. Restores automatically when disconnected.")
+                    }
+                }
                 Section {
                     let send = shown.sendAudio
                     Toggle(isOn: binding(send ?? false) { HostSettingsChange(sendAudio: $0) }) {

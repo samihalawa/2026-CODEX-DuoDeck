@@ -15,7 +15,8 @@ extension HostConfig {
         let pair = effective(away: away)
         return StreamSettings(maxFPS: maxFPS, bitrate: pair.bitrate, captureScale: Double(pair.captureScale),
                               prioritizeSpeed: prioritizeSpeed, virtualDisplay: virtualDisplay,
-                              directWireless: directWireless, sendAudio: sendAudio)
+                              directWireless: directWireless, sendAudio: sendAudio,
+                              displayMode: displayMode ?? "native")
     }
 
     /// This config with a device's change laid over it; nil fields keep their value. `package`:
@@ -29,6 +30,7 @@ extension HostConfig {
         if let v = change.virtualDisplay { c.virtualDisplay = v }
         if let v = change.directWireless { c.directWireless = v }
         if let v = change.sendAudio { c.sendAudio = v }
+        if let v = change.displayMode { c.displayMode = (v == "native" || v.isEmpty) ? nil : v }
         return c
     }
 
@@ -77,9 +79,16 @@ enum DeviceSettings {
     /// refusal or a log line (StreamProtocol's HostSettings.swift lists every place a new setting goes).
     /// No defaults: the caller says where the change came from, so a new caller cannot leave it open.
     static func accepted(_ c: HostSettingsChange, virtualDisplayAvailable: Bool, fromRemote: Bool,
-                         paired: Bool) -> (HostSettingsChange, refused: [String]) {
+                         paired: Bool, acceptedDisplayModes: Set<String>? = nil) -> (HostSettingsChange, refused: [String]) {
         var ok = HostSettingsChange(prioritizeSpeed: c.prioritizeSpeed, sendAudio: c.sendAudio)
         var refused: [String] = []
+        if let v = c.displayMode {
+            if v == "native" || (acceptedDisplayModes?.contains(v) ?? false) {
+                ok.displayMode = v
+            } else {
+                refused.append("display mode \(v)")
+            }
+        }
         if let v = c.directWireless {
             if fromRemote {
                 refused.append("direct wireless (not from a remote connection)")

@@ -131,6 +131,11 @@ final class AppModel {
                     settings.config = away ? settings.config.applyingAway(change) : settings.config.applying(change)
                     return settings.config
                 }
+                c.onDisplayModeReset = { [settings] in
+                    if settings.config.displayMode != nil {
+                        settings.config.displayMode = nil
+                    }
+                }
                 // Not in HostConfig (it moves no listener): handed over on its own.
                 remote.setAddressName(settings.remoteAddressName)
                 settings.onAddressNameChange = { [settings, weak remote] in remote?.setAddressName(settings.remoteAddressName) }

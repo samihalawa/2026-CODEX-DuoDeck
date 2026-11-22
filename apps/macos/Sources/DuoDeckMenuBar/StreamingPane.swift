@@ -77,6 +77,23 @@ struct StreamingPane: View {
                 Text("Advanced")
             }
 
+            Section {
+                Picker("Mac display", selection: displayModeBinding) {
+                    ForEach(model.coordinator?.displayResolutionOptions ?? defaultDisplayOptions) { opt in
+                        Text(displayOptionTitle(opt)).tag(opt.id)
+                    }
+                }
+                if settings.config.displayMode != nil {
+                    Button("Restore Mac Default") {
+                        settings.config.displayMode = nil
+                    }
+                }
+            } header: {
+                Text("Mac display")
+            } footer: {
+                Footnote("Switch this Mac’s resolution or verticalize the whole desktop while streaming. Restores automatically when all devices disconnect or DuoDeck quits.")
+            }
+
             if let snapshot = model.coordinator?.status.snapshot, snapshot.softwareEncoder {
                 Section {
                     Warning(snapshot.hardwareEncoderStuck
@@ -99,5 +116,23 @@ struct StreamingPane: View {
                         settings.config = preset.applying(to: settings.config)
                     }
                 })
+    }
+
+    private var displayModeBinding: Binding<String> {
+        Binding(get: { settings.config.displayMode ?? "native" },
+                set: { value in
+                    settings.config.displayMode = (value == "native" || value.isEmpty) ? nil : value
+                })
+    }
+
+    private var defaultDisplayOptions: [DisplayResolutionOption] {
+        [DisplayResolutionOption(id: "native", label: "Default", detail: nil, isVertical: false, isDefault: true)]
+    }
+
+    private func displayOptionTitle(_ opt: DisplayResolutionOption) -> String {
+        if let detail = opt.detail, !detail.isEmpty {
+            return "\(opt.label) (\(detail))"
+        }
+        return opt.label
     }
 }

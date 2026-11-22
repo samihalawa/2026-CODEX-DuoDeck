@@ -47,7 +47,7 @@ enum HIDKey {
 
 // MARK: - DuoDeck control surface
 
-private enum DuoDeckPadMode: String, CaseIterable, Identifiable {
+enum DuoDeckPadMode: String, CaseIterable, Identifiable {
     case compact, balanced, full
 
     var id: String { rawValue }
@@ -253,6 +253,7 @@ struct PortraitStreamScreen: View {
     @AppStorage("DuoDeck.focusMode") private var duoDeckFocusMode = true
     @AppStorage("DuoDeck.shortcutsVisible") private var duoDeckShortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var duoDeckHaptics = true
+    @AppStorage("DuoDeck.screenTrackingMode") private var screenTrackingRaw = ScreenTrackingMode.direct.rawValue
     @State private var controlsSettingsOpen = false
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
@@ -701,7 +702,10 @@ struct PortraitStreamScreen: View {
                          sendGesture: { client.sendGesture($0, fingers: $1) },
                          macRepeatsKeys: { KeyTyping.macRepeats(keyRepeat: client.hostKeyRepeat) },
                          readZoom: { [zoom] in zoom.zoom },
-                         writeZoom: { [zoom] in zoom.set($0) })
+                         writeZoom: { [zoom] in zoom.set($0) },
+                         trackingMode: ScreenTrackingMode(rawValue: screenTrackingRaw) ?? .direct,
+                         trackpadSensitivity: CGFloat(duoDeckPointerSensitivity),
+                         pointerFeed: { let f = client.pointerFeedState; return (f.anchor, f.reseeds) })
         }
         .background(Palette.panel)
         // A locked Mac: its cover over the picture (LockedMac), under the link's line.
@@ -1212,6 +1216,8 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.focusMode") private var focusMode = true
     @AppStorage("DuoDeck.shortcutsVisible") private var shortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var haptics = true
+    @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
+    @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
     @AppStorage(PointerSize.key) private var pointerSize = PointerSize.fallback.rawValue
     @Environment(\.duoEnvironment) private var duo
@@ -1238,6 +1244,13 @@ struct DuoDeckControlsSettings: View {
     private var preferences: some View {
         Form {
             Section {
+                Picker("Tracking mode", selection: $trackingRaw) {
+                    ForEach(ScreenTrackingMode.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                Picker("Portrait layout", selection: $portraitFullScreen) {
+                    Text("Split with controls").tag(false)
+                    Text("Full screen").tag(true)
+                }
                 Picker("Trackpad size", selection: $layout) {
                     ForEach(DuoDeckPadMode.allCases) { Text($0.title).tag($0.rawValue) }
                 }
@@ -1318,6 +1331,8 @@ struct DuoDeckControlsSettings: View {
                 focusMode = true
                 shortcutsVisible = false
                 haptics = true
+                trackingRaw = ScreenTrackingMode.direct.rawValue
+                portraitFullScreen = false
                 backScreen = BackScreenMode.off.rawValue
                 pointerSize = PointerSize.fallback.rawValue
                 UserDefaults.standard.removeObject(forKey: ShiftLeftEdge.key)

@@ -84,15 +84,34 @@ public struct StreamSettings: Codable, Hashable, Sendable {
     /// host without sound (the device's switch shows off and disabled, says to update the Mac, and
     /// never sends it).
     public var sendAudio: Bool?
+    public var displayMode: String?
 
     /// `directWireless` and `sendAudio` have no default: every host must say, so the compiler finds
     /// one that forgets.
     public init(maxFPS: Int, bitrate: Int, captureScale: Double, prioritizeSpeed: Bool, virtualDisplay: Bool,
-                directWireless: Bool?, sendAudio: Bool?) {
+                directWireless: Bool?, sendAudio: Bool?, displayMode: String? = nil) {
         self.maxFPS = maxFPS; self.bitrate = bitrate; self.captureScale = captureScale
         self.prioritizeSpeed = prioritizeSpeed; self.virtualDisplay = virtualDisplay
         self.directWireless = directWireless
         self.sendAudio = sendAudio
+        self.displayMode = displayMode
+    }
+}
+
+/// One host display resolution or vertical mirror option advertised in `HostSettingsState`.
+public struct DisplayResolutionOption: Codable, Equatable, Hashable, Identifiable, Sendable {
+    public var id: String
+    public var label: String
+    public var detail: String?
+    public var isVertical: Bool?
+    public var isDefault: Bool?
+
+    public init(id: String, label: String, detail: String? = nil, isVertical: Bool? = nil, isDefault: Bool? = nil) {
+        self.id = id
+        self.label = label
+        self.detail = detail
+        self.isVertical = isVertical
+        self.isDefault = isDefault
     }
 }
 
@@ -222,17 +241,19 @@ public struct HostSettingsState: Codable, Hashable, Sendable {
     /// device that pairs during its session hears true. Nil from hosts before 2026-10-29, which took
     /// Direct Wireless from any session at home. The connection's own, like `away` and `link`.
     public var sessionPaired: Bool?
+    public var displayModes: [DisplayResolutionOption]?
 
     public init(settings: StreamSettings, persistent: Bool, virtualDisplayAvailable: Bool,
                 virtualDisplayNote: String? = nil, softwareEncoder: Bool, stream: RunningStream? = nil,
                 answering: Int? = nil, away: AwayQuality? = nil, link: LinkReport? = nil, audioNote: String? = nil,
-                sessionPaired: Bool? = nil) {
+                sessionPaired: Bool? = nil, displayModes: [DisplayResolutionOption]? = nil) {
         self.settings = settings; self.persistent = persistent
         self.virtualDisplayAvailable = virtualDisplayAvailable; self.virtualDisplayNote = virtualDisplayNote
         self.softwareEncoder = softwareEncoder; self.stream = stream; self.answering = answering
         self.away = away; self.link = link
         self.audioNote = audioNote
         self.sessionPaired = sessionPaired
+        self.displayModes = displayModes
     }
 }
 
@@ -258,20 +279,22 @@ public struct HostSettingsChange: Codable, Hashable, Sendable {
     /// revised). The beta's hosts (2026-10-20 to 27) refused it, on or off, and named it in their log
     /// ("send audio (set on this Mac only)"), so a device's switch went back to the Mac's value.
     public var sendAudio: Bool?
+    public var displayMode: String?
 
     public init(token: Int? = nil, maxFPS: Int? = nil, bitrate: Int? = nil, captureScale: Double? = nil,
                 prioritizeSpeed: Bool? = nil, virtualDisplay: Bool? = nil, directWireless: Bool? = nil,
-                sendAudio: Bool? = nil) {
+                sendAudio: Bool? = nil, displayMode: String? = nil) {
         self.token = token; self.maxFPS = maxFPS; self.bitrate = bitrate; self.captureScale = captureScale
         self.prioritizeSpeed = prioritizeSpeed; self.virtualDisplay = virtualDisplay
         self.directWireless = directWireless
         self.sendAudio = sendAudio
+        self.displayMode = displayMode
     }
 
     /// All setting fields nil (the token does not count).
     public var isEmpty: Bool {
         maxFPS == nil && bitrate == nil && captureScale == nil && prioritizeSpeed == nil && virtualDisplay == nil
-            && directWireless == nil && sendAudio == nil
+            && directWireless == nil && sendAudio == nil && displayMode == nil
     }
 
     /// `s` with this change laid over it: the device's merge (its ledger, and the DEBUG mock's
@@ -287,6 +310,7 @@ public struct HostSettingsChange: Codable, Hashable, Sendable {
         if let v = virtualDisplay { r.virtualDisplay = v }
         if let v = directWireless { r.directWireless = v }
         if let v = sendAudio { r.sendAudio = v }
+        if let v = displayMode { r.displayMode = v }
         return r
     }
 }

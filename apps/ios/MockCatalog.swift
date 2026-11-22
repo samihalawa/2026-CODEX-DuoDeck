@@ -442,10 +442,19 @@ enum MockCatalog {
             // Send Audio switch and Mute under it show. `nosound` and `nodirect` are older Macs. A
             // paired session (`sessionPaired`, 2026-10-29), whose Direct Wireless switch works.
             settings: StreamSettings(maxFPS: 120, bitrate: 15_000_000, captureScale: 2, prioritizeSpeed: false, virtualDisplay: false,
-                                     directWireless: false, sendAudio: false),
+                                     directWireless: false, sendAudio: false, displayMode: "native"),
             persistent: true, virtualDisplayAvailable: true, softwareEncoder: false,
             stream: RunningStream(width: 2880, height: 1800, fps: 60, mbps: 15, onVirtualDisplay: false),
-            sessionPaired: true)
+            sessionPaired: true,
+            displayModes: [
+                DisplayResolutionOption(id: "native", label: "Default", detail: "1728 × 1117", isVertical: false, isDefault: true),
+                DisplayResolutionOption(id: "vertical:auto", label: "Vertical (Match Device)", detail: "Whole desktop · portrait", isVertical: true, isDefault: false),
+                DisplayResolutionOption(id: "vertical:640x1140", label: "Vertical 640 × 1140", detail: "Large text · 9:16 portrait", isVertical: true, isDefault: false),
+                DisplayResolutionOption(id: "vertical:756x1344", label: "Vertical 756 × 1344", detail: "Balanced · 9:16 portrait", isVertical: true, isDefault: false),
+                DisplayResolutionOption(id: "1168x755", label: "1168 × 755", detail: "HiDPI", isVertical: false, isDefault: false),
+                DisplayResolutionOption(id: "1280x800", label: "1280 × 800", detail: "HiDPI", isVertical: false, isDefault: false),
+                DisplayResolutionOption(id: "1728x1117", label: "1728 × 1117", detail: "Default · HiDPI", isVertical: false, isDefault: true),
+            ])
         switch c {
         case .cli:
             state.persistent = false

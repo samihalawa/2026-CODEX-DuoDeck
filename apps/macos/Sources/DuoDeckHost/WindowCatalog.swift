@@ -139,6 +139,8 @@ final class WindowCatalog {
     /// virtual one. `SCShareableContent.displays` order is not guaranteed once a second display
     /// exists, so pick by ID. Off by default: the default path keeps `displays.first`.
     var preferMainDisplay = false
+    /// Overrides display selection when desktop streaming targets a dedicated mirror display.
+    var preferredDisplayID: CGDirectDisplayID? = nil
 
     /// `--virtual-display`: the window the coordinator has moved onto the virtual display. Set right
     /// after a successful placement, cleared on release. If ScreenCaptureKit stops treating it as
@@ -328,9 +330,14 @@ final class WindowCatalog {
         appliedSeq = seq
         lookedAt = .now
         ownApplication = content.applications.first { $0.processID == Self.ownPID }
-        display = preferMainDisplay
-            ? (content.displays.first { $0.displayID == CGMainDisplayID() } ?? content.displays.first)
-            : content.displays.first
+        if let preferredDisplayID,
+           let match = content.displays.first(where: { $0.displayID == preferredDisplayID }) {
+            display = match
+        } else {
+            display = preferMainDisplay
+                ? (content.displays.first { $0.displayID == CGMainDisplayID() } ?? content.displays.first)
+                : content.displays.first
+        }
         setCaptureIssue(display == nil ? (CGPreflightScreenCaptureAccess() ? .noDisplay : .permission) : nil)
         var visible = content.windows.filter { w in
             guard let app = w.owningApplication, !app.applicationName.isEmpty else { return false }

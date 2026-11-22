@@ -200,9 +200,12 @@ struct StreamScreen: View {
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     /// The Duo's hinge (iOS 27.1, DuoPostureReader): with the fold, the book and laptop poses.
     @Environment(\.duoEnvironment) private var duoEnvironment
-    /// This device's Larger Picture switch (the Settings panel's This iPhone; docs/larger-picture-plan.md).
+    /// Larger Picture switch (the Settings panel's This iPhone; docs/larger-picture-plan.md).
     /// It acts only while a window streams (`largerPictureNow`).
     @AppStorage(StreamClient.largerPictureKey) private var largerPicture = false
+    @AppStorage("DuoDeck.screenTrackingMode") private var screenTrackingRaw = ScreenTrackingMode.direct.rawValue
+    @AppStorage("DuoDeck.pointerSensitivity") private var pointerSensitivity = 1.25
+    @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
     /// Larger Picture as it was in effect when the Settings panel opened (`largerPictureNow`), which
     /// the arrangement keeps until the panel closes; nil while it is closed. The panel hangs under row
     /// 1, which the arrangement moves by the picture's growth (157 pt on an 18 Pro Max), so a change
@@ -272,18 +275,30 @@ struct StreamScreen: View {
                     case .outerLandscape:
                         landscape(bar: .compact, width: geo.size.width, fold: posture.info(in: geo.size))
                     case .innerPortrait:
-                        portrait(metrics: .regular)
+                        if portraitFullScreen && !tourOnScreen {
+                            landscape(bar: .regular, width: geo.size.width, fold: posture.info(in: geo.size))
+                        } else {
+                            portrait(metrics: .regular)
+                        }
                     case .outerPortrait:
-                        portrait(metrics: DuoLayout.phoneArrangement ? .phone : .compact, largerKeyboard: largerKeyboard)
+                        if portraitFullScreen && !tourOnScreen {
+                            landscape(bar: .compact, width: geo.size.width, fold: posture.info(in: geo.size))
+                        } else {
+                            portrait(metrics: DuoLayout.phoneArrangement ? .phone : .compact, largerKeyboard: largerKeyboard)
+                        }
                     }
                 }
                 // Under the pairing overlay and the tour nothing takes a touch: not the bar, and
                 // not the stream's UIKit input view (nor, so, the Pencil, a hover or a key).
                 .allowsHitTesting(!overlayShown && tour == nil)
-                // The pointer sprite follows the layout: the trackpad's arrow shows only in the
-                // laptop layout, and a rotation re-renders it at once; the Mac's arrow stays.
-                .onChange(of: DuoLayout.of(geo.size).isPortrait, initial: true) { _, portrait in
-                    client.setPointerLayout(portrait: portrait)
+                // The pointer sprite follows the layout: the trackpad's arrow shows in split portrait
+                // or whenever Tracking mode is set to Trackpad on the screen canvas.
+                .onChange(of: DuoLayout.of(geo.size).isPortrait && (!portraitFullScreen || tourOnScreen), initial: true) { _, splitPortrait in
+                    client.setPointerLayout(portrait: splitPortrait)
+                }
+                .onChange(of: screenTrackingRaw, initial: true) { _, raw in
+                    let mode = ScreenTrackingMode(rawValue: raw) ?? .direct
+                    client.setScreenTrackpad(mode == .trackpad)
                 }
                 // The clipboard's chip on screen or not: its 20 s run only while it is, and VoiceOver
                 // is told when it first shows (ClipboardPolicy.chipCounts).
@@ -1214,6 +1229,7 @@ struct StreamScreen: View {
                    // button: Send Audio and Mute are the Settings panel's switches (the maintainer, 2026-10-27).
                    menusFit: MacMenuButton.fits(width: width - 2 * bar.padding, buttons: 7, buttonWidth: bar.buttonWidth,
                                                 gap: bar.gap, thumbWidth: bar.thumbWidth),
+                   narrowWidth: width < 560,
                    toggleKeyboard: { overlay.toggleKeyboard() },
                    setSettings: { setSettings($0, restoreKeyboard: $1) },
                    menusOpened: menusOpened, menusClosed: menusClosed, forceFullControls: tourOnScreen)
@@ -1261,7 +1277,10 @@ struct StreamScreen: View {
                              sendGesture: { client.sendGesture($0, fingers: $1) },
                              macRepeatsKeys: { KeyTyping.macRepeats(keyRepeat: client.hostKeyRepeat) },
                              readZoom: { [zoom] in zoom.zoom },
-                             writeZoom: { [zoom] in zoom.set($0) })
+                             writeZoom: { [zoom] in zoom.set($0) },
+                             trackingMode: ScreenTrackingMode(rawValue: screenTrackingRaw) ?? .direct,
+                             trackpadSensitivity: CGFloat(pointerSensitivity),
+                             pointerFeed: { let f = client.pointerFeedState; return (f.anchor, f.reseeds) })
             }
             .background(Palette.panel)
             // A locked Mac: its cover over the picture (LockedMac), under the link's line.
@@ -1492,6 +1511,7 @@ private struct TopBar: View {
     let settingsOpen: Bool
     /// Whether the bar holds the Menus button and still a whole thumbnail (`MacMenuButton.fits`).
     let menusFit: Bool
+    var narrowWidth = false
     let toggleKeyboard: () -> Void
     /// Opens or closes the Settings panel; the second argument says whether closing puts the
     /// keyboard back (see `StreamScreen.setSettings`).
@@ -1506,44 +1526,81 @@ private struct TopBar: View {
     var body: some View {
         Group {
             if focusMode && !forceFullControls {
-                HStack(spacing: 16) {
-                    Text(client.macName.isEmpty ? "Mac" : client.macName)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    Spacer(minLength: 12)
-                    Button {
-                        setSettings(false, false)
-                        drawerOpen.toggle()
-                    } label: {
-                        StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+                if narrowWidth {
+                    HStack(spacing: 4) {
+                        Button {
+                            setSettings(false, false)
+                            drawerOpen.toggle()
+                        } label: {
+                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+                        }
+                        .tourTarget(.apps)
+                        Button {
+                            setSettings(false, false)
+                            client.select(.desktop)
+                        } label: {
+                            StreamControlLabel(title: "Desktop", symbol: "desktopcomputer", selected: client.active == .desktop)
+                        }
+                        Button {
+                            setSettings(false, false)
+                            toggleKeyboard()
+                        } label: {
+                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
+                        }
+                        .tourTarget(.keyboard)
+                        DuoDeckShortcutsMenu(client: client, latched: $latched)
+                        SessionViewMenu(client: client, textScale: $textScale) {
+                            StreamControlLabel(title: "View", symbol: "eye")
+                        }
+                        Button { setSettings(!settingsOpen, true) } label: {
+                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
+                        }
+                        .tourTarget(.settings)
                     }
-                    .frame(width: 76)
-                    .tourTarget(.apps)
-                    Button {
-                        setSettings(false, false)
-                        toggleKeyboard()
-                    } label: {
-                        StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
-                    }
-                    .frame(width: 82)
-                    .tourTarget(.keyboard)
-                    DuoDeckShortcutsMenu(client: client, latched: $latched)
+                    .buttonStyle(.plain)
+                    .frame(height: metrics.height)
+                    .padding(.horizontal, 10)
+                    .background(Palette.bar.ignoresSafeArea(edges: .top))
+                } else {
+                    HStack(spacing: 16) {
+                        Text(client.macName.isEmpty ? "Mac" : client.macName)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer(minLength: 12)
+                        Button {
+                            setSettings(false, false)
+                            drawerOpen.toggle()
+                        } label: {
+                            StreamControlLabel(title: "Apps", symbol: "square.grid.2x2", selected: drawerOpen)
+                        }
+                        .frame(width: 76)
+                        .tourTarget(.apps)
+                        Button {
+                            setSettings(false, false)
+                            toggleKeyboard()
+                        } label: {
+                            StreamControlLabel(title: "Keyboard", symbol: "keyboard", selected: keyboardShown)
+                        }
                         .frame(width: 82)
-                    SessionViewMenu(client: client, textScale: $textScale) {
-                        StreamControlLabel(title: "View", symbol: "eye")
+                        .tourTarget(.keyboard)
+                        DuoDeckShortcutsMenu(client: client, latched: $latched)
+                            .frame(width: 82)
+                        SessionViewMenu(client: client, textScale: $textScale) {
+                            StreamControlLabel(title: "View", symbol: "eye")
+                        }
+                        .frame(width: 64)
+                        Button { setSettings(!settingsOpen, true) } label: {
+                            StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
+                        }
+                        .frame(width: 76)
+                        .tourTarget(.settings)
                     }
-                    .frame(width: 64)
-                    Button { setSettings(!settingsOpen, true) } label: {
-                        StreamControlLabel(title: "Settings", symbol: "gearshape", selected: settingsOpen)
-                    }
-                    .frame(width: 76)
-                    .tourTarget(.settings)
+                    .buttonStyle(.plain)
+                    .frame(height: metrics.height)
+                    .padding(.horizontal, metrics.padding)
+                    .background(Palette.bar.ignoresSafeArea(edges: .top))
                 }
-                .buttonStyle(.plain)
-                .frame(height: metrics.height)
-                .padding(.horizontal, metrics.padding)
-                .background(Palette.bar.ignoresSafeArea(edges: .top))
             } else {
                 fullBar
             }
@@ -1551,8 +1608,12 @@ private struct TopBar: View {
     }
 
     private var fullBar: some View {
-        HStack(spacing: metrics.gap) {
+        let btnW: CGFloat = narrowWidth ? 44 : metrics.buttonWidth
+        let barGap: CGFloat = narrowWidth ? 4 : metrics.gap
+        let barPad: CGFloat = narrowWidth ? 8 : metrics.padding
+        return HStack(spacing: barGap) {
             button(open: drawerOpen, symbol: "magnifyingglass", label: "Apps",
+                   width: btnW,
                    accessibilityLabel: drawerOpen ? "Close the app list" : "Open the app list",
                    action: {
                        setSettings(false, false)
@@ -1573,7 +1634,7 @@ private struct TopBar: View {
             // window's app's. Only while the Mac sent some, and where the bar holds it: with none the
             // strip takes its room back.
             if client.menus.hasMenus, menusFit {
-                MacMenuButton(client: client, width: metrics.buttonWidth, height: metrics.buttonHeight,
+                MacMenuButton(client: client, width: btnW, height: metrics.buttonHeight,
                               spacing: metrics.buttonSpacing, onOpen: menusOpened, onClose: menusClosed)
                     .opacity(scaleOpen ? 0 : 1)    // under the Aa ruler, as the buttons after Aa
                     .allowsHitTesting(!scaleOpen)
@@ -1584,12 +1645,13 @@ private struct TopBar: View {
             // bigger number means a smaller Mac window and bigger text here. The slider unfolds to
             // the right, over the two buttons after it, which fade while it is open.
             TextScaleControl(scale: $textScale, open: $scaleOpen,
-                             width: metrics.buttonWidth, height: metrics.buttonHeight,
+                             width: btnW, height: metrics.buttonHeight,
                              pointsPerStep: metrics.buttonHeight >= 60 ? 44 : 40,
                              offered: client.textScaleOffersOff, available: client.textScaleSelectable)
                 .tourTarget(.textSize)
 
             button(open: keyboardShown, symbol: "keyboard", label: "Keyboard",
+                   width: btnW,
                    accessibilityLabel: keyboardShown ? "Hide the keyboard" : "Show the keyboard",
                    action: { setSettings(false, false); toggleKeyboard() })
                 .opacity(scaleOpen ? 0 : 1)
@@ -1597,13 +1659,14 @@ private struct TopBar: View {
                 .tourTarget(.keyboard)
 
             SessionViewMenu(client: client, textScale: $textScale) {
-                SessionViewBarLabel(width: metrics.buttonWidth, height: metrics.buttonHeight,
+                SessionViewBarLabel(width: btnW, height: metrics.buttonHeight,
                                     spacing: metrics.buttonSpacing)
             }
             .opacity(scaleOpen ? 0 : 1)
             .allowsHitTesting(!scaleOpen)
 
             button(open: client.active == .desktop, symbol: "desktopcomputer", label: "Desktop",
+                   width: btnW,
                    accessibilityLabel: "Show the full Mac desktop",
                    action: { client.select(.desktop) })
                 .opacity(scaleOpen ? 0 : 1)
@@ -1611,6 +1674,7 @@ private struct TopBar: View {
 
             // Leave's old slot: Disconnect is the Settings panel's pinned last row now.
             button(open: settingsOpen, symbol: "gearshape", label: "Settings",
+                   width: btnW,
                    accessibilityLabel: settingsOpen ? "Close settings" : "Settings for \(client.macName.isEmpty ? "the Mac" : client.macName)",
                    action: { setSettings(!settingsOpen, true) })
                 .opacity(scaleOpen ? 0 : 1)
@@ -1620,14 +1684,14 @@ private struct TopBar: View {
         .animation(.easeOut(duration: 0.16), value: scaleOpen)
         .animation(.easeOut(duration: 0.18), value: client.menus.hasMenus)
         .frame(height: metrics.height)
-        .padding(.horizontal, metrics.padding)
+        .padding(.horizontal, barPad)
         // The bar's colour runs to the screen edge; its contents stay inside the safe area.
         .background(Palette.bar.ignoresSafeArea(edges: .top))
     }
 
-    private func button(open: Bool, symbol: String, label: String, accessibilityLabel: String,
+    private func button(open: Bool, symbol: String, label: String, width: CGFloat? = nil, accessibilityLabel: String,
                         action: @escaping () -> Void) -> some View {
-        BarButton(open: open, width: metrics.buttonWidth, height: metrics.buttonHeight,
+        BarButton(open: open, width: width ?? metrics.buttonWidth, height: metrics.buttonHeight,
                   accessibilityLabel: accessibilityLabel, action: action) {
             VStack(spacing: metrics.buttonSpacing) {
                 Image(systemName: symbol)
