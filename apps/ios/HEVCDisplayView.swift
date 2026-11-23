@@ -324,8 +324,14 @@ final class HEVCDisplayView: UIView {
     /// Main thread.
     func setPointer(_ p: CGPoint?) {
         pointer = p
+        if let p { lastPointer = p }
         placeCursor()
     }
+
+    /// Where the sprite last was, a fraction of the frame, kept while it is hidden: what the back
+    /// screen's filled copy follows (BackMirrorView). Main thread.
+    private(set) var lastPointer = CGPoint(x: 0.5, y: 0.5)
+    var pointerFraction: CGPoint { lastPointer }
 
     #if DEBUG
     /// The layout harness (`-DuoDeckPointer`): the frame size the sprite needs, as the host's parameter

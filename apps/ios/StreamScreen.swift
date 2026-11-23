@@ -128,6 +128,9 @@ struct StreamScreen: View {
     @ObservedObject var client: StreamClient
     @State private var drawerOpen = false
     @State private var keyboardShown = false
+    /// DuoDeck's own floating keyboard (FloatingKeyboard.swift): the Keyboard button's, when chosen in View.
+    @StateObject private var floatingKeyboard = FloatingKeyboardState()
+    @AppStorage(FloatingKeyboard.key) private var floatingKeyboardChosen = false
     /// Modifiers held down by the portrait key row until the next key, character or click uses
     /// them. Lives up here so rotating the iPad does not drop a half-typed shortcut.
     @State private var latched: KeyModifiers = []
@@ -394,6 +397,16 @@ struct StreamScreen: View {
             #endif
         }
         .background(Palette.canvas)
+        .overlay {
+            // Over every layout, under nothing of the stream screen's: it takes only its own touches.
+            GeometryReader { geo in
+                if floatingKeyboard.shown && floatingKeyboardChosen {
+                    FloatingKeyboardPanel(client: client, container: geo.size) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floatingKeyboard.shown = false }
+                    }
+                }
+            }
+        }
         .overlayPreferenceValue(WindowMenuAnchorKey.self) { anchor in
             if let anchor, let id = windowMenu, let window = client.windows.first(where: { $0.id == id }) {
                 WindowLightsMenu(anchor: anchor, window: window,
@@ -422,6 +435,10 @@ struct StreamScreen: View {
             // dictation and an input method may revise (#138).
             let proxy = overlay
             client.onCaretMayMove = { [weak proxy] in proxy?.caretMayHaveMoved() }
+            let floating = floatingKeyboard
+            proxy.onFloatingToggle = { [weak floating] in
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floating?.shown.toggle() }
+            }
             // A fresh connection starts on the Desktop (the client asks for it as soon as the host
             // reports nothing streaming), so the drawer stays closed until the user opens it.
             sendViewport()

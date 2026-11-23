@@ -1673,7 +1673,18 @@ final class InputOverlayProxy {
     var onOwnChange: ((Bool) -> Void)?
 
     /// The Keyboard button (and the portrait key row's keyboard cap).
-    func toggleKeyboard() { change("the Keyboard button") { $0.toggled() } }
+    func toggleKeyboard() {
+        if FloatingKeyboard.enabled, let onFloatingToggle {
+            // iOS's own keyboard, if it was up from before the choice, goes: one keyboard at a time.
+            if policy.isOwn { setKeyboard(shown: false) }
+            onFloatingToggle()
+            return
+        }
+        change("the Keyboard button") { $0.toggled() }
+    }
+    /// The floating keyboard's switch (StreamScreen): the Keyboard button toggles it instead of iOS's
+    /// keyboard while FloatingKeyboard.enabled.
+    var onFloatingToggle: (() -> Void)?
     /// Takes the keyboard down or puts the person's back, and with it hardware-key forwarding to the
     /// Mac: the overlay forwards keys only while it is first responder. The Settings panel takes it
     /// down while open, so Esc reaches its Done button instead of the Mac, and puts the person's back

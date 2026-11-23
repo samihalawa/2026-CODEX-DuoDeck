@@ -16,7 +16,7 @@ import StreamProtocol
 
 /// What the back screen does during a session.
 enum BackScreenMode: String, CaseIterable, Identifiable {
-    case off, mirror, trackpad, zoom
+    case off, mirror, mirrorFill, trackpad, zoom
 
     static let key = "DuoDeck.backScreen"
 
@@ -26,6 +26,7 @@ enum BackScreenMode: String, CaseIterable, Identifiable {
         switch self {
         case .off: return "Off"
         case .mirror: return "Mirror Mac"
+        case .mirrorFill: return "Mirror · Fill Screen"
         case .trackpad: return "Trackpad"
         case .zoom: return "Zoom"
         }
@@ -35,6 +36,7 @@ enum BackScreenMode: String, CaseIterable, Identifiable {
         switch self {
         case .off: return "rectangle.slash"
         case .mirror: return "rectangle.on.rectangle"
+        case .mirrorFill: return "rectangle.inset.filled"
         case .trackpad: return "rectangle.and.hand.point.up.left"
         case .zoom: return "plus.magnifyingglass"
         }
@@ -169,6 +171,8 @@ struct BackScreenSurface: View {
             case .off:
                 if mode != .off { idle }
             case .mirror:
+                // Whatever the picture's shape leaves is a soft glow in DuoDeck's colour, never bare black.
+                mirrorBackdrop
                 VStack(spacing: 8) {
                     Spacer()
                     HStack(spacing: 8) {
@@ -181,7 +185,12 @@ struct BackScreenSurface: View {
                     }
                     .padding(.bottom, 28)
                 }
-                BackMirror(client: client)
+                BackMirror(client: client, fill: false)
+            case .mirrorFill:
+                // The picture fills the whole back screen, whatever its shape (an upright Mac picture on
+                // a screen held sideways): no margins, and what does not fit follows the pointer.
+                BackMirror(client: client, fill: true)
+                    .ignoresSafeArea()
             case .trackpad:
                 padBackdrop
                 BackPad(client: client, speed: CGFloat(speed), zoom: false)
@@ -200,6 +209,23 @@ struct BackScreenSurface: View {
             client.setBackPad(on)
         }
         .onDisappear { client.setBackPad(false) }
+    }
+
+    /// Behind the fitted picture: a slow glow where the margins are.
+    private var mirrorBackdrop: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20)) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            ZStack {
+                LinearGradient(colors: [Palette.accent.opacity(0.26), .black, Palette.accent.opacity(0.16)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                RadialGradient(colors: [Palette.accent.opacity(0.22 + 0.08 * sin(t * 0.8)), .clear],
+                               center: UnitPoint(x: 0.5 + 0.35 * cos(t * 0.23), y: 0.5 + 0.3 * sin(t * 0.19)),
+                               startRadius: 0, endRadius: 420)
+                    .blendMode(.plusLighter)
+            }
+            .ignoresSafeArea()
+        }
+        .allowsHitTesting(false)
     }
 
     /// Before a Mac is connected: the mark, so the screen is plainly DuoDeck's.
@@ -291,27 +317,47 @@ struct BackScreenSurface: View {
 
 private struct BackMirror: UIViewRepresentable {
     let client: StreamClient
+    let fill: Bool
 
     func makeUIView(context: Context) -> BackMirrorView {
         let view = BackMirrorView()
         view.source = client.displayView
+        view.fill = fill
+        view.videoSize = client.videoSize
         return view
     }
 
-    func updateUIView(_ view: BackMirrorView, context: Context) { view.source = client.displayView }
+    func updateUIView(_ view: BackMirrorView, context: Context) {
+        view.source = client.displayView
+        view.fill = fill
+        view.videoSize = client.videoSize
+    }
 
-    static func dismantleUIView(_ view: BackMirrorView, coordinator: ()) { view.source?.attachMirror(nil) }
+    static func dismantleUIView(_ view: BackMirrorView, coordinator: ()) {
+        view.stopFollowing()
+        view.source?.attachMirror(nil)
+    }
 }
 
+/// The back screen's copy of the picture. Fitted, it is the whole picture inside the view. Filling, it
+/// covers the view whatever its shape, and the part that does not fit slides so the pointer stays in
+/// view: an upright Mac picture on a back screen held sideways shows the band around the pointer,
+/// eased at the screen's rate, instead of a strip between two black margins.
 final class BackMirrorView: UIView {
-    override class var layerClass: AnyClass { AVSampleBufferDisplayLayer.self }
-    var displayLayer: AVSampleBufferDisplayLayer { layer as! AVSampleBufferDisplayLayer }
+    let displayLayer = AVSampleBufferDisplayLayer()
     weak var source: HEVCDisplayView?
+    var fill = false { didSet { if fill != oldValue { modeChanged() } } }
+    var videoSize: CGSize = .zero { didSet { if videoSize != oldValue { setNeedsLayout() } } }
+    private var link: CADisplayLink?
+    /// Where the filled picture is centred, a fraction of what overflows on each axis (0…1).
+    private var focus = CGPoint(x: 0.5, y: 0.5)
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
+        clipsToBounds = true
         displayLayer.videoGravity = .resizeAspect
+        layer.addSublayer(displayLayer)
         isUserInteractionEnabled = false
     }
 
@@ -320,6 +366,70 @@ final class BackMirrorView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         source?.attachMirror(window == nil ? nil : displayLayer)
+        modeChanged()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        place(animated: false)
+    }
+
+    private func modeChanged() {
+        if fill && window != nil {
+            if link == nil {
+                let link = CADisplayLink(target: self, selector: #selector(step))
+                link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
+                link.add(to: .main, forMode: .common)
+                self.link = link
+            }
+        } else {
+            stopFollowing()
+        }
+        setNeedsLayout()
+    }
+
+    func stopFollowing() {
+        link?.invalidate()
+        link = nil
+    }
+
+    /// The pointer on the front, eased toward: a tenth of the way each frame, so the picture glides.
+    @objc private func step() {
+        let target = source?.pointerFraction ?? CGPoint(x: 0.5, y: 0.5)
+        let next = CGPoint(x: focus.x + (min(max(target.x, 0), 1) - focus.x) * 0.1,
+                           y: focus.y + (min(max(target.y, 0), 1) - focus.y) * 0.1)
+        guard abs(next.x - focus.x) > 0.0005 || abs(next.y - focus.y) > 0.0005 else { return }
+        focus = next
+        place(animated: false)
+    }
+
+    private func place(animated: Bool) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(!animated)
+        defer { CATransaction.commit() }
+        guard fill, videoSize.width > 0, videoSize.height > 0, bounds.width > 0, bounds.height > 0 else {
+            displayLayer.frame = bounds
+            return
+        }
+        let size = Self.fillSize(video: videoSize, in: bounds.size)
+        displayLayer.frame = CGRect(origin: Self.fillOrigin(size: size, in: bounds.size, focus: focus), size: size)
+    }
+
+    /// The picture's size when it covers `view` at its own shape.
+    static func fillSize(video: CGSize, in view: CGSize) -> CGSize {
+        let scale = max(view.width / video.width, view.height / video.height)
+        return CGSize(width: video.width * scale, height: video.height * scale)
+    }
+
+    /// Where the covering picture sits so that `focus` (a fraction of the picture) is as near the
+    /// view's middle as its edges allow: never a gap at any edge.
+    static func fillOrigin(size: CGSize, in view: CGSize, focus: CGPoint) -> CGPoint {
+        func axis(_ length: CGFloat, _ room: CGFloat, _ f: CGFloat) -> CGFloat {
+            let over = length - room
+            guard over > 0 else { return 0 }
+            return -min(max(f * length - room / 2, 0), over)
+        }
+        return CGPoint(x: axis(size.width, view.width, focus.x), y: axis(size.height, view.height, focus.y))
     }
 }
 
@@ -657,6 +767,7 @@ struct SessionViewMenu<Label: View>: View {
     @Binding var textScale: Double?
     let label: () -> Label
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
+    @AppStorage(FloatingKeyboard.key) private var floatingKeyboard = false
     @AppStorage(PointerSize.key) private var pointer = PointerSize.fallback.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
     @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
@@ -699,6 +810,13 @@ struct SessionViewMenu<Label: View>: View {
                 SwiftUI.Label("Full screen", systemImage: "rectangle.portrait.inset.filled").tag(true)
             } label: {
                 SwiftUI.Label("Portrait layout", systemImage: portraitFullScreen ? "rectangle.portrait.inset.filled" : "rectangle.split.1x2")
+            }
+            .pickerStyle(.menu)
+            Picker(selection: $floatingKeyboard) {
+                SwiftUI.Label("iPhone keyboard", systemImage: "keyboard").tag(false)
+                SwiftUI.Label("Floating (drag anywhere)", systemImage: "keyboard.badge.ellipsis").tag(true)
+            } label: {
+                SwiftUI.Label("Keyboard", systemImage: floatingKeyboard ? "keyboard.badge.ellipsis" : "keyboard")
             }
             .pickerStyle(.menu)
             Divider()
