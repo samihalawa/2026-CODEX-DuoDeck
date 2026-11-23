@@ -2862,54 +2862,6 @@ struct AppDrawer: View {
     }
 }
 
-/// One app row: icon, name, optional trailing count.
-struct DrawerRow<Leading: View>: View {
-    let height: CGFloat
-    let highlighted: Bool
-    let title: String
-    let trailing: String?
-    let action: () -> Void
-    let leading: () -> Leading
-
-    init(height: CGFloat, highlighted: Bool, title: String, trailing: String?,
-         action: @escaping () -> Void, @ViewBuilder leading: @escaping () -> Leading) {
-        self.height = height
-        self.highlighted = highlighted
-        self.title = title
-        self.trailing = trailing
-        self.action = action
-        self.leading = leading
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                leading()
-                Text(title)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Palette.text)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                if let trailing {
-                    // Whole, on one line, whatever the title's length: the title truncates instead
-                    // ("Not paired", "Update DuoDeck" and "3 windows" hold a space).
-                    Text(trailing)
-                        .font(.system(size: 13))
-                        .foregroundStyle(Palette.muted)
-                        .fixedSize()
-                }
-            }
-            .padding(.horizontal, 10)
-            .frame(height: height)
-            .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(highlighted ? Palette.control : Color.clear))
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Larger Picture's view of what streams
 
 extension PhonePortraitLayout.Streaming {

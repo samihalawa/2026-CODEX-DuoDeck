@@ -85,8 +85,7 @@ each in its own scratch path under `.build/universal`, joined with `lipo`, then
 stamped, iconized and signed as usual. It takes about twice as long, and
 `.build/release/DuoDeckMenuBar` is not refreshed, so it is off by default; unset,
 the build is for this Mac's architecture alone. Releases are universal from
-0.6.0 on (the maintainer, 2026-11-02: "D1 - Universal"; release.yml's publish job sets
-`DUODECK_UNIVERSAL=1`, as the nightlies do): README and the site say Apple silicon
+0.6.0 on (the maintainer, 2026-11-02: "D1 - Universal"; build_and_run.sh builds both architectures): README and the site say Apple silicon
 or Intel, and the App Store description names no chip; 0.5.1 and earlier were arm64 only. A nightly
 ran on an Intel iMac 5K (#62: fine at Standard; its hardware encoder refuses a
 5K Retina stream). `release.sh` names the architectures it built and checks
@@ -1618,9 +1617,7 @@ device, and the picture's pinch zoom with who two fingers belong to) on their ow
 runs them: about five minutes, no device, permission or encoder. `--mutants`
 also checks that each check fails when its file is changed in one place (well
 over an hour).
-`Tests/checks/README.md` lists them. CI (`.github/workflows/ci.yml`) runs them
-on every pull request and push to `main`, with `swift build -c release` and the
-iOS app's build for the simulator.
+`Tests/checks/README.md` lists them. Nothing runs them on GitHub: run them here before a push.
 
 ### The test client and the relay
 
@@ -2325,24 +2322,6 @@ in the data-protection keychain, as 0.4.0 and later do; without the profile it
 builds on the login keychain and says so, and a Mac updating from 0.4.0 or
 later would get a new key and pair every device again
 (docs/release-checklist.md, Part 1 §5).
-The release workflow (`.github/workflows/release.yml`) runs on a pushed tag
-`v<version>`: it checks and builds, and with the repository variable
-`DUODECK_SIGN_IN_CI` set to `true` it also signs, notarizes and publishes with
-`release.sh --publish` (docs/release-checklist.md, "Releasing from GitHub
-Actions"), in the environment `release`: only a `v*` tag may use it, the maintainer
-approves each run before it starts, and the signing secrets are that
-environment's, not the repository's. Its checkout is the commit the run was
-started for, with every tag as origin has it, and it stops when the tag no
-longer names that commit (a tag moved after the run began), so there
-`--publish` checks the local tag (`DUODECK_RELEASE_TAG`) rather than ask origin.
-Pushing the tag, which a `--publish` from your Mac needs first, starts it too
-(with `DUODECK_SIGN_IN_CI` on, its publish job then waits for the maintainer's approval).
-Since the nightlies the release workflow embeds the profile too (the secret
-`DUODECK_PROVISION_PROFILE`, decoded to `Packaging/embedded.provisionprofile`),
-so with `DUODECK_SIGN_IN_CI` on a pushed tag publishes a release on the
-data-protection keychain, as one from your Mac. Apple's answers and logs for
-both submissions are the run's artifact `notary-v<version>` for 30 days: when
-the job's log says a notary log lists issues, read them there.
 
 Homebrew: DuoDeck Host is also the cask `duodeck` in DuoDeck's own tap,
 [samihalawa/homebrew-duodeck](https://github.com/samihalawa/homebrew-duodeck), so
@@ -2373,36 +2352,10 @@ layouts need: the app it checks must say it was built with it).
 required-reason APIs its binary uses. `--build-number N` builds with N for the
 run only (xcodebuild's `CURRENT_PROJECT_VERSION=N`; the project is never
 changed), and `--whats-new FILE`, with `--upload` and `--api-key`, sets the
-build's What to Test once App Store Connect has processed it. The TestFlight
-workflow (`.github/workflows/testflight.yml`) runs it on GitHub, by hand and
-from main only (its job runs in the environment `nightly`, which only main may
-use, and holds the App Store Connect key), with the commit count as the build
-number, and uploads only a commit on main's own line (another branch's count
-can be a later nightly's). docs/release-checklist.md,
-"TestFlight", has the App Store Connect side, the record field by field.
+build's What to Test once App Store Connect has processed it.
 
-Nightlies (`.github/workflows/nightly.yml`; docs/release-checklist.md,
-"Nightlies"): every night main moved (09:17 UTC, while the repository variable
-`DUODECK_NIGHTLY` is `true`) and by hand, from main only: both builds run in the
-environment `nightly`, which holds the nine secrets. `Scripts/release.sh
---nightly --publish` builds main's head as a release, universal as releases
-are since 0.6.0 (`DUODECK_UNIVERSAL=1`; make-app.sh takes `DUODECK_RELEASE_NIGHTLY=1`
-for an untagged HEAD), as `DuoDeck-nightly-<yyyymmdd>-<sha7>.dmg` and `.zip` on the
-rolling pre-release `nightly` (the seven newest kept, never "latest");
-`release-ios.sh --build-number <commit count>` uploads the iOS build, and
-`Scripts/asc.swift` (App Store Connect's API: an ES256 token from the .p8 key
-with CryptoKit, Foundation only) waits for App Store Connect to process it,
-sets What to Test and gives it to every internal TestFlight group, and to the
-public beta group only while `DUODECK_NIGHTLY_PUBLIC_BETA` is `true`.
-`Scripts/nightly-notes.sh` writes both apps' words from the pull requests
-merged since the last release tag. A nightly says the version main says, the
-version of main's next release (0.6.1 since App Review approved 0.6.0; 0.6.0
-from 2026-10-31 until then, 0.5.5 the pre-release number before), with the commit
-count as its build, as in "DuoDeck nightly 0.6.1 (1280)"; the update check never offers a nightly, and offers
-one nothing until a release newer than its version exists. A nightly reads the
-release's data-protection keychain items, so a device paired with one stays
-paired with the other. `swift Scripts/asc.swift groups --key-file … --key-id …
---issuer …` lists the app's TestFlight groups (reads only).
+`swift Scripts/asc.swift groups --key-file … --key-id … --issuer …` lists the app's TestFlight groups
+(reads only).
 
 ## Known limitations
 
@@ -2444,8 +2397,7 @@ paired with the other. `swift Scripts/asc.swift groups --key-file … --key-id �
 - `Tests/checks/`: the pure checks (above). `Tests/touchrig/`: the touch rig
   (above). `Tests/duorig/`: folds and turns the iPhone Duo simulator (TEST
   ONLY, above). `Tests/keyrig/`: a hardware keyboard and mouse for the
-  simulator (TEST ONLY, above). `.github/`: the CI, release and TestFlight workflows, and the
-  Sponsor button.
+  simulator (TEST ONLY, above). `.github/`: the issue forms.
 - `site/`: the website, plain HTML for GitHub Pages: home, download, privacy
   policy, terms of service and support, with the App Store badge
   (`app-store-badge.svg`) and the image link previews show (`preview.jpg`).

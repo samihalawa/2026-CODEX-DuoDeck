@@ -298,7 +298,7 @@ struct PortraitStreamScreen: View {
         // and not physically constrained to a hinge crease.
         let base = DuoPosture.portraitSplit(size, duoFold, aspect: client.duoPaneAspect(textScale: textScale),
                                             controls: metrics.controlsHeight)
-        let canSlide = duoFold == nil && !lockViewportSize
+        let canSlide = duoFold.band == nil && !lockViewportSize
         let dividerHeight: CGFloat = canSlide ? 18 : max(0, base.controls - base.picture)
         let minPicture: CGFloat = 150
         let maxPicture = max(minPicture, size.height - dividerHeight - metrics.controlsHeight - 72)
@@ -360,7 +360,7 @@ struct PortraitStreamScreen: View {
         .background(Color.black)
         .contentShape(Rectangle())
         .gesture(
-            DragGesture(minimumDistance: 2)
+            DragGesture(minimumDistance: 2, coordinateSpace: .global)
                 .updating($splitDragDelta) { value, state, _ in
                     state = value.translation.height
                 }
@@ -833,11 +833,6 @@ struct PortraitStreamScreen: View {
 
     private var drawer: some View { AppDrawer(client: client, drawerOpen: $drawerOpen) }
 
-    private var settingsPanel: some View {
-        HostSettingsPanel(client: client, close: { setSettings(false, true) }, pairThisDevice: pairThisDevice,
-                          takeTour: takeTour)
-    }
-
     /// The drawer's dim: a tap on it closes the drawer instead of clicking the Mac.
     private var dim: some View {
         Color.black.opacity(0.58)
@@ -845,14 +840,6 @@ struct PortraitStreamScreen: View {
             .onTapGesture { withAnimation(.easeOut(duration: 0.18)) { drawerOpen = false } }
             .accessibilityHidden(true)
             .transition(.opacity)
-    }
-
-    /// The Settings panel's tap catcher: clear, so the stream stays in view while a setting changes.
-    private var catcher: some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture { setSettings(false, true) }
-            .accessibilityHidden(true)
     }
 
     private func appsButton(width: CGFloat? = nil) -> some View {
@@ -915,22 +902,6 @@ struct PortraitStreamScreen: View {
                         .foregroundStyle(open ? Palette.accent : Palette.barLabel)
                 }
             }
-        }
-    }
-}
-
-/// Larger Picture's drawer, above row 1, read after it: the accessibility tree orders what is at one
-/// level top to bottom, which would put the whole list before the Apps button that opened it, so a
-/// swipe on from Apps would never reach it. As one container sorted after the rest, VoiceOver reads
-/// row 1, then the list, as under row 1 in every other arrangement.
-private struct AfterRow1: ViewModifier {
-    let active: Bool
-
-    @ViewBuilder func body(content: Content) -> some View {
-        if active {
-            content.accessibilityElement(children: .contain).accessibilitySortPriority(-1)
-        } else {
-            content
         }
     }
 }

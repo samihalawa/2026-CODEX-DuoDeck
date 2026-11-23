@@ -31,8 +31,7 @@ displays will do for a capture or must be taken again) are plain Swift files tha
 own. Each folder here compiles one or a few of those files, exactly as they are in
 `Sources/`, `iOSClient/` and `Scripts/`, together with its own `main.swift`, and runs the result.
 Nothing here needs a device, Screen Recording, Accessibility, the video encoder or any network but
-loopback, so the checks run anywhere Xcode does, and in CI
-(`.github/workflows/ci.yml`) on pull requests and pushes to `main`.
+loopback, so the checks run anywhere Xcode does.
 
 ```
 Tests/checks/run-all.sh                   # every check, about five minutes on an M-series Mac
@@ -246,7 +245,7 @@ root) and compiles with `swiftc` into `"$out"`; or, for files that compile as on
 StreamProtocol's sources, a `module.txt` naming them and a `run.sh` that hands the check to
 `../module.py`, as `door-policy/run.sh` does. A `mutants.py` is optional; its last line must count
 the mutants (`N of M mutants caught`, or `mutants caught: N of M`), and `run.sh --mutants` hands it
-to `run_mutants`; add the check's name to the `mutants` matrix in `.github/workflows/ci.yml` too.
+to `run_mutants`.
 `run-all.sh` picks up every folder with a `run.sh`, and fails a check whose `run.sh` is not
 executable (`chmod +x`; git keeps the bit) rather than skip it. Only pure files: nothing that needs
 a permission, a device or the network, and never anything that links VideoToolbox.

@@ -1,11 +1,11 @@
 # DuoDeck for iPhone Duo
 
-DuoDeck turns the lower half of a half-folded iPhone Duo into an adjustable Mac trackpad and control surface, while keeping the Mac video above the fold.
+DuoDeck turns the lower half of a half-folded iPhone Duo into a Mac trackpad and control surface, while keeping the Mac video above the fold.
 
 ## DuoDeck additions
-- Compact, balanced and full trackpad footprints selected in the lower half; saved between launches.
-- Compact and balanced layouts put Mac shortcut presets beside the trackpad.
-- Built-in Editing, Browsing, Windows and Code shortcut palettes. Each shortcut sends proper HID key down and up events, with Mac modifier flags.
+- A trackpad that fills the lower half, with an optional shortcut row and your own control decks.
+- On iPad or an open iPhone Duo held upright, a divider that resizes the picture and the trackpad.
+- Built-in Editing, Browsing, Windows, Code and Presenting shortcut palettes. Each shortcut sends proper HID key down and up events, with Mac modifier flags.
 - Works with the free DuoDeck Host companion for Mac.
 
 ## Requirements

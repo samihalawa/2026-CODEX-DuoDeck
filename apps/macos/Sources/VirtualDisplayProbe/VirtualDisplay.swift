@@ -1,1 +1,1 @@
-../SillHost/VirtualDisplay.swift
+../DuoDeckHost/VirtualDisplay.swift

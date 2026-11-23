@@ -55,14 +55,15 @@ tasks.forEach(task=>task.addEventListener("click",()=>{
 function setMode(selected,notify=true) {
   if(!modes.some(item=>item.dataset.mode===selected)) selected=defaultMode;
   shell.dataset.mode=selected;
+  const labels={small:"Compact",medium:"Balanced",full:"Tall"};
   for(const item of modes) {
     const active=item.dataset.mode===selected;
     item.classList.toggle("active",active);
     item.setAttribute("aria-pressed",String(active));
   }
-  $("trackpadSizeLabel").textContent=selected[0].toUpperCase()+selected.slice(1);
+  $("trackpadSizeLabel").textContent=labels[selected]||"Balanced";
   persist();
-  if(notify) announce("Trackpad size: "+selected);
+  if(notify) announce("Split layout: "+(labels[selected]||selected));
 }
 function renderScenes() {
   const selected=scenes[sceneSelector.value]||scenes.editing;

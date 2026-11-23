@@ -15,9 +15,6 @@ struct ConnectLayout {
     /// fold, centred in the leading page. What widens the column (the side-by-side card) grows
     /// towards the trailing edge, so the title never moves sideways.
     var columnX: CGFloat { DuoPosture.columnX(columnWidth: columnWidth, screenWidth: size.width, fold: fold) }
-    /// The card side by side (a short screen): the viewfinder's 260 pt and its words, from the
-    /// column's leading edge to 24 pt short of the screen's trailing one, at most 620 pt.
-    var sideBySideWidth: CGFloat { max(columnWidth, min(size.width - columnX - 24, 620)) }
     /// The Duo half-folded upright (the laptop pose): the room above the fold, where the column
     /// lives, so nothing crosses it and the keyboard has the lower half. Before iOS 27.1 the fold
     /// is the middle of a 710×1000-like screen (DuoPosture.crease); open flat there is none.
@@ -32,9 +29,6 @@ struct ConnectLayout {
     /// room above the laptop pose's fold under that (373.5 pt with the status bar): the card goes
     /// side by side.
     var short: Bool { size.height < 520 || (roomAboveFold ?? .infinity) < 520 }
-    /// The Duo's outer display upright (500×710) and phones: the column anchors to the top while a
-    /// field has the keyboard.
-    var compactPortrait: Bool { size.height > size.width && size.width < 600 }
 }
 
 /// Add a Mac (docs/remote-access-plan.md §7.7–7.8, §7.10), unfolded in the connect screen's column

@@ -260,9 +260,6 @@ final class AudioOutput {
         }
     }
 
-    /// The last second's numbers, for the HUD. Any thread.
-    var latestSecond: AudioPlayout.Second? { statsLock.withLock { lastSecond } }
-
     // MARK: - Formats and packets
 
     private func receive(_ f: AudioFormat) {
