@@ -65,29 +65,29 @@ let duoCover = Phone(name: "the iPhone Duo's cover (iOS 27.1, less its camera's 
 
 let table: [Row] = [
     // today: trackpad 243, panel room 351
-    Row(phone: proMax, picture: CGSize(width: 424, height: 265), row1: (297, 347), button: 76, row2: (363, 425),
+    Row(phone: proMax, picture: CGSize(width: 424, height: 265), row1: (297, 347), button: 62, row2: (363, 425),
         row3: (435, 479), cap: 62, trackpad: CGSize(width: 412, height: 389), panelRoom: 523),
     // today: 202, 310
-    Row(phone: pro, picture: CGSize(width: 386, height: 241), row1: (273, 323), button: 68.4, row2: (339, 401),
+    Row(phone: pro, picture: CGSize(width: 386, height: 241), row1: (273, 323), button: 334.0 / 6, row2: (339, 401),
         row3: (411, 455), cap: 334.0 / 6, trackpad: CGSize(width: 374, height: 331), panelRoom: 465),
     // today: 192, 300
-    Row(phone: fifteenPro, picture: CGSize(width: 377, height: 235), row1: (267, 317), button: 66.6, row2: (333, 395),
+    Row(phone: fifteenPro, picture: CGSize(width: 377, height: 235), row1: (267, 317), button: 325.0 / 6, row2: (333, 395),
         row3: (405, 449), cap: 325.0 / 6, trackpad: CGSize(width: 365, height: 318), panelRoom: 452),
     // today: 194, 302
-    Row(phone: seventeenE, picture: CGSize(width: 374, height: 233), row1: (265, 315), button: 66, row2: (331, 393),
+    Row(phone: seventeenE, picture: CGSize(width: 374, height: 233), row1: (265, 315), button: 322.0 / 6, row2: (331, 393),
         row3: (403, 447), cap: 322.0 / 6, trackpad: CGSize(width: 362, height: 324), panelRoom: 458),
     // today: 177, 285
-    Row(phone: mini, picture: CGSize(width: 359, height: 224), row1: (256, 306), button: 63, row2: (322, 384),
+    Row(phone: mini, picture: CGSize(width: 359, height: 224), row1: (256, 306), button: 307.0 / 6, row2: (322, 384),
         row3: (394, 438), cap: 307.0 / 6, trackpad: CGSize(width: 347, height: 298), panelRoom: 432),
     // today: 119, 227
-    Row(phone: se, picture: CGSize(width: 359, height: 224), row1: (256, 306), button: 63, row2: (322, 384),
+    Row(phone: se, picture: CGSize(width: 359, height: 224), row1: (256, 306), button: 307.0 / 6, row2: (322, 384),
         row3: (394, 438), cap: 307.0 / 6, trackpad: CGSize(width: 347, height: 183), panelRoom: 317),
     // today: 151, 259
-    Row(phone: duoOuter, picture: CGSize(width: 484, height: 302), row1: (334, 384), button: 88, row2: (400, 462),
+    Row(phone: duoOuter, picture: CGSize(width: 484, height: 302), row1: (334, 384), button: 72, row2: (400, 462),
         row3: (472, 516), cap: 72, trackpad: CGSize(width: 472, height: 168), panelRoom: 302),
     // The real cover (the approved (c1): the phone's arrangement, narrower by the camera's strip):
     // the picture 366×228 the probe photographed.
-    Row(phone: duoCover, picture: CGSize(width: 366, height: 228), row1: (260, 310), button: 64.4, row2: (326, 388),
+    Row(phone: duoCover, picture: CGSize(width: 366, height: 228), row1: (260, 310), button: 314.0 / 6, row2: (326, 388),
         row3: (398, 442), cap: 314.0 / 6, trackpad: CGSize(width: 354, height: 210), panelRoom: 344),
 ]
 
@@ -99,8 +99,8 @@ for row in table {
           l.picture == CGRect(x: 8, y: 8, width: row.picture.width, height: row.picture.height))
     check("\(n): row 1 at \(Int(row.row1.0))–\(Int(row.row1.1)), from 14 to \(Int(size.width - 14))",
           l.row1 == CGRect(x: 14, y: row.row1.0, width: size.width - 28, height: row.row1.1 - row.row1.0))
-    check("\(n): five buttons \(row.button) wide, 50 tall, 8 apart",
-          l.buttons.count == 5 && l.buttons.enumerated().allSatisfy { i, b in
+    check("\(n): six buttons \(row.button) wide, 50 tall, 8 apart",
+          l.buttons.count == 6 && l.buttons.enumerated().allSatisfy { i, b in
               near(b, CGRect(x: 14 + CGFloat(i) * (row.button + 8), y: row.row1.0, width: row.button, height: 50)) })
     check("\(n): the strip at \(Int(row.row2.0))–\(Int(row.row2.1)), from 6 to \(Int(size.width - 6))",
           l.strip == CGRect(x: 6, y: row.row2.0, width: size.width - 12, height: row.row2.1 - row.row2.0))
@@ -117,7 +117,7 @@ for row in table {
             && l.settings.minY == row.row1.1 + 8 && l.settings.height == row.panelRoom)
     check("\(n): the drawer and the panel span row 1, from 14 to \(Int(size.width - 14)), Apps' leading edge to Settings' trailing one",
           l.drawer.minX == 14 && l.drawer.width == size.width - 28 && l.settings.minX == 14 && l.settings.width == size.width - 28
-            && l.drawer.minX == l.buttons[0].minX && near(l.settings.maxX, l.buttons[4].maxX))
+            && l.drawer.minX == l.buttons[0].minX && near(l.settings.maxX, l.buttons[5].maxX))
     check("\(n): the ruler 36 a detent, 204 wide, centred on Aa over row 1",
           l.rulerStep == 36 && near(l.ruler, CGRect(x: l.buttons[1].midX - 102, y: row.row1.0, width: 204, height: 50)))
     check("\(n): the trackpad's span is its width ÷ 1.6 (" + String(format: "%.2f", row.trackpad.width / 1.6) + ")",
@@ -132,12 +132,12 @@ for row in table {
 // The mockup's own numbers (the maintainer's approval, its frame()), in the screen's points: on the Pro Max the
 // picture 70–335, Apps 359–409, the thumbnails 431–481, the caps 497–541 and the trackpad 551–940,
 // 389 pt; on the Pro the trackpad 331 pt (the mockup's 330.75: it does not round the picture down).
-check("mockup: Pro Max picture 424×265, buttons 76×50", L(size: proMax.container).picture.size == CGSize(width: 424, height: 265)
-      && L(size: proMax.container).buttons.allSatisfy { near($0.width, 76) && $0.height == 50 })
-check("mockup: Pro picture 386×241, buttons 68.4×50", L(size: pro.container).picture.size == CGSize(width: 386, height: 241)
-      && L(size: pro.container).buttons.allSatisfy { near($0.width, 68.4) && $0.height == 50 })
-check("mockup: the button width is (row width − 4 × 8) ÷ 5 on both",
-      [proMax, pro].allSatisfy { p in L(size: p.container).buttons.allSatisfy { near($0.width, (p.container.width - 28 - 32) / 5) } })
+check("Pro Max picture 424×265, buttons 62×50", L(size: proMax.container).picture.size == CGSize(width: 424, height: 265)
+      && L(size: proMax.container).buttons.allSatisfy { near($0.width, 62) && $0.height == 50 })
+check("Pro picture 386×241, buttons 55.7×50", L(size: pro.container).picture.size == CGSize(width: 386, height: 241)
+      && L(size: pro.container).buttons.allSatisfy { near($0.width, 334.0 / 6) && $0.height == 50 })
+check("the button width is (row width − 5 × 8) ÷ 6 on both",
+      [proMax, pro].allSatisfy { p in L(size: p.container).buttons.allSatisfy { near($0.width, (p.container.width - 28 - 40) / 6) } })
 do {
     let l = L(size: proMax.container), y = proMax.inset
     check("mockup: Pro Max picture 70–335, Apps 359–409, thumbnails 431–481, caps 497–541, trackpad 551–940 (389 pt)",
@@ -149,10 +149,10 @@ do {
           l.row1.minY - l.picture.maxY == 24 && (l.strip.minY + 6) - l.row1.maxY == 22)
 }
 
-// 320 pt (an iPhone SE or 13 mini with Display Zoom): the buttons 52, the caps 42 (as the Duo's outer
+// 320 pt (an iPhone SE or 13 mini with Display Zoom): the buttons 42, the caps 42 (as the Duo's outer
 // layout had them), the ruler's step 28 so it stays inside the row.
 let narrow = L(size: CGSize(width: 320, height: 1000))
-check("320 wide: five buttons 52 wide", narrow.buttons.allSatisfy { near($0.width, 52) })
+check("320 wide: six buttons 42 wide", narrow.buttons.allSatisfy { near($0.width, 42) })
 check("320 wide: six caps 42 wide", narrow.caps.allSatisfy { near($0.width, 42) })
 check("320 wide: the ruler's step 28, its leading edge at the row's", near(narrow.rulerStep, 28) && near(narrow.ruler.minX, 14))
 let threeSixty = L(size: CGSize(width: 360, height: 1000))
@@ -235,7 +235,7 @@ let inside = Rule("everything inside the screen")
 let ordered = Rule("top to bottom: the picture, row 1, the strip, row 3, the trackpad, none overlapping")
 let gaps = Rule("the gaps: 24 from the picture to row 1's buttons, 16 from them to the strip, 10 to row 3, 10 above the trackpad, 16 under it")
 let pictureRule = Rule("the picture at (8, 8), full width less 16, exactly ⌊(W − 16) ÷ 1.6⌋ tall while the trackpad keeps 120 pt, else the trackpad exactly 120 (the picture never below 0)")
-let buttonsRule = Rule("five equal buttons, 50 tall, 8 apart, from 14 to W − 14, each at least 44 wide")
+let buttonsRule = Rule("six equal buttons, 50 tall, 8 apart, from 14 to W − 14; at least 44 wide from 332 pt up")
 let capsRule = Rule("six equal caps, 44 tall, 8 apart, from 14 to W − 14; at least 44 wide from 332 pt up")
 let alignRule = Rule("the rows line up: Apps, the first thumbnail, esc and the trackpad at 14; Settings, shift and the trackpad end at W − 14; the strip from 6 to W − 6")
 let spanRule = Rule("the trackpad's span is its width ÷ 1.6")
@@ -282,10 +282,10 @@ for w in 300...599 {
                            "picture \(str(l.picture)), trackpad \(l.trackpad.height)")
 
         let b = l.buttons
-        let bw = (W - 60) / 5
-        buttonsRule.expect(b.count == 5 && b.allSatisfy { near($0.width, bw) && $0.height == 50 && $0.minY == l.row1.minY }
-                           && b[0].minX == 14 && near(b[4].maxX, W - 14)
-                           && zip(b, b.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) } && bw >= 44, size)
+        let bw = (W - 68) / 6
+        buttonsRule.expect(b.count == 6 && b.allSatisfy { near($0.width, bw) && $0.height == 50 && $0.minY == l.row1.minY }
+                           && b[0].minX == 14 && near(b[5].maxX, W - 14)
+                           && zip(b, b.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) } && (w < 332 || bw >= 44), size)
 
         let c = l.caps
         let cw = (W - 68) / 6
@@ -294,7 +294,7 @@ for w in 300...599 {
                         && zip(c, c.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) } && (w < 332 || cw >= 44), size)
 
         alignRule.expect(b[0].minX == 14 && l.strip.minX + L.stripInset == 14 && c[0].minX == 14 && l.trackpad.minX == 14
-                         && near(b[4].maxX, W - 14) && near(c[5].maxX, W - 14) && l.trackpad.maxX == W - 14
+                         && near(b[5].maxX, W - 14) && near(c[5].maxX, W - 14) && l.trackpad.maxX == W - 14
                          && l.strip.minX == 6 && l.strip.maxX == W - 6 && l.strip.height == 62, size)
 
         spanRule.expect(near(l.trackpadSpan, l.trackpad.width / 1.6), size)
@@ -317,7 +317,7 @@ for w in 300...599 {
                        && l.dim[1] == CGRect(x: 0, y: l.row1.maxY, width: W, height: H - l.row1.maxY)
                        && !l.dim.contains { $0.intersects(l.row1) }, size)
 
-        menusRule.expect(near(l.menus.minX, b[4].minX) && near(l.menus.width, b[4].width) && l.menus.height == 50
+        menusRule.expect(near(l.menus.minX, b[5].minX) && near(l.menus.width, b[5].width) && l.menus.height == 50
                          && near(l.menus.midY, l.strip.midY) && l.stripBesideMenus.minX == l.strip.minX
                          && l.stripBesideMenus.minY == l.strip.minY && l.stripBesideMenus.height == l.strip.height
                          && near(l.menus.minX - l.stripBesideMenus.maxX, 8) && l.stripBesideMenus.width - 16 >= 80, size,
@@ -362,11 +362,11 @@ check("a tall screen never makes the picture taller than 16:10",
 do {
     let l = L(size: se.container)
     check("iPhone SE (375 wide): the Menus button \(str(l.menus)) under Settings, the strip 6 to \(l.stripBesideMenus.maxX): two whole thumbnails and more",
-          near(l.menus, CGRect(x: 298, y: l.strip.minY + 6, width: 63, height: 50)) && near(l.stripBesideMenus.width, 284)
+          near(l.menus, CGRect(x: 361 - 307.0 / 6, y: l.strip.minY + 6, width: 307.0 / 6, height: 50)) && near(l.stripBesideMenus.width, 347 - 307.0 / 6)
             && (l.stripBesideMenus.width - 16) / (80 + 12) >= 2.9)
     let w320 = L(size: CGSize(width: 320, height: 548))
-    check("320 pt (Display Zoom): the button 52 wide at 254, the strip 240 (two whole thumbnails)",
-          near(w320.menus.minX, 254) && near(w320.menus.width, 52) && near(w320.stripBesideMenus.width, 240)
+    check("320 pt (Display Zoom): the button 42 wide at 264, the strip 250 (two whole thumbnails)",
+          near(w320.menus.minX, 264) && near(w320.menus.width, 42) && near(w320.stripBesideMenus.width, 250)
             && (w320.stripBesideMenus.width - 16) / (80 + 12) >= 2.4)
 }
 check("the size is all it depends on", L(size: pro.container) == L(size: pro.container) && L(size: pro.container) != L(size: proMax.container))
@@ -639,11 +639,11 @@ check("the switch is offered whatever streams: it is judged as for a window (the
 // Row 1 beside the Mac's menus: six equal buttons, Menus after Apps (the landscape bar's order with
 // the strip gone); the ruler on that row's Aa, 36 a detent on every phone.
 do {
-    let l = L(size: proMax.container, keyboard: 320), six = (proMax.container.width - 68) / 6
+    let l = L(size: proMax.container, keyboard: 320), seven = (proMax.container.width - 76) / 7
     let b = l.buttonsBesideMenus
-    check("Pro Max: six buttons of \(six) (62): Apps at 14, Menus at 84, Aa, Keyboard, Desktop, Settings to 426",
-          near(six, 62) && b.count == 5 && near(b[0], CGRect(x: 14, y: 454, width: 62, height: 50)) && near(l.menus, CGRect(x: 84, y: 454, width: 62, height: 50))
-            && near(b[1].minX, 154) && near(b[2].minX, 224) && near(b[3].minX, 294) && near(b[4].minX, 364) && near(b[4].maxX, 426))
+    check("Pro Max: seven buttons of \(seven) (52): Apps at 14, Menus at 74, Aa, Keyboard, View, Desktop, Settings to 426",
+          near(seven, 52) && b.count == 6 && near(b[0], CGRect(x: 14, y: 454, width: 52, height: 50)) && near(l.menus, CGRect(x: 74, y: 454, width: 52, height: 50))
+            && near(b[1].minX, 134) && near(b[2].minX, 194) && near(b[3].minX, 254) && near(b[4].minX, 314) && near(b[5].minX, 374) && near(b[5].maxX, 426))
     check("Pro Max: the ruler on that Aa, 204 wide, 36 a detent", near(l.rulerStepBesideMenus, 36)
           && near(l.rulerBesideMenus, CGRect(x: b[1].midX - 102, y: 454, width: 204, height: 50)))
     let w320 = L(size: CGSize(width: 320, height: 548), keyboard: 233)
@@ -692,7 +692,7 @@ let lInside = Rule("Larger Picture: everything inside the screen")
 let lOrdered = Rule("Larger Picture: the room, row 1, the key row, the trackpad top to bottom, no thumbnails' row")
 let lGaps = Rule("Larger Picture: 24 from the room to row 1's buttons, 16 from them to the key row, 10 to the keyboard, the trackpad from its top to 16 off the bottom")
 let lRoom = Rule("Larger Picture: the room at (8, 8), W − 16 wide, the height less the keyboard less 152")
-let lRow1 = Rule("Larger Picture: five equal buttons as today, and beside the Mac's menus six, Menus second, each (W − 68) ÷ 6, 8 apart, from 14 to W − 14")
+let lRow1 = Rule("Larger Picture: six equal buttons as today, and beside the Mac's menus seven, Menus second, each (W − 76) ÷ 7, 8 apart, from 14 to W − 14")
 let lCaps = Rule("Larger Picture: six equal caps, 44 tall, 8 apart, from 14 to W − 14")
 let lRulers = Rule("Larger Picture: both rulers over row 1, centred on their Aa, inside the row, 36 a detent where they fit")
 let lPanels = Rule("Larger Picture: the panel from 8 under row 1 to 16 off the bottom, the drawer from 8 to 8 above row 1 (128 above the keyboard), both across row 1; the anchor the panel's corner; the dim all but row 1")
@@ -718,11 +718,11 @@ for keyboard: CGFloat in [233, 301, 310, 320] {
                          && l.trackpad.minY == H - keyboard && H - l.trackpad.maxY == 16, size,
                          "\(l.row1.minY - l.picture.maxY), \(l.keys.minY - l.row1.maxY), \(H - keyboard - l.keys.maxY), \(l.trackpad.minY)")
             lRoom.expect(l.picture == CGRect(x: 8, y: 8, width: W - 16, height: H - keyboard - 152), size, str(l.picture))
-            let b = l.buttons, s = l.buttonsBesideMenus, five = (W - 60) / 5, six = (W - 68) / 6
+            let b = l.buttons, s = l.buttonsBesideMenus, six = (W - 68) / 6, seven = (W - 76) / 7
             let row = [s[0], l.menus] + s.dropFirst()
-            lRow1.expect(b.count == 5 && b.allSatisfy { near($0.width, five) && $0.minY == l.row1.minY && $0.height == 50 }
-                         && s.count == 5 && row.allSatisfy { near($0.width, six) && $0.minY == l.row1.minY && $0.height == 50 }
-                         && row[0].minX == 14 && near(row[5].maxX, W - 14) && zip(row, row.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) }, size)
+            lRow1.expect(b.count == 6 && b.allSatisfy { near($0.width, six) && $0.minY == l.row1.minY && $0.height == 50 }
+                         && s.count == 6 && row.allSatisfy { near($0.width, seven) && $0.minY == l.row1.minY && $0.height == 50 }
+                         && row[0].minX == 14 && near(row[6].maxX, W - 14) && zip(row, row.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) }, size)
             let c = l.caps, cw = (W - 68) / 6
             lCaps.expect(c.count == 6 && c.allSatisfy { near($0.width, cw) && $0.height == 44 && $0.minY == l.keys.minY }
                          && c[0].minX == 14 && near(c[5].maxX, W - 14) && zip(c, c.dropFirst()).allSatisfy { near($1.minX - $0.maxX, 8) }, size)

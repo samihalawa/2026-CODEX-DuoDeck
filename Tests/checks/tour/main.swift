@@ -464,7 +464,7 @@ func phoneModel(_ w: CGFloat, _ h: CGFloat, menus: Bool = false) -> Screen {
 // The phones' stream screens upright (their screens less the top inset; the iPhone SE's status bar is
 // 20 pt), and the Duo's outer display, which an iPhone Duo draws as a phone.
 let proMax = phoneModel(440, 894), pro = phoneModel(402, 812), seTall = phoneModel(375, 647), duoPhone = phoneModel(500, 710)
-check(proMax.stream == CGRect(x: 8, y: 8, width: 424, height: 265) && proMax.targets[.textSize]! == CGRect(x: 98, y: 297, width: 76, height: 50)
+check(proMax.stream == CGRect(x: 8, y: 8, width: 424, height: 265) && proMax.targets[.textSize]! == CGRect(x: 84, y: 297, width: 62, height: 50)
       && proMax.targets[.strip]! == CGRect(x: 6, y: 364, width: 428, height: 61) && proMax.targets[.keys]!.minY == 435
       && proMax.targets[.trackpad]! == CGRect(x: 14, y: 489, width: 412, height: 389), "the 18 Pro Max's rows: \(proMax.targets)")
 check(seTall.stream.height == 224 && seTall.targets[.settings]!.minY == 256 && seTall.targets[.keys]!.minY == 394, "the SE's rows")
@@ -494,10 +494,10 @@ let macBook = CGSize(width: 3024, height: 1964)
 let largerMacShape = largerModel(440, 894, keyboard: 320, video: macBook), largerFitted = largerModel(440, 894, keyboard: 320, video: CGSize(width: 848, height: 844))
 let largerSE = largerModel(375, 647, keyboard: 233, video: macBook), largerFive = largerModel(440, 894, keyboard: 320, video: macBook, menus: false)
 check(largerMacShape.stream == CGRect(x: 8, y: 8, width: 424, height: 275) && largerMacShape.room == CGRect(x: 8, y: 8, width: 424, height: 422)
-      && largerMacShape.union(.bar)! == CGRect(x: 14, y: 454, width: 272, height: 50) && largerMacShape.targets[.keys]!.minY == 520
+      && largerMacShape.union(.bar)! == CGRect(x: 14, y: 454, width: 232, height: 50) && largerMacShape.targets[.keys]!.minY == 520
       && largerMacShape.targets[.trackpad]! == CGRect(x: 14, y: 574, width: 412, height: 304), "the 18 Pro Max with Larger Picture and a window of the Desktop's shape: \(largerMacShape.targets)")
 check(largerFitted.stream == largerFitted.room!, "a window fitted to the room: the picture is the room")
-check(largerFive.union(.bar)! == CGRect(x: 14, y: 454, width: 244, height: 50), "before the Mac's menus come: Apps, Aa and Keyboard of five")
+check(largerFive.union(.bar)! == CGRect(x: 14, y: 454, width: 202, height: 50), "before the Mac's menus come: Apps, Aa and Keyboard of six")
 do {
     let menus = largerMacShape.targets[.menus]!, apps = largerMacShape.targets[.apps]!
     check(menus.size == apps.size && menus.minY == apps.minY && abs(menus.minX - (apps.maxX + PhonePortraitLayout.gap)) < 0.001,
@@ -512,7 +512,7 @@ for (w, h) in [(1000, 710), (710, 500), (951, 669), (832, 440), (1376, 1032), (7
           && withMenus.targets[.strip]!.maxX + 12 == withMenus.targets[.menus]!.minX, "\(w)×\(h): the Menus button between the strip and Aa, the lit span as before")
 }
 let proMaxMenus = phoneModel(440, 894, menus: true)
-check(proMaxMenus.targets[.menus]! == CGRect(x: 350, y: 369, width: 76, height: 50) && proMaxMenus.targets[.strip]! == CGRect(x: 6, y: 364, width: 336, height: 61)
+check(proMaxMenus.targets[.menus]! == CGRect(x: 364, y: 369, width: 62, height: 50) && proMaxMenus.targets[.strip]! == CGRect(x: 6, y: 364, width: 350, height: 61)
       && proMaxMenus.union(.bar)! == CGRect(x: 6, y: 297, width: 420, height: 128), "the 18 Pro Max with menus: row 2's Menus under Settings: \(proMaxMenus.targets)")
 do {
     var noMenus = largerMacShape.targets
