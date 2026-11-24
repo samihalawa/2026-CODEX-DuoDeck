@@ -1,204 +1,429 @@
-const scenes = Object.freeze({
-  editing:[{label:"Copy",shortcut:"⌘ C"},{label:"Paste",shortcut:"⌘ V"},{label:"Undo",shortcut:"⌘ Z"},{label:"Find",shortcut:"⌘ F"},{label:"Switch apps",shortcut:"⌘ Tab"},{label:"Spotlight",shortcut:"⌘ Space"}],
-  browsing:[{label:"Address",shortcut:"⌘ L"},{label:"New tab",shortcut:"⌘ T"},{label:"Reload",shortcut:"⌘ R"},{label:"Find",shortcut:"⌘ F"},{label:"Back",shortcut:"⌘ ["},{label:"Forward",shortcut:"⌘ ]"}],
-  windows:[{label:"Switch apps",shortcut:"⌘ Tab"},{label:"Close",shortcut:"⌘ W"},{label:"Minimize",shortcut:"⌘ M"},{label:"Mission Control",shortcut:"⌃ ↑"},{label:"Space left",shortcut:"⌃ ←"},{label:"Space right",shortcut:"⌃ →"}],
-  code:[{label:"Run",shortcut:"⌘ R"},{label:"Build",shortcut:"⌘ B"},{label:"Save",shortcut:"⌘ S"},{label:"Find all",shortcut:"⇧ ⌘ F"},{label:"Comment",shortcut:"⌘ /"},{label:"Next window",shortcut:"⌘ \u0060"}],
-});
-const $ = id => document.getElementById(id);
-const shell = document.querySelector(".preview-shell");
-const pad = $("demoPad");
-const pointer = $("previewPointer");
-const status = $("demoStatus");
-const speedInput = $("speed");
-const speedLabel = $("speedValue");
-const sceneSelector = $("sceneSelect");
-const sceneGrid = $("sceneGrid");
-const shortcuts = $("shortcutDisclosure");
-const settings = $("previewSettings");
-const modes = Array.from(document.querySelectorAll(".mode[data-mode]"));
-const tasks = Array.from(document.querySelectorAll(".demo-task"));
-const storageKey = "duodeck.website.preview";
-const defaultMode = shell.dataset.mode;
-let anchor = {x:.72,y:.48};
-let pointerSession = null;
-let statusReset;
-let clickReset;
+(() => {
+  "use strict";
 
-function announce(message) {
-  status.textContent=message;
-  clearTimeout(statusReset);
-  statusReset=setTimeout(()=>{status.textContent="Browser preview";},3500);
-}
-function persist() {
-  try { localStorage.setItem(storageKey,JSON.stringify({mode:shell.dataset.mode,scene:sceneSelector.value,speed:Number(speedInput.value),shortcuts:shortcuts.open})); } catch {}
-}
-function movePointer(dx,dy) {
-  anchor.x=Math.max(.01,Math.min(.92,anchor.x+dx));
-  anchor.y=Math.max(.01,Math.min(.84,anchor.y+dy));
-  pointer.style.left=(anchor.x*100).toFixed(2)+"%";
-  pointer.style.top=(anchor.y*100).toFixed(2)+"%";
-}
-function clickPointer() {
-  pointer.classList.add("clicked");
-  clearTimeout(clickReset);
-  clickReset=setTimeout(()=>pointer.classList.remove("clicked"),150);
-  const rect=pointer.getBoundingClientRect();
-  const target=document.elementFromPoint(rect.left+4,rect.top+3)?.closest(".demo-task");
-  if(target) target.click();
-  else announce("Click");
-}
-tasks.forEach(task=>task.addEventListener("click",()=>{
-  const checked=task.getAttribute("aria-checked")!=="true";
-  task.setAttribute("aria-checked",String(checked));
-  announce(task.textContent.trim()+(checked?" — checked":" — unchecked"));
-}));
-function setMode(selected,notify=true) {
-  if(!modes.some(item=>item.dataset.mode===selected)) selected=defaultMode;
-  shell.dataset.mode=selected;
-  const labels={small:"Compact",medium:"Balanced",full:"Tall"};
-  for(const item of modes) {
-    const active=item.dataset.mode===selected;
-    item.classList.toggle("active",active);
-    item.setAttribute("aria-pressed",String(active));
+  const CONSENT_KEY = "duodeck.consent.v1";
+  const PREVIEW_KEY = "duodeck.preview.v1";
+  const THEME_KEY = "duodeck.theme.v1";
+  const POSTHOG_HOST = "https://posthog.megawebs.com";
+  const POSTHOG_KEY = "phc_D6o2sxKaneoKCAxp8w8oQiD86Bm77AGMboe7DMK5Y8Y6";
+
+  // Theme support (system default, persisted manual toggle, or ?theme=light|dark preview)
+  const themeToggle = document.getElementById("themeToggle");
+  function setTheme(next, persist = true) {
+    if (next === "light" || next === "dark") {
+      document.documentElement.setAttribute("data-theme", next);
+      if (themeToggle) themeToggle.textContent = next === "dark" ? "Light" : "Dark";
+      if (persist) {
+        try { localStorage.setItem(THEME_KEY, next); } catch {}
+      }
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      const sysDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+      if (themeToggle) themeToggle.textContent = sysDark ? "Light" : "Dark";
+    }
   }
-  $("trackpadSizeLabel").textContent=labels[selected]||"Balanced";
-  persist();
-  if(notify) announce("Split layout: "+(labels[selected]||selected));
-}
-function renderScenes() {
-  const selected=scenes[sceneSelector.value]||scenes.editing;
-  sceneGrid.replaceChildren();
-  for(const action of selected) {
-    const button=document.createElement("button");
-    button.type="button";
-    button.title=action.shortcut;
-    button.setAttribute("aria-label",action.label+", "+action.shortcut+", preview");
-    const key=document.createElement("kbd");
-    key.textContent=action.shortcut;
-    key.setAttribute("aria-hidden","true");
-    const label=document.createElement("span");
-    label.textContent=action.label;
-    button.append(key,label);
-    button.addEventListener("click",()=>{
-      announce(action.label+" · "+action.shortcut+" · preview");
-      button.classList.add("action-flash");
-      setTimeout(()=>button.classList.remove("action-flash"),180);
+  try {
+    const queryTheme = new URLSearchParams(window.location.search).get("theme");
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (queryTheme === "light" || queryTheme === "dark") setTheme(queryTheme, false);
+    else if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme, false);
+    else setTheme(null, false);
+  } catch {
+    setTheme(null, false);
+  }
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme")
+        || (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light");
+      setTheme(current === "dark" ? "light" : "dark", true);
     });
-    sceneGrid.append(button);
   }
-}
-modes.forEach(control=>control.addEventListener("click",()=>setMode(control.dataset.mode)));
-sceneSelector.addEventListener("change",()=>{
-  renderScenes();persist();
-  announce(sceneSelector.selectedOptions[0].text+" shortcuts");
-});
-shortcuts.addEventListener("toggle",persist);
-speedInput.addEventListener("input",()=>{
-  speedLabel.value=(Number(speedInput.value)/100).toFixed(2)+"×";persist();
-});
-$("settingsOpen").addEventListener("click",()=>settings.showModal());
-$("settingsClose").addEventListener("click",()=>settings.close());
-$("settingsDone").addEventListener("click",()=>settings.close());
-settings.addEventListener("close",()=>$("settingsOpen").focus({preventScroll:true}));
-settings.addEventListener("click",event=>{
-  const rect=settings.getBoundingClientRect();
-  if(event.target===settings&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)) settings.close();
-});
-pad.addEventListener("pointerdown",event=>{
-  if(pointerSession||(event.pointerType==="mouse"&&event.button!==0)) return;
-  pad.setPointerCapture(event.pointerId);
-  pointerSession={id:event.pointerId,x:event.clientX,y:event.clientY,distance:0};
-  pad.focus({preventScroll:true});
-});
-pad.addEventListener("pointermove",event=>{
-  if(!pointerSession||pointerSession.id!==event.pointerId)return;
-  const bounds=pad.getBoundingClientRect();
-  const dx=event.clientX-pointerSession.x;
-  const dy=event.clientY-pointerSession.y;
-  pointerSession.distance+=Math.hypot(dx,dy);
-  pointerSession.x=event.clientX;pointerSession.y=event.clientY;
-  const speed=Number(speedInput.value)/100;
-  movePointer(dx/Math.max(1,bounds.width)*speed,dy/Math.max(1,bounds.height)*speed);
-});
-function endInteraction(event) {
-  if(!pointerSession||pointerSession.id!==event.pointerId)return;
-  if(event.type==="pointerup"){
-    if(pointerSession.distance<8)clickPointer();
-    else announce("Pointer moved");
-  }
-  pointerSession=null;
-  if(pad.hasPointerCapture(event.pointerId))pad.releasePointerCapture(event.pointerId);
-}
-pad.addEventListener("pointerup",endInteraction);
-pad.addEventListener("pointercancel",endInteraction);
-pad.addEventListener("lostpointercapture",()=>{pointerSession=null;});
-pad.addEventListener("wheel",event=>{event.preventDefault();announce("Scroll · preview");},{passive:false});
-pad.addEventListener("keydown",event=>{
-  const step=(event.shiftKey?.07:.025)*Number(speedInput.value)/100;
-  const keys={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};
-  if(keys[event.key]){event.preventDefault();movePointer(...keys[event.key]);}
-  if(event.key==="Enter"||event.key===" "){event.preventDefault();clickPointer();}
-});
-$("resetDemo").addEventListener("click",()=>{
-  anchor={x:.72,y:.48};speedInput.value="125";speedLabel.value="1.25×";
-  sceneSelector.value="editing";shortcuts.open=false;
-  tasks.forEach((task,index)=>task.setAttribute("aria-checked",String(index===0)));
-  setMode(defaultMode,false);renderScenes();movePointer(0,0);announce("Preview reset");
-});
-let saved;
-try{saved=JSON.parse(localStorage.getItem(storageKey)||"null");}catch{}
-if(saved&&typeof saved==="object"){
-  if(scenes[saved.scene])sceneSelector.value=saved.scene;
-  if(Number.isFinite(saved.speed)&&saved.speed>=65&&saved.speed<=230)speedInput.value=String(saved.speed);
-  shortcuts.open=saved.shortcuts===true;
-}
-setMode(saved?.mode,false);
-speedLabel.value=(Number(speedInput.value)/100).toFixed(2)+"×";
-renderScenes();movePointer(0,0);
 
-let downloadRefreshTimer;
-let downloadRefreshInProgress = false;
-function renderMacDownload(mac) {
-  const link=$("macDownload");
-  const status=$("macDownloadStatus");
-  const expected="https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
-  if(mac?.available&&mac.url===expected){
-    link.href=expected;
-    link.removeAttribute("aria-disabled");
-    link.removeAttribute("tabindex");
-    link.textContent="Download for Mac";
-    status.textContent="Signed and notarized Mac companion.";
-    return;
+  window.dataLayer = window.dataLayer || [];
+  function pushDataLayer() {
+    window.dataLayer.push(arguments);
   }
-  link.removeAttribute("href");
-  link.setAttribute("aria-disabled","true");
-  link.setAttribute("tabindex","-1");
-  const pending=mac?.status==="pending";
-  link.textContent=pending?"Mac download coming soon":"Mac download unavailable";
-  status.textContent=pending?"The Mac download is being prepared.":"Couldn’t check the Mac download. See Mac releases below.";
-}
-async function refreshDownloads(){
-  if(downloadRefreshInProgress)return;
-  downloadRefreshInProgress=true;
-  clearTimeout(downloadRefreshTimer);
-  const request=new AbortController();
-  const timeout=setTimeout(()=>request.abort(),9000);
-  try{
-    const response=await fetch("/api/downloads",{cache:"no-store",signal:request.signal});
-    if(!response.ok)throw new Error("Could not check downloads");
-    const {mac}=await response.json();
-    renderMacDownload(mac);
-  }catch{
-    renderMacDownload();
+  pushDataLayer("consent", "default", {
+    analytics_storage: "denied",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+  });
+
+  let posthogLoaded = false;
+  function loadPostHog() {
+    if (posthogLoaded || window.posthog?.__SV) {
+      if (window.posthog?.opt_in_capturing) window.posthog.opt_in_capturing();
+      return;
+    }
+    posthogLoaded = true;
+    const script = document.createElement("script");
+    script.src = POSTHOG_HOST + "/static/array.js";
+    script.async = true;
+    script.onload = () => {
+      if (!window.posthog || typeof window.posthog.init !== "function") return;
+      window.posthog.init(POSTHOG_KEY, {
+        api_host: POSTHOG_HOST,
+        ui_host: POSTHOG_HOST,
+        capture_pageview: true,
+        capture_pageleave: true,
+        capture_exceptions: true,
+        autocapture: true,
+        person_profiles: "identified_only",
+        persistence: "localStorage+cookie",
+      });
+    };
+    document.head.appendChild(script);
   }
-  finally{
-    clearTimeout(timeout);
-    downloadRefreshInProgress=false;
-    if(!document.hidden)downloadRefreshTimer=setTimeout(refreshDownloads,65_000);
+
+  function track(eventName, props) {
+    try {
+      if (localStorage.getItem(CONSENT_KEY) !== "accepted") return;
+      pushDataLayer("event", eventName, props || {});
+      if (window.posthog && typeof window.posthog.capture === "function") {
+        window.posthog.capture(eventName, props || {});
+      }
+    } catch {
+      // Ignore storage or telemetry restrictions
+    }
   }
-}
-refreshDownloads();
-document.addEventListener("visibilitychange",()=>{
-  clearTimeout(downloadRefreshTimer);
-  if(!document.hidden)refreshDownloads();
-});
+
+  window.addEventListener("error", (event) => {
+    if (localStorage.getItem(CONSENT_KEY) === "accepted" && window.posthog?.captureException) {
+      window.posthog.captureException(event.error || new Error(event.message || "Script error"));
+    }
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    if (localStorage.getItem(CONSENT_KEY) === "accepted" && window.posthog?.captureException) {
+      window.posthog.captureException(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+    }
+  });
+
+  // Consent banner controller
+  const consentBanner = document.getElementById("consentBanner");
+  const acceptBtn = document.getElementById("consentAccept");
+  const declineBtn = document.getElementById("consentDecline");
+  const manageBtn = document.getElementById("manageConsent");
+
+  function applyConsent(choice) {
+    try {
+      localStorage.setItem(CONSENT_KEY, choice);
+    } catch {
+      // Ignore storage denial
+    }
+    if (consentBanner) consentBanner.hidden = true;
+    if (choice === "accepted") {
+      pushDataLayer("consent", "update", { analytics_storage: "granted" });
+      loadPostHog();
+    } else {
+      pushDataLayer("consent", "update", { analytics_storage: "denied" });
+      if (window.posthog?.opt_out_capturing) window.posthog.opt_out_capturing();
+    }
+  }
+
+  try {
+    const savedConsent = localStorage.getItem(CONSENT_KEY);
+    if (savedConsent === "accepted") {
+      applyConsent("accepted");
+    } else if (!savedConsent && consentBanner) {
+      consentBanner.hidden = false;
+    }
+  } catch {
+    if (consentBanner) consentBanner.hidden = false;
+  }
+
+  if (acceptBtn) acceptBtn.addEventListener("click", () => applyConsent("accepted"));
+  if (declineBtn) declineBtn.addEventListener("click", () => applyConsent("declined"));
+  if (manageBtn && consentBanner) {
+    manageBtn.addEventListener("click", () => {
+      consentBanner.hidden = false;
+    });
+  }
+
+  // Live Mac Host download check
+  const macBtn = document.getElementById("macDownloadBtn");
+  const downloadMeta = document.getElementById("downloadMeta");
+  if (macBtn) {
+    macBtn.addEventListener("click", () => track("duodeck_mac_download_click", { source: "hero_or_card" }));
+    fetch("/api/downloads")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || !data.mac || !downloadMeta) return;
+        if (data.mac.available && data.mac.url) {
+          macBtn.href = data.mac.url;
+          downloadMeta.textContent = "Signed & notarized Universal DMG verified available on GitHub Releases.";
+        } else if (data.mac.status === "pending") {
+          downloadMeta.textContent = "Mac Host release is uploading — source & release notes remain available on GitHub.";
+        } else {
+          downloadMeta.textContent = "Latest Universal DMG hosted on GitHub Releases (macOS 14+).";
+        }
+      })
+      .catch(() => {
+        if (downloadMeta) downloadMeta.textContent = "Hosted on GitHub Releases (macOS 14+).";
+      });
+  }
+
+  // Interactive workspace preview
+  const sceneSelector = document.getElementById("sceneSelector");
+  const layoutSelector = document.getElementById("layoutSelector");
+  const presetSelector = document.getElementById("presetSelector");
+  const deviceFrame = document.getElementById("deviceFrame");
+  const sceneBadge = document.getElementById("sceneBadge");
+  const windowTitle = document.getElementById("windowTitle");
+  const sceneHeading = document.getElementById("sceneHeading");
+  const sceneBody = document.getElementById("sceneBody");
+  const macActionLog = document.getElementById("macActionLog");
+  const shortcutStrip = document.getElementById("shortcutStrip");
+  const trackpadPad = document.getElementById("trackpadPad");
+  const macCursor = document.getElementById("macCursor");
+  const pointerSpeed = document.getElementById("pointerSpeed");
+  const floatKbToggle = document.getElementById("floatKbToggle");
+  const floatingKb = document.getElementById("floatingKb");
+  const closeFloatKb = document.getElementById("closeFloatKb");
+  const backScreenToggle = document.getElementById("backScreenToggle");
+  const duoBackPreview = document.getElementById("duoBackPreview");
+  const resetPreview = document.getElementById("resetPreview");
+  const previewTelemetry = document.getElementById("previewTelemetry");
+
+  if (!sceneSelector || !deviceFrame) return;
+
+  const scenes = {
+    notes: {
+      badge: "Window · Notes",
+      title: "Notes — Release Checklist.md",
+      heading: "Single-window capture keeps everything else private",
+      body: "Only the Mac window you pick streams to your phone. Drag across the trackpad below to steer the Mac pointer or open Floating Keyboard to send chords.",
+    },
+    code: {
+      badge: "Window · Xcode",
+      title: "DuoDeck.xcodeproj — FloatingKeyboard.swift",
+      heading: "Keep builds running while navigating files from the couch",
+      body: "Trigger Cmd+R, Cmd+Shift+O, or arrow keys with Esc, Tab, and Control modifiers always one tap away.",
+    },
+    browser: {
+      badge: "Window · Safari",
+      title: "Safari — Documentation & Staging",
+      heading: "Two-finger scroll and link clicks without full desktop clutter",
+      body: "Switch between direct Touch mode and invisible relative Trackpad mode anytime from View › Tracking mode.",
+    },
+    presenting: {
+      badge: "Desktop · Keynote",
+      title: "Keynote — Product Deck.key",
+      heading: "Run slides from your palm or the iPhone Duo outer screen",
+      body: "Use the Presenting shortcut preset and Back screen mirror so notes stay on the Mac while slides advance cleanly.",
+    },
+  };
+
+  const presets = {
+    editing: ["Undo (Cmd+Z)", "Redo (Shift+Cmd+Z)", "Copy (Cmd+C)", "Paste (Cmd+V)", "Find (Cmd+F)", "Spotlight"],
+    browsing: ["Back (Cmd+[)", "Forward (Cmd+])", "New Tab (Cmd+T)", "Reload (Cmd+R)", "Find (Cmd+F)"],
+    presenting: ["Prev Slide", "Next Slide", "Play Deck", "Black Screen (B)", "Exit (Esc)"],
+    code: ["Open Quickly (Shift+Cmd+O)", "Run (Cmd+R)", "Stop (Cmd+.)", "Comment (Cmd+/)", "Build (Cmd+B)"],
+  };
+
+  const defaults = {
+    scene: "notes",
+    layout: "split",
+    preset: "editing",
+    speed: 1.2,
+    floatingKb: false,
+    backScreen: false,
+  };
+
+  let state = { ...defaults };
+  try {
+    const raw = localStorage.getItem(PREVIEW_KEY);
+    if (raw) state = { ...defaults, ...JSON.parse(raw) };
+  } catch {
+    state = { ...defaults };
+  }
+
+  let cursorX = 48;
+  let cursorY = 52;
+  let lastPointer = null;
+  const stickyMods = new Set();
+
+  function saveState() {
+    try {
+      localStorage.setItem(PREVIEW_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore storage denial
+    }
+  }
+
+  function setPressedGroup(container, attr, activeVal) {
+    if (!container) return;
+    container.querySelectorAll("button").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(btn.dataset[attr] === activeVal));
+    });
+  }
+
+  function renderShortcuts() {
+    if (!shortcutStrip) return;
+    const list = presets[state.preset] || presets.editing;
+    shortcutStrip.innerHTML = "";
+    list.forEach((label) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "shortcut-chip";
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        if (macActionLog) macActionLog.textContent = `Sent Mac shortcut: ${label}`;
+        track("duodeck_preview_interact", { kind: "shortcut", value: label });
+      });
+      shortcutStrip.appendChild(btn);
+    });
+  }
+
+  function render() {
+    const sc = scenes[state.scene] || scenes.notes;
+    if (sceneBadge) sceneBadge.textContent = sc.badge;
+    if (windowTitle) windowTitle.textContent = sc.title;
+    if (sceneHeading) sceneHeading.textContent = sc.heading;
+    if (sceneBody) sceneBody.textContent = sc.body;
+
+    deviceFrame.classList.remove("is-split", "is-trackpad", "is-desktop");
+    deviceFrame.classList.add(`is-${state.layout}`);
+
+    setPressedGroup(sceneSelector, "scene", state.scene);
+    setPressedGroup(layoutSelector, "layout", state.layout);
+    setPressedGroup(presetSelector, "preset", state.preset);
+
+    if (pointerSpeed) pointerSpeed.value = String(state.speed);
+    if (floatKbToggle) floatKbToggle.setAttribute("aria-pressed", String(Boolean(state.floatingKb)));
+    if (floatingKb) floatingKb.hidden = !state.floatingKb;
+    if (backScreenToggle) backScreenToggle.setAttribute("aria-pressed", String(Boolean(state.backScreen)));
+    if (duoBackPreview) duoBackPreview.hidden = !state.backScreen;
+
+    renderShortcuts();
+    if (previewTelemetry) {
+      const kbLabel = state.floatingKb ? " · Floating Keyboard open" : "";
+      const backLabel = state.backScreen ? " · Back screen active" : "";
+      previewTelemetry.textContent = `Scene: ${sc.badge} · Layout: ${state.layout} · Speed ${Number(state.speed).toFixed(1)}x${kbLabel}${backLabel}`;
+    }
+    saveState();
+  }
+
+  sceneSelector.addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-scene]");
+    if (!btn) return;
+    state.scene = btn.dataset.scene;
+    render();
+  });
+
+  if (layoutSelector) {
+    layoutSelector.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-layout]");
+      if (!btn) return;
+      state.layout = btn.dataset.layout;
+      render();
+    });
+  }
+
+  if (presetSelector) {
+    presetSelector.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-preset]");
+      if (!btn) return;
+      state.preset = btn.dataset.preset;
+      render();
+    });
+  }
+
+  if (pointerSpeed) {
+    pointerSpeed.addEventListener("input", () => {
+      state.speed = Number(pointerSpeed.value) || 1.2;
+      render();
+    });
+  }
+
+  if (floatKbToggle) {
+    floatKbToggle.addEventListener("click", () => {
+      state.floatingKb = !state.floatingKb;
+      render();
+    });
+  }
+  if (closeFloatKb) {
+    closeFloatKb.addEventListener("click", () => {
+      state.floatingKb = false;
+      render();
+    });
+  }
+
+  if (floatingKb) {
+    floatingKb.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-key]");
+      if (!btn) return;
+      const key = btn.dataset.key;
+      if (["Ctrl", "Opt", "Cmd", "Shift"].includes(key)) {
+        if (stickyMods.has(key)) {
+          stickyMods.delete(key);
+          btn.setAttribute("aria-pressed", "false");
+        } else {
+          stickyMods.add(key);
+          btn.setAttribute("aria-pressed", "true");
+        }
+        if (macActionLog) {
+          macActionLog.textContent = stickyMods.size
+            ? `Latched modifiers: ${Array.from(stickyMods).join(" + ")}`
+            : "Modifiers cleared";
+        }
+      } else {
+        const prefix = stickyMods.size ? `${Array.from(stickyMods).join("+")}+` : "";
+        if (macActionLog) macActionLog.textContent = `Floating Keyboard sent: ${prefix}${key}`;
+        stickyMods.clear();
+        floatingKb.querySelectorAll("button[data-key]").forEach((k) => k.setAttribute("aria-pressed", "false"));
+      }
+    });
+  }
+
+  if (backScreenToggle) {
+    backScreenToggle.addEventListener("click", () => {
+      state.backScreen = !state.backScreen;
+      render();
+    });
+  }
+
+  if (trackpadPad && macCursor) {
+    trackpadPad.addEventListener("pointerenter", (event) => {
+      lastPointer = { x: event.clientX, y: event.clientY };
+    });
+    trackpadPad.addEventListener("pointerleave", () => {
+      lastPointer = null;
+    });
+    trackpadPad.addEventListener("pointermove", (event) => {
+      if (!lastPointer) {
+        lastPointer = { x: event.clientX, y: event.clientY };
+        return;
+      }
+      const dx = (event.clientX - lastPointer.x) * state.speed * 0.28;
+      const dy = (event.clientY - lastPointer.y) * state.speed * 0.42;
+      lastPointer = { x: event.clientX, y: event.clientY };
+      cursorX = Math.max(6, Math.min(92, cursorX + dx));
+      cursorY = Math.max(10, Math.min(86, cursorY + dy));
+      macCursor.style.left = `${cursorX.toFixed(1)}%`;
+      macCursor.style.top = `${cursorY.toFixed(1)}%`;
+    });
+    trackpadPad.addEventListener("pointerdown", () => {
+      if (macActionLog) {
+        macActionLog.textContent = `Primary click sent at (${Math.round(cursorX)}%, ${Math.round(cursorY)}%)`;
+      }
+    });
+  }
+
+  if (resetPreview) {
+    resetPreview.addEventListener("click", () => {
+      state = { ...defaults };
+      cursorX = 48;
+      cursorY = 52;
+      if (macCursor) {
+        macCursor.style.left = "48%";
+        macCursor.style.top = "52%";
+      }
+      if (macActionLog) macActionLog.textContent = "Preview reset to defaults";
+      stickyMods.clear();
+      render();
+    });
+  }
+
+  render();
+})();

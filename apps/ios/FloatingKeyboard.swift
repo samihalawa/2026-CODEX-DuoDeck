@@ -30,11 +30,42 @@ enum FloatingKeyboard {
         return max(260, min(container - 8, base * CGFloat(step)))
     }
 
-    /// The panel's centre kept inside the container, whole on screen.
-    static func clamp(_ center: CGPoint, panel: CGSize, in container: CGSize) -> CGPoint {
+    /// The panel's centre kept inside the container, whole on screen, clear of the bottom safe area
+    /// and any active iPhone Duo fold band.
+    static func clamp(_ center: CGPoint, panel: CGSize, in container: CGSize,
+                      bottomInset: CGFloat = 0, fold: FoldInfo = .inferred) -> CGPoint {
         let halfW = panel.width / 2, halfH = panel.height / 2
-        return CGPoint(x: min(max(center.x, halfW + 4), max(halfW + 4, container.width - halfW - 4)),
-                       y: min(max(center.y, halfH + 4), max(halfH + 4, container.height - halfH - 4)))
+        let minX = halfW + 4, maxX = max(minX, container.width - halfW - 4)
+        let minY = halfH + 4, maxY = max(minY, container.height - halfH - max(8, bottomInset))
+        var x = min(max(center.x, minX), maxX)
+        var y = min(max(center.y, minY), maxY)
+        if let band = fold.verticalBand, x - halfW < band.maxX, x + halfW > band.minX {
+            let leadingMax = band.minX - halfW - 4
+            let trailingMin = band.maxX + halfW + 4
+            let fitsLeading = leadingMax >= minX
+            let fitsTrailing = trailingMin <= maxX
+            if x <= band.midX {
+                if fitsLeading { x = leadingMax }
+                else if fitsTrailing { x = trailingMin }
+            } else {
+                if fitsTrailing { x = trailingMin }
+                else if fitsLeading { x = leadingMax }
+            }
+        }
+        if let band = fold.horizontalBand, y - halfH < band.maxY, y + halfH > band.minY {
+            let belowMin = band.maxY + halfH + 4
+            let aboveMax = band.minY - halfH - 4
+            let fitsBelow = belowMin <= maxY
+            let fitsAbove = aboveMax >= minY
+            if y >= band.midY {
+                if fitsBelow { y = belowMin }
+                else if fitsAbove { y = aboveMax }
+            } else {
+                if fitsAbove { y = aboveMax }
+                else if fitsBelow { y = belowMin }
+            }
+        }
+        return CGPoint(x: x, y: y)
     }
 }
 
@@ -46,6 +77,7 @@ final class FloatingKeyboardState: ObservableObject {
 struct FloatingKeyboardPanel: View {
     let client: StreamClient
     let container: CGSize
+    var bottomInset: CGFloat = 0
     let close: () -> Void
 
     @AppStorage(FloatingKeyboard.xKey) private var storedX = 0.5
@@ -53,6 +85,8 @@ struct FloatingKeyboardPanel: View {
     @AppStorage(FloatingKeyboard.clearKey) private var clear = false
     @AppStorage(FloatingKeyboard.sizeKey) private var sizeStep = 1.0
     @AppStorage("DuoDeck.haptics") private var haptics = true
+    @Environment(\.duoFold) private var duoFold
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var layer = Layer.letters
     @State private var shift = Shift.off
@@ -76,7 +110,8 @@ struct FloatingKeyboardPanel: View {
     var body: some View {
         let stored = CGPoint(x: storedX * container.width, y: storedY * container.height)
         let center = FloatingKeyboard.clamp(CGPoint(x: stored.x + drag.width, y: stored.y + drag.height),
-                                            panel: panelSize, in: container)
+                                            panel: panelSize, in: container,
+                                            bottomInset: bottomInset, fold: duoFold)
         VStack(spacing: gap) {
             handle
             modifierRow
@@ -97,6 +132,9 @@ struct FloatingKeyboardPanel: View {
         .position(center)
         .animation(drag == .zero ? .spring(response: 0.3, dampingFraction: 0.82) : nil, value: center)
         .transition(.scale(scale: 0.86).combined(with: .opacity))
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { releaseAll() }
+        }
         .onDisappear(perform: releaseAll)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Floating keyboard")
@@ -134,7 +172,8 @@ struct FloatingKeyboardPanel: View {
                 .onEnded { value in
                     let moved = CGPoint(x: storedX * container.width + value.translation.width,
                                         y: storedY * container.height + value.translation.height)
-                    let kept = FloatingKeyboard.clamp(moved, panel: panelSize, in: container)
+                    let kept = FloatingKeyboard.clamp(moved, panel: panelSize, in: container,
+                                                      bottomInset: bottomInset, fold: duoFold)
                     storedX = container.width > 0 ? kept.x / container.width : 0.5
                     storedY = container.height > 0 ? kept.y / container.height : 0.6
                 }
@@ -264,7 +303,7 @@ struct FloatingKeyboardPanel: View {
             .foregroundStyle(on ? Palette.onAccent : Palette.text)
             .frame(width: keyWidth * 1.45)
             .frame(maxHeight: .infinity)
-            .background(on ? Palette.accent : Palette.control.opacity(1.6), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .background(on ? Palette.accent : Color(uiColor: .secondarySystemFill), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(FloatingKeyStyle())

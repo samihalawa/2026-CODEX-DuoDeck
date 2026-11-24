@@ -149,9 +149,10 @@ struct StreamScreen: View {
     /// The Settings panel (the Mac's streaming settings) is open. Up here, next to the drawer, so a
     /// rotation keeps it open and it re-anchors in the other layout.
     @State private var settingsOpen = false
-    /// The keyboard was up (the overlay first responder) when the panel opened: closing the panel
-    /// puts it back.
+    /// The keyboard was up (the overlay first responder or floating keyboard) when the panel opened:
+    /// closing the panel puts it back.
     @State private var keyboardBeforeSettings = false
+    @State private var floatingBeforeSettings = false
     /// The Menus pull-down closed the Settings panel, which had taken the keyboard down: it comes
     /// back when the pull-down goes (`menusClosed`).
     @State private var keyboardAfterMenus = false
@@ -357,6 +358,12 @@ struct StreamScreen: View {
                     PairingOverlay(client: client, scannerMode: scannerOverride ?? CodeScanner.currentMode,
                                    close: { withAnimation(.easeOut(duration: 0.2)) { pairingOverlay = false } })
                 }
+                if floatingKeyboard.shown && floatingKeyboardChosen && !overlayShown && tour == nil {
+                    FloatingKeyboardPanel(client: client, container: geo.size,
+                                          bottomInset: geo.safeAreaInsets.bottom) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floatingKeyboard.shown = false }
+                    }
+                }
             }
             .sheet(isPresented: Binding(get: { settingsOpen }, set: { setSettings($0) })) {
                 HostSettingsPanel(client: client, close: { setSettings(false) },
@@ -397,14 +404,15 @@ struct StreamScreen: View {
             #endif
         }
         .background(Palette.canvas)
-        .overlay {
-            // Over every layout, under nothing of the stream screen's: it takes only its own touches.
-            GeometryReader { geo in
-                if floatingKeyboard.shown && floatingKeyboardChosen {
-                    FloatingKeyboardPanel(client: client, container: geo.size) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floatingKeyboard.shown = false }
-                    }
+        .onChange(of: floatingKeyboardChosen) { _, enabled in
+            if !enabled {
+                if floatingKeyboard.shown {
+                    floatingKeyboard.shown = false
+                    overlay.setKeyboard(shown: true)
                 }
+            } else if keyboardShown {
+                overlay.setKeyboard(shown: false)
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floatingKeyboard.shown = true }
             }
         }
         .overlayPreferenceValue(WindowMenuAnchorKey.self) { anchor in
@@ -860,8 +868,11 @@ struct StreamScreen: View {
         withAnimation(.easeOut(duration: 0.18)) { drawerOpen = false }
         windowMenu = nil
         scaleOpen = false
+        floatingKeyboard.shown = false
         overlay.setKeyboard(shown: false)
     }
+
+    private var anyKeyboardShown: Bool { keyboardShown || (floatingKeyboardChosen && floatingKeyboard.shown) }
 
     /// Larger Picture in effect now (PhonePortraitLayout's rule): the switch, while a window streams.
     /// The Desktop, which Aa never resizes, and nothing streaming keep the standard arrangement.
@@ -884,6 +895,8 @@ struct StreamScreen: View {
             windowMenu = nil
             scaleOpen = false
             keyboardBeforeSettings = keyboardShown
+            floatingBeforeSettings = floatingKeyboardChosen && floatingKeyboard.shown
+            floatingKeyboard.shown = false
             overlay.setKeyboard(shown: false)
         }
         let motion: Animation = open && !reduceMotion ? .spring(duration: 0.25, bounce: 0.15) : .easeOut(duration: 0.18)
@@ -895,8 +908,15 @@ struct StreamScreen: View {
             largerPictureHeld = open ? largerPictureNow : nil
         }
         if !open {
-            if restoreKeyboard, keyboardBeforeSettings { overlay.setKeyboard(shown: true) }
+            if restoreKeyboard {
+                if floatingBeforeSettings && floatingKeyboardChosen {
+                    floatingKeyboard.shown = true
+                } else if keyboardBeforeSettings {
+                    overlay.setKeyboard(shown: true)
+                }
+            }
             keyboardBeforeSettings = false
+            floatingBeforeSettings = false
         }
     }
 
@@ -1250,7 +1270,7 @@ struct StreamScreen: View {
         let sizeMode = TopBarSizeMode(rawValue: topBarSizeRaw) ?? .automatic
         let adaptiveBar = plain.adapted(mode: sizeMode, keyboardShown: keyboardShown, narrowWidth: width < 640)
         let (bar, stripWidth) = adaptiveBar.clearing(fold, width: width)
-        let keepBarOpen = drawerOpen || settingsOpen || scaleOpen || keyboardShown || windowMenu != nil || tourOnScreen
+        let keepBarOpen = drawerOpen || settingsOpen || scaleOpen || anyKeyboardShown || windowMenu != nil || tourOnScreen
         let barVisible = !topBarAutoHide || topBarRevealed || keepBarOpen
         let autoHideKey = "\(topBarAutoHide)-\(topBarRevealed)-\(topBarInteractionToken)-\(keepBarOpen)"
 
@@ -1270,6 +1290,9 @@ struct StreamScreen: View {
             if barVisible {
                 TopBar(client: client, metrics: bar, stripWidth: stripWidth, drawerOpen: $drawerOpen,
                        keyboardShown: $keyboardShown,
+                       keyboardActive: anyKeyboardShown,
+                       fold: fold,
+                       totalWidth: width,
                        textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu, latched: $latched,
                        lockViewportSize: $lockViewportSize,
                        settingsOpen: settingsOpen,
@@ -1358,6 +1381,7 @@ struct StreamScreen: View {
     private func portrait(metrics: PortraitMetrics, largerKeyboard: CGFloat? = nil) -> some View {
         PortraitStreamScreen(client: client, metrics: metrics, drawerOpen: $drawerOpen,
                              keyboardShown: $keyboardShown,
+                             keyboardSelected: anyKeyboardShown,
                              textScale: $textScale, scaleOpen: $scaleOpen, windowMenu: $windowMenu,
                              latched: $latched, overlay: overlay,
                              settingsOpen: settingsOpen,
@@ -1663,6 +1687,9 @@ private struct TopBar: View {
     var stripWidth: CGFloat? = nil
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
+    var keyboardActive: Bool? = nil
+    var fold: FoldInfo = .none
+    var totalWidth: CGFloat = 0
     @Binding var textScale: Double?
     @Binding var scaleOpen: Bool
     @Binding var windowMenu: UInt32?
@@ -1686,35 +1713,75 @@ private struct TopBar: View {
     @AppStorage("DuoDeck.focusMode") private var focusMode = true
     @Environment(\.colorScheme) private var systemColorScheme
 
+    private var isKeyboardSelected: Bool { keyboardActive ?? keyboardShown }
+
     var body: some View {
         Group {
             if focusMode && !forceFullControls {
-                if narrowWidth || keyboardShown {
-                    scrollableFocusBar
-                } else if stripWidth != nil {
-                    // Book pose: keep Apps + Mac name on the left page and the remaining actions on the
-                    // right page so nothing straddles the vertical fold.
-                    HStack(spacing: metrics.gap) {
-                        appsActionButton
-                            .frame(width: 72)
-                        macTitleBadge
-                        Spacer(minLength: 12)
-                        if lockViewportSize { lockChip }
-                        keyboardActionButton
-                            .frame(width: 72)
-                        DuoDeckShortcutsMenu(client: client, latched: $latched)
-                            .frame(width: 72)
-                        viewMenuButton
-                            .frame(width: 58)
-                        desktopActionButton
-                            .frame(width: 64)
-                        settingsActionButton
-                            .frame(width: 68)
+                if let band = fold.verticalBand, totalWidth > 0 {
+                    // Book pose: split into leading and trailing pages around the vertical fold band
+                    // so neither lockChip, Mac name, nor action buttons ever straddle the crease.
+                    let leadingWidth = max(0, band.minX - metrics.padding)
+                    let trailingWidth = max(0, totalWidth - band.maxX - metrics.padding)
+                    HStack(spacing: 0) {
+                        HStack(spacing: metrics.gap) {
+                            appsActionButton
+                                .frame(width: 68)
+                            macTitleBadge
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if lockViewportSize {
+                                lockChip
+                                    .fixedSize()
+                            }
+                        }
+                        .frame(width: leadingWidth, alignment: .leading)
+                        .clipped()
+
+                        Spacer()
+                            .frame(width: band.width)
+
+                        Group {
+                            if keyboardShown {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        keyboardActionButton
+                                            .frame(minWidth: 62)
+                                        quickCommandStrip
+                                        DuoDeckShortcutsMenu(client: client, latched: $latched)
+                                            .frame(minWidth: 64)
+                                        viewMenuButton
+                                            .frame(minWidth: 52)
+                                        desktopActionButton
+                                            .frame(minWidth: 58)
+                                        settingsActionButton
+                                            .frame(minWidth: 58)
+                                    }
+                                }
+                            } else {
+                                HStack(spacing: metrics.gap) {
+                                    Spacer(minLength: 0)
+                                    keyboardActionButton
+                                        .frame(width: 72)
+                                    DuoDeckShortcutsMenu(client: client, latched: $latched)
+                                        .frame(width: 72)
+                                    viewMenuButton
+                                        .frame(width: 58)
+                                    desktopActionButton
+                                        .frame(width: 64)
+                                    settingsActionButton
+                                        .frame(width: 68)
+                                }
+                            }
+                        }
+                        .frame(width: trailingWidth, alignment: .trailing)
+                        .clipped()
                     }
                     .buttonStyle(.plain)
                     .frame(height: metrics.height)
                     .padding(.horizontal, metrics.padding)
                     .background(TopBarBackdrop(transparent: transparentTopBar))
+                } else if narrowWidth || keyboardShown {
+                    scrollableFocusBar
                 } else {
                     HStack(spacing: 12) {
                         macTitleBadge
@@ -1760,15 +1827,8 @@ private struct TopBar: View {
                 keyboardActionButton
                     .frame(minWidth: 62)
                 if keyboardShown {
-                    HStack(spacing: 6) {
-                        quickCommandCap("esc")
-                        quickCommandCap("tab")
-                        quickCommandCap("ctrl")
-                        quickCommandCap("opt")
-                        quickCommandCap("cmd")
-                        quickCommandCap("shift")
-                    }
-                    .padding(.horizontal, 4)
+                    quickCommandStrip
+                        .padding(.horizontal, 4)
                 }
                 DuoDeckShortcutsMenu(client: client, latched: $latched)
                     .frame(minWidth: 64)
@@ -1831,6 +1891,17 @@ private struct TopBar: View {
         }
     }
 
+    private var quickCommandStrip: some View {
+        HStack(spacing: 6) {
+            quickCommandCap("esc")
+            quickCommandCap("tab")
+            quickCommandCap("ctrl")
+            quickCommandCap("opt")
+            quickCommandCap("cmd")
+            quickCommandCap("shift")
+        }
+    }
+
     private var keyboardActionButton: some View {
         Button {
             onInteract()
@@ -1838,9 +1909,10 @@ private struct TopBar: View {
             toggleKeyboard()
         } label: {
             StreamControlLabel(title: "Keyboard",
-                               symbol: keyboardShown ? "keyboard.chevron.compact.down" : "keyboard",
-                               selected: keyboardShown)
+                               symbol: isKeyboardSelected ? "keyboard.chevron.compact.down" : "keyboard",
+                               selected: isKeyboardSelected)
         }
+        .accessibilityLabel(isKeyboardSelected ? "Hide the keyboard" : "Show the keyboard")
         .tourTarget(.keyboard)
     }
 
@@ -1942,9 +2014,9 @@ private struct TopBar: View {
                              offered: client.textScaleOffersOff, available: client.textScaleSelectable)
                 .tourTarget(.textSize)
 
-            button(open: keyboardShown, symbol: "keyboard", label: "Keyboard",
+            button(open: isKeyboardSelected, symbol: "keyboard", label: "Keyboard",
                    width: btnW,
-                   accessibilityLabel: keyboardShown ? "Hide the keyboard" : "Show the keyboard",
+                   accessibilityLabel: isKeyboardSelected ? "Hide the keyboard" : "Show the keyboard",
                    action: { onInteract(); setSettings(false, false); toggleKeyboard() })
                 .opacity(scaleOpen ? 0 : 1)
                 .allowsHitTesting(!scaleOpen)

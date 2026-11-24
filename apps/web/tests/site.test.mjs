@@ -32,7 +32,9 @@ test("health supplies actual product identity and no secrets",async()=>{
   assert.equal(response.status,200);
   const body=await response.json();
   assert.equal(body.status,"ok");assert.equal(body.product,"DuoDeck");
-  assert.equal(body.version,"1.1.0");assert.equal(body.commit,"web-cache-test");assert.equal("token" in body,false);
+  assert.equal(body.version,"1.1.0");assert.equal(body.commit,"web-cache-test");
+  assert.equal(body.sourceCommit,"web-cache-test");
+  assert.equal("token" in body,false);
   assert.equal(response.headers.get("cache-control"),"no-store");
 });
 test("homepage has distinct brand and real claims",async()=>{
@@ -46,16 +48,21 @@ test("homepage has distinct brand and real claims",async()=>{
   assert.match(body,/not a system-wide trackpad/i);
   assert.match(body,/href="\/styles\.css\?v=web-cache-test"/);
   assert.match(body,/src="\/app\.js\?v=web-cache-test"/);
+  assert.match(body,/application\/ld\+json/);
+  assert.match(body,/og-image\.png/);
+  assert.match(body,/Floating Keyboard/);
   assert.equal(r.headers.get("cache-control"),"no-cache");
   assert.equal(body.includes("__ASSET_VERSION__"),false);
   assert.match(body,/github\.com\/samihalawa\/2026-CODEX-DuoDeck/);
 });
-test("real published icon is available",async()=>{
-  const r=await fetch(origin+"/icon.png");
-  assert.equal(r.status,200);
-  assert.equal(r.headers.get("content-type"),"image/png");
-  const b=Buffer.from(await r.arrayBuffer());
-  assert.equal(b.subarray(1,4).toString(),"PNG");
+test("real published icon and og image are available",async()=>{
+  for (const asset of ["/icon.png", "/og-image.png"]) {
+    const r=await fetch(origin+asset);
+    assert.equal(r.status,200);
+    assert.equal(r.headers.get("content-type"),"image/png");
+    const b=Buffer.from(await r.arrayBuffer());
+    assert.equal(b.subarray(1,4).toString(),"PNG");
+  }
 });
 test("web controls are real runnable JavaScript",async()=>{
   const r=await fetch(origin+"/app.js");assert.equal(r.status,200);
@@ -70,13 +77,14 @@ test("visual stylesheet includes mobile and reduced-motion behavior",async()=>{
   assert.match(css,/@media\(max-width:560px\)/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
-test("privacy and terms are readable, accurate and linked",async()=>{
-  for(const path of ["/privacy","/terms"]){
+test("privacy, terms and support are readable, accurate and linked",async()=>{
+  for(const path of ["/privacy","/terms","/support"]){
     const r=await fetch(origin+path);assert.equal(r.status,200);
     const body=await r.text();
     assert.match(body,/DuoDeck/);
     assert.match(body,/Agents AI Ltd/);
     assert.match(body,/href="\/"/);
+    assert.equal(body.includes("__ASSET_VERSION__"),false);
   }
 });
 test("security response headers prevent embedding and sniffing",async()=>{
@@ -99,4 +107,5 @@ test("robots and sitemap routes use correct origin",async()=>{
   assert.match(robots,/duodeck\.megawebs\.com\/sitemap\.xml/);
   const sitemap=await (await fetch(origin+"/sitemap.xml")).text();
   assert.match(sitemap,/https:\/\/duodeck\.megawebs\.com\//);
+  assert.match(sitemap,/https:\/\/duodeck\.megawebs\.com\/support/);
 });

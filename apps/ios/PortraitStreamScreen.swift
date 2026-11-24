@@ -230,6 +230,7 @@ struct PortraitStreamScreen: View {
     @State private var controlsSettingsOpen = false
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
+    var keyboardSelected: Bool? = nil
     @Binding var textScale: Double?
     @Binding var scaleOpen: Bool
     @Binding var windowMenu: UInt32?
@@ -243,6 +244,8 @@ struct PortraitStreamScreen: View {
     let menusClosed: () -> Void
     /// The panel's open and close motion, scaled about the given point (see `StreamScreen`).
     let settingsTransition: (_ anchor: UnitPoint) -> AnyTransition
+
+    private var isKeyboardSelected: Bool { keyboardSelected ?? keyboardShown }
     /// The stream panel's size in points, for the viewport `StreamScreen` sends the host.
     let onPanelSize: (CGSize) -> Void
     /// Pair This iPad… in the panel (see `StreamScreen.openPairingOverlay`).
@@ -420,11 +423,11 @@ struct PortraitStreamScreen: View {
                 overlay.toggleKeyboard()
             } label: {
                 StreamControlLabel(title: "Keyboard",
-                                   symbol: keyboardShown ? "keyboard.chevron.compact.down" : "keyboard",
-                                   selected: keyboardShown)
+                                   symbol: isKeyboardSelected ? "keyboard.chevron.compact.down" : "keyboard",
+                                   selected: isKeyboardSelected)
             }
             .frame(minWidth: keyboardShown ? 62 : nil)
-            .accessibilityLabel(keyboardShown ? "Hide the keyboard" : "Show the keyboard")
+            .accessibilityLabel(isKeyboardSelected ? "Hide the keyboard" : "Show the keyboard")
             .tourTarget(.keyboard)
             if keyboardShown {
                 ForEach(["esc", "tab", "ctrl", "opt", "cmd"], id: \.self) { label in
@@ -812,6 +815,7 @@ struct PortraitStreamScreen: View {
     /// A key row key keeps what the sprite shows (StreamClient.sendFromKeyRow).
     private func keyRow(_ keys: KeyRow.Keys) -> some View {
         KeyRow(metrics: metrics, keys: keys, latched: $latched, keyboardShown: keyboardShown,
+               keyboardSelected: keyboardSelected,
                send: { client.sendFromKeyRow($0) },
                toggleKeyboard: { overlay.toggleKeyboard() },
                showSpotlight: client.active == .desktop)
@@ -1049,6 +1053,7 @@ private struct KeyRow: View {
     let keys: Keys
     @Binding var latched: KeyModifiers
     let keyboardShown: Bool
+    var keyboardSelected: Bool? = nil
     let send: (InputEvent) -> Void
     let toggleKeyboard: () -> Void
     /// Spotlight's panel is its own Mac window, so it only shows up in the stream while the whole
@@ -1136,12 +1141,13 @@ private struct KeyRow: View {
         case .modifier(let title, let flag, let label):
             latchKey(key, title, flag, label: label)
         case .keyboard:
-            cap(open: keyboardShown,
-                label: keyboardShown ? "Hide the keyboard" : "Show the keyboard",
+            let active = keyboardSelected ?? keyboardShown
+            cap(open: active,
+                label: active ? "Hide the keyboard" : "Show the keyboard",
                 action: { tap(key) }) {
                 Image(systemName: "keyboard")
                     .font(.system(size: 20))
-                    .foregroundStyle(keyboardShown ? Palette.accent : Palette.text)
+                    .foregroundStyle(active ? Palette.accent : Palette.text)
             }
         case .spotlight:
             cap(open: false, label: "Open Spotlight on the Mac", action: { tap(key) }) {
