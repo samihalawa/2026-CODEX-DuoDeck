@@ -1688,7 +1688,7 @@ private struct TopBar: View {
     @Binding var drawerOpen: Bool
     @Binding var keyboardShown: Bool
     var keyboardActive: Bool? = nil
-    var fold: FoldInfo = .none
+    var fold: FoldInfo = .known(nil)
     var totalWidth: CGFloat = 0
     @Binding var textScale: Double?
     @Binding var scaleOpen: Bool
