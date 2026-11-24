@@ -27,6 +27,14 @@ struct Trackpad: View {
     var pointerSensitivity: CGFloat = 1.25
     /// A three- or four-finger gesture, for the Mac (`StreamClient.sendGesture`). True when it went.
     var sendGesture: (TrackpadGestures.Gesture, Int) -> Bool = { _, _ in false }
+    /// Hold-to-precision-zoom wiring for the front portrait picture pane.
+    var precisionHoldZoomEnabled: Bool = true
+    var videoSize: CGSize = .zero
+    var readZoom: (() -> StreamZoom)? = nil
+    var writeZoom: ((StreamZoom) -> Void)? = nil
+    var animateZoom: ((StreamZoom, CFTimeInterval) -> Void)? = nil
+    var onPrecisionZoomChange: ((Bool) -> Void)? = nil
+    var onFocusPoint: ((CGPoint) -> Void)? = nil
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 22, style: .continuous) }
 
@@ -35,7 +43,10 @@ struct Trackpad: View {
             Palette.trackpad
             TrackpadView(send: send, setPointer: setPointer, feed: feed, onFingers: onFingers,
                          latched: latched, onModifiersConsumed: onModifiersConsumed,
-                         verticalSpan: verticalSpan, pointerSensitivity: pointerSensitivity, sendGesture: sendGesture)
+                         verticalSpan: verticalSpan, pointerSensitivity: pointerSensitivity, sendGesture: sendGesture,
+                         precisionHoldZoomEnabled: precisionHoldZoomEnabled, videoSize: videoSize,
+                         readZoom: readZoom, writeZoom: writeZoom, animateZoom: animateZoom,
+                         onPrecisionZoomChange: onPrecisionZoomChange, onFocusPoint: onFocusPoint)
             VStack {
                 Spacer(minLength: 0)
                 Text("Move with one finger · Scroll with two")
@@ -64,6 +75,13 @@ struct TrackpadView: UIViewRepresentable {
     var verticalSpan: CGFloat? = nil
     var pointerSensitivity: CGFloat = 1.25
     var sendGesture: (TrackpadGestures.Gesture, Int) -> Bool = { _, _ in false }
+    var precisionHoldZoomEnabled: Bool = true
+    var videoSize: CGSize = .zero
+    var readZoom: (() -> StreamZoom)? = nil
+    var writeZoom: ((StreamZoom) -> Void)? = nil
+    var animateZoom: ((StreamZoom, CFTimeInterval) -> Void)? = nil
+    var onPrecisionZoomChange: ((Bool) -> Void)? = nil
+    var onFocusPoint: ((CGPoint) -> Void)? = nil
 
     func makeUIView(context: Context) -> TrackpadSurface {
         let view = TrackpadSurface(frame: .zero)
@@ -84,6 +102,13 @@ struct TrackpadView: UIViewRepresentable {
         uiView.verticalSpan = verticalSpan
         uiView.travel = min(2.3, max(0.65, pointerSensitivity))
         uiView.sendGesture = sendGesture
+        uiView.precisionHoldZoomEnabled = precisionHoldZoomEnabled
+        uiView.videoSize = videoSize
+        uiView.readZoom = readZoom
+        uiView.writeZoom = writeZoom
+        uiView.animateZoom = animateZoom
+        uiView.onPrecisionZoomChange = onPrecisionZoomChange
+        uiView.onFocusPoint = onFocusPoint
         // Called from a gesture callback, never from inside a SwiftUI update, so the binding write
         // it performs needs no hop to the next runloop turn.
         uiView.onModifiersConsumed = onModifiersConsumed
@@ -152,6 +177,14 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// Mac's size, so a real trackpad's pt-for-pt acceleration is not available to copy; 1.25
     /// frames per swipe lands close enough to reach any corner in one comfortable stroke.
     var travel: CGFloat = 1.25
+    /// Precision hold-to-zoom on the picture pane above this trackpad.
+    var precisionHoldZoomEnabled: Bool = true
+    var videoSize: CGSize = .zero
+    var readZoom: (() -> StreamZoom)?
+    var writeZoom: ((StreamZoom) -> Void)?
+    var animateZoom: ((StreamZoom, CFTimeInterval) -> Void)?
+    var onPrecisionZoomChange: ((Bool) -> Void)?
+    var onFocusPoint: ((CGPoint) -> Void)?
 
     // One-finger pointer motion: the tracker, from touch-down.
 
@@ -163,11 +196,22 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// Where the tracked finger was at the last move turned into pointer motion (its touch-down
     /// point until it clears the slop), in this view's points.
     private var trackLast: CGPoint = .zero
+    private var trackStart: CGPoint = .zero
+    private var trackMovedForPrecision = false
     /// True once the tracked finger has cleared the slop.
     private var trackLive = false
     /// Set when the pan turned this stroke into a two-finger scroll; cleared when the tracker begins
     /// the next stroke. Backs up the tracker's own second-finger check (`FingerTracker`).
     private var trackSuspended = false
+    /// Precision hold-to-zoom state (same contract as InputOverlayView).
+    private var precisionActive = false
+    private var precisionSavedZoom: StreamZoom?
+    private var precisionDwellAnchor: CGPoint = .zero
+    private var precisionDwellWork: DispatchWorkItem?
+    private let precisionHaptic = UISelectionFeedbackGenerator()
+    private static let precisionMoveThreshold: CGFloat = 10
+    private static let precisionDwellRadius: CGFloat = 8
+    private static let precisionDwellDelay: TimeInterval = 0.55
 
     // Two-finger scrolling, and one-finger motion whenever the tracker is not driving: the pan.
 
@@ -268,12 +312,40 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         guard bounds.width > 0, bounds.height > 0 else { return }
         catchUp()
         let d = turned(dx, dy)
-        pad.move(dx: Double(d.x / xMeasure * travel), dy: Double(d.y / yMeasure * travel))
+        let currentZoom = readZoom?() ?? StreamZoom()
+        let precisionFactor: CGFloat = precisionActive ? (0.42 / max(1, currentZoom.scale)) : 1.0
+        pad.move(dx: Double(d.x / xMeasure * travel * precisionFactor),
+                 dy: Double(d.y / yMeasure * travel * precisionFactor))
+        if precisionActive {
+            keepCursorInPrecisionZoom(currentZoom)
+        }
         // The sprite first, since it is the feedback the finger is waiting for; then the Mac, whose
         // cursor still has to follow for clicks to land there. No rate limit needed here:
         // sendInput coalesces moves to one every 8 ms.
         setPointer(cursor)
         send(.pointer(.move, x: cursor.x, y: cursor.y))
+    }
+
+    private func keepCursorInPrecisionZoom(_ current: StreamZoom) {
+        guard current.isZoomed, current.pane.width > 0, current.pane.height > 0,
+              videoSize.width > 0, videoSize.height > 0 else { return }
+        let rect = HEVCDisplayView.videoRect(in: CGRect(origin: .zero, size: current.pane), videoSize: videoSize)
+        guard rect.width > 0, rect.height > 0 else { return }
+        let at1x = CGPoint(x: rect.minX + cursor.x * rect.width, y: rect.minY + cursor.y * rect.height)
+        let onScreen = current.zoomedPoint(at1x, in: current.pane)
+        let marginX = min(40, current.pane.width * 0.14)
+        let marginY = min(40, current.pane.height * 0.14)
+        var shiftX: CGFloat = 0, shiftY: CGFloat = 0
+        if onScreen.x < marginX { shiftX = marginX - onScreen.x }
+        else if onScreen.x > current.pane.width - marginX { shiftX = (current.pane.width - marginX) - onScreen.x }
+        if onScreen.y < marginY { shiftY = marginY - onScreen.y }
+        else if onScreen.y > current.pane.height - marginY { shiftY = (current.pane.height - marginY) - onScreen.y }
+        guard shiftX != 0 || shiftY != 0 else { return }
+        var z = current
+        z.aim(scale: z.scale,
+              offset: CGSize(width: z.offset.width + shiftX, height: z.offset.height + shiftY),
+              in: current.pane)
+        writeZoom?(z)
     }
 
     /// A stroke's first finger, or the pad joining a window: the cursor carries on from the anchor,
@@ -304,26 +376,116 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// Once a second finger joins, this stroke's motion belongs to the pan (scroll, then one-finger
     /// moves after a lift, with its own rebase) until every finger is up.
     @objc private func handleTrack() {
-        guard !strokes.silent else { return }
+        guard !strokes.silent else {
+            cancelPrecisionZoom(restore: true)
+            return
+        }
         switch tracker.state {
         case .began:
             trackSuspended = false
             trackLive = false
-            trackLast = tracker.location(in: self)
+            trackMovedForPrecision = false
+            cancelPrecisionZoom(restore: true)
+            trackStart = tracker.location(in: self)
+            trackLast = trackStart
+            precisionDwellAnchor = trackStart
+            if precisionHoldZoomEnabled && readZoom != nil { precisionHaptic.prepare() }
         case .changed:
+            if tracker.sawSecondFinger || trackSuspended {
+                cancelPrecisionZoom(restore: true)
+                return
+            }
             guard trackerDriving else { return }
             let location = tracker.location(in: self)
             if !trackLive {
                 guard hypot(location.x - trackLast.x, location.y - trackLast.y) > Self.trackSlop else { return }
                 trackLive = true
             }
+            if !trackMovedForPrecision && hypot(location.x - trackStart.x, location.y - trackStart.y) >= Self.precisionMoveThreshold {
+                trackMovedForPrecision = true
+                precisionDwellAnchor = location
+                armPrecisionDwell()
+            }
             let dx = location.x - trackLast.x
             let dy = location.y - trackLast.y
             trackLast = location
-            guard dx != 0 || dy != 0 else { return }
-            moveCursor(dx: dx, dy: dy)
-        default:
+            if dx != 0 || dy != 0 {
+                moveCursor(dx: dx, dy: dy)
+            }
+            if precisionHoldZoomEnabled && readZoom != nil && trackMovedForPrecision && !precisionActive && !dragging {
+                if hypot(location.x - precisionDwellAnchor.x, location.y - precisionDwellAnchor.y) > Self.precisionDwellRadius {
+                    precisionDwellAnchor = location
+                    armPrecisionDwell()
+                }
+            }
+        case .ended:
+            precisionDwellWork?.cancel()
+            precisionDwellWork = nil
+            if precisionActive {
+                let saved = precisionSavedZoom
+                precisionActive = false
+                precisionSavedZoom = nil
+                onPrecisionZoomChange?(false)
+                click(down: .leftDown, up: .leftUp)
+                if let saved {
+                    if let animateZoom { animateZoom(saved, 0.22) } else { writeZoom?(saved) }
+                }
+            }
             trackLive = false
+            trackMovedForPrecision = false
+        default:
+            cancelPrecisionZoom(restore: true)
+            trackLive = false
+            trackMovedForPrecision = false
+        }
+    }
+
+    private func armPrecisionDwell() {
+        precisionDwellWork?.cancel()
+        guard precisionHoldZoomEnabled, readZoom != nil,
+              trackMovedForPrecision, !precisionActive, !dragging,
+              !strokes.silent, videoSize != .zero else { return }
+        let work = DispatchWorkItem { [weak self] in
+            self?.engagePrecisionZoom()
+        }
+        precisionDwellWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.precisionDwellDelay, execute: work)
+    }
+
+    private func engagePrecisionZoom() {
+        precisionDwellWork = nil
+        guard precisionHoldZoomEnabled, let readZoom,
+              trackerDriving, trackMovedForPrecision, !precisionActive, !dragging,
+              !strokes.silent, videoSize != .zero else { return }
+        let original = readZoom()
+        let pane = original.pane
+        guard pane.width > 0, pane.height > 0 else { return }
+        let rect = HEVCDisplayView.videoRect(in: CGRect(origin: .zero, size: pane), videoSize: videoSize)
+        guard rect.width > 0, rect.height > 0 else { return }
+        let targetScale = min(StreamZoom.maxScale, max(original.scale * 2.5, 2.8))
+        let pointAt1x = CGPoint(x: rect.minX + cursor.x * rect.width,
+                                y: rect.minY + cursor.y * rect.height)
+        let target = StreamZoom.centered(on: pointAt1x, scale: targetScale, in: pane)
+        precisionSavedZoom = original
+        precisionActive = true
+        if hapticsEnabled { precisionHaptic.selectionChanged() }
+        onPrecisionZoomChange?(true)
+        if let animateZoom { animateZoom(target, 0.22) } else { writeZoom?(target) }
+    }
+
+    private func cancelPrecisionZoom(restore: Bool) {
+        precisionDwellWork?.cancel()
+        precisionDwellWork = nil
+        guard precisionActive else {
+            precisionSavedZoom = nil
+            return
+        }
+        let saved = precisionSavedZoom
+        precisionActive = false
+        precisionSavedZoom = nil
+        onPrecisionZoomChange?(false)
+        if restore, let saved {
+            if let animateZoom { animateZoom(saved, 0.18) } else { writeZoom?(saved) }
         }
     }
 
@@ -392,6 +554,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// A new two-finger gesture ends any coast still running first (its `.momentumEnded` goes out
     /// before this `.began`), so the host never has two scrolls open.
     private func beginScroll() {
+        cancelPrecisionZoom(restore: true)
         momentum.stop()
         scrolling = true
         scrollFactor = CGFloat(ScrollDirection.factor(.pad, reversed: StreamClient.reverseScrollOn))
@@ -454,12 +617,16 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         if down == touches.count { adoptAnchor() }
         // Spin the Taptic Engine up now, so a tap's click lands without its start-up delay.
         clickHaptic.prepare()
-        if down >= 2 { momentum.stop() }
+        if down >= 2 {
+            cancelPrecisionZoom(restore: true)
+            momentum.stop()
+        }
     }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
+            cancelPrecisionZoom(restore: true)
             // This device's pointer is left alone: it outlives this view across a rotation.
             momentum.stop()
             // A drag the pad is taken away in the middle of (a rotation) has ended by now: UIKit
@@ -494,11 +661,14 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         guard !strokes.silent else { return }
         switch gesture.state {
         case .began:
+            guard !precisionActive else { return }
+            cancelPrecisionZoom(restore: false)
             dragging = true
             // Firmer than a click: the button is now held down.
             if hapticsEnabled { clickHaptic.impactOccurred(intensity: 1.0) }
             catchUp()
             setPointer(cursor)
+            onFocusPoint?(cursor)
             pressModifiers()
             send(.pointer(.leftDown, x: cursor.x, y: cursor.y))
         case .ended, .cancelled, .failed:
@@ -522,6 +692,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
     /// under way ends here, with no coast. Pointer motion before the third finger stays (at most
     /// `chordTravel`); nothing else of the stroke goes out but its gesture.
     private func strokeSilenced() {
+        cancelPrecisionZoom(restore: true)
         if scrolling { endScroll(momentumVelocity: nil) }
     }
 
@@ -548,6 +719,7 @@ final class TrackpadSurface: UIView, UIGestureRecognizerDelegate {
         if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.8) }
         catchUp()
         setPointer(cursor)
+        onFocusPoint?(cursor)
         pressModifiers()
         send(.pointer(down, x: cursor.x, y: cursor.y))
         send(.pointer(up, x: cursor.x, y: cursor.y))

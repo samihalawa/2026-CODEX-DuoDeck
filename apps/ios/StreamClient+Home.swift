@@ -873,13 +873,110 @@ extension StreamClient {
                   link: link, linkSaved: link, scannedSecret: secret)
     }
 
-    /// A proof at the home door: `duodeck-pair/1` to each target in turn, pinned to `pin`, kind 19
-    /// `qr` or `code` with proof_D; kind 20 ok with proof_M checked and naming that key: saved
-    /// (`homeTLS`, the Bonjour name), then a pinned session on the row, or over a stream the
-    /// session goes on, now with a saved Mac. No target answering: a link's own addresses
-    /// (`link`), else the words. `linkSaved`: the code's link, whose addresses and port the record
-    /// keeps until the session's first kind 18 (SavedMacs.applyingLink). `busy`: one silent retry.
-    private func homeProof(targets: [HomeDialer.Target], pin: Data, method: String, key makeKey: @escaping (Data) -> SymmetricKey?,
+    /// Pairing by 12-digit code without needing an IP address: tries every Mac discovered on Wi-Fi,
+    /// USB, or Direct wireless (and falls back to saved Macs' known addresses), matching whichever
+    /// Mac is actively showing that pairing code via cryptographic PBKDF2 proof.
+    func pairCodeWithoutAddress(code text: String, overlay: Bool) {
+        switch PairingCode.check(text) {
+        case .failure(.length): pairing = .failed(.codeLength); return
+        case .failure(.typo): pairing = .failed(.codeTypo); return
+        case .success(let code):
+            let localTargets: [HomeDialer.Target] = macs
+                .filter { $0.route != .remote && $0.endpoint != nil }
+                .compactMap { mac in
+                    guard let endpoint = mac.endpoint else { return nil }
+                    let wired = wiredDial(for: mac)
+                    return HomeDialer.Target(
+                        endpoint: wired?.endpoint ?? endpoint,
+                        fallback: wired != nil ? endpoint : nil,
+                        peerToPeer: mac.direct,
+                        row: mac.id,
+                        label: wired?.via ?? mac.name)
+                }
+            if !localTargets.isEmpty {
+                tryHomeCodeTargets(localTargets, index: 0, code: code, overlay: overlay)
+                return
+            }
+            // Fallback: try any previously saved Mac's remote/LAN addresses if no Bonjour Mac is visible.
+            let savedCandidates: [(mac: SavedMac, candidates: [RemoteDialPolicy.Candidate])] = savedMacs.compactMap { m in
+                let c = RemoteDialPolicy.order(m.addresses, remotePort: m.remotePort,
+                                               lastWorked: m.lastWorked, localIPv4: Self.localIPv4Networks())
+                return c.isEmpty ? nil : (m, c)
+            }
+            if let first = savedCandidates.first {
+                pairCodeAcrossCandidates(code: code, candidates: first.candidates, macName: first.mac.name,
+                                         port: first.mac.remotePort, overlay: overlay)
+                return
+            }
+            searchNearby()
+            pairing = .failed(.noNearbyMac)
+        }
+    }
+
+    private func tryHomeCodeTargets(_ targets: [HomeDialer.Target], index: Int, code: String, overlay: Bool) {
+        guard index < targets.count, let identity = deviceIdentity() else {
+            pairing = .failed(.homeNoAnswer(targets.first?.label ?? "your Mac"))
+            return
+        }
+        let target = targets[index]
+        homeDialer?.cancel()
+        pairingDial?.cancel()
+        pairingDial = nil
+        pairingAttempt += 1
+        let attempt = pairingAttempt
+        pairing = .working("Pairing with \(target.label)\u{2026}")
+        let dialer = HomeDialer(targets: [target], pin: nil, identity: identity, queue: queue)
+        homeDialer = dialer
+        let deviceName = UIDevice.current.name
+        let keyMaker: (Data) -> SymmetricKey? = { fp in PairingProof.codeKey(code: code, macFingerprint: fp) }
+        let advanceOrFail: (PairingProblem) -> Void = { [weak self] fallbackProblem in
+            guard let self, self.pairingAttempt == attempt else { return }
+            if index + 1 < targets.count {
+                self.tryHomeCodeTargets(targets, index: index + 1, code: code, overlay: overlay)
+            } else {
+                self.pairing = .failed(fallbackProblem)
+            }
+        }
+        dialer.onWinner = { [weak self, weak dialer] w in
+            guard let self, let dialer else { w.connection.cancel(); return }
+            self.homeExchange(w, identity: identity, deviceName: deviceName, method: PairRequest.code, cable: nil, key: keyMaker) { outcome in
+                DispatchQueue.main.async {
+                    guard self.homeDialer === dialer, self.pairingAttempt == attempt else { return }
+                    self.homeDialer = nil
+                    if case .answer(let r, _) = outcome, !r.ok,
+                       r.reason == PairResult.closed || r.reason == PairResult.expired,
+                       index + 1 < targets.count {
+                        self.tryHomeCodeTargets(targets, index: index + 1, code: code, overlay: overlay)
+                        return
+                    }
+                    self.proved(outcome, winner: w, identity: identity, method: PairRequest.code, name: target.label,
+                                overlay: overlay, linkSaved: nil, busyRetried: false, retry: { after in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + after) {
+                            guard self.pairingAttempt == attempt else { return }
+                            self.tryHomeCodeTargets(targets, index: index, code: code, overlay: overlay)
+                        }
+                    })
+                }
+            }
+        }
+        dialer.onFailed = { [weak self, weak dialer] _ in
+            DispatchQueue.main.async {
+                guard let self, let dialer, self.homeDialer === dialer, self.pairingAttempt == attempt else { return }
+                self.homeDialer = nil
+                advanceOrFail(overlay ? .noAnswerOverStream(target.label) : .homeNoAnswer(target.label))
+            }
+        }
+        dialer.start()
+    }
+
+    /// A proof at the home door: `duodeck-pair/1` to each target in turn, pinned to `pin` (or any P-256
+    /// key when authenticated by a typed 12-digit code), kind 19 `qr` or `code` with proof_D; kind 20
+    /// ok with proof_M checked and naming that key: saved (`homeTLS`, the Bonjour name), then a pinned
+    /// session on the row, or over a stream the session goes on, now with a saved Mac. No target
+    /// answering: a link's own addresses (`link`), else the words. `linkSaved`: the code's link, whose
+    /// addresses and port the record keeps until the session's first kind 18 (SavedMacs.applyingLink).
+    /// `busy`: one silent retry.
+    private func homeProof(targets: [HomeDialer.Target], pin: Data?, method: String, key makeKey: @escaping (Data) -> SymmetricKey?,
                            name: String, overlay: Bool, link: PairLink?, linkSaved: PairLink? = nil, scannedSecret: Data?,
                            busyRetried: Bool = false) {
         guard let identity = deviceIdentity() else { return }

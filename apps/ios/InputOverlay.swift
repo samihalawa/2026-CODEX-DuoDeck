@@ -148,6 +148,11 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// fingers pinch or move the picture.
     var readZoom: (() -> StreamZoom)?
     var writeZoom: ((StreamZoom) -> Void)?
+    var animateZoom: ((StreamZoom, CFTimeInterval) -> Void)?
+    var onPrecisionZoomChange: ((Bool) -> Void)?
+    var onFocusPoint: ((CGPoint) -> Void)?
+    var keyboardLift: CGFloat = 0
+    var precisionHoldZoomEnabled: Bool = true
     private var ownZoom = StreamZoom()
     var zoom: StreamZoom {
         get { readZoom?() ?? ownZoom }
@@ -175,11 +180,24 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     private weak var twoFingerTap: UITapGestureRecognizer?
     private static let trackSlop: CGFloat = 2
     private var trackLast: CGPoint = .zero
+    private var trackStart: CGPoint = .zero
+    private var trackMovedForPrecision = false
     private var trackLive = false
     private var trackSuspended = false
     private var trackpadDragging = false
     private var padHeldModifiers: KeyModifiers = []
     private let clickHaptic = UIImpactFeedbackGenerator(style: .rigid)
+    private let precisionHaptic = UISelectionFeedbackGenerator()
+    /// Precision hold-to-zoom state: after moving the pointer near a small target, pausing with the
+    /// finger held down (< 1s) smoothly zooms centered on the cursor; micro-adjusting aims precisely;
+    /// releasing clicks at the exact cursor and smoothly restores the original zoom.
+    private var precisionActive = false
+    private var precisionSavedZoom: StreamZoom?
+    private var precisionDwellAnchor: CGPoint = .zero
+    private var precisionDwellWork: DispatchWorkItem?
+    private static let precisionMoveThreshold: CGFloat = 10
+    private static let precisionDwellRadius: CGFloat = 8
+    private static let precisionDwellDelay: TimeInterval = 0.55
     private var hapticsEnabled: Bool {
         UserDefaults.standard.object(forKey: "DuoDeck.haptics") as? Bool ?? true
     }
@@ -310,7 +328,9 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     private func normalized(_ point: CGPoint, clamped: Bool) -> (x: Double, y: Double)? {
         let rect = videoRect
         guard rect.width > 0, rect.height > 0 else { return nil }
-        let u = zoom.unzoomedPoint(point, in: bounds.size)
+        // Account for any upward keyboard viewport lift so taps still hit the exact pixel displayed.
+        let lifted = CGPoint(x: point.x, y: point.y + keyboardLift)
+        let u = zoom.unzoomedPoint(lifted, in: bounds.size)
         let x = (u.x - rect.minX) / rect.width
         let y = (u.y - rect.minY) / rect.height
         if x < 0 || x > 1 || y < 0 || y > 1 {
@@ -353,7 +373,8 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// composition on the device, as `touchesBegan` does.
     private func tap(at point: CGPoint) {
         setOwnPointer(nil, .none)
-        guard sendPointer(.move, at: point, clamped: false) != nil else { return }
+        guard let at = sendPointer(.move, at: point, clamped: false) else { return }
+        onFocusPoint?(at)
         forgetTyped()
         sendPointer(.leftDown, at: point, clamped: false)
         sendPointer(.leftUp, at: point, clamped: false)
@@ -366,11 +387,13 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         if trackingMode == .trackpad {
             switch gesture.state {
             case .began:
-                guard videoSize != .zero else { return }
+                guard videoSize != .zero, !precisionActive else { return }
+                cancelPrecisionZoom(restore: false)
                 trackpadDragging = true
                 if hapticsEnabled { clickHaptic.impactOccurred(intensity: 1.0) }
                 padCatchUp()
                 setOwnPointer(pad.cursor, .trackpad)
+                onFocusPoint?(pad.cursor)
                 forgetTyped()
                 pressKeyRowModifiers()
                 send(.pointer(.leftDown, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
@@ -406,6 +429,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         twoFingerTap?.isEnabled = isPad
         trackSuspended = false
         trackLive = false
+        cancelPrecisionZoom(restore: true)
         if trackpadDragging {
             trackpadDragging = false
             send(.pointer(.leftUp, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
@@ -439,13 +463,25 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     }
 
     @objc private func handleTrack() {
-        guard trackingMode == .trackpad, !strokes.silent else { return }
+        guard trackingMode == .trackpad, !strokes.silent else {
+            cancelPrecisionZoom(restore: true)
+            return
+        }
         switch tracker.state {
         case .began:
             trackSuspended = false
             trackLive = false
-            trackLast = tracker.location(in: self)
+            trackMovedForPrecision = false
+            cancelPrecisionZoom(restore: true)
+            trackStart = tracker.location(in: self)
+            trackLast = trackStart
+            precisionDwellAnchor = trackStart
+            if precisionHoldZoomEnabled { precisionHaptic.prepare() }
         case .changed:
+            if tracker.sawSecondFinger || trackSuspended {
+                cancelPrecisionZoom(restore: true)
+                return
+            }
             guard trackerDriving else { return }
             let location = tracker.location(in: self)
             if !trackLive {
@@ -453,10 +489,90 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
                 guard d >= Self.trackSlop else { return }
                 trackLive = true
             }
+            if !trackMovedForPrecision && hypot(location.x - trackStart.x, location.y - trackStart.y) >= Self.precisionMoveThreshold {
+                trackMovedForPrecision = true
+                precisionDwellAnchor = location
+                armPrecisionDwell()
+            }
             moveTrackpadCursor(dx: location.x - trackLast.x, dy: location.y - trackLast.y)
             trackLast = location
+            if precisionHoldZoomEnabled && trackMovedForPrecision && !precisionActive && !trackpadDragging {
+                if hypot(location.x - precisionDwellAnchor.x, location.y - precisionDwellAnchor.y) > Self.precisionDwellRadius {
+                    precisionDwellAnchor = location
+                    armPrecisionDwell()
+                }
+            }
+        case .ended:
+            precisionDwellWork?.cancel()
+            precisionDwellWork = nil
+            if precisionActive {
+                // Release from temporary precision zoom: click the exact aimed button and restore
+                // the original zoom & offset seamlessly.
+                let saved = precisionSavedZoom
+                precisionActive = false
+                precisionSavedZoom = nil
+                onPrecisionZoomChange?(false)
+                trackpadClick(down: .leftDown, up: .leftUp)
+                if let saved {
+                    if let animateZoom { animateZoom(saved, 0.22) } else { zoom = saved }
+                }
+            }
+            trackLive = false
+            trackMovedForPrecision = false
+        case .cancelled, .failed:
+            cancelPrecisionZoom(restore: true)
+            trackLive = false
+            trackMovedForPrecision = false
         default:
             break
+        }
+    }
+
+    private func armPrecisionDwell() {
+        precisionDwellWork?.cancel()
+        guard precisionHoldZoomEnabled, trackingMode == .trackpad,
+              trackMovedForPrecision, !precisionActive, !trackpadDragging,
+              !strokes.silent, videoSize != .zero else { return }
+        let work = DispatchWorkItem { [weak self] in
+            self?.engagePrecisionZoom()
+        }
+        precisionDwellWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.precisionDwellDelay, execute: work)
+    }
+
+    private func engagePrecisionZoom() {
+        precisionDwellWork = nil
+        guard precisionHoldZoomEnabled, trackingMode == .trackpad,
+              trackerDriving, trackMovedForPrecision, !precisionActive, !trackpadDragging,
+              !strokes.silent, videoSize != .zero,
+              bounds.width > 0, bounds.height > 0 else { return }
+        let rect = videoRect
+        guard rect.width > 0, rect.height > 0 else { return }
+        let original = zoom
+        let targetScale = min(StreamZoom.maxScale, max(original.scale * 2.5, 2.8))
+        let pointAt1x = CGPoint(x: rect.minX + pad.cursor.x * rect.width,
+                                y: rect.minY + pad.cursor.y * rect.height)
+        let target = StreamZoom.centered(on: pointAt1x, scale: targetScale, in: bounds.size)
+        precisionSavedZoom = original
+        precisionActive = true
+        if hapticsEnabled { precisionHaptic.selectionChanged() }
+        onPrecisionZoomChange?(true)
+        if let animateZoom { animateZoom(target, 0.22) } else { zoom = target }
+    }
+
+    private func cancelPrecisionZoom(restore: Bool) {
+        precisionDwellWork?.cancel()
+        precisionDwellWork = nil
+        guard precisionActive else {
+            precisionSavedZoom = nil
+            return
+        }
+        let saved = precisionSavedZoom
+        precisionActive = false
+        precisionSavedZoom = nil
+        onPrecisionZoomChange?(false)
+        if restore, let saved {
+            if let animateZoom { animateZoom(saved, 0.18) } else { zoom = saved }
         }
     }
 
@@ -466,7 +582,10 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         let ySpan = rect.height > 0 ? rect.height : bounds.height
         guard xSpan > 0, ySpan > 0 else { return }
         padCatchUp()
-        let travel = max(trackpadSensitivity, 0.3) / max(1, zoom.scale)
+        // In temporary precision zoom, damp sensitivity further so micro finger movements land
+        // effortlessly on small buttons.
+        let precisionFactor: CGFloat = precisionActive ? 0.42 : 1.0
+        let travel = max(trackpadSensitivity, 0.3) * precisionFactor / max(1, zoom.scale)
         pad.move(dx: Double(dx / xSpan * travel), dy: Double(dy / ySpan * travel))
         followTrackpadCursorIfZoomed(in: rect)
         setOwnPointer(pad.cursor, .trackpad)
@@ -498,6 +617,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         if hapticsEnabled { clickHaptic.impactOccurred(intensity: 0.8) }
         padCatchUp()
         setOwnPointer(pad.cursor, .trackpad)
+        onFocusPoint?(pad.cursor)
         forgetTyped()
         pressKeyRowModifiers()
         send(.pointer(down, x: Double(pad.cursor.x), y: Double(pad.cursor.y)))
@@ -531,6 +651,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
             zoomStroke.panBegan()
             fingerScroll = zoomStroke.scrollsMac
             if trackingMode == .trackpad, fingerScroll {
+                cancelPrecisionZoom(restore: true)
                 trackSuspended = true
                 padCatchUp()
             }
@@ -722,6 +843,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     /// than `chordTravel`. Nothing else of the stroke goes out but its gesture, and a picture its first
     /// two fingers had pinched goes back to how the stroke found it (StreamZoom.Stroke).
     private func strokeSilenced() {
+        cancelPrecisionZoom(restore: true)
         lastPanTranslation = .zero
         fingerScroll = false
         var z = zoom
@@ -756,6 +878,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
+            cancelPrecisionZoom(restore: true)
             momentum.stop(); releaseForwardedKeys(); commitComposition("left its window")
             if trackpadDragging {
                 trackpadDragging = false
@@ -938,6 +1061,9 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         if trackingMode == .direct || directDown >= 2 || Self.pointerTouch(in: touches) != nil {
             momentum.stop()
         }
+        if directDown >= 2 {
+            cancelPrecisionZoom(restore: true)
+        }
         if trackingMode == .trackpad,
            let first = touches.first, first.type == .direct {
             if directDown == touches.filter({ $0.type == .direct }).count {
@@ -950,6 +1076,7 @@ final class InputOverlayView: UIView, UITextInput, UIGestureRecognizerDelegate {
         }
         let point = touch.location(in: self)
         guard let at = sendPointer(.move, at: point, clamped: false) else { return }
+        onFocusPoint?(at)
         ownPointer(at, for: touch)
         forgetTyped()
         // A trackpad's secondary click (two fingers, or right button) is a right click on the Mac.
@@ -1835,6 +1962,11 @@ struct InputOverlay: UIViewRepresentable {
     /// view.
     var readZoom: (() -> StreamZoom)? = nil
     var writeZoom: ((StreamZoom) -> Void)? = nil
+    var animateZoom: ((StreamZoom, CFTimeInterval) -> Void)? = nil
+    var onPrecisionZoomChange: ((Bool) -> Void)? = nil
+    var onFocusPoint: ((CGPoint) -> Void)? = nil
+    var keyboardLift: CGFloat = 0
+    var precisionHoldZoomEnabled: Bool = true
     var trackingMode: ScreenTrackingMode = .direct
     var trackpadSensitivity: CGFloat = 1.0
     var pointerFeed: () -> (anchor: CGPoint?, reseeds: Int) = { (nil, 0) }
@@ -1855,6 +1987,11 @@ struct InputOverlay: UIViewRepresentable {
         uiView.macRepeatsKeys = macRepeatsKeys
         uiView.readZoom = readZoom
         uiView.writeZoom = writeZoom
+        uiView.animateZoom = animateZoom
+        uiView.onPrecisionZoomChange = onPrecisionZoomChange
+        uiView.onFocusPoint = onFocusPoint
+        uiView.keyboardLift = keyboardLift
+        uiView.precisionHoldZoomEnabled = precisionHoldZoomEnabled
         uiView.pointerFeed = pointerFeed
         uiView.trackpadSensitivity = trackpadSensitivity
         uiView.trackingMode = trackingMode

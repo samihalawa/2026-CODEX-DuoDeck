@@ -54,10 +54,12 @@ enum PairingProblem: Equatable {
     /// The Mac refused for a reason this build does not know, and said why in its own words
     /// (PairResult.unknownReasonMessage): shown as they are.
     case macSaid(String)
+    /// Code-only pairing found no local/USB/saved Mac yet; expands the optional address field.
+    case noNearbyMac
 
     var field: Field {
         switch self {
-        case .address, .zone, .nothingAnswered, .notDuoDeck, .localNetwork: return .address
+        case .address, .zone, .nothingAnswered, .notDuoDeck, .localNetwork, .noNearbyMac: return .address
         case .codeLength, .codeTypo, .wrongCode, .expired, .stopped, .homeStopped, .homeExpired, .homeClosed: return .code
         case .notPairing, .proofFailed, .notALink, .noKey, .homeProofFailed, .homeNoAnswer, .proofFailedOverStream, .noAnswerOverStream,
              .macSaid:
@@ -68,6 +70,7 @@ enum PairingProblem: Equatable {
     var text: String {
         switch self {
         case .address: return "That doesn’t look like an address. Try 100.101.102.103 or mac.example.net."
+        case .noNearbyMac: return "No nearby Mac found on Wi-Fi or USB yet. Open DuoDeck Host on the same network, or enter your Mac’s address below."
         case .zone: return "Remove the part after %: it only works on this network."
         case .codeLength: return "A code has 12 digits."
         case .codeTypo: return "That code has a typo. Check it against your Mac."
@@ -1006,6 +1009,13 @@ extension StreamClient {
         let candidates = [RemoteDialPolicy.Candidate(host: a.host, port: port, kind: a.kind, via: a.via)]
         startPairing(candidates: candidates, pin: nil, key: { fp in PairingProof.codeKey(code: code, macFingerprint: fp) },
                      method: PairRequest.code, macName: nil, port: port, addresses: [], typed: a,
+                     overlay: overlay, scannedSecret: nil, busyRetried: false)
+    }
+
+    /// Fallback code-only pairing across known candidates from saved Macs when no Bonjour Mac is visible.
+    func pairCodeAcrossCandidates(code: String, candidates: [RemoteDialPolicy.Candidate], macName: String?, port: Int, overlay: Bool) {
+        startPairing(candidates: candidates, pin: nil, key: { fp in PairingProof.codeKey(code: code, macFingerprint: fp) },
+                     method: PairRequest.code, macName: macName, port: port, addresses: [], typed: nil,
                      overlay: overlay, scannedSecret: nil, busyRetried: false)
     }
 

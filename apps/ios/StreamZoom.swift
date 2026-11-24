@@ -138,6 +138,78 @@ struct StreamZoom: Equatable, Sendable {
         let s = max(Self.minScale, scale)
         return CGPoint(x: delta.x / s, y: delta.y / s)
     }
+
+    /// A zoom centred on `pointAt1x` (in pane coordinates at 1×) at `wanted` scale, clamped so the
+    /// zoomed picture still covers `size`. Used by hold-to-precision-zoom.
+    static func centered(on pointAt1x: CGPoint, scale wanted: CGFloat, in size: CGSize) -> StreamZoom {
+        var z = StreamZoom()
+        guard size.width > 0, size.height > 0 else { return z }
+        let clampedScale = min(Self.maxScale, max(Self.minScale, wanted))
+        let mid = CGPoint(x: size.width / 2, y: size.height / 2)
+        let offset = CGSize(width: -(pointAt1x.x - mid.x) * clampedScale,
+                            height: -(pointAt1x.y - mid.y) * clampedScale)
+        z.aim(scale: clampedScale, offset: offset, in: size)
+        return z
+    }
+}
+
+/// Pure geometry rule for shifting the Mac screen upward when the standard iOS keyboard appears so
+/// the selected input field / cursor is never covered.
+enum KeyboardViewportLift {
+    /// Returns the upward Y shift (in pane points, `>= 0`) to apply to the stream picture when the
+    /// software keyboard overlaps the bottom of `paneSize` by `overlap` points.
+    ///
+    /// Strategy:
+    /// 1. First consume any unused black letterbox margin above the video (`freeTopLift`), moving
+    ///    the picture into the upper clear area at zero visual cost.
+    /// 2. Next ensure the active input / cursor (`focusFractionY` in `0...1`) sits comfortably above
+    ///    the keyboard's top edge (`visibleBottom - margin`), while never pushing the active input
+    ///    past `topClearance`.
+    static func compute(paneSize: CGSize,
+                        videoRect: CGRect,
+                        zoom: StreamZoom,
+                        keyboardOverlap overlap: CGFloat,
+                        focusFractionY: CGFloat,
+                        topClearance: CGFloat = 12,
+                        marginAboveKeyboard: CGFloat = 28) -> CGFloat {
+        guard overlap > 1, paneSize.width > 0, paneSize.height > 0,
+              videoRect.width > 0, videoRect.height > 0 else { return 0 }
+        let clampedOverlap = min(overlap, paneSize.height * 0.85)
+        let visibleBottom = paneSize.height - clampedOverlap
+        let safeBottom = max(topClearance + 36, visibleBottom - marginAboveKeyboard)
+
+        // 1. Free lift: reclaim empty top letterbox space above the video so the whole picture
+        //    slides neatly above the keyboard when portrait/aspect letterboxing leaves room.
+        let freeTopLift: CGFloat
+        if !zoom.isZoomed {
+            let unusedTop = max(0, videoRect.minY - topClearance)
+            let coveredVideoBottom = max(0, videoRect.maxY - visibleBottom)
+            freeTopLift = min(unusedTop, coveredVideoBottom)
+        } else {
+            freeTopLift = 0
+        }
+
+        // 2. Focus-preserving lift: ensure the selected input / cursor stays above `safeBottom`.
+        let fy = min(max(focusFractionY.isFinite ? focusFractionY : 0.72, 0), 1)
+        let pointAt1x = CGPoint(x: videoRect.midX, y: videoRect.minY + fy * videoRect.height)
+        let targetY = zoom.zoomedPoint(pointAt1x, in: paneSize).y
+        let neededForFocus = max(0, targetY - safeBottom)
+
+        var lift = max(freeTopLift, neededForFocus)
+        // Never lift more than needed to bring the bottom of the video (+ small breathing room)
+        // above the keyboard, and never lift past the keyboard overlap + small margin.
+        let videoBottomOnScreen = zoom.isZoomed
+            ? paneSize.height
+            : videoRect.maxY
+        let maxUseful = max(0, min(clampedOverlap + 24, max(videoBottomOnScreen - safeBottom, freeTopLift)))
+        lift = min(lift, maxUseful)
+        // Never push the active input above `topClearance + 16`.
+        let maxWithoutClippingTop = max(0, targetY - (topClearance + 16))
+        if neededForFocus > 0 {
+            lift = min(lift, max(freeTopLift, maxWithoutClippingTop))
+        }
+        return max(0, lift.rounded())
+    }
 }
 
 extension StreamZoom {

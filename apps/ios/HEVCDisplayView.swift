@@ -43,17 +43,23 @@ final class HEVCDisplayView: UIView {
     // MARK: The back screen's copy (BackScreen.swift)
 
     /// The iPhone Duo's back screen showing the picture too: every frame this layer gets goes there as
-    /// well, from the next keyframe on. Set on main, read on `renderQueue`.
+    /// well, from the next keyframe on — AND immediately from the cached latest keyframe so mode
+    /// switches never leave the back screen black. Set on main, read on `renderQueue`.
     private let mirrorLock = NSLock()
     private var mirrorLayer: AVSampleBufferDisplayLayer?
+    private var mirrorObservers: [NSObjectProtocol] = []
     private var mirrorWaits = true
     private var mirrorAskedAt: CFTimeInterval = 0
+    /// Cached latest keyframe bytes + format description so re-attaching a mirror layer after a mode
+    /// switch paints the Mac's picture immediately while a fresh keyframe is requested in parallel.
+    private var lastKeyframeData: Data?
+    private var lastKeyframeFormat: CMVideoFormatDescription?
     /// Asks the Mac for a keyframe for the back screen's copy alone (`StreamClient`).
     var onMirrorNeedsKeyframe: (() -> Void)?
 
-    private func askMirrorKeyframe() {
+    private func askMirrorKeyframe(force: Bool = false) {
         let now = CACurrentMediaTime()
-        guard now - mirrorAskedAt > 1.5 else { return }
+        if !force { guard now - mirrorAskedAt > 1.0 else { return } }
         mirrorAskedAt = now
         DispatchQueue.main.async { [weak self] in self?.onMirrorNeedsKeyframe?() }
     }
@@ -61,26 +67,150 @@ final class HEVCDisplayView: UIView {
     private var mirrorFrames = 0
     #endif
 
-    func attachMirror(_ layer: AVSampleBufferDisplayLayer?) {
-        mirrorLock.lock()
-        mirrorLayer = layer
-        mirrorWaits = true
-        mirrorLock.unlock()
-        // A still Mac window sends no keyframe by itself: ask for one so the copy starts at once.
-        #if DEBUG
-        print("backscreen: mirror \(layer == nil ? "detached" : "attached"), render queue \(renderQueue == nil ? "missing" : "set")")
-        #endif
-        guard layer != nil else { return }
-        // A still Mac window sends no keyframe by itself, so the copy asks for its own. Never through
-        // `onNeedsKeyframe`: that one says the front's picture was interrupted.
-        mirrorAskedAt = 0
-        askMirrorKeyframe()
+    private static func makeSampleBuffer(_ data: Data, format desc: CMVideoFormatDescription) -> CMSampleBuffer? {
+        let count = data.count
+        guard count > 0 else { return nil }
+        var block: CMBlockBuffer?
+        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: count, blockAllocator: nil,
+                                                 customBlockSource: nil, offsetToData: 0, dataLength: count, flags: 0,
+                                                 blockBufferOut: &block) == noErr, let block,
+              CMBlockBufferAssureBlockMemory(block) == noErr else { return nil }
+        let replaced = data.withUnsafeBytes { raw in
+            CMBlockBufferReplaceDataBytes(with: raw.baseAddress!, blockBuffer: block, offsetIntoDestination: 0, dataLength: count)
+        }
+        guard replaced == noErr else { return nil }
+
+        var timing = CMSampleTimingInfo(duration: .invalid, presentationTimeStamp: .invalid, decodeTimeStamp: .invalid)
+        var size = count
+        var sample: CMSampleBuffer?
+        guard CMSampleBufferCreateReady(allocator: nil, dataBuffer: block, formatDescription: desc, sampleCount: 1,
+                                        sampleTimingEntryCount: 1, sampleTimingArray: &timing,
+                                        sampleSizeEntryCount: 1, sampleSizeArray: &size,
+                                        sampleBufferOut: &sample) == noErr, let sample else { return nil }
+        if let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true) as NSArray?,
+           let first = attachments.firstObject as? NSMutableDictionary {
+            first[kCMSampleAttachmentKey_DisplayImmediately as String] = true
+        }
+        return sample
     }
 
-    private func mirror(_ sample: CMSampleBuffer, isKeyframe: Bool) {
+    private func clearMirrorObserversLocked() {
+        mirrorObservers.forEach(NotificationCenter.default.removeObserver)
+        mirrorObservers.removeAll()
+    }
+
+    private func installMirrorObserversLocked(for layer: AVSampleBufferDisplayLayer) {
+        clearMirrorObserversLocked()
+        let center = NotificationCenter.default
+        let recover: (Notification) -> Void = { [weak self, weak layer] _ in
+            guard let self, let layer else { return }
+            self.recoverMirrorLayer(layer)
+        }
+        mirrorObservers.append(center.addObserver(forName: .AVSampleBufferDisplayLayerFailedToDecode, object: layer, queue: nil, using: recover))
+        mirrorObservers.append(center.addObserver(forName: .AVSampleBufferDisplayLayerRequiresFlushToResumeDecodingDidChange, object: layer, queue: nil, using: recover))
+    }
+
+    private func recoverMirrorLayer(_ layer: AVSampleBufferDisplayLayer) {
         mirrorLock.lock()
-        defer { mirrorLock.unlock() }
-        guard let layer = mirrorLayer else { return }
+        guard mirrorLayer === layer else { mirrorLock.unlock(); return }
+        if layer.status == .failed || layer.requiresFlushToResumeDecoding {
+            layer.flush()
+        }
+        let cachedData = lastKeyframeData
+        let cachedDesc = lastKeyframeFormat
+        mirrorWaits = true
+        mirrorLock.unlock()
+        if let cachedData, let cachedDesc, let sample = Self.makeSampleBuffer(cachedData, format: cachedDesc) {
+            mirrorLock.lock()
+            if mirrorLayer === layer { layer.enqueue(sample) }
+            mirrorLock.unlock()
+        }
+        askMirrorKeyframe(force: true)
+    }
+
+    func attachMirror(_ layer: AVSampleBufferDisplayLayer?) {
+        mirrorLock.lock()
+        clearMirrorObserversLocked()
+        mirrorLayer = layer
+        mirrorWaits = true
+        let cachedData = lastKeyframeData
+        let cachedDesc = lastKeyframeFormat
+        if let layer {
+            if layer.status == .failed || layer.requiresFlushToResumeDecoding {
+                layer.flush()
+            }
+            installMirrorObserversLocked(for: layer)
+        }
+        mirrorLock.unlock()
+        #if DEBUG
+        print("backscreen: mirror \(layer == nil ? "detached" : "attached"), cachedKeyframe \(cachedData != nil), render queue \(renderQueue == nil ? "missing" : "set")")
+        #endif
+        guard let layer else { return }
+        // Immediately paint the cached keyframe so switching back from Trackpad/Zoom/Off shows the
+        // Mac's screen at 0 ms instead of black, then request a fresh live keyframe from the Mac.
+        if let cachedData, let cachedDesc, let sample = Self.makeSampleBuffer(cachedData, format: cachedDesc) {
+            mirrorLock.lock()
+            if mirrorLayer === layer {
+                layer.enqueue(sample)
+            }
+            mirrorLock.unlock()
+        }
+        askMirrorKeyframe(force: true)
+        // Follow-up check: if the Mac was idle or the first keyframe request raced mode switching,
+        // nudge once more after 0.6s if the layer is still waiting for a fresh live keyframe.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self, weak layer] in
+            guard let self, let layer else { return }
+            self.mirrorLock.lock()
+            let stillWaiting = (self.mirrorLayer === layer) && self.mirrorWaits
+            self.mirrorLock.unlock()
+            if stillWaiting { self.askMirrorKeyframe(force: true) }
+        }
+    }
+
+    /// Identity-checked detach: an old dismantled BackMirrorView can never wipe out a newly attached
+    /// BackMirrorView's layer during SwiftUI view transitions.
+    func detachMirror(_ layer: AVSampleBufferDisplayLayer) {
+        mirrorLock.lock()
+        guard mirrorLayer === layer else { mirrorLock.unlock(); return }
+        clearMirrorObserversLocked()
+        mirrorLayer = nil
+        mirrorWaits = true
+        mirrorLock.unlock()
+        #if DEBUG
+        print("backscreen: mirror detached (matched layer)")
+        #endif
+    }
+
+    /// Re-enqueues the cached keyframe and asks for a live one if `layer` is the active mirror layer
+    /// (e.g. after layout gives the layer non-zero bounds or the accessory scene reactivates).
+    func refreshMirror(_ layer: AVSampleBufferDisplayLayer) {
+        mirrorLock.lock()
+        guard mirrorLayer === layer else { mirrorLock.unlock(); return }
+        let cachedData = lastKeyframeData
+        let cachedDesc = lastKeyframeFormat
+        if layer.status == .failed || layer.requiresFlushToResumeDecoding {
+            layer.flush()
+            mirrorWaits = true
+        }
+        mirrorLock.unlock()
+        if let cachedData, let cachedDesc, let sample = Self.makeSampleBuffer(cachedData, format: cachedDesc) {
+            mirrorLock.lock()
+            if mirrorLayer === layer { layer.enqueue(sample) }
+            mirrorLock.unlock()
+        }
+        askMirrorKeyframe(force: true)
+    }
+
+    private func mirror(_ data: Data, format desc: CMVideoFormatDescription, isKeyframe: Bool) {
+        mirrorLock.lock()
+        if isKeyframe {
+            lastKeyframeData = data
+            lastKeyframeFormat = desc
+        }
+        guard let layer = mirrorLayer else {
+            mirrorLock.unlock()
+            return
+        }
         #if DEBUG
         mirrorFrames += 1
         if mirrorFrames % 120 == 1 {
@@ -93,31 +223,71 @@ final class HEVCDisplayView: UIView {
             askMirrorKeyframe()
         }
         if mirrorWaits {
-            // Still waiting while frames go by: ask again, at most every 1.5 s.
-            guard isKeyframe else { askMirrorKeyframe(); return }
+            guard isKeyframe else {
+                mirrorLock.unlock()
+                askMirrorKeyframe()
+                return
+            }
             mirrorWaits = false
         }
-        layer.enqueue(sample)
+        mirrorLock.unlock()
+        // Build an independent CMSampleBuffer so the mirror layer never contends with the main layer.
+        guard let sample = Self.makeSampleBuffer(data, format: desc) else { return }
+        mirrorLock.lock()
+        if mirrorLayer === layer {
+            layer.enqueue(sample)
+        }
+        mirrorLock.unlock()
     }
 
-    private func flushMirror() {
+    private func flushMirror(removeImage: Bool = true) {
         mirrorLock.lock()
-        mirrorLayer?.flushAndRemoveImage()
+        if removeImage {
+            lastKeyframeData = nil
+            lastKeyframeFormat = nil
+            mirrorLayer?.flushAndRemoveImage()
+        } else {
+            mirrorLayer?.flush()
+        }
         mirrorWaits = true
         mirrorLock.unlock()
     }
 
+    /// Whether the display layer currently holds a decoded frame on screen.
+    private var layerHasVisibleImage: Bool {
+        if #available(iOS 17.4, *) {
+            return displayLayer.isReadyForDisplay && displayLayer.error == nil
+        } else {
+            return displayLayer.status == .rendering && displayLayer.error == nil
+        }
+    }
+
     /// A new attempt cannot stamp the previous displayed image with its generation.
-    /// Generation and image invalidation are one render-queue operation.
+    /// Generation and decoder flush are one render-queue operation; when a frame is already visible,
+    /// keep it on screen smoothly until the new keyframe replaces it instead of flashing black.
     func setRecoveryGeneration(_ generation: UInt64) {
-        removePicture(generation: generation)
+        softFlush(generation: generation)
+    }
+
+    /// Seamless flush for source switches, resolution changes, and reconnects: flushes pending
+    /// decode state without blanking the last rendered frame, so the user sees no flash or reload
+    /// curtain if they are not interacting.
+    private func softFlush(generation: UInt64? = nil) {
+        let now = CACurrentMediaTime()
+        readiness.invalidate(generation: generation, at: now)
+        waitingForKeyframe = true
+        displayLayer.flush()
+        flushMirror(removeImage: false)
+        // Mark the transition boundary so `PictureReadiness` will accept the next decoded keyframe
+        // even though we deliberately kept the previous image visible on `displayLayer`.
+        _ = readiness.observed(ready: false, at: now)
     }
 
     private func removePicture(generation: UInt64? = nil) {
         readiness.invalidate(generation: generation, at: CACurrentMediaTime())
         waitingForKeyframe = true
         displayLayer.flushAndRemoveImage()
-        flushMirror()
+        flushMirror(removeImage: true)
         if #available(iOS 17.4, *) {
             if !displayLayer.isReadyForDisplay {
                 _ = readiness.observed(ready: false, at: CACurrentMediaTime())
@@ -220,8 +390,13 @@ final class HEVCDisplayView: UIView {
                 }
             })
     }
-    required init?(coder: NSCoder) { fatalError() }
-    deinit { layerObservers.forEach(NotificationCenter.default.removeObserver) }
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+    deinit {
+        layerObservers.forEach(NotificationCenter.default.removeObserver)
+        mirrorLock.lock()
+        clearMirrorObserversLocked()
+        mirrorLock.unlock()
+    }
 
     /// The layer says it could not decode a frame, or that it needs a flush before it decodes again
     /// (iOS says so when DuoDeck goes to the background, or another app takes the decoder): looked at on
@@ -477,9 +652,9 @@ final class HEVCDisplayView: UIView {
             self.placeCursor()
             self.onVideoSizeForPointer?(size)
         }
-        // Remove the last frame too: switching sources should show black until the new keyframe,
-        // not the previous window frozen in place.
-        removePicture()
+        // Keep the last visible frame smoothly on screen during format/source switches so the user
+        // sees no black flash before the new keyframe arrives (a locked Mac still uses `blank()`).
+        softFlush()
     }
 
     /// A locked Mac (docs/locked-mac-plan.md): the picture removed at once, nothing shown until the next
@@ -509,30 +684,7 @@ final class HEVCDisplayView: UIView {
         let resuming = waitingForKeyframe
         if waitingForKeyframe { guard isKeyframe else { return } }
 
-        let count = data.count
-        var block: CMBlockBuffer?
-        guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: count, blockAllocator: nil,
-                                                 customBlockSource: nil, offsetToData: 0, dataLength: count, flags: 0,
-                                                 blockBufferOut: &block) == noErr, let block,
-              CMBlockBufferAssureBlockMemory(block) == noErr else { return }
-        let replaced = data.withUnsafeBytes { raw in
-            CMBlockBufferReplaceDataBytes(with: raw.baseAddress!, blockBuffer: block, offsetIntoDestination: 0, dataLength: count)
-        }
-        guard replaced == noErr else { return }
-
-        var timing = CMSampleTimingInfo(duration: .invalid, presentationTimeStamp: .invalid, decodeTimeStamp: .invalid)
-        var size = count
-        var sample: CMSampleBuffer?
-        guard CMSampleBufferCreateReady(allocator: nil, dataBuffer: block, formatDescription: desc, sampleCount: 1,
-                                        sampleTimingEntryCount: 1, sampleTimingArray: &timing,
-                                        sampleSizeEntryCount: 1, sampleSizeArray: &size,
-                                        sampleBufferOut: &sample) == noErr, let sample else { return }
-
-        // Show each frame as soon as it decodes instead of scheduling by timestamp.
-        if let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true) as NSArray?,
-           let first = attachments.firstObject as? NSMutableDictionary {
-            first[kCMSampleAttachmentKey_DisplayImmediately as String] = true
-        }
+        guard let sample = Self.makeSampleBuffer(data, format: desc) else { return }
 
         var lost: Error?
         #if DEBUG
@@ -543,11 +695,18 @@ final class HEVCDisplayView: UIView {
         }
         #endif
         if checkLayer("at a frame", failedToDecode: lost, droppingKeyframe: resuming) { return }
+        let hadVisibleBeforeEnqueue = layerHasVisibleImage
         if resuming { resumedAt = CACurrentMediaTime() }
         waitingForKeyframe = false
-        if isKeyframe { readiness.enqueuedKeyframe(at: CACurrentMediaTime()) }
+        let now = CACurrentMediaTime()
+        if isKeyframe { readiness.enqueuedKeyframe(at: now) }
         displayLayer.enqueue(sample)
-        mirror(sample, isKeyframe: isKeyframe)
+        mirror(data, format: desc, isKeyframe: isKeyframe)
+        if isKeyframe, hadVisibleBeforeEnqueue, layerHasVisibleImage {
+            // When `softFlush()` kept the previous image visible, `isReadyForDisplay` stays `true`
+            // and AVFoundation does not re-post the ready notification; confirm readiness immediately.
+            reportReadyForDisplay(true, postedAt: CACurrentMediaTime())
+        }
         if resuming {
             #if DEBUG
             if let at = interruptedAt {
@@ -692,15 +851,70 @@ struct StreamView: UIViewRepresentable {
 /// fingers pinch or move the picture (InputOverlay's `readZoom` and `writeZoom`); only
 /// `ZoomedStreamView` watches it, so a pinch redraws the picture's transform and nothing else of the
 /// stream screen.
-final class StreamZoomModel: ObservableObject {
+final class StreamZoomModel: NSObject, ObservableObject {
     @Published private(set) var zoom = StreamZoom()
+    @Published var precisionZoomActive = false
+
+    private var animationLink: CADisplayLink?
+    private var animStart: CFTimeInterval = 0
+    private var animDuration: CFTimeInterval = 0.22
+    private var animFrom = StreamZoom()
+    private var animTo = StreamZoom()
+
+    deinit {
+        animationLink?.invalidate()
+    }
 
     func set(_ new: StreamZoom) {
+        stopAnimation()
         if new != zoom { zoom = new }
+    }
+
+    /// Smoothly animates the picture zoom to `target` (used by hold-to-precision-zoom in & out).
+    func animate(to target: StreamZoom, duration: CFTimeInterval = 0.22) {
+        stopAnimation()
+        guard duration > 0.01, target != zoom else {
+            if target != zoom { zoom = target }
+            return
+        }
+        animFrom = zoom
+        animTo = target
+        animDuration = duration
+        animStart = CACurrentMediaTime()
+        let link = CADisplayLink(target: self, selector: #selector(stepAnimation))
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+        link.add(to: .main, forMode: .common)
+        animationLink = link
+    }
+
+    private func stopAnimation() {
+        animationLink?.invalidate()
+        animationLink = nil
+    }
+
+    @objc private func stepAnimation() {
+        let elapsed = CACurrentMediaTime() - animStart
+        let rawT = min(1, max(0, elapsed / animDuration))
+        // Cubic ease-out for crisp, immediate response that settles gently.
+        let t = CGFloat(1 - pow(1 - rawT, 3))
+        if rawT >= 1 {
+            stopAnimation()
+            if zoom != animTo { zoom = animTo }
+            return
+        }
+        let pane = animTo.pane.width > 0 ? animTo.pane : zoom.pane
+        let s = animFrom.scale + (animTo.scale - animFrom.scale) * t
+        let ox = animFrom.offset.width + (animTo.offset.width - animFrom.offset.width) * t
+        let oy = animFrom.offset.height + (animTo.offset.height - animFrom.offset.height) * t
+        var z = zoom
+        z.aim(scale: s, offset: CGSize(width: ox, height: oy), in: pane)
+        if z != zoom { zoom = z }
     }
 
     /// Another source, whoever picked it: the whole picture.
     func reset() {
+        stopAnimation()
+        precisionZoomActive = false
         var z = zoom
         z.reset()
         set(z)
@@ -710,22 +924,24 @@ final class StreamZoomModel: ObservableObject {
     func paneResized(to size: CGSize) {
         var z = zoom
         z.resized(to: size)
-        set(z)
+        if z != zoom { zoom = z }
     }
 }
 
 /// The stream's view as the picture's zoom shows it: scaled about the pane's middle and moved
 /// (`.scaleEffect(scale).offset(offset)`, which `StreamZoom`'s mapping is the inverse of), inside the
-/// pane's clip; the pointer sprite at its own size (`StreamView.zoom`).
+/// pane's clip; the pointer sprite at its own size (`StreamView.zoom`). Also applies an optional
+/// vertical lift when the standard iOS keyboard slides up from the bottom so active inputs stay clear.
 struct ZoomedStreamView: View {
     let client: StreamClient
     @ObservedObject var zoom: StreamZoomModel
+    var keyboardLift: CGFloat = 0
 
     var body: some View {
         StreamView(client: client, zoom: zoom.zoom)
             .onGeometryChange(for: CGSize.self, of: { $0.size }) { zoom.paneResized(to: $0) }
             .scaleEffect(zoom.zoom.scale)
-            .offset(zoom.zoom.offset)
+            .offset(x: zoom.zoom.offset.width, y: zoom.zoom.offset.height - keyboardLift)
             // Drawn past the pane when zoomed, and a clip does not clip hit testing: never a touch's target
             // (sideways the bar comes before the picture, and its buttons' touches must stay theirs).
             .allowsHitTesting(false)

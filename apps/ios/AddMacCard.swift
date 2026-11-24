@@ -54,8 +54,13 @@ struct AddMacCard: View {
 
     @State private var address = ""
     @State private var code = ""
+    @State private var showManualAddress = false
     @FocusState private var focus: Field?
     enum Field: Hashable { case address, code }
+
+    private var nearbyMacs: [FoundMac] {
+        client.macs.filter { $0.route != .remote && $0.endpoint != nil }
+    }
 
     private var device: String { StreamClient.deviceWord }
     private var working: Bool { if case .working = client.pairing { return true }; if case .paired = client.pairing { return true }; return false }
@@ -83,13 +88,6 @@ struct AddMacCard: View {
             }
             if typed {
                 Section {
-                    if home == nil {
-                        PairingField(prompt: "Mac address", label: "Address", text: $address,
-                                     keyboard: .URL, submit: .next)
-                            .focused($focus, equals: .address)
-                            .onSubmit { focus = .code }
-                        if let problem, problem.field == .address { ProblemLine(text: problem.text) }
-                    }
                     PairingField(prompt: "0000 0000 0000", label: "Pairing code", text: $code,
                                  keyboard: PairingField.codeKeyboard, submit: .go, monospaced: true)
                         .focused($focus, equals: .code)
@@ -99,12 +97,32 @@ struct AddMacCard: View {
                             if grouped != typed { code = grouped }
                         }
                     if let problem, problem.field == .code { ProblemLine(text: problem.text) }
+                    if home == nil {
+                        DisclosureGroup("Different network? Enter address (optional)", isExpanded: $showManualAddress) {
+                            PairingField(prompt: "Mac address (optional)", label: "Address", text: $address,
+                                         keyboard: .URL, submit: .go)
+                                .focused($focus, equals: .address)
+                                .onSubmit(pair)
+                            if let problem, problem.field == .address { ProblemLine(text: problem.text) }
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
                 } footer: {
-                    Text(home == nil
-                         ? "Use the address and 12-digit code shown in DuoDeck on your Mac."
-                         : "The 12-digit code is shown on your Mac.")
+                    if home != nil {
+                        Text("The 12-digit code is shown on your Mac.")
+                    } else if let first = nearbyMacs.first {
+                        Text(nearbyMacs.count == 1
+                             ? "Pairs automatically with \(first.name) — no IP address needed."
+                             : "Pairs automatically with \(nearbyMacs.count) nearby Macs — no IP address needed.")
+                    } else {
+                        Text("Enter the 12-digit code shown on your Mac. DuoDeck finds Macs on Wi-Fi or USB automatically.")
+                    }
                 }
                 .disabled(working)
+                .onChange(of: problem?.field) { _, field in
+                    if field == .address { showManualAddress = true }
+                }
                 Section {
                     Button(action: pair) {
                         Text("Pair Mac").frame(maxWidth: .infinity, minHeight: 30)
@@ -139,6 +157,8 @@ struct AddMacCard: View {
         focus = nil
         if home != nil {
             client.pairHome(code: code)
+        } else if address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            client.pairCodeWithoutAddress(code: code, overlay: false)
         } else {
             client.pairTyped(code: code, address: address, overlay: false)
         }

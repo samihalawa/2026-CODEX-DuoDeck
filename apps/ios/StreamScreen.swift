@@ -209,11 +209,16 @@ struct StreamScreen: View {
     @AppStorage(StreamClient.largerPictureKey) private var largerPicture = false
     @AppStorage("DuoDeck.screenTrackingMode") private var screenTrackingRaw = ScreenTrackingMode.direct.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var pointerSensitivity = 1.25
+    @AppStorage("DuoDeck.precisionHoldZoom") private var precisionHoldZoom = true
+    @AppStorage("DuoDeck.keyboardLift") private var keyboardLiftEnabled = true
     @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
     @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
     @AppStorage("DuoDeck.topBarAutoHide") private var topBarAutoHide = false
     @AppStorage("DuoDeck.transparentTopBar") private var transparentTopBar = true
     @AppStorage(TopBarSizeMode.key) private var topBarSizeRaw = TopBarSizeMode.automatic.rawValue
+    @StateObject private var keyboardFrame = KeyboardFrameObserver()
+    @State private var focusFractionY: CGFloat = 0.72
+    @State private var landscapePaneFrame: CGRect = .zero
     @State private var topBarRevealed = true
     @State private var topBarInteractionToken = 0
     @State private var hasSentViewport = false
@@ -359,8 +364,17 @@ struct StreamScreen: View {
                                    close: { withAnimation(.easeOut(duration: 0.2)) { pairingOverlay = false } })
                 }
                 if floatingKeyboard.shown && floatingKeyboardChosen && !overlayShown && tour == nil {
-                    FloatingKeyboardPanel(client: client, container: geo.size,
-                                          bottomInset: geo.safeAreaInsets.bottom) {
+                    FloatingKeyboardPanel(
+                        client: client,
+                        container: geo.size,
+                        topInset: max(geo.safeAreaInsets.top, 8),
+                        bottomInset: geo.safeAreaInsets.bottom,
+                        switchToSystemKeyboard: {
+                            floatingKeyboard.shown = false
+                            floatingKeyboardChosen = false
+                            overlay.setKeyboard(shown: true)
+                        }
+                    ) {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { floatingKeyboard.shown = false }
                     }
                 }
@@ -1394,20 +1408,51 @@ struct StreamScreen: View {
                              takeTour: takeTour,
                              forceFullControls: tourOnScreen,
                              largerKeyboard: largerKeyboard,
-                             zoom: zoom)
+                             zoom: zoom,
+                             keyboardFrame: keyboardFrame.frameInScreen,
+                             keyboardDuration: keyboardFrame.duration,
+                             keyboardLiftEnabled: keyboardLiftEnabled && !floatingKeyboardChosen,
+                             focusFractionY: focusFractionY,
+                             onFocusPoint: { focusFractionY = $0.y },
+                             precisionHoldZoom: precisionHoldZoom)
     }
 
     private var streamShape: RoundedRectangle { RoundedRectangle(cornerRadius: 12, style: .continuous) }
 
+    private func computeKeyboardLift(paneFrame: CGRect, topClearance: CGFloat) -> CGFloat {
+        guard keyboardShown, keyboardLiftEnabled, !floatingKeyboardChosen else { return 0 }
+        let kb = keyboardFrame.frameInScreen
+        guard kb.height >= 80, paneFrame.width > 0, paneFrame.height > 0 else { return 0 }
+        let overlap = max(0, paneFrame.maxY - kb.minY)
+        guard overlap > 1 else { return 0 }
+        let videoRect = HEVCDisplayView.videoRect(in: CGRect(origin: .zero, size: paneFrame.size),
+                                                  videoSize: client.videoSize)
+        let activeY = client.shownPointer?.y ?? client.displayView.lastPointer.y
+        let chosenY = (activeY.isFinite && activeY >= 0 && activeY <= 1) ? activeY : focusFractionY
+        // Prefer the most recent explicit tap/click Y if it's lower or near the active pointer.
+        let effectiveY = max(focusFractionY, chosenY)
+        return KeyboardViewportLift.compute(
+            paneSize: paneFrame.size,
+            videoRect: videoRect,
+            zoom: zoom.zoom,
+            keyboardOverlap: overlap,
+            focusFractionY: effectiveY,
+            topClearance: topClearance)
+    }
+
     private func contentArea(bar: BarMetrics) -> some View {
-        ZStack(alignment: .topLeading) {
+        let topClearance: CGFloat = transparentTopBar ? (bar.height + 8) : 12
+        let activeLift = computeKeyboardLift(paneFrame: landscapePaneFrame, topClearance: topClearance)
+        return ZStack(alignment: .topLeading) {
             Color.black
 
             ZStack {
-                // Scaled and moved by the picture's zoom, inside the clip below.
-                ZoomedStreamView(client: client, zoom: zoom)
+                // Scaled and moved by the picture's zoom, inside the clip below, and lifted cleanly
+                // above the standard iOS keyboard when an input field would otherwise be covered.
+                ZoomedStreamView(client: client, zoom: zoom, keyboardLift: activeLift)
+                    .animation(.easeOut(duration: max(0.18, keyboardFrame.duration)), value: activeLift)
                 // Same frame as the video, so a touch maps straight onto the streamed frame (through the
-                // zoom, StreamZoom.unzoomedPoint).
+                // zoom and keyboard lift).
                 InputOverlay(videoSize: client.videoSize,
                              send: { client.sendInput($0) },
                              setOwnPointer: { client.setOwnPointer($0, from: $1) },
@@ -1419,6 +1464,11 @@ struct StreamScreen: View {
                              macRepeatsKeys: { KeyTyping.macRepeats(keyRepeat: client.hostKeyRepeat) },
                              readZoom: { [zoom] in zoom.zoom },
                              writeZoom: { [zoom] in zoom.set($0) },
+                             animateZoom: { [zoom] target, dur in zoom.animate(to: target, duration: dur) },
+                             onPrecisionZoomChange: { [zoom] active in zoom.precisionZoomActive = active },
+                             onFocusPoint: { focusFractionY = $0.y },
+                             keyboardLift: activeLift,
+                             precisionHoldZoomEnabled: precisionHoldZoom,
                              trackingMode: ScreenTrackingMode(rawValue: screenTrackingRaw) ?? .direct,
                              trackpadSensitivity: CGFloat(pointerSensitivity),
                              pointerFeed: { let f = client.pointerFeedState; return (f.anchor, f.reseeds) })
@@ -1427,11 +1477,15 @@ struct StreamScreen: View {
             // A locked Mac: its cover over the picture (LockedMac), under the link's line.
             .overlay { VideoRecoveryShade(client: client, openSettings: { setSettings(true) }) }
             .overlay { LockedMacShade(client: client) }
+            .overlay(alignment: .top) { PrecisionZoomBadge(zoom: zoom) }
             .overlay(alignment: .top) { LinkLineView(text: shownLinkLine) }
             .clipShape(streamShape)
             .overlay(streamShape.strokeBorder(Color.white.opacity(0.09), lineWidth: 1))
             // The panel itself, inside the padding: the size the host fits the Mac window to.
-            .onGeometryChange(for: CGSize.self, of: { $0.size }, action: { panelSize = $0 })
+            .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }, action: { rect in
+                landscapePaneFrame = rect
+                panelSize = rect.size
+            })
             .tourTarget(.stream)
             .padding(8)
 
@@ -1496,60 +1550,122 @@ struct LinkLineView: View {
     }
 }
 
+// MARK: - Keyboard frame observer & Precision zoom badge
+
+/// Publishes the system software keyboard's end frame in screen coordinates and animation duration
+/// so the stream pane can lift cleanly above it whenever an input field would be covered.
+final class KeyboardFrameObserver: ObservableObject {
+    @Published private(set) var frameInScreen: CGRect = .zero
+    @Published private(set) var duration: Double = 0.25
+    private var tokens: [NSObjectProtocol] = []
+
+    init() {
+        let center = NotificationCenter.default
+        let handler: (Notification) -> Void = { [weak self] note in
+            guard let self else { return }
+            let end = (note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect) ?? .zero
+            let dur = (note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.25
+            let isHide = note.name == UIResponder.keyboardWillHideNotification
+            let nextFrame = isHide ? .zero : end
+            DispatchQueue.main.async {
+                self.duration = dur
+                if self.frameInScreen != nextFrame { self.frameInScreen = nextFrame }
+            }
+        }
+        for name in [UIResponder.keyboardWillChangeFrameNotification,
+                     UIResponder.keyboardDidChangeFrameNotification,
+                     UIResponder.keyboardWillHideNotification] {
+            tokens.append(center.addObserver(forName: name, object: nil, queue: nil, using: handler))
+        }
+    }
+
+    deinit {
+        tokens.forEach(NotificationCenter.default.removeObserver)
+    }
+}
+
+/// Subtle non-interactive pill shown only while hold-to-precision-zoom is active.
+struct PrecisionZoomBadge: View {
+    @ObservedObject var zoom: StreamZoomModel
+
+    var body: some View {
+        if zoom.precisionZoomActive {
+            HStack(spacing: 6) {
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.caption2.weight(.bold))
+                Text("Precision · release to click")
+                    .font(.caption2.weight(.semibold))
+            }
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial, in: Capsule(style: .continuous))
+            .overlay(Capsule(style: .continuous).strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75))
+            .padding(.top, 10)
+            .allowsHitTesting(false)
+            .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            .animation(.easeOut(duration: 0.16), value: zoom.precisionZoomActive)
+        }
+    }
+}
+
 // MARK: - Picture startup and recovery
 
-/// Control/catalog connectivity does not imply that a video frame exists. This state is confined to
-/// the video pane; Apps, Settings and trackpad controls remain available.
+/// Non-disruptive recovery indicator: never shows a full-screen "Starting screen sharing…" or reload
+/// curtain during normal connects, reloads, reconnects, or source switches (the last rendered frame
+/// stays cleanly visible until new frames arrive). Only surfaces a compact floating banner if a
+/// genuine, actionable capture error persists (e.g. macOS Screen Recording permission denied or
+/// retries completely exhausted).
 struct VideoRecoveryShade: View {
     @ObservedObject var client: StreamClient
     let openSettings: () -> Void
 
-    var body: some View {
-        if client.connected, client.lockWhy == nil,
-           client.captureIssue != nil || client.awaitingPicture {
-            ViewThatFits(in: .vertical) {
-                message(showDetail: true)
-                message(showDetail: false)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Palette.bar)
-        }
+    private var actionableIssue: CaptureIssue? {
+        guard client.connected, client.lockWhy == nil else { return nil }
+        guard let issue = client.captureIssue, issue != .decoding else { return nil }
+        return issue
     }
 
-    private func message(showDetail: Bool) -> some View {
-        VStack(spacing: showDetail ? 12 : 8) {
-            if showDetail {
-                if client.retryingPicture || (client.awaitingPicture && client.captureIssue == nil) {
-                    ProgressView()
-                } else {
+    var body: some View {
+        if let issue = actionableIssue {
+            VStack {
+                Spacer(minLength: 0)
+                HStack(spacing: 12) {
                     Image(systemName: "display.trianglebadge.exclamationmark")
-                        .font(.title2).foregroundStyle(.secondary).accessibilityHidden(true)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(issue.title)
+                            .font(.footnote.weight(.semibold))
+                            .lineLimit(2)
+                        Text(issue.detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 4)
+                    Button("Retry") { client.retryPicture() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .foregroundStyle(Palette.onAccent)
+                        .disabled(client.retryingPicture)
+                        .accessibilityIdentifier("retryPicture")
+                    Button("Settings", action: openSettings)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .accessibilityIdentifier("pictureRecoverySettings")
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+                .shadow(color: .black.opacity(0.28), radius: 12, y: 4)
+                .frame(maxWidth: 520)
+                .padding(14)
             }
-            Text(client.captureIssue?.title ?? "Starting screen sharing…")
-                .font(showDetail ? .headline : .subheadline.weight(.semibold))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-            if showDetail {
-                Text(client.captureIssue?.detail ?? "Your Mac’s picture will appear here.")
-                    .font(.subheadline).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(spacing: 12) {
-                Button("Retry picture") { client.retryPicture() }
-                    .buttonStyle(.borderedProminent)
-                    .foregroundStyle(Palette.onAccent)
-                    .disabled(client.retryingPicture)
-                    .accessibilityIdentifier("retryPicture")
-                Button("Settings", action: openSettings)
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("pictureRecoverySettings")
-            }
-            .controlSize(.large)
+            .transition(.opacity)
         }
-        .frame(maxWidth: 480)
     }
 }
 

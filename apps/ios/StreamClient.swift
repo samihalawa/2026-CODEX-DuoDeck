@@ -516,7 +516,9 @@ final class StreamClient: ObservableObject {
             let generation = self.renderGeneration
             DispatchQueue.main.async {
                 guard self.pictureGeneration == generation, self.connected else { return }
-                self.captureIssue = self.hostCaptureIssue ?? .decoding
+                // Do not flash a disruptive decoding error curtain during normal keyframe recovery;
+                // only surface real host-reported capture issues.
+                self.captureIssue = self.hostCaptureIssue
                 if !self.hasVideoPicture {
                     self.scheduleFirstPictureCheck()
                     return
@@ -3821,7 +3823,8 @@ final class StreamClient: ObservableObject {
         if source != .none { lastRequestedVideoSource = source }
         queue.async {
             self.videoReplay.invalidateFrame()
-            self.onBlank?()
+            // Keep the last visible frame smoothly on screen while the new source's keyframe
+            // arrives (locked Macs still blank via `onBlank?()` for privacy).
         }
         onCaretMayMove?()   // the Mac raises what it picks: its caret is in another window
         sendAfterInput(.selectSource, Wire.encode(source))

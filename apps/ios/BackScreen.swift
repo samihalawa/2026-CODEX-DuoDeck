@@ -62,10 +62,18 @@ final class BackScreenCamera: @unchecked Sendable {
     private var wanted = false
     private var observers: [NSObjectProtocol] = []
 
+    private var previewAttached = false
+
     func set(running on: Bool) {
-        queue.async { self.wanted = on }
-        guard on else {
-            queue.async { if self.session.isRunning { self.session.stopRunning() } }
+        queue.async {
+            self.wanted = on
+            if !on {
+                if self.session.isRunning { self.session.stopRunning() }
+            }
+        }
+        guard on else { return }
+        if AVCaptureDevice.authorizationStatus(for: .video) == .authorized {
+            ensurePreviewAndStart()
             return
         }
         Task {
@@ -75,11 +83,23 @@ final class BackScreenCamera: @unchecked Sendable {
                 #endif
                 return
             }
-            await MainActor.run {
+            self.ensurePreviewAndStart()
+        }
+    }
+
+    private func ensurePreviewAndStart() {
+        let attachPreview = {
+            if !self.previewAttached {
                 self.preview.session = self.session
                 self.preview.videoGravity = .resizeAspectFill
+                self.previewAttached = true
             }
-            queue.async { self.start() }
+            self.queue.async { self.start() }
+        }
+        if Thread.isMainThread {
+            attachPreview()
+        } else {
+            DispatchQueue.main.async(execute: attachPreview)
         }
     }
 
@@ -170,27 +190,29 @@ struct BackScreenSurface: View {
             switch client.connected ? mode : .off {
             case .off:
                 if mode != .off { idle }
-            case .mirror:
-                // Whatever the picture's shape leaves is a soft glow in DuoDeck's colour, never bare black.
-                mirrorBackdrop
-                VStack(spacing: 8) {
-                    Spacer()
-                    HStack(spacing: 8) {
-                        DuoDeckMark(size: 22)
-                        Text(client.macName.isEmpty ? "Your Mac" : client.macName)
-                            .font(.footnote.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                            .foregroundStyle(.white.opacity(0.7))
+            case .mirror, .mirrorFill:
+                let fill = (mode == .mirrorFill)
+                if !fill {
+                    // Whatever the picture's shape leaves is a soft glow in DuoDeck's colour, never bare black.
+                    mirrorBackdrop
+                    VStack(spacing: 8) {
+                        Spacer()
+                        HStack(spacing: 8) {
+                            DuoDeckMark(size: 22)
+                            Text(client.macName.isEmpty ? "Your Mac" : client.macName)
+                                .font(.footnote.weight(.semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                                .foregroundStyle(.white.opacity(0.7))
+                        }
+                        .padding(.bottom, 28)
                     }
-                    .padding(.bottom, 28)
                 }
-                BackMirror(client: client, fill: false)
-            case .mirrorFill:
-                // The picture fills the whole back screen, whatever its shape (an upright Mac picture on
-                // a screen held sideways): no margins, and what does not fit follows the pointer.
-                BackMirror(client: client, fill: true)
-                    .ignoresSafeArea()
+                // One shared BackMirror across Mirror Mac & Mirror · Fill Screen so switching between
+                // them never tears down and re-creates the AVSampleBufferDisplayLayer.
+                BackMirror(client: client, fill: fill)
+                    .id("back-mirror-layer")
+                    .ignoresSafeArea(edges: fill ? .all : [])
             case .trackpad:
                 padBackdrop
                 BackPad(client: client, speed: CGFloat(speed), zoom: false)
@@ -335,7 +357,7 @@ private struct BackMirror: UIViewRepresentable {
 
     static func dismantleUIView(_ view: BackMirrorView, coordinator: ()) {
         view.stopFollowing()
-        view.source?.attachMirror(nil)
+        view.detachFromSource()
     }
 }
 
@@ -345,10 +367,20 @@ private struct BackMirror: UIViewRepresentable {
 /// eased at the screen's rate, instead of a strip between two black margins.
 final class BackMirrorView: UIView {
     let displayLayer = AVSampleBufferDisplayLayer()
-    weak var source: HEVCDisplayView?
+    weak var source: HEVCDisplayView? {
+        didSet {
+            guard source !== oldValue else { return }
+            oldValue?.detachMirror(displayLayer)
+            if window != nil {
+                source?.attachMirror(displayLayer)
+            }
+        }
+    }
     var fill = false { didSet { if fill != oldValue { modeChanged() } } }
     var videoSize: CGSize = .zero { didSet { if videoSize != oldValue { setNeedsLayout() } } }
     private var link: CADisplayLink?
+    private var hadNonZeroBounds = false
+    private var sceneObserver: NSObjectProtocol?
     /// Where the filled picture is centred, a fraction of what overflows on each axis (0…1).
     private var focus = CGPoint(x: 0.5, y: 0.5)
 
@@ -359,19 +391,44 @@ final class BackMirrorView: UIView {
         displayLayer.videoGravity = .resizeAspect
         layer.addSublayer(displayLayer)
         isUserInteractionEnabled = false
+        sceneObserver = NotificationCenter.default.addObserver(
+            forName: UIScene.didActivateNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let self, self.window != nil else { return }
+            self.source?.refreshMirror(self.displayLayer)
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
+    deinit {
+        if let sceneObserver { NotificationCenter.default.removeObserver(sceneObserver) }
+        stopFollowing()
+    }
+
+    func detachFromSource() {
+        source?.detachMirror(displayLayer)
+    }
+
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        source?.attachMirror(window == nil ? nil : displayLayer)
+        if window != nil {
+            hadNonZeroBounds = bounds.width > 0 && bounds.height > 0
+            source?.attachMirror(displayLayer)
+        } else {
+            hadNonZeroBounds = false
+            source?.detachMirror(displayLayer)
+        }
         modeChanged()
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         place(animated: false)
+        let nonZero = bounds.width > 0 && bounds.height > 0
+        if nonZero && !hadNonZeroBounds && window != nil {
+            hadNonZeroBounds = true
+            source?.refreshMirror(displayLayer)
+        }
     }
 
     private func modeChanged() {
@@ -768,6 +825,8 @@ struct SessionViewMenu<Label: View>: View {
     let label: () -> Label
     @AppStorage(BackScreenMode.key) private var backScreen = BackScreenMode.off.rawValue
     @AppStorage(FloatingKeyboard.key) private var floatingKeyboard = false
+    @AppStorage("DuoDeck.keyboardLift") private var keyboardLift = true
+    @AppStorage("DuoDeck.precisionHoldZoom") private var precisionHoldZoom = true
     @AppStorage(PointerSize.key) private var pointer = PointerSize.fallback.rawValue
     @AppStorage("DuoDeck.pointerSensitivity") private var speed = 1.25
     @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
@@ -805,6 +864,9 @@ struct SessionViewMenu<Label: View>: View {
                 SwiftUI.Label("Tracking mode", systemImage: (ScreenTrackingMode(rawValue: trackingRaw) ?? .direct).systemImage)
             }
             .pickerStyle(.menu)
+            Toggle(isOn: $precisionHoldZoom) {
+                SwiftUI.Label("Hold to zoom & click", systemImage: "plus.magnifyingglass")
+            }
             Picker(selection: $portraitFullScreen) {
                 SwiftUI.Label("Split with controls", systemImage: "rectangle.split.1x2").tag(false)
                 SwiftUI.Label("Full screen", systemImage: "rectangle.portrait.inset.filled").tag(true)
@@ -812,13 +874,15 @@ struct SessionViewMenu<Label: View>: View {
                 SwiftUI.Label("Portrait layout", systemImage: portraitFullScreen ? "rectangle.portrait.inset.filled" : "rectangle.split.1x2")
             }
             .pickerStyle(.menu)
-            Picker(selection: $floatingKeyboard) {
-                SwiftUI.Label("iPhone keyboard", systemImage: "keyboard").tag(false)
-                SwiftUI.Label("Floating (drag anywhere)", systemImage: "keyboard.badge.ellipsis").tag(true)
+            Menu {
+                Picker("Keyboard style", selection: $floatingKeyboard) {
+                    SwiftUI.Label("iPhone keyboard", systemImage: "keyboard").tag(false)
+                    SwiftUI.Label("Floating (drag anywhere)", systemImage: "keyboard.badge.ellipsis").tag(true)
+                }
+                Toggle("Shift screen above keyboard", isOn: $keyboardLift)
             } label: {
                 SwiftUI.Label("Keyboard", systemImage: floatingKeyboard ? "keyboard.badge.ellipsis" : "keyboard")
             }
-            .pickerStyle(.menu)
             Divider()
             Toggle(isOn: $lockViewportSize) {
                 SwiftUI.Label("Lock window size", systemImage: lockViewportSize ? "lock.fill" : "lock.open")

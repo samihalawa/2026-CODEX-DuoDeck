@@ -265,6 +265,13 @@ struct PortraitStreamScreen: View {
     /// The picture's pinch zoom (StreamScreen's; StreamZoom): not watched here, only by the picture's
     /// own view, so a pinch redraws nothing else.
     let zoom: StreamZoomModel
+    var keyboardFrame: CGRect = .zero
+    var keyboardDuration: Double = 0.25
+    var keyboardLiftEnabled: Bool = true
+    var focusFractionY: CGFloat = 0.72
+    var onFocusPoint: (CGPoint) -> Void = { _ in }
+    var precisionHoldZoom: Bool = true
+    @State private var portraitPaneFrame: CGRect = .zero
 
     private var usesSimpleControls: Bool { duoDeckFocusMode && !forceFullControls }
 
@@ -774,10 +781,30 @@ struct PortraitStreamScreen: View {
     /// its size is the panel the video is fitted into, which the viewport sends the Mac (the halves);
     /// a phone sends its layout's picture instead (`phone`), the same rect or, with Larger Picture,
     /// the room this pane sits at the top of.
+    private var portraitKeyboardLift: CGFloat {
+        guard keyboardShown, keyboardLiftEnabled, keyboardFrame.height >= 80,
+              portraitPaneFrame.width > 0, portraitPaneFrame.height > 0 else { return 0 }
+        let overlap = max(0, portraitPaneFrame.maxY - keyboardFrame.minY)
+        guard overlap > 1 else { return 0 }
+        let videoRect = HEVCDisplayView.videoRect(in: CGRect(origin: .zero, size: portraitPaneFrame.size),
+                                                  videoSize: client.videoSize)
+        let activeY = client.shownPointer?.y ?? client.displayView.lastPointer.y
+        let chosenY = (activeY.isFinite && activeY >= 0 && activeY <= 1) ? activeY : focusFractionY
+        return KeyboardViewportLift.compute(
+            paneSize: portraitPaneFrame.size,
+            videoRect: videoRect,
+            zoom: zoom.zoom,
+            keyboardOverlap: overlap,
+            focusFractionY: max(focusFractionY, chosenY),
+            topClearance: 10)
+    }
+
     private func picturePane(measured: Bool) -> some View {
-        ZStack {
+        let lift = portraitKeyboardLift
+        return ZStack {
             // Scaled and moved by the picture's zoom, inside the clip below.
-            ZoomedStreamView(client: client, zoom: zoom)
+            ZoomedStreamView(client: client, zoom: zoom, keyboardLift: lift)
+                .animation(.easeOut(duration: max(0.18, keyboardDuration)), value: lift)
             InputOverlay(videoSize: client.videoSize,
                          send: { client.sendInput($0) },
                          setOwnPointer: { client.setOwnPointer($0, from: $1) },
@@ -789,6 +816,11 @@ struct PortraitStreamScreen: View {
                          macRepeatsKeys: { KeyTyping.macRepeats(keyRepeat: client.hostKeyRepeat) },
                          readZoom: { [zoom] in zoom.zoom },
                          writeZoom: { [zoom] in zoom.set($0) },
+                         animateZoom: { [zoom] target, dur in zoom.animate(to: target, duration: dur) },
+                         onPrecisionZoomChange: { [zoom] active in zoom.precisionZoomActive = active },
+                         onFocusPoint: onFocusPoint,
+                         keyboardLift: lift,
+                         precisionHoldZoomEnabled: precisionHoldZoom,
                          trackingMode: ScreenTrackingMode(rawValue: screenTrackingRaw) ?? .direct,
                          trackpadSensitivity: CGFloat(duoDeckPointerSensitivity),
                          pointerFeed: { let f = client.pointerFeedState; return (f.anchor, f.reseeds) })
@@ -797,10 +829,14 @@ struct PortraitStreamScreen: View {
         // A locked Mac: its cover over the picture (LockedMac), under the link's line.
         .overlay { VideoRecoveryShade(client: client, openSettings: { setSettings(true, true) }) }
         .overlay { LockedMacShade(client: client) }
+        .overlay(alignment: .top) { PrecisionZoomBadge(zoom: zoom) }
         .overlay(alignment: .top) { LinkLineView(text: linkLine) }
         .clipShape(streamShape)
         .overlay(streamShape.strokeBorder(Color.white.opacity(0.09), lineWidth: 1))
-        .onGeometryChange(for: CGSize.self, of: { $0.size }, action: { if measured { onPanelSize($0) } })
+        .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }, action: { rect in
+            portraitPaneFrame = rect
+            if measured { onPanelSize(rect.size) }
+        })
         .tourTarget(.stream)
     }
 
@@ -831,7 +867,14 @@ struct PortraitStreamScreen: View {
                  onModifiersConsumed: { latched = [] },
                  verticalSpan: verticalSpan,
                  pointerSensitivity: sensitivity ?? CGFloat(duoDeckPointerSensitivity),
-                 sendGesture: { client.sendGesture($0, fingers: $1) })
+                 sendGesture: { client.sendGesture($0, fingers: $1) },
+                 precisionHoldZoomEnabled: precisionHoldZoom,
+                 videoSize: client.videoSize,
+                 readZoom: { [zoom] in zoom.zoom },
+                 writeZoom: { [zoom] in zoom.set($0) },
+                 animateZoom: { [zoom] target, dur in zoom.animate(to: target, duration: dur) },
+                 onPrecisionZoomChange: { [zoom] active in zoom.precisionZoomActive = active },
+                 onFocusPoint: onFocusPoint)
             .tourTarget(.trackpad)
     }
 
@@ -1283,6 +1326,8 @@ struct DuoDeckControlsSettings: View {
     @AppStorage("DuoDeck.shortcutsVisible") private var shortcutsVisible = false
     @AppStorage("DuoDeck.haptics") private var haptics = true
     @AppStorage("DuoDeck.screenTrackingMode") private var trackingRaw = ScreenTrackingMode.direct.rawValue
+    @AppStorage("DuoDeck.precisionHoldZoom") private var precisionHoldZoom = true
+    @AppStorage("DuoDeck.keyboardLift") private var keyboardLift = true
     @AppStorage("DuoDeck.portraitFullScreen") private var portraitFullScreen = false
     @AppStorage("DuoDeck.lockViewportSize") private var lockViewportSize = false
     @AppStorage("DuoDeck.topBarAutoHide") private var topBarAutoHide = false
@@ -1316,6 +1361,8 @@ struct DuoDeckControlsSettings: View {
                 Picker("Tracking mode", selection: $trackingRaw) {
                     ForEach(ScreenTrackingMode.allCases) { Text($0.title).tag($0.rawValue) }
                 }
+                Toggle("Hold to zoom & click", isOn: $precisionHoldZoom)
+                Toggle("Shift screen above keyboard", isOn: $keyboardLift)
                 Picker("Portrait layout", selection: $portraitFullScreen) {
                     Text("Split with controls").tag(false)
                     Text("Full screen").tag(true)
@@ -1401,6 +1448,8 @@ struct DuoDeckControlsSettings: View {
                 shortcutsVisible = false
                 haptics = true
                 trackingRaw = ScreenTrackingMode.direct.rawValue
+                precisionHoldZoom = true
+                keyboardLift = true
                 portraitFullScreen = false
                 lockViewportSize = false
                 topBarAutoHide = false
