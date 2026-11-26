@@ -51,6 +51,7 @@ struct ContentView: View {
             #endif
             client.startBrowsing()
             client.startRemote()                 // saved Macs without a key are cleared; DEBUG pairing arguments
+            client.restoreMegawebsAccount()
             #if DEBUG
             client.connectFromLaunchArgument()   // -DuoDeckConnect host:port, for the off-Bonjour test hosts
             Self.orientFromLaunchArgument()      // -DuoDeckOrientation landscape|portrait
@@ -1235,6 +1236,7 @@ struct ConnectScreen: View {
                     .background(Palette.bar, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 quickActions
+                accountCard
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -1322,6 +1324,58 @@ struct ConnectScreen: View {
                 }
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private var accountCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Account & Plan")
+                    .font(.footnote.weight(.semibold))
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if let account = client.account {
+                    Text(account.isPro ? "DuoDeck Pro" : "Free")
+                        .font(.caption.weight(.bold))
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 3)
+                        .background(account.isPro ? Palette.accent.opacity(0.2) : Color.secondary.opacity(0.14), in: Capsule())
+                        .foregroundStyle(account.isPro ? Palette.accent : .secondary)
+                }
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                if let account = client.account {
+                    Text(account.user.email).font(.headline)
+                    Text(account.isPro ? "DuoDeck Pro active · syncs automatically to your Mac." : "Free local mode active · sign in syncs across your devices.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Button("Refresh") { client.refreshMegawebsAccount() }
+                        Button("Sign out", role: .destructive) { client.signOutMegawebs() }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                } else {
+                    Text("Sign in with Megawebs")
+                        .font(.headline)
+                    Text("Optional. Local control is always free; signing in syncs your plan to your Mac automatically.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        client.signInWithMegawebs()
+                    } label: {
+                        Text(client.authWorking ? "Signing in…" : "Sign in with Megawebs")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(client.authWorking)
+                }
+                if let err = client.authError {
+                    Text(err).font(.footnote).foregroundStyle(.orange)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.bar, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 

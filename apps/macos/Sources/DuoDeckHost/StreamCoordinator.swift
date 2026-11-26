@@ -61,6 +61,7 @@ package final class StreamCoordinator {
     let synthetic: Bool
     let displayResolution: DisplayResolutionManager
     package var onDisplayModeReset: (@MainActor () -> Void)?
+    package var onAuthSync: (@MainActor (AuthSyncMessage) -> Void)?
     package var displayResolutionOptions: [DisplayResolutionOption] {
         displayResolution.options(virtualDisplaySupported: appKitLoop)
     }
@@ -1281,6 +1282,9 @@ package final class StreamCoordinator {
             guard active != .none, let encoder else { return }     // nothing streams: the next stream starts with one
             print("Keyframe for \(deviceName(connection)): its picture was interrupted.")
             encoder.requestKeyframe()
+        case .authSync:
+            guard let authMsg = Wire.decode(AuthSyncMessage.self, from: message.payload) else { return }
+            onAuthSync?(authMsg)
         case .viewport:
             // A device's panel and text scale. One outside what a host takes (ViewportBounds), or a
             // payload that does not decode, is refused whole, with a line: the last viewport stands and

@@ -91,6 +91,9 @@ public enum StreamMessageKind: UInt8 {
                              // From the device once per interruption while its keyframe is due, again when it
                              // has not come in 4 s (or four round trips), 2 s apart at least (KeyframeRecovery);
                              // at most one a second per connection on the host
+    // Unified Megawebs Auth handoff (auth.megawebs.com): additive, backward-compatible.
+    case authSync = 45       // device → host: JSON AuthSyncMessage (handoff code, signOut, refresh).
+                             // Older hosts map it to `.unknown` and skip it cleanly.
     case unknown = 255       // never sent: what parseHeader yields for a kind this build does not know
 }
 

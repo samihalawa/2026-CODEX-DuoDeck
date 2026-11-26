@@ -1121,3 +1121,37 @@ select {
     background: var(--bg-alt);
   }
 }
+
+.mw-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.mw-feature-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mw-chip {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--muted);
+}
+
+.mw-chip[data-mw-locked="false"] {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.mw-pro-pill {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}

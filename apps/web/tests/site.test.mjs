@@ -54,6 +54,8 @@ test("homepage has distinct brand and real claims",async()=>{
   assert.equal(r.headers.get("cache-control"),"no-cache");
   assert.equal(body.includes("__ASSET_VERSION__"),false);
   assert.match(body,/github\.com\/samihalawa\/2026-CODEX-DuoDeck/);
+  assert.match(body,/auth\.megawebs\.com\/assets\/auth-client\.js/);
+  assert.match(body,/<megawebs-auth-bar app="duodeck"/);
 });
 test("real published icon and og image are available",async()=>{
   for (const asset of ["/icon.png", "/og-image.png"]) {
@@ -92,6 +94,7 @@ test("security response headers prevent embedding and sniffing",async()=>{
   assert.equal(r.headers.get("x-frame-options"),"DENY");
   assert.equal(r.headers.get("x-content-type-options"),"nosniff");
   assert.match(r.headers.get("content-security-policy"),/frame-ancestors 'none'/);
+  assert.match(r.headers.get("content-security-policy"),/https:\/\/auth\.megawebs\.com/);
 });
 test("rejects writes and unknown assets",async()=>{
   assert.equal((await fetch(origin+"/",{method:"POST"})).status,405);

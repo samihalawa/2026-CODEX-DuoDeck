@@ -83,6 +83,7 @@
   }
   </script>
   <script src="/app.js?v=__ASSET_VERSION__" defer></script>
+  <script type="module" src="https://auth.megawebs.com/assets/auth-client.js"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -101,6 +102,7 @@
         <a href="/support">Support</a>
       </nav>
       <div class="nav-actions">
+        <megawebs-auth-bar app="duodeck" login-label="Sign in"></megawebs-auth-bar>
         <button type="button" class="btn btn-sm" id="themeToggle" aria-label="Toggle color theme">Theme</button>
         <a class="btn btn-primary btn-sm" href="#downloads">Download Host</a>
       </div>
@@ -326,6 +328,38 @@
 
       <div class="scope-note">
         <strong>Clear scope:</strong> DuoDeck controls your paired Mac; it is <strong>not a system-wide trackpad</strong> for unrelated iPhone or iPad apps, and it never claims the outer iPhone Duo cover screen when another app moves to the foreground.
+      </div>
+    </section>
+
+    <section class="section wrap" id="plans" aria-label="Plans and feature gating">
+      <div class="section-head">
+        <span class="section-kicker">Account &amp; Tiers</span>
+        <h2>Free local mode · Optional DuoDeck Pro</h2>
+        <p>Sign in once with your Megawebs Account — DuoDeck automatically syncs your plan between web, iPhone, and Mac.</p>
+      </div>
+      <div class="mw-tier-grid">
+        <article class="bento-card">
+          <span class="bento-tag">Always free</span>
+          <h3>Free Local Mode</h3>
+          <p>Direct Wi-Fi &amp; USB pairing, Floating Keyboard, Back Screen mirror, and basic shortcuts — no account required.</p>
+          <p class="meta-line" data-mw-auth="signed-in" hidden>Signed in as <strong data-mw-user-email></strong> (<span data-mw-tier-label>Free</span>)</p>
+        </article>
+        <article class="bento-card">
+          <span class="bento-tag" data-mw-tier="free">DuoDeck Pro</span>
+          <span class="bento-tag mw-pro-pill" data-mw-tier="pro" hidden>DuoDeck Pro · Active</span>
+          <h3>Pro Cross-Device Sync</h3>
+          <p>Remote Access, Virtual Display, Audio Streaming, 120Hz ProMotion, and automatic iPhone → Mac account handoff.</p>
+          <div class="mw-feature-badges">
+            <span class="mw-chip" data-mw-feature="remote_access">Remote Access</span>
+            <span class="mw-chip" data-mw-feature="virtual_display">Virtual Display</span>
+            <span class="mw-chip" data-mw-feature="audio_streaming">Audio Streaming</span>
+            <span class="mw-chip" data-mw-feature="cloud_device_sync">Auto Mac Sync</span>
+          </div>
+          <div style="margin-top:14px">
+            <a class="btn btn-sm" data-mw-auth="signed-out" href="https://auth.megawebs.com/authorize?app=duodeck&redirect_uri=https%3A%2F%2Fduodeck.megawebs.com%2F">Sign in to check tier</a>
+            <a class="btn btn-sm" data-mw-auth="signed-in" hidden href="https://auth.megawebs.com/account?app=duodeck">Manage Megawebs Account</a>
+          </div>
+        </article>
       </div>
     </section>
 

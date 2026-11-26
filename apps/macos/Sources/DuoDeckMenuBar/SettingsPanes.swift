@@ -225,6 +225,15 @@ struct VirtualDisplayPane: View {
         let snapshot = model.coordinator?.status.snapshot ?? HostStatusSnapshot()
         Form {
             Section {
+                LabeledContent("Plan") {
+                    Text(model.isPro ? "DuoDeck Pro" : "Free")
+                        .font(.caption.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(model.isPro ? Color.purple.opacity(0.18) : Color.secondary.opacity(0.14), in: Capsule())
+                }
+            }
+            Section {
                 Toggle("Stream from a virtual display", isOn: $settings.config.virtualDisplay)
             } footer: {
                 Footnote("DuoDeck Host moves the window you pick onto an invisible display made for your device, so it keeps updating when other windows cover it and text is drawn at your device’s scale. The window leaves this screen while it streams and comes back when you stop streaming or quit DuoDeck Host.")

@@ -26,7 +26,7 @@ function security(res) {
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://posthog.megawebs.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://posthog.megawebs.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' https://posthog.megawebs.com https://auth.megawebs.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://posthog.megawebs.com https://auth.megawebs.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 }
 const macDownloadURL = "https://github.com/samihalawa/2026-CODEX-DuoDeck/releases/latest/download/DuoDeck-Host-macOS.dmg";
 let downloadState = {status:"unknown",checkedAt:0,confirmedAt:0};

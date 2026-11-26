@@ -121,6 +121,28 @@ struct HostSettingsPanel: View {
                         Label("Advanced", systemImage: "slider.horizontal.3")
                     }
                 }
+                Section("Account & Plan") {
+                    if let account = client.account {
+                        LabeledContent(account.user.email) {
+                            Text(account.isPro ? "DuoDeck Pro" : "Free")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(account.isPro ? Palette.accent : .secondary)
+                        }
+                        Text("Synced automatically with \(mac).")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Button("Refresh Plan") { client.refreshMegawebsAccount() }
+                        Button("Sign Out", role: .destructive) { client.signOutMegawebs() }
+                    } else {
+                        Button(client.authWorking ? "Signing in…" : "Sign in with Megawebs") {
+                            client.signInWithMegawebs()
+                        }
+                        .disabled(client.authWorking)
+                        Text("Optional. Local control is free without an account.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Section {
                     Button(role: .destructive) { client.disconnect() } label: {
                         Label("Disconnect", systemImage: "rectangle.portrait.and.arrow.right")

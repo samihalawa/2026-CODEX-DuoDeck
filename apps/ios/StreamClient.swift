@@ -292,6 +292,14 @@ final class StreamClient: ObservableObject {
     /// Bumped once per answer that refused something: the panel plays the warning haptic and
     /// announces it.
     @Published var settingsRefusals = 0
+    /// Unified Megawebs Account state (auth.megawebs.com) — optional; local mode is always free.
+    @Published var account: MegawebsAccountState?
+    @Published var authWorking = false
+    @Published var authError: String?
+    var isPro: Bool { account?.isPro ?? false }
+    var authSyncedKey: String?
+    var authPresentationProvider: AnyObject?
+    static let authKeychainService = "com.agentsai.duodeck.megawebs-auth"
     /// When this connection became ready (a remote one: its first window list, since with TLS 1.3
     /// the device is ready before the Mac has judged its certificate); nil while disconnected. The
     /// panel gives the first state two seconds before it calls the Mac an older one.
@@ -4400,6 +4408,7 @@ final class StreamClient: ObservableObject {
                     self.lastRequestedVideoSource = list.active == .none ? .desktop : list.active
                     self.beginPictureWait(newGeneration: false)
                     self.sessionListed = true
+                    self.pushAuthHandoffToConnectedMacIfNeeded()
                     #if DEBUG
                     switch (list.hostVersion, list.protocol) {
                     case (nil, nil): print("host: no version (a Mac from before 2026-09-25)")

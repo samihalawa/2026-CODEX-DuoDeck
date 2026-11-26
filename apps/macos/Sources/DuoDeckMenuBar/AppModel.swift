@@ -1,4 +1,5 @@
 import AppKit
+import AuthenticationServices
 import Observation
 import Security
 import DuoDeckHostCore
@@ -29,6 +30,14 @@ final class AppModel {
     var visibleSettingsTab: SettingsTab?
     /// The last Require pairing change the identity store did not keep, for the Devices pane.
     private(set) var requirePairingProblem: RequirePairingProblem?
+
+    /// Unified Megawebs Account state (auth.megawebs.com) — synced automatically from iPhone or via Sign In.
+    private(set) var account: MegawebsAccountState?
+    private(set) var authWorking = false
+    private(set) var authError: String?
+    var isPro: Bool { account?.isPro ?? false }
+    @ObservationIgnored private var authPresentationProvider: MacAuthPresentationProvider?
+    private static let authKeychainService = "com.agentsai.duodeck.host.megawebs-auth"
 
     /// A Require pairing change that was not saved: what was asked, and why not.
     struct RequirePairingProblem: Equatable {
@@ -136,6 +145,10 @@ final class AppModel {
                         settings.config.displayMode = nil
                     }
                 }
+                c.onAuthSync = { [weak self] msg in
+                    self?.handleAuthSync(msg)
+                }
+                restoreAccount()
                 // Not in HostConfig (it moves no listener): handed over on its own.
                 remote.setAddressName(settings.remoteAddressName)
                 settings.onAddressNameChange = { [settings, weak remote] in remote?.setAddressName(settings.remoteAddressName) }
@@ -425,5 +438,128 @@ final class AppModel {
         permissions.refresh()
         guard !synthetic, !permissions.allGranted, !settings.permissionsOnboardingDismissed else { return }
         showSettings?(.permissions)
+    }
+
+    // MARK: Megawebs Account & Automatic iPhone -> Mac Sync
+
+    func restoreAccount() {
+        guard !synthetic, let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService) else { return }
+        Task { @MainActor [weak self] in
+            await self?.refreshAccount(token: token)
+        }
+    }
+
+    func refreshAccount() {
+        guard let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService) else { return }
+        Task { @MainActor [weak self] in
+            await self?.refreshAccount(token: token)
+        }
+    }
+
+    private func refreshAccount(token: String) async {
+        do {
+            let me = try await MegawebsAuthClient.fetchMe(token: token)
+            if me.authenticated, let user = me.user, let app = me.app {
+                account = MegawebsAccountState(user: user, entitlement: app)
+                authError = nil
+            } else {
+                MegawebsAuthClient.deleteToken(service: Self.authKeychainService)
+                account = nil
+            }
+        } catch {
+            // Keep cached state on transient offline errors
+        }
+    }
+
+    func handleAuthSync(_ msg: AuthSyncMessage) {
+        switch msg.action {
+        case .handoff:
+            guard let code = msg.handoffCode, !code.isEmpty else { return }
+            if let existing = account, let incomingId = msg.userId, existing.user.id == incomingId {
+                refreshAccount()
+                return
+            }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.authWorking = true
+                defer { self.authWorking = false }
+                do {
+                    let deviceId = self.coordinator?.remote?.identity?.macID ?? Host.current().localizedName ?? "mac"
+                    let deviceName = Host.current().localizedName ?? "Mac"
+                    let fp = self.coordinator?.remote?.identity.map { Base64URL.encode($0.fingerprint) }
+                    let tokenRes = try await MegawebsAuthClient.exchangeDeviceHandoff(
+                        code: code,
+                        deviceId: deviceId,
+                        deviceName: deviceName,
+                        platform: "macos",
+                        fingerprint: fp
+                    )
+                    MegawebsAuthClient.saveToken(tokenRes.accessToken, service: Self.authKeychainService)
+                    self.account = MegawebsAccountState(user: tokenRes.user, entitlement: tokenRes.app)
+                    self.authError = nil
+                    print("Account synced automatically from iPhone (\(tokenRes.user.email), tier: \(tokenRes.app.tier))")
+                } catch {
+                    self.authError = "Could not sync account from iPhone."
+                }
+            }
+        case .refresh:
+            refreshAccount()
+        case .signOut:
+            if let uid = msg.userId, account?.user.id == uid {
+                signOutOnMac()
+            }
+        }
+    }
+
+    func signInOnMac() {
+        let pkce = MegawebsAuthClient.makePKCE()
+        let url = MegawebsAuthClient.authorizeURL(pkce: pkce)
+        let provider = MacAuthPresentationProvider()
+        authPresentationProvider = provider
+        authWorking = true
+        authError = nil
+
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "duodeck") { [weak self] callbackURL, error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                defer {
+                    self.authWorking = false
+                    self.authPresentationProvider = nil
+                }
+                guard error == nil, let callbackURL,
+                      let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
+                      let code = items.first(where: { $0.name == "code" })?.value else {
+                    return
+                }
+                do {
+                    let tokenRes = try await MegawebsAuthClient.exchangeOAuthCode(code: code, verifier: pkce.verifier)
+                    MegawebsAuthClient.saveToken(tokenRes.accessToken, service: Self.authKeychainService)
+                    self.account = MegawebsAccountState(user: tokenRes.user, entitlement: tokenRes.app)
+                    self.authError = nil
+                } catch {
+                    self.authError = "Sign in could not complete."
+                }
+            }
+        }
+        session.presentationContextProvider = provider
+        session.prefersEphemeralWebBrowserSession = false
+        session.start()
+    }
+
+    func signOutOnMac() {
+        let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService)
+        MegawebsAuthClient.deleteToken(service: Self.authKeychainService)
+        account = nil
+        authError = nil
+        if let token {
+            Task { await MegawebsAuthClient.signOut(token: token) }
+        }
+    }
+}
+
+@MainActor
+private final class MacAuthPresentationProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        NSApp.keyWindow ?? NSApp.windows.first ?? ASPresentationAnchor()
     }
 }

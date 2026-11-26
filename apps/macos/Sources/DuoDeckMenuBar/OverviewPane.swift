@@ -92,6 +92,38 @@ struct GeneralPane: View {
             }
 
             Section {
+                if let account = model.account {
+                    LabeledContent {
+                        HStack(spacing: 8) {
+                            Text(account.isPro ? "DuoDeck Pro" : "Free")
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(account.isPro ? Color.purple.opacity(0.18) : Color.secondary.opacity(0.14), in: Capsule())
+                            Button("Refresh") { model.refreshAccount() }
+                            Button("Sign Out") { model.signOutOnMac() }
+                        }
+                    } label: {
+                        Text(account.user.email)
+                        Text("Megawebs Account · synced across iPhone & Mac")
+                    }
+                } else {
+                    LabeledContent {
+                        Button(model.authWorking ? "Signing in…" : "Sign In…") { model.signInOnMac() }
+                            .disabled(model.authWorking)
+                    } label: {
+                        Text("Megawebs Account")
+                        Text("Optional. Local control is always free; signing in syncs DuoDeck Pro automatically from your iPhone.")
+                    }
+                }
+                if let err = model.authError {
+                    Text(err).font(.callout).foregroundStyle(.orange)
+                }
+            } header: {
+                Text("Account")
+            }
+
+            Section {
                 Toggle("Launch at login", isOn: Binding(get: { model.loginItem.isOn }, set: { model.loginItem.set($0) }))
                     .disabled(!model.loginItem.available)
                 if model.loginItem.needsApproval {

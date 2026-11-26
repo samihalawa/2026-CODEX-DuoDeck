@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 import Network
 import CryptoKit
@@ -144,6 +145,16 @@ enum RemoteCopy {
     }
 }
 
+private final class IOSAuthPresentationProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    @MainActor
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow } ?? ASPresentationAnchor()
+    }
+}
+
 extension StreamClient {
     /// "iPhone" or "iPad", for copy about this device.
     static var deviceWord: String { UIDevice.current.userInterfaceIdiom == .phone ? "iPhone" : "iPad" }
@@ -195,6 +206,130 @@ extension StreamClient {
         removePreview(for: macID)
         persistSavedMacs()
         status = "Forgot \(name). It still lists this \(Self.deviceWord) until you remove it in DuoDeck’s Settings on the Mac."
+    }
+
+    // MARK: Megawebs Account & Automatic Mac Auth Handoff
+
+    func restoreMegawebsAccount() {
+        guard let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService) else { return }
+        Task { @MainActor [weak self] in
+            await self?.refreshMegawebsAccount(token: token)
+        }
+    }
+
+    func refreshMegawebsAccount() {
+        guard let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService) else { return }
+        Task { @MainActor [weak self] in
+            await self?.refreshMegawebsAccount(token: token)
+        }
+    }
+
+    private func refreshMegawebsAccount(token: String) async {
+        do {
+            let me = try await MegawebsAuthClient.fetchMe(token: token)
+            if me.authenticated, let user = me.user, let app = me.app {
+                account = MegawebsAccountState(user: user, entitlement: app)
+                authError = nil
+                pushAuthHandoffToConnectedMacIfNeeded()
+            } else {
+                MegawebsAuthClient.deleteToken(service: Self.authKeychainService)
+                account = nil
+            }
+        } catch {
+            // Keep cached account state on transient offline errors
+        }
+    }
+
+    func signInWithMegawebs() {
+        let pkce = MegawebsAuthClient.makePKCE()
+        let url = MegawebsAuthClient.authorizeURL(pkce: pkce)
+        let provider = IOSAuthPresentationProvider()
+        authPresentationProvider = provider
+        authWorking = true
+        authError = nil
+
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "duodeck") { [weak self] callbackURL, error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                defer {
+                    self.authWorking = false
+                    self.authPresentationProvider = nil
+                }
+                guard error == nil, let callbackURL,
+                      let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems,
+                      let code = items.first(where: { $0.name == "code" })?.value else {
+                    return
+                }
+                do {
+                    let tokenRes = try await MegawebsAuthClient.exchangeOAuthCode(code: code, verifier: pkce.verifier)
+                    MegawebsAuthClient.saveToken(tokenRes.accessToken, service: Self.authKeychainService)
+                    self.account = MegawebsAccountState(user: tokenRes.user, entitlement: tokenRes.app)
+                    self.authError = nil
+                    self.authSyncedKey = nil
+                    self.pushAuthHandoffToConnectedMacIfNeeded()
+                } catch {
+                    self.authError = "Sign in could not complete. Try again."
+                }
+            }
+        }
+        session.presentationContextProvider = provider
+        session.prefersEphemeralWebBrowserSession = false
+        session.start()
+    }
+
+    func signOutMegawebs() {
+        let userId = account?.user.id
+        let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService)
+        MegawebsAuthClient.deleteToken(service: Self.authKeychainService)
+        account = nil
+        authError = nil
+        authSyncedKey = nil
+        let data = Wire.encode(AuthSyncMessage(action: .signOut, userId: userId))
+        if connected {
+            send(.authSync, payload: data)
+        }
+        if let token {
+            Task { await MegawebsAuthClient.signOut(token: token) }
+        }
+    }
+
+    /// Seamlessly authenticates the connected Mac using a single-use 60s device-handoff code.
+    func pushAuthHandoffToConnectedMacIfNeeded() {
+        guard connected,
+              let account,
+              let token = MegawebsAuthClient.loadToken(service: Self.authKeychainService) else {
+            return
+        }
+        let targetMacID = macInfo?.macID ?? macName
+        let syncKey = "\(targetMacID):\(account.user.id)"
+        guard authSyncedKey != syncKey else { return }
+        authSyncedKey = syncKey
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let handoff = try await MegawebsAuthClient.createDeviceHandoff(
+                    token: token,
+                    sourcePlatform: "ios",
+                    targetPlatform: "macos",
+                    targetDeviceId: self.macInfo?.macID
+                )
+                let msg = AuthSyncMessage(
+                    action: .handoff,
+                    handoffCode: handoff.code,
+                    userId: account.user.id,
+                    email: account.user.email,
+                    tier: account.entitlement.tier,
+                    authBaseURL: MegawebsAuthClient.defaultBaseURL.absoluteString
+                )
+                let payload = Wire.encode(msg)
+                if self.connected {
+                    self.send(.authSync, payload: payload)
+                }
+            } catch {
+                self.authSyncedKey = nil
+            }
+        }
     }
 
     // MARK: Connection groups and preview pictures (ConnectionList)
@@ -925,6 +1060,10 @@ extension StreamClient {
     /// poster or a message could otherwise add a look-alike "Mac" that collects keystrokes).
     func handleOpenURL(_ url: URL) {
         guard url.scheme?.lowercased() == "duodeck" else { return }
+        if url.host?.lowercased() == "auth" {
+            refreshMegawebsAccount()
+            return
+        }
         switch PairLink.parse(url.absoluteString) {
         case .success(let link):
             pendingLink = link
